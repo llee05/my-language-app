@@ -10,7 +10,6 @@ class AppSidebar extends StatelessWidget {
     (Icons.menu_book_outlined, 'Lessons'),
     (Icons.language_rounded, 'Vocabulary'),
     (Icons.bar_chart_rounded, 'Progress'),
-    (Icons.emoji_events_outlined, 'Achievements'),
   ];
 
   @override

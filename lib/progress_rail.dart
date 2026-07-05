@@ -27,19 +27,12 @@ class RightRail extends StatelessWidget {
               children: [
                 SizedBox(width: 270, child: WeeklyXp()),
                 SizedBox(width: 270, child: VocabularyPanel()),
-                SizedBox(width: 270, child: Achievements()),
               ],
             )
           : const SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  WeeklyXp(),
-                  SizedBox(height: 26),
-                  VocabularyPanel(),
-                  SizedBox(height: 26),
-                  Achievements(),
-                ],
+                children: [WeeklyXp(), SizedBox(height: 26), VocabularyPanel()],
               ),
             ),
     );
@@ -274,88 +267,6 @@ class _VocabularyCardState extends State<VocabularyCard> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class Achievements extends StatelessWidget {
-  const Achievements({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SectionLabel('ACHIEVEMENTS'),
-        const SizedBox(height: 13),
-        Row(
-          children: [
-            Expanded(
-              child: _Achievement(
-                icon: Icons.local_fire_department_outlined,
-                label: '7-Day\nStreak',
-                color: AppColors.red,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _Achievement(
-                icon: Icons.star_border_rounded,
-                label: 'First 100\nXP',
-                color: AppColors.gold,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _Achievement(
-                icon: Icons.bolt_outlined,
-                label: 'Speed\nLearner',
-                color: AppColors.gold,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Achievement extends StatelessWidget {
-  const _Achievement({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 78,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: const Color(0xFF594018)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 19, color: color),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 9,
-              color: AppColors.muted,
-              height: 1.15,
-            ),
-          ),
-        ],
       ),
     );
   }
