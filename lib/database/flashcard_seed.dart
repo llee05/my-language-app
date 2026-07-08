@@ -1,0 +1,1964 @@
+const List<Map<String, dynamic>> flashcardLessons = [
+  {
+    "lesson_title": "Daily Life HSK1 Flashcards",
+    "theme": "Daily Life",
+    "hsk_level": 1,
+    "cards": [
+      {
+        "chinese": "你好",
+        "pinyin": "nǐ hǎo",
+        "english_meaning": "hello",
+        "part_of_speech": "phrase",
+        "example_sentence_chinese": "你好，很高兴认识你。",
+        "example_sentence_pinyin": "nǐ hǎo, hěn gāoxìng rènshì nǐ.",
+        "example_sentence_english": "Hello.",
+        "quiz_options": [
+          "hello",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "hello"
+      },
+      {
+        "chinese": "谢谢",
+        "pinyin": "xièxie",
+        "english_meaning": "thank you",
+        "part_of_speech": "phrase",
+        "example_sentence_chinese": "谢谢，很高兴认识你。",
+        "example_sentence_pinyin": "xièxie, hěn gāoxìng rènshì nǐ.",
+        "example_sentence_english": "Thank you.",
+        "quiz_options": [
+          "thank you",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "thank you"
+      },
+      {
+        "chinese": "学习",
+        "pinyin": "xuéxí",
+        "english_meaning": "to study; to learn",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天学习。",
+        "example_sentence_pinyin": "Wǒ měitiān xuéxí.",
+        "example_sentence_english": "I to study; to learn every day.",
+        "quiz_options": [
+          "to study; to learn",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to study; to learn"
+      },
+      {
+        "chinese": "老师",
+        "pinyin": "lǎoshī",
+        "english_meaning": "teacher",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢老师。",
+        "example_sentence_pinyin": "Wǒ xǐhuān lǎoshī.",
+        "example_sentence_english": "I like teacher.",
+        "quiz_options": [
+          "teacher",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "teacher"
+      },
+      {
+        "chinese": "学生",
+        "pinyin": "xuéshēng",
+        "english_meaning": "student",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢学生。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xuéshēng.",
+        "example_sentence_english": "I like student.",
+        "quiz_options": [
+          "student",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "student"
+      },
+      {
+        "chinese": "学校",
+        "pinyin": "xuéxiào",
+        "english_meaning": "school",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢学校。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xuéxiào.",
+        "example_sentence_english": "I like school.",
+        "quiz_options": [
+          "school",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "school"
+      },
+      {
+        "chinese": "中文",
+        "pinyin": "Zhōngwén",
+        "english_meaning": "Chinese language",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢中文。",
+        "example_sentence_pinyin": "Wǒ xǐhuān Zhōngwén.",
+        "example_sentence_english": "I like Chinese language.",
+        "quiz_options": [
+          "Chinese language",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "Chinese language"
+      },
+      {
+        "chinese": "饭",
+        "pinyin": "fàn",
+        "english_meaning": "rice; meal",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢饭。",
+        "example_sentence_pinyin": "Wǒ xǐhuān fàn.",
+        "example_sentence_english": "I like rice; meal.",
+        "quiz_options": [
+          "rice; meal",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "rice; meal"
+      },
+      {
+        "chinese": "书",
+        "pinyin": "shū",
+        "english_meaning": "book",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢书。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shū.",
+        "example_sentence_english": "I like book.",
+        "quiz_options": [
+          "book",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "book"
+      },
+      {
+        "chinese": "朋友",
+        "pinyin": "péngyǒu",
+        "english_meaning": "friend",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢朋友。",
+        "example_sentence_pinyin": "Wǒ xǐhuān péngyǒu.",
+        "example_sentence_english": "I like friend.",
+        "quiz_options": [
+          "friend",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "friend"
+      },
+      {
+        "chinese": "听",
+        "pinyin": "tīng",
+        "english_meaning": "to listen",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天听。",
+        "example_sentence_pinyin": "Wǒ měitiān tīng.",
+        "example_sentence_english": "I to listen every day.",
+        "quiz_options": [
+          "to listen",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to listen"
+      },
+      {
+        "chinese": "看",
+        "pinyin": "kàn",
+        "english_meaning": "to look; to watch",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天看。",
+        "example_sentence_pinyin": "Wǒ měitiān kàn.",
+        "example_sentence_english": "I to look; to watch every day.",
+        "quiz_options": [
+          "to look; to watch",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to look; to watch"
+      },
+      {
+        "chinese": "去",
+        "pinyin": "qù",
+        "english_meaning": "to go",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天去。",
+        "example_sentence_pinyin": "Wǒ měitiān qù.",
+        "example_sentence_english": "I to go every day.",
+        "quiz_options": [
+          "to go",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to go"
+      },
+      {
+        "chinese": "来",
+        "pinyin": "lái",
+        "english_meaning": "to come",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天来。",
+        "example_sentence_pinyin": "Wǒ měitiān lái.",
+        "example_sentence_english": "I to come every day.",
+        "quiz_options": [
+          "to come",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to come"
+      },
+      {
+        "chinese": "坐",
+        "pinyin": "zuò",
+        "english_meaning": "to sit",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天坐。",
+        "example_sentence_pinyin": "Wǒ měitiān zuò.",
+        "example_sentence_english": "I to sit every day.",
+        "quiz_options": [
+          "to sit",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to sit"
+      },
+      {
+        "chinese": "吃",
+        "pinyin": "chī",
+        "english_meaning": "to eat",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天吃。",
+        "example_sentence_pinyin": "Wǒ měitiān chī.",
+        "example_sentence_english": "I to eat every day.",
+        "quiz_options": [
+          "to eat",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to eat"
+      },
+      {
+        "chinese": "喝",
+        "pinyin": "hē",
+        "english_meaning": "to drink",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天喝。",
+        "example_sentence_pinyin": "Wǒ měitiān hē.",
+        "example_sentence_english": "I to drink every day.",
+        "quiz_options": [
+          "to drink",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to drink"
+      },
+      {
+        "chinese": "睡觉",
+        "pinyin": "shuìjiào",
+        "english_meaning": "to sleep",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天睡觉。",
+        "example_sentence_pinyin": "Wǒ měitiān shuìjiào.",
+        "example_sentence_english": "I to sleep every day.",
+        "quiz_options": [
+          "to sleep",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to sleep"
+      },
+      {
+        "chinese": "工作",
+        "pinyin": "gōngzuò",
+        "english_meaning": "to work; work",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天工作。",
+        "example_sentence_pinyin": "Wǒ měitiān gōngzuò.",
+        "example_sentence_english": "I to work; work every day.",
+        "quiz_options": [
+          "to work; work",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to work; work"
+      },
+      {
+        "chinese": "家",
+        "pinyin": "jiā",
+        "english_meaning": "home; family",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢家。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jiā.",
+        "example_sentence_english": "I like home; family.",
+        "quiz_options": [
+          "home; family",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "home; family"
+      }
+    ]
+  },
+  {
+    "lesson_title": "School HSK2 Flashcards",
+    "theme": "School",
+    "hsk_level": 2,
+    "cards": [
+      {
+        "chinese": "考试",
+        "pinyin": "kǎoshì",
+        "english_meaning": "exam",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢考试。",
+        "example_sentence_pinyin": "Wǒ xǐhuān kǎoshì.",
+        "example_sentence_english": "I like exam.",
+        "quiz_options": [
+          "exam",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "exam"
+      },
+      {
+        "chinese": "图书馆",
+        "pinyin": "túshūguǎn",
+        "english_meaning": "library",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢图书馆。",
+        "example_sentence_pinyin": "Wǒ xǐhuān túshūguǎn.",
+        "example_sentence_english": "I like library.",
+        "quiz_options": [
+          "library",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "library"
+      },
+      {
+        "chinese": "黑板",
+        "pinyin": "hēibǎn",
+        "english_meaning": "blackboard",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢黑板。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hēibǎn.",
+        "example_sentence_english": "I like blackboard.",
+        "quiz_options": [
+          "blackboard",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "blackboard"
+      },
+      {
+        "chinese": "练习",
+        "pinyin": "liànxí",
+        "english_meaning": "to practice; exercise",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天练习。",
+        "example_sentence_pinyin": "Wǒ měitiān liànxí.",
+        "example_sentence_english": "I to practice; exercise every day.",
+        "quiz_options": [
+          "to practice; exercise",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to practice; exercise"
+      },
+      {
+        "chinese": "课程",
+        "pinyin": "kèchéng",
+        "english_meaning": "course; curriculum",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢课程。",
+        "example_sentence_pinyin": "Wǒ xǐhuān kèchéng.",
+        "example_sentence_english": "I like course; curriculum.",
+        "quiz_options": [
+          "course; curriculum",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "course; curriculum"
+      },
+      {
+        "chinese": "成绩",
+        "pinyin": "chéngjì",
+        "english_meaning": "grades",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢成绩。",
+        "example_sentence_pinyin": "Wǒ xǐhuān chéngjì.",
+        "example_sentence_english": "I like grades.",
+        "quiz_options": [
+          "grades",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "grades"
+      },
+      {
+        "chinese": "讲课",
+        "pinyin": "jiǎngkè",
+        "english_meaning": "to teach a class",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天讲课。",
+        "example_sentence_pinyin": "Wǒ měitiān jiǎngkè.",
+        "example_sentence_english": "I to teach a class every day.",
+        "quiz_options": [
+          "to teach a class",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to teach a class"
+      },
+      {
+        "chinese": "作业",
+        "pinyin": "zuòyè",
+        "english_meaning": "homework",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢作业。",
+        "example_sentence_pinyin": "Wǒ xǐhuān zuòyè.",
+        "example_sentence_english": "I like homework.",
+        "quiz_options": [
+          "homework",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "homework"
+      },
+      {
+        "chinese": "文具",
+        "pinyin": "wénjù",
+        "english_meaning": "stationery",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢文具。",
+        "example_sentence_pinyin": "Wǒ xǐhuān wénjù.",
+        "example_sentence_english": "I like stationery.",
+        "quiz_options": [
+          "stationery",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "stationery"
+      },
+      {
+        "chinese": "教室",
+        "pinyin": "jiàoshì",
+        "english_meaning": "classroom",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢教室。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jiàoshì.",
+        "example_sentence_english": "I like classroom.",
+        "quiz_options": [
+          "classroom",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "classroom"
+      },
+      {
+        "chinese": "上课",
+        "pinyin": "shàngkè",
+        "english_meaning": "to attend class",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天上课。",
+        "example_sentence_pinyin": "Wǒ měitiān shàngkè.",
+        "example_sentence_english": "I to attend class every day.",
+        "quiz_options": [
+          "to attend class",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to attend class"
+      },
+      {
+        "chinese": "复习",
+        "pinyin": "fùxí",
+        "english_meaning": "to review",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天复习。",
+        "example_sentence_pinyin": "Wǒ měitiān fùxí.",
+        "example_sentence_english": "I to review every day.",
+        "quiz_options": [
+          "to review",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to review"
+      },
+      {
+        "chinese": "成绩单",
+        "pinyin": "chéngjìdān",
+        "english_meaning": "report card",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢成绩单。",
+        "example_sentence_pinyin": "Wǒ xǐhuān chéngjìdān.",
+        "example_sentence_english": "I like report card.",
+        "quiz_options": [
+          "report card",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "report card"
+      },
+      {
+        "chinese": "放学",
+        "pinyin": "fàngxué",
+        "english_meaning": "to finish school",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天放学。",
+        "example_sentence_pinyin": "Wǒ měitiān fàngxué.",
+        "example_sentence_english": "I to finish school every day.",
+        "quiz_options": [
+          "to finish school",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to finish school"
+      },
+      {
+        "chinese": "校车",
+        "pinyin": "xiàochē",
+        "english_meaning": "school bus",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢校车。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xiàochē.",
+        "example_sentence_english": "I like school bus.",
+        "quiz_options": [
+          "school bus",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "school bus"
+      },
+      {
+        "chinese": "老师办公室",
+        "pinyin": "lǎoshī bàngōngshì",
+        "english_meaning": "teacher's office",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢老师办公室。",
+        "example_sentence_pinyin": "Wǒ xǐhuān lǎoshī bàngōngshì.",
+        "example_sentence_english": "I like teacher's office.",
+        "quiz_options": [
+          "teacher's office",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "teacher's office"
+      },
+      {
+        "chinese": "练习本",
+        "pinyin": "liànxí běn",
+        "english_meaning": "exercise book",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢练习本。",
+        "example_sentence_pinyin": "Wǒ xǐhuān liànxí běn.",
+        "example_sentence_english": "I like exercise book.",
+        "quiz_options": [
+          "exercise book",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "exercise book"
+      },
+      {
+        "chinese": "问题",
+        "pinyin": "wèntí",
+        "english_meaning": "question",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢问题。",
+        "example_sentence_pinyin": "Wǒ xǐhuān wèntí.",
+        "example_sentence_english": "I like question.",
+        "quiz_options": [
+          "question",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "question"
+      },
+      {
+        "chinese": "答案",
+        "pinyin": "dá'àn",
+        "english_meaning": "answer",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢答案。",
+        "example_sentence_pinyin": "Wǒ xǐhuān dá'àn.",
+        "example_sentence_english": "I like answer.",
+        "quiz_options": [
+          "answer",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "answer"
+      },
+      {
+        "chinese": "口语",
+        "pinyin": "kǒuyǔ",
+        "english_meaning": "spoken language",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢口语。",
+        "example_sentence_pinyin": "Wǒ xǐhuān kǒuyǔ.",
+        "example_sentence_english": "I like spoken language.",
+        "quiz_options": [
+          "spoken language",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "spoken language"
+      }
+    ]
+  },
+  {
+    "lesson_title": "Vegetables HSK3 Flashcards",
+    "theme": "Vegetables",
+    "hsk_level": 3,
+    "cards": [
+      {
+        "chinese": "西红柿",
+        "pinyin": "xīhóngshì",
+        "english_meaning": "tomato",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢西红柿。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xīhóngshì.",
+        "example_sentence_english": "I like tomato.",
+        "quiz_options": [
+          "tomato",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "tomato"
+      },
+      {
+        "chinese": "黄瓜",
+        "pinyin": "huángguā",
+        "english_meaning": "cucumber",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢黄瓜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān huángguā.",
+        "example_sentence_english": "I like cucumber.",
+        "quiz_options": [
+          "cucumber",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "cucumber"
+      },
+      {
+        "chinese": "胡萝卜",
+        "pinyin": "húluóbo",
+        "english_meaning": "carrot",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢胡萝卜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān húluóbo.",
+        "example_sentence_english": "I like carrot.",
+        "quiz_options": [
+          "carrot",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "carrot"
+      },
+      {
+        "chinese": "土豆",
+        "pinyin": "tǔdòu",
+        "english_meaning": "potato",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢土豆。",
+        "example_sentence_pinyin": "Wǒ xǐhuān tǔdòu.",
+        "example_sentence_english": "I like potato.",
+        "quiz_options": [
+          "potato",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "potato"
+      },
+      {
+        "chinese": "菠菜",
+        "pinyin": "bōcài",
+        "english_meaning": "spinach",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢菠菜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān bōcài.",
+        "example_sentence_english": "I like spinach.",
+        "quiz_options": [
+          "spinach",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "spinach"
+      },
+      {
+        "chinese": "洋葱",
+        "pinyin": "yángcōng",
+        "english_meaning": "onion",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢洋葱。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yángcōng.",
+        "example_sentence_english": "I like onion.",
+        "quiz_options": [
+          "onion",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "onion"
+      },
+      {
+        "chinese": "白菜",
+        "pinyin": "báicài",
+        "english_meaning": "Chinese cabbage",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢白菜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān báicài.",
+        "example_sentence_english": "I like Chinese cabbage.",
+        "quiz_options": [
+          "Chinese cabbage",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "Chinese cabbage"
+      },
+      {
+        "chinese": "茄子",
+        "pinyin": "qiézi",
+        "english_meaning": "eggplant",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢茄子。",
+        "example_sentence_pinyin": "Wǒ xǐhuān qiézi.",
+        "example_sentence_english": "I like eggplant.",
+        "quiz_options": [
+          "eggplant",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "eggplant"
+      },
+      {
+        "chinese": "豆角",
+        "pinyin": "dòujiǎo",
+        "english_meaning": "green bean",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢豆角。",
+        "example_sentence_pinyin": "Wǒ xǐhuān dòujiǎo.",
+        "example_sentence_english": "I like green bean.",
+        "quiz_options": [
+          "green bean",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "green bean"
+      },
+      {
+        "chinese": "蘑菇",
+        "pinyin": "mógū",
+        "english_meaning": "mushroom",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢蘑菇。",
+        "example_sentence_pinyin": "Wǒ xǐhuān mógū.",
+        "example_sentence_english": "I like mushroom.",
+        "quiz_options": [
+          "mushroom",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "mushroom"
+      },
+      {
+        "chinese": "玉米",
+        "pinyin": "yùmǐ",
+        "english_meaning": "corn",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢玉米。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yùmǐ.",
+        "example_sentence_english": "I like corn.",
+        "quiz_options": [
+          "corn",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "corn"
+      },
+      {
+        "chinese": "南瓜",
+        "pinyin": "nánguā",
+        "english_meaning": "pumpkin",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢南瓜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān nánguā.",
+        "example_sentence_english": "I like pumpkin.",
+        "quiz_options": [
+          "pumpkin",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "pumpkin"
+      },
+      {
+        "chinese": "生菜",
+        "pinyin": "shēngcài",
+        "english_meaning": "lettuce",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢生菜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shēngcài.",
+        "example_sentence_english": "I like lettuce.",
+        "quiz_options": [
+          "lettuce",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "lettuce"
+      },
+      {
+        "chinese": "大蒜",
+        "pinyin": "dàsuàn",
+        "english_meaning": "garlic",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢大蒜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān dàsuàn.",
+        "example_sentence_english": "I like garlic.",
+        "quiz_options": [
+          "garlic",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "garlic"
+      },
+      {
+        "chinese": "生姜",
+        "pinyin": "shēngjiāng",
+        "english_meaning": "ginger",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢生姜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shēngjiāng.",
+        "example_sentence_english": "I like ginger.",
+        "quiz_options": [
+          "ginger",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "ginger"
+      },
+      {
+        "chinese": "芹菜",
+        "pinyin": "qíncài",
+        "english_meaning": "celery",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢芹菜。",
+        "example_sentence_pinyin": "Wǒ xǐhuān qíncài.",
+        "example_sentence_english": "I like celery.",
+        "quiz_options": [
+          "celery",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "celery"
+      },
+      {
+        "chinese": "西兰花",
+        "pinyin": "xīlánhuā",
+        "english_meaning": "broccoli",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢西兰花。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xīlánhuā.",
+        "example_sentence_english": "I like broccoli.",
+        "quiz_options": [
+          "broccoli",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "broccoli"
+      },
+      {
+        "chinese": "茼蒿",
+        "pinyin": "tónghāo",
+        "english_meaning": "crown daisy",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢茼蒿。",
+        "example_sentence_pinyin": "Wǒ xǐhuān tónghāo.",
+        "example_sentence_english": "I like crown daisy.",
+        "quiz_options": [
+          "crown daisy",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "crown daisy"
+      },
+      {
+        "chinese": "藕",
+        "pinyin": "ǒu",
+        "english_meaning": "lotus root",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢藕。",
+        "example_sentence_pinyin": "Wǒ xǐhuān ǒu.",
+        "example_sentence_english": "I like lotus root.",
+        "quiz_options": [
+          "lotus root",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "lotus root"
+      },
+      {
+        "chinese": "菌菇",
+        "pinyin": "jūngū",
+        "english_meaning": "mushroom variety",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢菌菇。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jūngū.",
+        "example_sentence_english": "I like mushroom variety.",
+        "quiz_options": [
+          "mushroom variety",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "mushroom variety"
+      }
+    ]
+  },
+  {
+    "lesson_title": "Travel HSK4 Flashcards",
+    "theme": "Travel",
+    "hsk_level": 4,
+    "cards": [
+      {
+        "chinese": "机场",
+        "pinyin": "jīchǎng",
+        "english_meaning": "airport",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢机场。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jīchǎng.",
+        "example_sentence_english": "I like airport.",
+        "quiz_options": [
+          "airport",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "airport"
+      },
+      {
+        "chinese": "护照",
+        "pinyin": "hùzhào",
+        "english_meaning": "passport",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢护照。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hùzhào.",
+        "example_sentence_english": "I like passport.",
+        "quiz_options": [
+          "passport",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "passport"
+      },
+      {
+        "chinese": "行李",
+        "pinyin": "xínglǐ",
+        "english_meaning": "luggage",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢行李。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xínglǐ.",
+        "example_sentence_english": "I like luggage.",
+        "quiz_options": [
+          "luggage",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "luggage"
+      },
+      {
+        "chinese": "预订",
+        "pinyin": "yùdìng",
+        "english_meaning": "to book",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天预订。",
+        "example_sentence_pinyin": "Wǒ měitiān yùdìng.",
+        "example_sentence_english": "I to book every day.",
+        "quiz_options": [
+          "to book",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to book"
+      },
+      {
+        "chinese": "导游",
+        "pinyin": "dǎoyóu",
+        "english_meaning": "tour guide",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢导游。",
+        "example_sentence_pinyin": "Wǒ xǐhuān dǎoyóu.",
+        "example_sentence_english": "I like tour guide.",
+        "quiz_options": [
+          "tour guide",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "tour guide"
+      },
+      {
+        "chinese": "签证",
+        "pinyin": "qiānzhèng",
+        "english_meaning": "visa",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢签证。",
+        "example_sentence_pinyin": "Wǒ xǐhuān qiānzhèng.",
+        "example_sentence_english": "I like visa.",
+        "quiz_options": [
+          "visa",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "visa"
+      },
+      {
+        "chinese": "行程",
+        "pinyin": "xíngchéng",
+        "english_meaning": "itinerary",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢行程。",
+        "example_sentence_pinyin": "Wǒ xǐhuān xíngchéng.",
+        "example_sentence_english": "I like itinerary.",
+        "quiz_options": [
+          "itinerary",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "itinerary"
+      },
+      {
+        "chinese": "景点",
+        "pinyin": "jǐngdiǎn",
+        "english_meaning": "scenic spot",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢景点。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jǐngdiǎn.",
+        "example_sentence_english": "I like scenic spot.",
+        "quiz_options": [
+          "scenic spot",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "scenic spot"
+      },
+      {
+        "chinese": "地图",
+        "pinyin": "dìtú",
+        "english_meaning": "map",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢地图。",
+        "example_sentence_pinyin": "Wǒ xǐhuān dìtú.",
+        "example_sentence_english": "I like map.",
+        "quiz_options": [
+          "map",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "map"
+      },
+      {
+        "chinese": "旅馆",
+        "pinyin": "lǚguǎn",
+        "english_meaning": "hotel",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢旅馆。",
+        "example_sentence_pinyin": "Wǒ xǐhuān lǚguǎn.",
+        "example_sentence_english": "I like hotel.",
+        "quiz_options": [
+          "hotel",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "hotel"
+      },
+      {
+        "chinese": "海关",
+        "pinyin": "hǎiguān",
+        "english_meaning": "customs",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢海关。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hǎiguān.",
+        "example_sentence_english": "I like customs.",
+        "quiz_options": [
+          "customs",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "customs"
+      },
+      {
+        "chinese": "座位",
+        "pinyin": "zuòwèi",
+        "english_meaning": "seat",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢座位。",
+        "example_sentence_pinyin": "Wǒ xǐhuān zuòwèi.",
+        "example_sentence_english": "I like seat.",
+        "quiz_options": [
+          "seat",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "seat"
+      },
+      {
+        "chinese": "登机牌",
+        "pinyin": "dēngjīpái",
+        "english_meaning": "boarding pass",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢登机牌。",
+        "example_sentence_pinyin": "Wǒ xǐhuān dēngjīpái.",
+        "example_sentence_english": "I like boarding pass.",
+        "quiz_options": [
+          "boarding pass",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "boarding pass"
+      },
+      {
+        "chinese": "航班",
+        "pinyin": "hángbān",
+        "english_meaning": "flight",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢航班。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hángbān.",
+        "example_sentence_english": "I like flight.",
+        "quiz_options": [
+          "flight",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "flight"
+      },
+      {
+        "chinese": "酒店",
+        "pinyin": "jiǔdiàn",
+        "english_meaning": "hotel",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢酒店。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jiǔdiàn.",
+        "example_sentence_english": "I like hotel.",
+        "quiz_options": [
+          "hotel",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "hotel"
+      },
+      {
+        "chinese": "交通",
+        "pinyin": "jiāotōng",
+        "english_meaning": "transportation",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢交通。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jiāotōng.",
+        "example_sentence_english": "I like transportation.",
+        "quiz_options": [
+          "transportation",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "transportation"
+      },
+      {
+        "chinese": "出发",
+        "pinyin": "chūfā",
+        "english_meaning": "to depart",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天出发。",
+        "example_sentence_pinyin": "Wǒ měitiān chūfā.",
+        "example_sentence_english": "I to depart every day.",
+        "quiz_options": [
+          "to depart",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to depart"
+      },
+      {
+        "chinese": "抵达",
+        "pinyin": "dǐdá",
+        "english_meaning": "to arrive",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天抵达。",
+        "example_sentence_pinyin": "Wǒ měitiān dǐdá.",
+        "example_sentence_english": "I to arrive every day.",
+        "quiz_options": [
+          "to arrive",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to arrive"
+      },
+      {
+        "chinese": "海滩",
+        "pinyin": "hǎitān",
+        "english_meaning": "beach",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢海滩。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hǎitān.",
+        "example_sentence_english": "I like beach.",
+        "quiz_options": [
+          "beach",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "beach"
+      },
+      {
+        "chinese": "行驶",
+        "pinyin": "xíngshǐ",
+        "english_meaning": "to travel; to drive",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天行驶。",
+        "example_sentence_pinyin": "Wǒ měitiān xíngshǐ.",
+        "example_sentence_english": "I to travel; to drive every day.",
+        "quiz_options": [
+          "to travel; to drive",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to travel; to drive"
+      }
+    ]
+  },
+  {
+    "lesson_title": "Health HSK5 Flashcards",
+    "theme": "Health",
+    "hsk_level": 5,
+    "cards": [
+      {
+        "chinese": "体检",
+        "pinyin": "tǐjiǎn",
+        "english_meaning": "medical checkup",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢体检。",
+        "example_sentence_pinyin": "Wǒ xǐhuān tǐjiǎn.",
+        "example_sentence_english": "I like medical checkup.",
+        "quiz_options": [
+          "medical checkup",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "medical checkup"
+      },
+      {
+        "chinese": "药房",
+        "pinyin": "yàofáng",
+        "english_meaning": "pharmacy",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢药房。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yàofáng.",
+        "example_sentence_english": "I like pharmacy.",
+        "quiz_options": [
+          "pharmacy",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "pharmacy"
+      },
+      {
+        "chinese": "症状",
+        "pinyin": "zhèngzhuàng",
+        "english_meaning": "symptom",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢症状。",
+        "example_sentence_pinyin": "Wǒ xǐhuān zhèngzhuàng.",
+        "example_sentence_english": "I like symptom.",
+        "quiz_options": [
+          "symptom",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "symptom"
+      },
+      {
+        "chinese": "康复",
+        "pinyin": "kāngfù",
+        "english_meaning": "to recover",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天康复。",
+        "example_sentence_pinyin": "Wǒ měitiān kāngfù.",
+        "example_sentence_english": "I to recover every day.",
+        "quiz_options": [
+          "to recover",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to recover"
+      },
+      {
+        "chinese": "疫苗",
+        "pinyin": "yìmiáo",
+        "english_meaning": "vaccine",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢疫苗。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yìmiáo.",
+        "example_sentence_english": "I like vaccine.",
+        "quiz_options": [
+          "vaccine",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "vaccine"
+      },
+      {
+        "chinese": "手术",
+        "pinyin": "shǒushù",
+        "english_meaning": "surgery",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢手术。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shǒushù.",
+        "example_sentence_english": "I like surgery.",
+        "quiz_options": [
+          "surgery",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "surgery"
+      },
+      {
+        "chinese": "营养",
+        "pinyin": "yíngyǎng",
+        "english_meaning": "nutrition",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢营养。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yíngyǎng.",
+        "example_sentence_english": "I like nutrition.",
+        "quiz_options": [
+          "nutrition",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "nutrition"
+      },
+      {
+        "chinese": "复诊",
+        "pinyin": "fùzhěn",
+        "english_meaning": "follow-up appointment",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢复诊。",
+        "example_sentence_pinyin": "Wǒ xǐhuān fùzhěn.",
+        "example_sentence_english": "I like follow-up appointment.",
+        "quiz_options": [
+          "follow-up appointment",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "follow-up appointment"
+      },
+      {
+        "chinese": "急诊",
+        "pinyin": "jízhěn",
+        "english_meaning": "emergency room",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢急诊。",
+        "example_sentence_pinyin": "Wǒ xǐhuān jízhěn.",
+        "example_sentence_english": "I like emergency room.",
+        "quiz_options": [
+          "emergency room",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "emergency room"
+      },
+      {
+        "chinese": "身体",
+        "pinyin": "shēntǐ",
+        "english_meaning": "body; health",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢身体。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shēntǐ.",
+        "example_sentence_english": "I like body; health.",
+        "quiz_options": [
+          "body; health",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "body; health"
+      },
+      {
+        "chinese": "疼痛",
+        "pinyin": "téngtòng",
+        "english_meaning": "pain",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢疼痛。",
+        "example_sentence_pinyin": "Wǒ xǐhuān téngtòng.",
+        "example_sentence_english": "I like pain.",
+        "quiz_options": [
+          "pain",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "pain"
+      },
+      {
+        "chinese": "过敏",
+        "pinyin": "guòmǐn",
+        "english_meaning": "allergic",
+        "part_of_speech": "adjective",
+        "example_sentence_chinese": "我喜欢过敏。",
+        "example_sentence_pinyin": "Wǒ xǐhuān guòmǐn.",
+        "example_sentence_english": "I like allergic.",
+        "quiz_options": [
+          "allergic",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "allergic"
+      },
+      {
+        "chinese": "检查",
+        "pinyin": "jiǎnchá",
+        "english_meaning": "to examine",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天检查。",
+        "example_sentence_pinyin": "Wǒ měitiān jiǎnchá.",
+        "example_sentence_english": "I to examine every day.",
+        "quiz_options": [
+          "to examine",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to examine"
+      },
+      {
+        "chinese": "处方",
+        "pinyin": "chǔfāng",
+        "english_meaning": "prescription",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢处方。",
+        "example_sentence_pinyin": "Wǒ xǐhuān chǔfāng.",
+        "example_sentence_english": "I like prescription.",
+        "quiz_options": [
+          "prescription",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "prescription"
+      },
+      {
+        "chinese": "体温",
+        "pinyin": "tǐwēn",
+        "english_meaning": "temperature",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢体温。",
+        "example_sentence_pinyin": "Wǒ xǐhuān tǐwēn.",
+        "example_sentence_english": "I like temperature.",
+        "quiz_options": [
+          "temperature",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "temperature"
+      },
+      {
+        "chinese": "药物",
+        "pinyin": "yàowù",
+        "english_meaning": "medicine",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢药物。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yàowù.",
+        "example_sentence_english": "I like medicine.",
+        "quiz_options": [
+          "medicine",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "medicine"
+      },
+      {
+        "chinese": "头痛",
+        "pinyin": "tóutòng",
+        "english_meaning": "headache",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢头痛。",
+        "example_sentence_pinyin": "Wǒ xǐhuān tóutòng.",
+        "example_sentence_english": "I like headache.",
+        "quiz_options": [
+          "headache",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "headache"
+      },
+      {
+        "chinese": "饮食",
+        "pinyin": "yǐnshí",
+        "english_meaning": "diet",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢饮食。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yǐnshí.",
+        "example_sentence_english": "I like diet.",
+        "quiz_options": [
+          "diet",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "diet"
+      },
+      {
+        "chinese": "运动",
+        "pinyin": "yùndòng",
+        "english_meaning": "exercise",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢运动。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yùndòng.",
+        "example_sentence_english": "I like exercise.",
+        "quiz_options": [
+          "exercise",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "exercise"
+      },
+      {
+        "chinese": "康复中心",
+        "pinyin": "kāngfù zhōngxīn",
+        "english_meaning": "rehabilitation center",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢康复中心。",
+        "example_sentence_pinyin": "Wǒ xǐhuān kāngfù zhōngxīn.",
+        "example_sentence_english": "I like rehabilitation center.",
+        "quiz_options": [
+          "rehabilitation center",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "rehabilitation center"
+      }
+    ]
+  },
+  {
+    "lesson_title": "Business HSK6 Flashcards",
+    "theme": "Business",
+    "hsk_level": 6,
+    "cards": [
+      {
+        "chinese": "合同",
+        "pinyin": "hétong",
+        "english_meaning": "contract",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢合同。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hétong.",
+        "example_sentence_english": "I like contract.",
+        "quiz_options": [
+          "contract",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "contract"
+      },
+      {
+        "chinese": "会议",
+        "pinyin": "huìyì",
+        "english_meaning": "meeting",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢会议。",
+        "example_sentence_pinyin": "Wǒ xǐhuān huìyì.",
+        "example_sentence_english": "I like meeting.",
+        "quiz_options": [
+          "meeting",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "meeting"
+      },
+      {
+        "chinese": "预算",
+        "pinyin": "yùsuàn",
+        "english_meaning": "budget",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢预算。",
+        "example_sentence_pinyin": "Wǒ xǐhuān yùsuàn.",
+        "example_sentence_english": "I like budget.",
+        "quiz_options": [
+          "budget",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "budget"
+      },
+      {
+        "chinese": "客户",
+        "pinyin": "kèhù",
+        "english_meaning": "client",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢客户。",
+        "example_sentence_pinyin": "Wǒ xǐhuān kèhù.",
+        "example_sentence_english": "I like client.",
+        "quiz_options": [
+          "client",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "client"
+      },
+      {
+        "chinese": "市场",
+        "pinyin": "shìchǎng",
+        "english_meaning": "market",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢市场。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shìchǎng.",
+        "example_sentence_english": "I like market.",
+        "quiz_options": [
+          "market",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "market"
+      },
+      {
+        "chinese": "谈判",
+        "pinyin": "tánpàn",
+        "english_meaning": "to negotiate",
+        "part_of_speech": "verb",
+        "example_sentence_chinese": "我每天谈判。",
+        "example_sentence_pinyin": "Wǒ měitiān tánpàn.",
+        "example_sentence_english": "I to negotiate every day.",
+        "quiz_options": [
+          "to negotiate",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "to negotiate"
+      },
+      {
+        "chinese": "股市",
+        "pinyin": "gǔshì",
+        "english_meaning": "stock market",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢股市。",
+        "example_sentence_pinyin": "Wǒ xǐhuān gǔshì.",
+        "example_sentence_english": "I like stock market.",
+        "quiz_options": [
+          "stock market",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "stock market"
+      },
+      {
+        "chinese": "投资",
+        "pinyin": "tóuzī",
+        "english_meaning": "investment",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢投资。",
+        "example_sentence_pinyin": "Wǒ xǐhuān tóuzī.",
+        "example_sentence_english": "I like investment.",
+        "quiz_options": [
+          "investment",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "investment"
+      },
+      {
+        "chinese": "利润",
+        "pinyin": "lìrùn",
+        "english_meaning": "profit",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢利润。",
+        "example_sentence_pinyin": "Wǒ xǐhuān lìrùn.",
+        "example_sentence_english": "I like profit.",
+        "quiz_options": [
+          "profit",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "profit"
+      },
+      {
+        "chinese": "合资",
+        "pinyin": "hézī",
+        "english_meaning": "joint venture",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢合资。",
+        "example_sentence_pinyin": "Wǒ xǐhuān hézī.",
+        "example_sentence_english": "I like joint venture.",
+        "quiz_options": [
+          "joint venture",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "joint venture"
+      },
+      {
+        "chinese": "股东",
+        "pinyin": "gǔdōng",
+        "english_meaning": "shareholder",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢股东。",
+        "example_sentence_pinyin": "Wǒ xǐhuān gǔdōng.",
+        "example_sentence_english": "I like shareholder.",
+        "quiz_options": [
+          "shareholder",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "shareholder"
+      },
+      {
+        "chinese": "市场份额",
+        "pinyin": "shìchǎng fèn'é",
+        "english_meaning": "market share",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢市场份额。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shìchǎng fèn'é.",
+        "example_sentence_english": "I like market share.",
+        "quiz_options": [
+          "market share",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "market share"
+      },
+      {
+        "chinese": "战略",
+        "pinyin": "zhànlüè",
+        "english_meaning": "strategy",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢战略。",
+        "example_sentence_pinyin": "Wǒ xǐhuān zhànlüè.",
+        "example_sentence_english": "I like strategy.",
+        "quiz_options": [
+          "strategy",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "strategy"
+      },
+      {
+        "chinese": "风险",
+        "pinyin": "fēngxiǎn",
+        "english_meaning": "risk",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢风险。",
+        "example_sentence_pinyin": "Wǒ xǐhuān fēngxiǎn.",
+        "example_sentence_english": "I like risk.",
+        "quiz_options": [
+          "risk",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "risk"
+      },
+      {
+        "chinese": "财务报表",
+        "pinyin": "cáiwù bàobiǎo",
+        "english_meaning": "financial statement",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢财务报表。",
+        "example_sentence_pinyin": "Wǒ xǐhuān cáiwù bàobiǎo.",
+        "example_sentence_english": "I like financial statement.",
+        "quiz_options": [
+          "financial statement",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "financial statement"
+      },
+      {
+        "chinese": "并购",
+        "pinyin": "bìnggòu",
+        "english_meaning": "merger and acquisition",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢并购。",
+        "example_sentence_pinyin": "Wǒ xǐhuān bìnggòu.",
+        "example_sentence_english": "I like merger and acquisition.",
+        "quiz_options": [
+          "merger and acquisition",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "merger and acquisition"
+      },
+      {
+        "chinese": "收入",
+        "pinyin": "shōurù",
+        "english_meaning": "income",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢收入。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shōurù.",
+        "example_sentence_english": "I like income.",
+        "quiz_options": [
+          "income",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "income"
+      },
+      {
+        "chinese": "支出",
+        "pinyin": "zhīchū",
+        "english_meaning": "expense",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢支出。",
+        "example_sentence_pinyin": "Wǒ xǐhuān zhīchū.",
+        "example_sentence_english": "I like expense.",
+        "quiz_options": [
+          "expense",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "expense"
+      },
+      {
+        "chinese": "融资",
+        "pinyin": "róngzī",
+        "english_meaning": "financing",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢融资。",
+        "example_sentence_pinyin": "Wǒ xǐhuān róngzī.",
+        "example_sentence_english": "I like financing.",
+        "quiz_options": [
+          "financing",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "financing"
+      },
+      {
+        "chinese": "商业计划",
+        "pinyin": "shāngyè jìhuà",
+        "english_meaning": "business plan",
+        "part_of_speech": "noun",
+        "example_sentence_chinese": "我喜欢商业计划。",
+        "example_sentence_pinyin": "Wǒ xǐhuān shāngyè jìhuà.",
+        "example_sentence_english": "I like business plan.",
+        "quiz_options": [
+          "business plan",
+          "something else",
+          "another option",
+          "not this one"
+        ],
+        "correct_answer": "business plan"
+      }
+    ]
+  }
+];
