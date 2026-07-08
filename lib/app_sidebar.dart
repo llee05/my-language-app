@@ -22,20 +22,23 @@ class AppSidebar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.local_fire_department_rounded,
                     color: AppColors.red,
                     size: 22,
                   ),
-                  SizedBox(width: 9),
-                  Text(
-                    '汉字路',
-                    style: TextStyle(
-                      fontFamily: 'serif',
-                      fontSize: 18,
-                      color: AppColors.text,
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      '汉字路',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'serif',
+                        fontSize: 18,
+                        color: AppColors.text,
+                      ),
                     ),
                   ),
                 ],
@@ -74,16 +77,19 @@ class AppSidebar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: [
+                      children: const [
                         Icon(
                           Icons.local_fire_department_rounded,
                           size: 16,
                           color: AppColors.red,
                         ),
                         SizedBox(width: 5),
-                        Text(
-                          '7-day streak',
-                          style: TextStyle(fontSize: 12, color: AppColors.text),
+                        Expanded(
+                          child: Text(
+                            '7-day streak',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: AppColors.text),
+                          ),
                         ),
                       ],
                     ),
