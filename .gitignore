@@ -33,6 +33,13 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+local_app.db
+
 # Symbolication related
 app.*.symbols
 
