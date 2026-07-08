@@ -5,6 +5,9 @@ class MainDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lessons = flashcardLessons;
+    final continueLesson = lessons.first;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 28, 32, 40),
       child: Column(
@@ -12,16 +15,25 @@ class MainDashboard extends StatelessWidget {
         children: [
           const SectionLabel('CONTINUE LEARNING'),
           const SizedBox(height: 12),
-          const ContinueCard(),
+          ContinueCard(
+            lessonTitle: continueLesson['lesson_title'] as String,
+            theme: continueLesson['theme'] as String,
+            level: continueLesson['hsk_level'] as int,
+            duration: '20 cards',
+            xpReward: 60,
+            progress: 0.35,
+          ),
           const SizedBox(height: 26),
+          const SectionLabel('ALL LESSONS'),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SectionLabel('ALL LESSONS'),
+              const SizedBox.shrink(),
               TextButton.icon(
                 onPressed: () {},
                 label: const Text(
-                  'Unit 1–3',
+                  'HSK Levels',
                   style: TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
                 iconAlignment: IconAlignment.end,
@@ -34,46 +46,19 @@ class MainDashboard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          const LessonTile(
-            title: 'Greetings & Politeness',
-            chinese: '问候与礼貌',
-            unit: 'Unit 1',
-            duration: '10 min',
-            xp: '+40 XP',
-            state: LessonState.done,
-          ),
-          const LessonTile(
-            title: 'Numbers & Dates',
-            chinese: '数字与日期',
-            unit: 'Unit 1',
-            duration: '14 min',
-            xp: '+50 XP',
-            state: LessonState.done,
-          ),
-          const LessonTile(
-            title: 'Family & Relationships',
-            chinese: '家庭与关系',
-            unit: 'Unit 2',
-            duration: '18 min',
-            xp: '+60 XP',
-            state: LessonState.active,
-          ),
-          const LessonTile(
-            title: 'Food & Restaurants',
-            chinese: '饮食与餐厅',
-            unit: 'Unit 2',
-            duration: '20 min',
-            xp: '+70 XP',
-            state: LessonState.locked,
-          ),
-          const LessonTile(
-            title: 'Travel & Directions',
-            chinese: '旅行与方向',
-            unit: 'Unit 3',
-            duration: '22 min',
-            xp: '+80 XP',
-            state: LessonState.locked,
-          ),
+          for (var i = 0; i < lessons.length; i++)
+            LessonTile(
+              title: lessons[i]['lesson_title'] as String,
+              chinese: lessons[i]['theme'] as String,
+              unit: 'HSK ${lessons[i]['hsk_level']}',
+              duration: '20 cards',
+              xp: '+${50 + i * 10} XP',
+              state: i == 0
+                  ? LessonState.active
+                  : i <= 2
+                      ? LessonState.done
+                      : LessonState.locked,
+            ),
         ],
       ),
     );
@@ -81,7 +66,22 @@ class MainDashboard extends StatelessWidget {
 }
 
 class ContinueCard extends StatelessWidget {
-  const ContinueCard({super.key});
+  const ContinueCard({
+    super.key,
+    required this.lessonTitle,
+    required this.theme,
+    required this.level,
+    required this.duration,
+    required this.xpReward,
+    this.progress = .35,
+  });
+
+  final String lessonTitle;
+  final String theme;
+  final int level;
+  final String duration;
+  final int xpReward;
+  final double progress;
 
   @override
   Widget build(BuildContext context) {
@@ -109,22 +109,22 @@ class ContinueCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: const Icon(
-                  Icons.family_restroom_rounded,
+                  Icons.book_rounded,
                   size: 31,
                   color: AppColors.text,
                 ),
               ),
               const SizedBox(width: 18),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        _Pill(label: 'Unit 2'),
-                        SizedBox(width: 8),
-                        Text(
-                          'Lesson 3',
+                        _Pill(label: 'HSK $level'),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Lesson 1',
                           style: TextStyle(
                             fontSize: 11,
                             color: AppColors.muted,
@@ -132,15 +132,15 @@ class ContinueCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 7),
+                    const SizedBox(height: 7),
                     Text(
-                      'Family & Relationships',
-                      style: TextStyle(fontSize: 17, color: AppColors.text),
+                      lessonTitle,
+                      style: const TextStyle(fontSize: 17, color: AppColors.text),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      '家庭与关系 · 18 min · 60 XP reward',
-                      style: TextStyle(fontSize: 11, color: AppColors.muted),
+                      '$theme · $duration · $xpReward XP reward',
+                      style: const TextStyle(fontSize: 11, color: AppColors.muted),
                     ),
                   ],
                 ),
@@ -149,7 +149,7 @@ class ContinueCard extends StatelessWidget {
           );
           final button = FilledButton.icon(
             onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Resuming Family & Relationships…')),
+              SnackBar(content: Text('Resuming $lessonTitle…')),
             ),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.red,
@@ -184,18 +184,18 @@ class ContinueCard extends StatelessWidget {
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(3),
-                      child: const LinearProgressIndicator(
-                        value: .35,
+                      child: LinearProgressIndicator(
+                        value: progress,
                         minHeight: 5,
                         color: AppColors.red,
-                        backgroundColor: Color(0xFF49302D),
+                        backgroundColor: const Color(0xFF49302D),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    '35%',
-                    style: TextStyle(fontSize: 10, color: AppColors.muted),
+                  Text(
+                    '${(progress * 100).round()}%',
+                    style: const TextStyle(fontSize: 10, color: AppColors.muted),
                   ),
                 ],
               ),
