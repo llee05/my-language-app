@@ -40,6 +40,10 @@ migrate_working_dir/
 *.db-journal
 local_app.db
 
+# Environment files
+.env
+.env.*
+
 # Symbolication related
 app.*.symbols
 
