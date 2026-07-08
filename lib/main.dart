@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'local_database.dart';
+
 part 'app_colors.dart';
 part 'app_sidebar.dart';
 part 'dashboard_page.dart';
@@ -7,7 +9,11 @@ part 'learning_panel.dart';
 part 'progress_rail.dart';
 part 'shared_widgets.dart';
 
-void main() => runApp(const HanziPathApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await LocalDatabase.ensureInitialized();
+  runApp(const HanziPathApp());
+}
 
 class HanziPathApp extends StatelessWidget {
   const HanziPathApp({super.key});
