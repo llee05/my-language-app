@@ -30,12 +30,15 @@ class AppSidebar extends StatelessWidget {
                     size: 22,
                   ),
                   SizedBox(width: 9),
-                  Text(
-                    '汉字路',
-                    style: TextStyle(
-                      fontFamily: 'serif',
-                      fontSize: 18,
-                      color: AppColors.text,
+                  Flexible(
+                    child: Text(
+                      '汉字路',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'serif',
+                        fontSize: 18,
+                        color: AppColors.text,
+                      ),
                     ),
                   ),
                 ],
@@ -75,15 +78,18 @@ class AppSidebar extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.local_fire_department_rounded,
                           size: 16,
                           color: AppColors.red,
                         ),
-                        SizedBox(width: 5),
-                        Text(
-                          '7-day streak',
-                          style: TextStyle(fontSize: 12, color: AppColors.text),
+                        const SizedBox(width: 5),
+                        const Flexible(
+                          child: Text(
+                            '7-day streak',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: AppColors.text),
+                          ),
                         ),
                       ],
                     ),
@@ -136,11 +142,14 @@ class _NavItem extends StatelessWidget {
                 color: selected ? AppColors.red : AppColors.muted,
               ),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: selected ? AppColors.red : AppColors.muted,
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: selected ? AppColors.red : AppColors.muted,
+                  ),
                 ),
               ),
             ],
