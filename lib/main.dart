@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'local_database.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'ai/openai_service.dart';
 
 part 'app_colors.dart';
 part 'app_sidebar.dart';
@@ -11,7 +13,17 @@ part 'shared_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Load environment variables from a local .env file (if present).
+  // Create a `.env` file in the project root with `OPENAI_API_KEY=...` for local dev.
+  try {
+    await dotenv.load();
+  } catch (_) {}
+
+  // Initialize local services
   await LocalDatabase.ensureInitialized();
+
+  // Initialize OpenAI service (loads key from dotenv)
+  await OpenAIService.instance.ensureInitialized();
   runApp(const HanziPathApp());
 }
 
