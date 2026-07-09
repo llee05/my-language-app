@@ -40,7 +40,7 @@ migrate_working_dir/
 *.db-journal
 local_app.db
 
-# Environment files (API keys)
+# Environment files
 .env
 .env.*
 
