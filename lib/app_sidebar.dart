@@ -10,6 +10,7 @@ class AppSidebar extends StatelessWidget {
     (Icons.menu_book_outlined, 'Lessons'),
     (Icons.language_rounded, 'Vocabulary'),
     (Icons.bar_chart_rounded, 'Progress'),
+    (Icons.chat_bubble_outline_rounded, 'AI Tutor'),
   ];
 
   @override
@@ -88,7 +89,10 @@ class AppSidebar extends StatelessWidget {
                           child: Text(
                             '7-day streak',
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12, color: AppColors.text),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.text,
+                            ),
                           ),
                         ),
                       ],

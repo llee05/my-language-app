@@ -14,11 +14,17 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final desktop = constraints.maxWidth >= 1080;
         final showSidebar = constraints.maxWidth >= 760;
 
         return Scaffold(
-          drawer: showSidebar ? null : const Drawer(child: AppSidebar()),
+          drawer: showSidebar
+              ? null
+              : Drawer(
+                  child: AppSidebar(
+                    selectedIndex: selectedNav,
+                    onSelected: (value) => setState(() => selectedNav = value),
+                  ),
+                ),
           body: Row(
             children: [
               if (showSidebar)
@@ -33,34 +39,46 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   children: [
                     DashboardHeader(showMenu: !showSidebar),
-                    Expanded(
-                      child: desktop
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    child: MainDashboard(),
-                                  ),
-                                ),
-                                const SizedBox(width: 300, child: RightRail()),
-                              ],
-                            )
-                          : const SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  MainDashboard(),
-                                  RightRail(compact: true),
-                                ],
-                              ),
-                            ),
-                    ),
+                    Expanded(child: _DashboardBody(selectedNav: selectedNav)),
                   ],
                 ),
               ),
             ],
           ),
         );
+      },
+    );
+  }
+}
+
+class _DashboardBody extends StatelessWidget {
+  const _DashboardBody({required this.selectedNav});
+  final int selectedNav;
+
+  @override
+  Widget build(BuildContext context) {
+    if (selectedNav == 4) {
+      return const AiTutorPage();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 870;
+        return desktop
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(child: MainDashboard()),
+                  ),
+                  const SizedBox(width: 300, child: RightRail()),
+                ],
+              )
+            : const SingleChildScrollView(
+                child: Column(
+                  children: [MainDashboard(), RightRail(compact: true)],
+                ),
+              );
       },
     );
   }

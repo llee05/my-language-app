@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite_common/sqlite_api.dart';
-import 'package:sqflite_common/utils/utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'database/flashcard_seed.dart';
@@ -89,10 +87,9 @@ class LocalDatabase {
   }
 
   static Future<void> _maybeSeedDefaultLessons(Database db) async {
-    final count = firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM $_lessonTable'),
-    );
-    if ((count ?? 0) == 0) {
+    final countRows = await db.rawQuery('SELECT COUNT(*) FROM $_lessonTable');
+    final count = countRows.first.values.first as int? ?? 0;
+    if (count == 0) {
       await _seedDefaultLessons(db);
     }
   }

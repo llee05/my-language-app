@@ -7,6 +7,7 @@ import 'ai/openai_service.dart';
 
 part 'app_colors.dart';
 part 'app_sidebar.dart';
+part 'ai_tutor_page.dart';
 part 'dashboard_page.dart';
 part 'learning_panel.dart';
 part 'progress_rail.dart';
