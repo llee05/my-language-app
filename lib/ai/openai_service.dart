@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -17,9 +19,48 @@ class OpenAIService {
 
   /// Ensure API key is loaded from environment if present.
   Future<void> ensureInitialized() async {
-    if (dotenv.isInitialized) {
-      _apiKey ??= dotenv.env['OPENAI_API_KEY'];
+    if (_apiKey != null && _apiKey!.trim().isNotEmpty) {
+      return;
     }
+
+    if (dotenv.isInitialized) {
+      _apiKey = _normalizeKey(dotenv.env['OPENAI_API_KEY']);
+    }
+
+    _apiKey ??= _normalizeKey(Platform.environment['OPENAI_API_KEY']);
+    _apiKey ??= await _readLocalEnvKey();
+  }
+
+  Future<String?> _readLocalEnvKey() async {
+    final candidates = [File('.env'), File('${Directory.current.path}/.env')];
+
+    for (final file in candidates) {
+      if (!await file.exists()) {
+        continue;
+      }
+      final lines = await file.readAsLines();
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty ||
+            trimmed.startsWith('#') ||
+            !trimmed.startsWith('OPENAI_API_KEY=')) {
+          continue;
+        }
+        return _normalizeKey(trimmed.substring('OPENAI_API_KEY='.length));
+      }
+    }
+    return null;
+  }
+
+  String? _normalizeKey(String? value) {
+    var normalized = value?.trim();
+    if (normalized != null &&
+        normalized.length >= 2 &&
+        ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+            (normalized.startsWith("'") && normalized.endsWith("'")))) {
+      normalized = normalized.substring(1, normalized.length - 1);
+    }
+    return normalized == null || normalized.isEmpty ? null : normalized;
   }
 
   /// Set the API key programmatically (useful for tests or secure storage flows)
