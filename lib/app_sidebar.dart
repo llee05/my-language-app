@@ -29,12 +29,12 @@ class AppSidebar extends StatelessWidget {
                     color: AppColors.red,
                     size: 22,
                   ),
-                  const SizedBox(width: 9),
-                  Expanded(
+                  SizedBox(width: 9),
+                  Flexible(
                     child: Text(
                       '汉字路',
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'serif',
                         fontSize: 18,
                         color: AppColors.text,
@@ -77,14 +77,14 @@ class AppSidebar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: const [
+                      children: [
                         Icon(
                           Icons.local_fire_department_rounded,
                           size: 16,
                           color: AppColors.red,
                         ),
                         SizedBox(width: 5),
-                        Expanded(
+                        Flexible(
                           child: Text(
                             '7-day streak',
                             overflow: TextOverflow.ellipsis,
@@ -142,11 +142,14 @@ class _NavItem extends StatelessWidget {
                 color: selected ? AppColors.red : AppColors.muted,
               ),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: selected ? AppColors.red : AppColors.muted,
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: selected ? AppColors.red : AppColors.muted,
+                  ),
                 ),
               ),
             ],

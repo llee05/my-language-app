@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'local_database.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'database/flashcard_seed.dart';
 import 'ai/openai_service.dart';
 
 part 'app_colors.dart';

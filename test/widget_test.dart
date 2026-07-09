@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
 
 void main() {
   testWidgets('dashboard renders core learning content', (tester) async {
     await tester.pumpWidget(const HanziPathApp());
 
+    final firstLesson = flashcardLessons.first;
+
     expect(find.text('早上好，学员'), findsOneWidget);
-    expect(find.text('Family & Relationships'), findsNWidgets(2));
+    expect(find.text(firstLesson['lesson_title'] as String), findsWidgets);
     expect(find.text('WEEKLY XP'), findsOneWidget);
   });
 
   testWidgets('continue card shows snack bar when resume is tapped', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: ContinueCard()),
+        home: Scaffold(
+          body: ContinueCard(
+            lessonTitle: 'Family & Relationships',
+            theme: 'Family & Relationships',
+            level: 1,
+            duration: '20 cards',
+            xpReward: 60,
+          ),
+        ),
       ),
     );
 

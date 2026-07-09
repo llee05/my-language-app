@@ -42,6 +42,7 @@ local_app.db
 
 # Environment files (API keys)
 .env
+.env.*
 
 # Symbolication related
 app.*.symbols
