@@ -24,26 +24,8 @@ class MainDashboard extends StatelessWidget {
             progress: 0.35,
           ),
           const SizedBox(height: 26),
-          const SectionLabel('ALL LESSONS'),
+          const SectionLabel('SUGGESTED LESSONS'),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () {},
-                label: const Text(
-                  'HSK Levels',
-                  style: TextStyle(fontSize: 11, color: AppColors.muted),
-                ),
-                iconAlignment: IconAlignment.end,
-                icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 15,
-                  color: AppColors.muted,
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 4),
           for (var i = 0; i < lessons.length; i++)
             LessonTile(
