@@ -44,27 +44,12 @@ Use an empty string for any field that is not needed.
 
   static const _initialMessages = [
     _ChatMessage.assistant(
-      chinese: '今天我们学习家庭词汇。你家里有几个人？',
-      pinyin: 'Jintian women xuexi jiating cihui. Ni jiali you ji ge ren?',
+      chinese: '你好！我是龙老师。你想练习什么中文？',
+      pinyin: 'Ni hao! Wo shi Long Laoshi. Ni xiang lianxi shenme Zhongwen?',
       english:
-          'Today we are learning family vocabulary. How many people are in your family?',
-      tip: 'Use 几个 (ji ge) to ask "how many" for small numbers.',
-    ),
-    _ChatMessage.user('我家里有四个人。爸爸，妈妈，我，和妹妹。'),
-    _ChatMessage.assistant(
-      chinese: '很好！你的句子非常正确。',
-      pinyin: 'Hen hao! Ni de juzi feichang zhengque.',
-      english: 'Very good! Your sentence is completely correct.',
-      tip: '和 (he) means "and" - used to connect nouns in a list.',
-    ),
-    _ChatMessage.user('谢谢！怎么说 "older brother"?'),
-    _ChatMessage.assistant(
-      chinese:
-          '哥哥 (gege) means older brother. 弟弟 (didi) is younger brother. Chinese has different words depending on birth order.',
-      pinyin: '哥哥 / 弟弟',
-      english: 'Older brother / Younger brother',
+          'Hello! I am Long Laoshi. Ask me a question, practice a sentence, or choose a prompt below to start.',
       tip:
-          'Similarly: 姐姐 (jiejie) = older sister, 妹妹 (meimei) = younger sister.',
+          'You can write in English, pinyin, or Chinese. I will help with corrections and examples.',
       wide: true,
     ),
   ];
