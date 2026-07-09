@@ -57,9 +57,39 @@ class OpenAIService {
     );
 
     if (resp.statusCode >= 400) {
-      throw http.ClientException('OpenAI API error', url);
+      throw http.ClientException(
+        'OpenAI API error ${resp.statusCode}: ${resp.body}',
+        url,
+      );
     }
 
     return jsonDecode(resp.body) as Map<String, dynamic>;
+  }
+
+  /// Send a chat completion request and return the assistant message text.
+  Future<String> chatText({
+    required List<Map<String, String>> messages,
+    String model = 'gpt-4o-mini',
+    int maxTokens = 512,
+    double temperature = 0.7,
+  }) async {
+    final response = await chatCompletion(
+      messages: messages,
+      model: model,
+      maxTokens: maxTokens,
+      temperature: temperature,
+    );
+    final choices = response['choices'] as List<dynamic>? ?? const [];
+    if (choices.isEmpty) {
+      throw const FormatException('OpenAI response did not include choices');
+    }
+
+    final firstChoice = choices.first as Map<String, dynamic>;
+    final message = firstChoice['message'] as Map<String, dynamic>? ?? const {};
+    final content = message['content'] as String?;
+    if (content == null || content.trim().isEmpty) {
+      throw const FormatException('OpenAI response did not include text');
+    }
+    return content.trim();
   }
 }

@@ -20,8 +20,145 @@ class AiTutorPage extends StatelessWidget {
   }
 }
 
-class _TutorChat extends StatelessWidget {
+class _TutorChat extends StatefulWidget {
   const _TutorChat();
+
+  @override
+  State<_TutorChat> createState() => _TutorChatState();
+}
+
+class _TutorChatState extends State<_TutorChat> {
+  static const _systemPrompt = '''
+You are 龙老师 (Long Laoshi), a warm Mandarin tutor for a beginner learner.
+Keep replies short and practical. Correct mistakes gently.
+When useful, include Chinese, pinyin, and a plain English explanation.
+Return only compact JSON with this shape:
+{"chinese":"...","pinyin":"...","english":"...","tip":"..."}
+Use an empty string for any field that is not needed.
+''';
+
+  final _controller = TextEditingController();
+  final _scrollController = ScrollController();
+  var _messages = _initialMessages;
+  var _sending = false;
+
+  static const _initialMessages = [
+    _ChatMessage.assistant(
+      chinese: '今天我们学习家庭词汇。你家里有几个人？',
+      pinyin: 'Jintian women xuexi jiating cihui. Ni jiali you ji ge ren?',
+      english:
+          'Today we are learning family vocabulary. How many people are in your family?',
+      tip: 'Use 几个 (ji ge) to ask "how many" for small numbers.',
+    ),
+    _ChatMessage.user('我家里有四个人。爸爸，妈妈，我，和妹妹。'),
+    _ChatMessage.assistant(
+      chinese: '很好！你的句子非常正确。',
+      pinyin: 'Hen hao! Ni de juzi feichang zhengque.',
+      english: 'Very good! Your sentence is completely correct.',
+      tip: '和 (he) means "and" - used to connect nouns in a list.',
+    ),
+    _ChatMessage.user('谢谢！怎么说 "older brother"?'),
+    _ChatMessage.assistant(
+      chinese:
+          '哥哥 (gege) means older brother. 弟弟 (didi) is younger brother. Chinese has different words depending on birth order.',
+      pinyin: '哥哥 / 弟弟',
+      english: 'Older brother / Younger brother',
+      tip:
+          'Similarly: 姐姐 (jiejie) = older sister, 妹妹 (meimei) = younger sister.',
+      wide: true,
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send([String? prompt]) async {
+    final text = (prompt ?? _controller.text).trim();
+    if (text.isEmpty || _sending) {
+      return;
+    }
+
+    setState(() {
+      _sending = true;
+      _messages = [..._messages, _ChatMessage.user(text)];
+      _controller.clear();
+    });
+    _scrollToEnd();
+
+    try {
+      final response = await OpenAIService.instance.chatText(
+        messages: [
+          {'role': 'system', 'content': _systemPrompt},
+          for (final message in _messages) message.toOpenAiMessage(),
+        ],
+        model: 'gpt-4o-mini',
+        maxTokens: 420,
+        temperature: 0.45,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _messages = [
+          ..._messages,
+          _ChatMessage.fromAssistantResponse(response),
+        ];
+        _sending = false;
+      });
+      _scrollToEnd();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _messages = [
+          ..._messages,
+          _ChatMessage.assistant(
+            chinese: '我现在连接不上 OpenAI。',
+            pinyin: 'Wo xianzai lianjie bu shang OpenAI.',
+            english: _friendlyError(error),
+            tip: 'Check that OPENAI_API_KEY is set in your local .env file.',
+          ),
+        ];
+        _sending = false;
+      });
+      _scrollToEnd();
+    }
+  }
+
+  void _reset() {
+    setState(() {
+      _messages = _initialMessages;
+      _sending = false;
+      _controller.clear();
+    });
+    _scrollToEnd();
+  }
+
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) {
+        return;
+      }
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  String _friendlyError(Object error) {
+    final text = error.toString();
+    if (text.contains('API key is not set')) {
+      return 'Add OPENAI_API_KEY=your_key to a .env file in the project root, then restart the app.';
+    }
+    return 'Please try again in a moment. $text';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +200,7 @@ class _TutorChat extends StatelessWidget {
                 ),
               ),
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: _reset,
                 icon: const Icon(Icons.refresh_rounded, size: 14),
                 label: const Text('Reset'),
                 style: OutlinedButton.styleFrom(
@@ -104,49 +241,57 @@ class _TutorChat extends StatelessWidget {
             ],
           ),
         ),
-        const Expanded(child: _Conversation()),
-        const _TutorComposer(),
+        Expanded(
+          child: _Conversation(
+            messages: _messages,
+            sending: _sending,
+            controller: _scrollController,
+          ),
+        ),
+        _TutorComposer(
+          controller: _controller,
+          sending: _sending,
+          onSend: _send,
+          onPromptSelected: _send,
+        ),
       ],
     );
   }
 }
 
 class _Conversation extends StatelessWidget {
-  const _Conversation();
+  const _Conversation({
+    required this.messages,
+    required this.sending,
+    required this.controller,
+  });
+
+  final List<_ChatMessage> messages;
+  final bool sending;
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: controller,
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: const [
-          _TutorMessage(
-            chinese: '今天我们学习家庭词汇。你家里有几个人？',
-            pinyin:
-                'Jintian women xuexi jiating cihui. Ni jiali you ji ge ren?',
-            english:
-                'Today we are learning family vocabulary. How many people are in your family?',
-          ),
-          _TipBubble('Use 几个 (ji ge) to ask "how many" for small numbers.'),
-          _UserMessage('我家里有四个人。爸爸，妈妈，我，和妹妹。'),
-          _TutorMessage(
-            chinese: '很好！你的句子非常正确。',
-            pinyin: 'Hen hao! Ni de juzi feichang zhengque.',
-            english: 'Very good! Your sentence is completely correct.',
-          ),
-          _TipBubble('和 (he) means "and" - used to connect nouns in a list.'),
-          _UserMessage('谢谢！怎么说 "older brother"?'),
-          _TutorMessage(
-            chinese:
-                '哥哥 (gege) means older brother. 弟弟 (didi) is younger brother. Chinese has different words depending on birth order.',
-            pinyin: '哥哥 / 弟弟',
-            english: 'Older brother / Younger brother',
-            wide: true,
-          ),
-          _TipBubble(
-            'Similarly: 姐姐 (jiejie) = older sister, 妹妹 (meimei) = younger sister.',
-          ),
+        children: [
+          for (final message in messages) ...[
+            if (message.role == _ChatRole.user)
+              _UserMessage(message.chinese)
+            else ...[
+              _TutorMessage(
+                chinese: message.chinese,
+                pinyin: message.pinyin,
+                english: message.english,
+                wide: message.wide,
+              ),
+              if (message.tip.isNotEmpty) _TipBubble(message.tip),
+            ],
+          ],
+          if (sending) const _TypingMessage(),
         ],
       ),
     );
@@ -196,23 +341,27 @@ class _TutorMessage extends StatelessWidget {
                       height: 1.35,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    pinyin,
-                    style: const TextStyle(
-                      color: AppColors.red,
-                      fontSize: 11,
-                      letterSpacing: .3,
+                  if (pinyin.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      pinyin,
+                      style: const TextStyle(
+                        color: AppColors.red,
+                        fontSize: 11,
+                        letterSpacing: .3,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    english,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.muted,
+                  ],
+                  if (english.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      english,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -280,7 +429,17 @@ class _TipBubble extends StatelessWidget {
 }
 
 class _TutorComposer extends StatelessWidget {
-  const _TutorComposer();
+  const _TutorComposer({
+    required this.controller,
+    required this.sending,
+    required this.onSend,
+    required this.onPromptSelected,
+  });
+
+  final TextEditingController controller;
+  final bool sending;
+  final VoidCallback onSend;
+  final ValueChanged<String> onPromptSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -306,7 +465,7 @@ class _TutorComposer extends StatelessWidget {
                 for (final prompt in prompts)
                   ActionChip(
                     label: Text(prompt),
-                    onPressed: () {},
+                    onPressed: sending ? null : () => onPromptSelected(prompt),
                     backgroundColor: Colors.transparent,
                     side: const BorderSide(color: Color(0xFF73352C)),
                     labelStyle: const TextStyle(
@@ -320,8 +479,12 @@ class _TutorComposer extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextField(
+            controller: controller,
+            enabled: !sending,
             minLines: 1,
             maxLines: 3,
+            textInputAction: TextInputAction.send,
+            onSubmitted: (_) => onSend(),
             decoration: InputDecoration(
               hintText: 'Ask 龙老师 anything in English or 中文...',
               hintStyle: const TextStyle(fontSize: 12, color: AppColors.muted),
@@ -331,8 +494,17 @@ class _TutorComposer extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 8),
                 child: IconButton(
                   tooltip: 'Send',
-                  onPressed: () {},
-                  icon: const Icon(Icons.send_rounded, size: 18),
+                  onPressed: sending ? null : onSend,
+                  icon: sending
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.red,
+                          ),
+                        )
+                      : const Icon(Icons.send_rounded, size: 18),
                   style: IconButton.styleFrom(
                     backgroundColor: const Color(0xFF6A241E),
                     foregroundColor: AppColors.red,
@@ -356,6 +528,94 @@ class _TutorComposer extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _TypingMessage extends StatelessWidget {
+  const _TypingMessage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TutorAvatar(size: 30),
+          SizedBox(width: 10),
+          Text(
+            '龙老师 is thinking...',
+            style: TextStyle(fontSize: 12, color: AppColors.muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _ChatRole { assistant, user }
+
+class _ChatMessage {
+  const _ChatMessage.assistant({
+    required this.chinese,
+    required this.pinyin,
+    required this.english,
+    this.tip = '',
+    this.wide = false,
+  }) : role = _ChatRole.assistant;
+
+  const _ChatMessage.user(String text)
+    : role = _ChatRole.user,
+      chinese = text,
+      pinyin = '',
+      english = '',
+      tip = '',
+      wide = false;
+
+  final _ChatRole role;
+  final String chinese;
+  final String pinyin;
+  final String english;
+  final String tip;
+  final bool wide;
+
+  static _ChatMessage fromAssistantResponse(String response) {
+    final normalized = response
+        .trim()
+        .replaceAll(RegExp(r'^```(?:json)?\s*'), '')
+        .replaceAll(RegExp(r'\s*```$'), '');
+
+    try {
+      final decoded = jsonDecode(normalized) as Map<String, dynamic>;
+      return _ChatMessage.assistant(
+        chinese: (decoded['chinese'] as String? ?? '').trim(),
+        pinyin: (decoded['pinyin'] as String? ?? '').trim(),
+        english: (decoded['english'] as String? ?? '').trim(),
+        tip: (decoded['tip'] as String? ?? '').trim(),
+        wide: true,
+      );
+    } catch (_) {
+      return _ChatMessage.assistant(
+        chinese: response.trim(),
+        pinyin: '',
+        english: '',
+        wide: true,
+      );
+    }
+  }
+
+  Map<String, String> toOpenAiMessage() {
+    return {
+      'role': role == _ChatRole.user ? 'user' : 'assistant',
+      'content': role == _ChatRole.user
+          ? chinese
+          : [
+              if (chinese.isNotEmpty) chinese,
+              if (pinyin.isNotEmpty) pinyin,
+              if (english.isNotEmpty) english,
+              if (tip.isNotEmpty) 'Tip: $tip',
+            ].join('\n'),
+    };
   }
 }
 
