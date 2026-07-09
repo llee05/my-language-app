@@ -27,9 +27,8 @@ class MainDashboard extends StatelessWidget {
           const SectionLabel('ALL LESSONS'),
           const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const SizedBox.shrink(),
               TextButton.icon(
                 onPressed: () {},
                 label: const Text(
@@ -56,8 +55,8 @@ class MainDashboard extends StatelessWidget {
               state: i == 0
                   ? LessonState.active
                   : i <= 2
-                      ? LessonState.done
-                      : LessonState.locked,
+                  ? LessonState.done
+                  : LessonState.locked,
             ),
         ],
       ),
@@ -135,12 +134,18 @@ class ContinueCard extends StatelessWidget {
                     const SizedBox(height: 7),
                     Text(
                       lessonTitle,
-                      style: const TextStyle(fontSize: 17, color: AppColors.text),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        color: AppColors.text,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '$theme · $duration · $xpReward XP reward',
-                      style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -148,9 +153,9 @@ class ContinueCard extends StatelessWidget {
             ],
           );
           final button = FilledButton.icon(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Resuming $lessonTitle…')),
-            ),
+            onPressed: () => ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Resuming $lessonTitle…'))),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.red,
               foregroundColor: Colors.white,
@@ -195,7 +200,10 @@ class ContinueCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     '${(progress * 100).round()}%',
-                    style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.muted,
+                    ),
                   ),
                 ],
               ),

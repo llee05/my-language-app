@@ -35,11 +35,15 @@ class _DashboardPageState extends State<DashboardPage> {
                     DashboardHeader(showMenu: !showSidebar),
                     Expanded(
                       child: desktop
-                          ? const Row(
+                          ? Row(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Expanded(child: MainDashboard()),
-                                SizedBox(width: 300, child: RightRail()),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: MainDashboard(),
+                                  ),
+                                ),
+                                const SizedBox(width: 300, child: RightRail()),
                               ],
                             )
                           : const SingleChildScrollView(
