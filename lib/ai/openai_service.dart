@@ -17,7 +17,9 @@ class OpenAIService {
 
   /// Ensure API key is loaded from environment if present.
   Future<void> ensureInitialized() async {
-    _apiKey ??= dotenv.env['OPENAI_API_KEY'];
+    if (dotenv.isInitialized) {
+      _apiKey ??= dotenv.env['OPENAI_API_KEY'];
+    }
   }
 
   /// Set the API key programmatically (useful for tests or secure storage flows)

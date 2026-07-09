@@ -17,8 +17,10 @@ Future<void> main() async {
   // Load environment variables from a local .env file (if present).
   // Create a `.env` file in the project root with `OPENAI_API_KEY=...` for local dev.
   try {
-    await dotenv.load();
-  } catch (_) {}
+    await dotenv.load(isOptional: true);
+  } catch (_) {
+    // Ignore missing .env in environments where the file is not provided.
+  }
 
   // Initialize local services
   await LocalDatabase.ensureInitialized();
