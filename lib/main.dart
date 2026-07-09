@@ -33,7 +33,7 @@ class HanziPathApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFFE44332);
+    const seed = Color(0xFFFF6B5F);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'HanziPath',
