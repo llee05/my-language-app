@@ -7,7 +7,7 @@ class AppSidebar extends StatelessWidget {
 
   static const items = [
     (Icons.home_outlined, 'Home'),
-    (Icons.menu_book_outlined, 'Lessons'),
+    (Icons.sports_martial_arts_rounded, 'Vocab Rush'),
     (Icons.language_rounded, 'Vocabulary'),
     (Icons.bar_chart_rounded, 'Progress'),
     (Icons.chat_bubble_outline_rounded, 'AI Tutor'),

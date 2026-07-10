@@ -54,13 +54,29 @@ void main() {
         ),
       );
 
-      expect(find.text('Lessons'), findsOneWidget);
-      await tester.tap(find.text('Lessons'));
+      expect(find.text('Vocab Rush'), findsOneWidget);
+      await tester.tap(find.text('Vocab Rush'));
       await tester.pumpAndSettle();
 
       expect(selected, 1);
     },
   );
+
+  testWidgets('vocab rush starts a timed vocabulary game', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const HanziPathApp());
+
+    await tester.tap(find.text('Vocab Rush'));
+    await tester.pumpAndSettle();
+    expect(find.text('词汇冲刺'), findsOneWidget);
+    expect(find.text('开始游戏 — Start Game'), findsOneWidget);
+
+    await tester.tap(find.text('开始游戏 — Start Game'));
+    await tester.pump();
+    expect(find.text('PICK THE CORRECT MEANING'), findsOneWidget);
+    expect(find.text('90s'), findsOneWidget);
+  });
 
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));

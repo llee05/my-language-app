@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -13,6 +15,7 @@ part 'dashboard_page.dart';
 part 'learning_panel.dart';
 part 'progress_rail.dart';
 part 'shared_widgets.dart';
+part 'vocab_rush_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
