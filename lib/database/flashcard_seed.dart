@@ -16,9 +16,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "hello",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "hello"
+        "correct_answer": "hello",
       },
       {
         "chinese": "谢谢",
@@ -32,9 +32,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "thank you",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "thank you"
+        "correct_answer": "thank you",
       },
       {
         "chinese": "学习",
@@ -48,9 +48,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to study; to learn",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to study; to learn"
+        "correct_answer": "to study; to learn",
       },
       {
         "chinese": "老师",
@@ -64,9 +64,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "teacher",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "teacher"
+        "correct_answer": "teacher",
       },
       {
         "chinese": "学生",
@@ -80,9 +80,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "student",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "student"
+        "correct_answer": "student",
       },
       {
         "chinese": "学校",
@@ -96,9 +96,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "school",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "school"
+        "correct_answer": "school",
       },
       {
         "chinese": "中文",
@@ -112,9 +112,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "Chinese language",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "Chinese language"
+        "correct_answer": "Chinese language",
       },
       {
         "chinese": "饭",
@@ -128,9 +128,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "rice; meal",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "rice; meal"
+        "correct_answer": "rice; meal",
       },
       {
         "chinese": "书",
@@ -144,9 +144,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "book",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "book"
+        "correct_answer": "book",
       },
       {
         "chinese": "朋友",
@@ -160,9 +160,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "friend",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "friend"
+        "correct_answer": "friend",
       },
       {
         "chinese": "听",
@@ -176,9 +176,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to listen",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to listen"
+        "correct_answer": "to listen",
       },
       {
         "chinese": "看",
@@ -192,9 +192,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to look; to watch",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to look; to watch"
+        "correct_answer": "to look; to watch",
       },
       {
         "chinese": "去",
@@ -208,9 +208,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to go",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to go"
+        "correct_answer": "to go",
       },
       {
         "chinese": "来",
@@ -224,9 +224,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to come",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to come"
+        "correct_answer": "to come",
       },
       {
         "chinese": "坐",
@@ -240,9 +240,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to sit",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to sit"
+        "correct_answer": "to sit",
       },
       {
         "chinese": "吃",
@@ -256,9 +256,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to eat",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to eat"
+        "correct_answer": "to eat",
       },
       {
         "chinese": "喝",
@@ -272,9 +272,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to drink",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to drink"
+        "correct_answer": "to drink",
       },
       {
         "chinese": "睡觉",
@@ -288,9 +288,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to sleep",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to sleep"
+        "correct_answer": "to sleep",
       },
       {
         "chinese": "工作",
@@ -304,9 +304,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to work; work",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to work; work"
+        "correct_answer": "to work; work",
       },
       {
         "chinese": "家",
@@ -320,11 +320,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "home; family",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "home; family"
-      }
-    ]
+        "correct_answer": "home; family",
+      },
+    ],
   },
   {
     "lesson_title": "School HSK2 Flashcards",
@@ -343,9 +343,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "exam",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "exam"
+        "correct_answer": "exam",
       },
       {
         "chinese": "图书馆",
@@ -359,9 +359,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "library",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "library"
+        "correct_answer": "library",
       },
       {
         "chinese": "黑板",
@@ -375,9 +375,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "blackboard",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "blackboard"
+        "correct_answer": "blackboard",
       },
       {
         "chinese": "练习",
@@ -391,9 +391,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to practice; exercise",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to practice; exercise"
+        "correct_answer": "to practice; exercise",
       },
       {
         "chinese": "课程",
@@ -407,9 +407,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "course; curriculum",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "course; curriculum"
+        "correct_answer": "course; curriculum",
       },
       {
         "chinese": "成绩",
@@ -423,9 +423,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "grades",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "grades"
+        "correct_answer": "grades",
       },
       {
         "chinese": "讲课",
@@ -439,9 +439,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to teach a class",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to teach a class"
+        "correct_answer": "to teach a class",
       },
       {
         "chinese": "作业",
@@ -455,9 +455,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "homework",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "homework"
+        "correct_answer": "homework",
       },
       {
         "chinese": "文具",
@@ -471,9 +471,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "stationery",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "stationery"
+        "correct_answer": "stationery",
       },
       {
         "chinese": "教室",
@@ -487,9 +487,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "classroom",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "classroom"
+        "correct_answer": "classroom",
       },
       {
         "chinese": "上课",
@@ -503,9 +503,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to attend class",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to attend class"
+        "correct_answer": "to attend class",
       },
       {
         "chinese": "复习",
@@ -519,9 +519,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to review",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to review"
+        "correct_answer": "to review",
       },
       {
         "chinese": "成绩单",
@@ -535,9 +535,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "report card",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "report card"
+        "correct_answer": "report card",
       },
       {
         "chinese": "放学",
@@ -551,9 +551,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to finish school",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to finish school"
+        "correct_answer": "to finish school",
       },
       {
         "chinese": "校车",
@@ -567,9 +567,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "school bus",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "school bus"
+        "correct_answer": "school bus",
       },
       {
         "chinese": "老师办公室",
@@ -583,9 +583,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "teacher's office",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "teacher's office"
+        "correct_answer": "teacher's office",
       },
       {
         "chinese": "练习本",
@@ -599,9 +599,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "exercise book",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "exercise book"
+        "correct_answer": "exercise book",
       },
       {
         "chinese": "问题",
@@ -615,9 +615,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "question",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "question"
+        "correct_answer": "question",
       },
       {
         "chinese": "答案",
@@ -631,9 +631,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "answer",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "answer"
+        "correct_answer": "answer",
       },
       {
         "chinese": "口语",
@@ -647,11 +647,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "spoken language",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "spoken language"
-      }
-    ]
+        "correct_answer": "spoken language",
+      },
+    ],
   },
   {
     "lesson_title": "Vegetables HSK3 Flashcards",
@@ -670,9 +670,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "tomato",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "tomato"
+        "correct_answer": "tomato",
       },
       {
         "chinese": "黄瓜",
@@ -686,9 +686,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "cucumber",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "cucumber"
+        "correct_answer": "cucumber",
       },
       {
         "chinese": "胡萝卜",
@@ -702,9 +702,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "carrot",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "carrot"
+        "correct_answer": "carrot",
       },
       {
         "chinese": "土豆",
@@ -718,9 +718,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "potato",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "potato"
+        "correct_answer": "potato",
       },
       {
         "chinese": "菠菜",
@@ -734,9 +734,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "spinach",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "spinach"
+        "correct_answer": "spinach",
       },
       {
         "chinese": "洋葱",
@@ -750,9 +750,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "onion",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "onion"
+        "correct_answer": "onion",
       },
       {
         "chinese": "白菜",
@@ -766,9 +766,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "Chinese cabbage",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "Chinese cabbage"
+        "correct_answer": "Chinese cabbage",
       },
       {
         "chinese": "茄子",
@@ -782,9 +782,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "eggplant",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "eggplant"
+        "correct_answer": "eggplant",
       },
       {
         "chinese": "豆角",
@@ -798,9 +798,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "green bean",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "green bean"
+        "correct_answer": "green bean",
       },
       {
         "chinese": "蘑菇",
@@ -814,9 +814,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "mushroom",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "mushroom"
+        "correct_answer": "mushroom",
       },
       {
         "chinese": "玉米",
@@ -830,9 +830,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "corn",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "corn"
+        "correct_answer": "corn",
       },
       {
         "chinese": "南瓜",
@@ -846,9 +846,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "pumpkin",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "pumpkin"
+        "correct_answer": "pumpkin",
       },
       {
         "chinese": "生菜",
@@ -862,9 +862,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "lettuce",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "lettuce"
+        "correct_answer": "lettuce",
       },
       {
         "chinese": "大蒜",
@@ -878,9 +878,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "garlic",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "garlic"
+        "correct_answer": "garlic",
       },
       {
         "chinese": "生姜",
@@ -894,9 +894,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "ginger",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "ginger"
+        "correct_answer": "ginger",
       },
       {
         "chinese": "芹菜",
@@ -910,9 +910,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "celery",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "celery"
+        "correct_answer": "celery",
       },
       {
         "chinese": "西兰花",
@@ -926,9 +926,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "broccoli",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "broccoli"
+        "correct_answer": "broccoli",
       },
       {
         "chinese": "茼蒿",
@@ -942,9 +942,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "crown daisy",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "crown daisy"
+        "correct_answer": "crown daisy",
       },
       {
         "chinese": "藕",
@@ -958,9 +958,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "lotus root",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "lotus root"
+        "correct_answer": "lotus root",
       },
       {
         "chinese": "菌菇",
@@ -974,11 +974,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "mushroom variety",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "mushroom variety"
-      }
-    ]
+        "correct_answer": "mushroom variety",
+      },
+    ],
   },
   {
     "lesson_title": "Travel HSK4 Flashcards",
@@ -997,9 +997,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "airport",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "airport"
+        "correct_answer": "airport",
       },
       {
         "chinese": "护照",
@@ -1013,9 +1013,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "passport",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "passport"
+        "correct_answer": "passport",
       },
       {
         "chinese": "行李",
@@ -1029,9 +1029,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "luggage",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "luggage"
+        "correct_answer": "luggage",
       },
       {
         "chinese": "预订",
@@ -1045,9 +1045,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to book",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to book"
+        "correct_answer": "to book",
       },
       {
         "chinese": "导游",
@@ -1061,9 +1061,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "tour guide",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "tour guide"
+        "correct_answer": "tour guide",
       },
       {
         "chinese": "签证",
@@ -1077,9 +1077,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "visa",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "visa"
+        "correct_answer": "visa",
       },
       {
         "chinese": "行程",
@@ -1093,9 +1093,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "itinerary",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "itinerary"
+        "correct_answer": "itinerary",
       },
       {
         "chinese": "景点",
@@ -1109,9 +1109,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "scenic spot",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "scenic spot"
+        "correct_answer": "scenic spot",
       },
       {
         "chinese": "地图",
@@ -1125,9 +1125,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "map",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "map"
+        "correct_answer": "map",
       },
       {
         "chinese": "旅馆",
@@ -1141,9 +1141,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "hotel",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "hotel"
+        "correct_answer": "hotel",
       },
       {
         "chinese": "海关",
@@ -1157,9 +1157,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "customs",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "customs"
+        "correct_answer": "customs",
       },
       {
         "chinese": "座位",
@@ -1173,9 +1173,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "seat",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "seat"
+        "correct_answer": "seat",
       },
       {
         "chinese": "登机牌",
@@ -1189,9 +1189,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "boarding pass",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "boarding pass"
+        "correct_answer": "boarding pass",
       },
       {
         "chinese": "航班",
@@ -1205,9 +1205,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "flight",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "flight"
+        "correct_answer": "flight",
       },
       {
         "chinese": "酒店",
@@ -1221,9 +1221,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "hotel",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "hotel"
+        "correct_answer": "hotel",
       },
       {
         "chinese": "交通",
@@ -1237,9 +1237,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "transportation",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "transportation"
+        "correct_answer": "transportation",
       },
       {
         "chinese": "出发",
@@ -1253,9 +1253,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to depart",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to depart"
+        "correct_answer": "to depart",
       },
       {
         "chinese": "抵达",
@@ -1269,9 +1269,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to arrive",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to arrive"
+        "correct_answer": "to arrive",
       },
       {
         "chinese": "海滩",
@@ -1285,9 +1285,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "beach",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "beach"
+        "correct_answer": "beach",
       },
       {
         "chinese": "行驶",
@@ -1301,11 +1301,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to travel; to drive",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to travel; to drive"
-      }
-    ]
+        "correct_answer": "to travel; to drive",
+      },
+    ],
   },
   {
     "lesson_title": "Health HSK5 Flashcards",
@@ -1324,9 +1324,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "medical checkup",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "medical checkup"
+        "correct_answer": "medical checkup",
       },
       {
         "chinese": "药房",
@@ -1340,9 +1340,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "pharmacy",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "pharmacy"
+        "correct_answer": "pharmacy",
       },
       {
         "chinese": "症状",
@@ -1356,9 +1356,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "symptom",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "symptom"
+        "correct_answer": "symptom",
       },
       {
         "chinese": "康复",
@@ -1372,9 +1372,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to recover",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to recover"
+        "correct_answer": "to recover",
       },
       {
         "chinese": "疫苗",
@@ -1388,9 +1388,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "vaccine",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "vaccine"
+        "correct_answer": "vaccine",
       },
       {
         "chinese": "手术",
@@ -1404,9 +1404,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "surgery",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "surgery"
+        "correct_answer": "surgery",
       },
       {
         "chinese": "营养",
@@ -1420,9 +1420,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "nutrition",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "nutrition"
+        "correct_answer": "nutrition",
       },
       {
         "chinese": "复诊",
@@ -1436,9 +1436,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "follow-up appointment",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "follow-up appointment"
+        "correct_answer": "follow-up appointment",
       },
       {
         "chinese": "急诊",
@@ -1452,9 +1452,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "emergency room",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "emergency room"
+        "correct_answer": "emergency room",
       },
       {
         "chinese": "身体",
@@ -1468,9 +1468,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "body; health",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "body; health"
+        "correct_answer": "body; health",
       },
       {
         "chinese": "疼痛",
@@ -1484,9 +1484,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "pain",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "pain"
+        "correct_answer": "pain",
       },
       {
         "chinese": "过敏",
@@ -1500,9 +1500,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "allergic",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "allergic"
+        "correct_answer": "allergic",
       },
       {
         "chinese": "检查",
@@ -1516,9 +1516,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to examine",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to examine"
+        "correct_answer": "to examine",
       },
       {
         "chinese": "处方",
@@ -1532,9 +1532,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "prescription",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "prescription"
+        "correct_answer": "prescription",
       },
       {
         "chinese": "体温",
@@ -1548,9 +1548,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "temperature",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "temperature"
+        "correct_answer": "temperature",
       },
       {
         "chinese": "药物",
@@ -1564,9 +1564,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "medicine",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "medicine"
+        "correct_answer": "medicine",
       },
       {
         "chinese": "头痛",
@@ -1580,9 +1580,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "headache",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "headache"
+        "correct_answer": "headache",
       },
       {
         "chinese": "饮食",
@@ -1596,9 +1596,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "diet",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "diet"
+        "correct_answer": "diet",
       },
       {
         "chinese": "运动",
@@ -1612,9 +1612,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "exercise",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "exercise"
+        "correct_answer": "exercise",
       },
       {
         "chinese": "康复中心",
@@ -1628,11 +1628,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "rehabilitation center",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "rehabilitation center"
-      }
-    ]
+        "correct_answer": "rehabilitation center",
+      },
+    ],
   },
   {
     "lesson_title": "Business HSK6 Flashcards",
@@ -1651,9 +1651,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "contract",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "contract"
+        "correct_answer": "contract",
       },
       {
         "chinese": "会议",
@@ -1667,9 +1667,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "meeting",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "meeting"
+        "correct_answer": "meeting",
       },
       {
         "chinese": "预算",
@@ -1683,9 +1683,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "budget",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "budget"
+        "correct_answer": "budget",
       },
       {
         "chinese": "客户",
@@ -1699,9 +1699,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "client",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "client"
+        "correct_answer": "client",
       },
       {
         "chinese": "市场",
@@ -1715,9 +1715,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "market",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "market"
+        "correct_answer": "market",
       },
       {
         "chinese": "谈判",
@@ -1731,9 +1731,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "to negotiate",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "to negotiate"
+        "correct_answer": "to negotiate",
       },
       {
         "chinese": "股市",
@@ -1747,9 +1747,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "stock market",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "stock market"
+        "correct_answer": "stock market",
       },
       {
         "chinese": "投资",
@@ -1763,9 +1763,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "investment",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "investment"
+        "correct_answer": "investment",
       },
       {
         "chinese": "利润",
@@ -1779,9 +1779,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "profit",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "profit"
+        "correct_answer": "profit",
       },
       {
         "chinese": "合资",
@@ -1795,9 +1795,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "joint venture",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "joint venture"
+        "correct_answer": "joint venture",
       },
       {
         "chinese": "股东",
@@ -1811,9 +1811,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "shareholder",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "shareholder"
+        "correct_answer": "shareholder",
       },
       {
         "chinese": "市场份额",
@@ -1827,9 +1827,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "market share",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "market share"
+        "correct_answer": "market share",
       },
       {
         "chinese": "战略",
@@ -1843,9 +1843,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "strategy",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "strategy"
+        "correct_answer": "strategy",
       },
       {
         "chinese": "风险",
@@ -1859,9 +1859,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "risk",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "risk"
+        "correct_answer": "risk",
       },
       {
         "chinese": "财务报表",
@@ -1875,9 +1875,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "financial statement",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "financial statement"
+        "correct_answer": "financial statement",
       },
       {
         "chinese": "并购",
@@ -1891,9 +1891,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "merger and acquisition",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "merger and acquisition"
+        "correct_answer": "merger and acquisition",
       },
       {
         "chinese": "收入",
@@ -1907,9 +1907,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "income",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "income"
+        "correct_answer": "income",
       },
       {
         "chinese": "支出",
@@ -1923,9 +1923,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "expense",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "expense"
+        "correct_answer": "expense",
       },
       {
         "chinese": "融资",
@@ -1939,9 +1939,9 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "financing",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "financing"
+        "correct_answer": "financing",
       },
       {
         "chinese": "商业计划",
@@ -1955,10 +1955,10 @@ const List<Map<String, dynamic>> flashcardLessons = [
           "business plan",
           "something else",
           "another option",
-          "not this one"
+          "not this one",
         ],
-        "correct_answer": "business plan"
-      }
-    ]
-  }
+        "correct_answer": "business plan",
+      },
+    ],
+  },
 ];

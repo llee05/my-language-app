@@ -14,8 +14,8 @@ const hskFlashcardLessons = [
         "example_sentence_pinyin": "Wǒ měitiān xuéxí Zhōngwén.",
         "example_sentence_english": "I study Chinese every day.",
         "quiz_options": ["to study", "to sleep", "to buy", "to run"],
-        "correct_answer": "to study"
-      }
-    ]
-  }
+        "correct_answer": "to study",
+      },
+    ],
+  },
 ];

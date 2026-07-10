@@ -17,8 +17,7 @@ The app is currently focused on the learner experience: continuing lessons, brow
 - Responsive Flutter dashboard with sidebar navigation for Home, Lessons, Vocabulary, Progress, and AI Tutor.
 - HSK flashcard lesson seed data with Chinese terms, pinyin, English meanings, examples, quiz options, and answer keys.
 - Local SQLite database initialization using `sqflite_common_ffi`.
-- AI tutor chat powered by OpenAI Chat Completions.
-- Optional `.env` support for local OpenAI API key configuration.
+- AI tutor chat powered locally by Ollama.
 - Dark Mandarin study interface with XP, streak, lesson progress, and suggested lesson surfaces.
 
 ## Technical Snapshot
@@ -26,8 +25,7 @@ The app is currently focused on the learner experience: continuing lessons, brow
 - Framework: Flutter
 - Language: Dart
 - Local storage: SQLite via `sqflite_common_ffi`
-- AI integration: OpenAI Chat Completions through a lightweight HTTP client
-- Environment config: `flutter_dotenv`, platform environment variables, or local `.env`
+- AI integration: Ollama's local chat API through a lightweight HTTP client
 - Tests: Flutter widget and database startup tests
 
 ## Local Setup
@@ -38,11 +36,14 @@ Install dependencies:
 flutter pub get
 ```
 
-To enable the AI tutor locally, create a `.env` file in the project root:
+Make sure at least one Ollama model is installed:
 
 ```sh
-OPENAI_API_KEY=your_api_key_here
+ollama list
 ```
+
+On Linux, macOS, and Windows, the app starts `ollama serve` automatically when
+needed. Ollama must be installed and its executable must be available on `PATH`.
 
 Run the app:
 
@@ -58,11 +59,11 @@ flutter test
 
 ## Current Architecture
 
-- `lib/main.dart` wires app startup, environment loading, local database initialization, and the root `HanziPathApp`.
+- `lib/main.dart` wires local database initialization and the root `HanziPathApp`.
 - `lib/dashboard_page.dart` defines the responsive shell and switches to the AI tutor view from the sidebar.
 - `lib/learning_panel.dart` renders the main lesson dashboard and suggested lesson cards.
 - `lib/ai_tutor_page.dart` implements the Long Laoshi chat interface and response formatting.
-- `lib/ai/openai_service.dart` provides the OpenAI API client and API key loading.
+- `lib/ai/ollama_service.dart` connects the tutor to the local Ollama server. It uses the first installed model by default; override it with `--dart-define=OLLAMA_MODEL=model-name`.
 - `lib/local_database.dart` creates and seeds the local SQLite schema.
 - `lib/database/flashcard_seed.dart` contains the current flashcard lesson content.
 
@@ -72,7 +73,6 @@ flutter test
 - Persist user progress, streaks, XP, completed cards, and tutor conversation history.
 - Add vocabulary search and review modes.
 - Expand HSK lesson coverage beyond the current seed set.
-- Improve secure API key handling for packaged builds.
 - Add integration tests around tutor failure states and database seeding.
 
 ## Project Status

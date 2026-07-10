@@ -75,12 +75,11 @@ Use an empty string for any field that is not needed.
     _scrollToEnd();
 
     try {
-      final response = await OpenAIService.instance.chatText(
+      final response = await OllamaService.instance.chatText(
         messages: [
           {'role': 'system', 'content': _systemPrompt},
-          for (final message in _messages) message.toOpenAiMessage(),
+          for (final message in _messages) message.toAiMessage(),
         ],
-        model: 'gpt-4o-mini',
         maxTokens: 420,
         temperature: 0.45,
       );
@@ -103,10 +102,10 @@ Use an empty string for any field that is not needed.
         _messages = [
           ..._messages,
           _ChatMessage.assistant(
-            chinese: '我现在连接不上 OpenAI。',
-            pinyin: 'Wo xianzai lianjie bu shang OpenAI.',
+            chinese: '我现在连接不上本地模型。',
+            pinyin: 'Wo xianzai lianjie bu shang bendi moxing.',
             english: _friendlyError(error),
-            tip: 'Check that OPENAI_API_KEY is set in your local .env file.',
+            tip: 'Make sure Ollama is running and a model is installed.',
           ),
         ];
         _sending = false;
@@ -139,8 +138,10 @@ Use an empty string for any field that is not needed.
 
   String _friendlyError(Object error) {
     final text = error.toString();
-    if (text.contains('API key is not set')) {
-      return 'Add OPENAI_API_KEY=your_key to a .env file in the project root, then restart the app.';
+    if (text.contains('Connection refused') ||
+        text.contains('Failed host lookup') ||
+        text.contains('Connection failed')) {
+      return 'Start Ollama with `ollama serve`, then try again.';
     }
     return 'Please try again in a moment. $text';
   }
@@ -589,7 +590,7 @@ class _ChatMessage {
     }
   }
 
-  Map<String, String> toOpenAiMessage() {
+  Map<String, String> toAiMessage() {
     return {
       'role': role == _ChatRole.user ? 'user' : 'assistant',
       'content': role == _ChatRole.user
