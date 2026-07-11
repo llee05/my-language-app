@@ -73,7 +73,10 @@ void main() {
     expect(find.text('开始游戏 — Start Game'), findsOneWidget);
 
     await tester.tap(find.text('开始游戏 — Start Game'));
-    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
     expect(find.text('PICK THE CORRECT MEANING'), findsOneWidget);
     expect(find.text('90s'), findsOneWidget);
   });

@@ -42,14 +42,25 @@ class _VocabRushPageState extends State<VocabRushPage> {
     super.dispose();
   }
 
-  void _start() {
+  Future<void> _start() async {
     _timer?.cancel();
-    _cards = [
-      for (final lesson in flashcardLessons)
-        if ((lesson['hsk_level'] as int) <= _difficulty.maxHsk)
-          for (final card in lesson['cards'] as List<dynamic>)
-            card as Map<String, dynamic>,
-    ];
+    final vocabulary =
+        jsonDecode(
+              await rootBundle.loadString('assets/data/hsk_vocabulary.json'),
+            )
+            as List<dynamic>;
+    if (!mounted) return;
+    _cards = vocabulary
+        .cast<Map<String, dynamic>>()
+        .where((card) => (card['hskLevel'] as int) <= _difficulty.maxHsk)
+        .map(
+          (card) => {
+            'chinese': card['simplified'],
+            'pinyin': card['pinyin'],
+            'english_meaning': (card['meanings'] as List<dynamic>).first,
+          },
+        )
+        .toList();
     _cards.shuffle(_random);
 
     setState(() {
