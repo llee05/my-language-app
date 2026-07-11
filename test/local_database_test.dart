@@ -17,4 +17,40 @@ void main() {
     final rows = await db.query('app_data');
     expect(rows, isEmpty);
   });
+
+  test('generated lessons are saved and offered as previous topics', () async {
+    await LocalDatabase.resetForTesting();
+    await LocalDatabase.ensureInitialized();
+
+    await LocalDatabase.saveGeneratedLesson(
+      title: 'Ordering breakfast · HSK 1',
+      theme: 'Ordering breakfast',
+      hskLevel: 1,
+      cards: const [
+        {
+          'chinese': '吃',
+          'pinyin': 'chī',
+          'english_meaning': 'to eat',
+          'part_of_speech': 'verb',
+          'example_sentence_chinese': '我吃早饭。',
+          'example_sentence_pinyin': 'Wǒ chī zǎofàn.',
+          'example_sentence_english': 'I eat breakfast.',
+        },
+      ],
+    );
+
+    final topics = await LocalDatabase.lessonTopics();
+    expect(topics.first['lesson_title'], 'Ordering breakfast · HSK 1');
+    expect(topics.first['theme'], 'Ordering breakfast');
+
+    final db = await LocalDatabase.ensureInitialized();
+    final cards = await db.query(
+      'cards',
+      where: 'lesson_id = ?',
+      whereArgs: [topics.first['id']],
+    );
+    expect(cards, hasLength(1));
+    expect(cards.single['chinese'], '吃');
+    expect(cards.single['example_sentence_english'], 'I eat breakfast.');
+  });
 }

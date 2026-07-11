@@ -124,6 +124,46 @@ class LocalDatabase {
     });
   }
 
+  static Future<List<Map<String, dynamic>>> lessonTopics() async {
+    final db = await ensureInitialized();
+    return db.query(
+      _lessonTable,
+      columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
+      orderBy: 'id DESC',
+    );
+  }
+
+  static Future<void> saveGeneratedLesson({
+    required String title,
+    required String theme,
+    required int hskLevel,
+    required List<Map<String, dynamic>> cards,
+  }) async {
+    final db = await ensureInitialized();
+    await db.transaction((txn) async {
+      final lessonId = await txn.insert(_lessonTable, {
+        'lesson_title': title,
+        'theme': theme,
+        'hsk_level': hskLevel,
+      });
+      for (final card in cards) {
+        await txn.insert(_cardTable, {
+          'lesson_id': lessonId,
+          'chinese': card['chinese'],
+          'pinyin': card['pinyin'],
+          'english_meaning': card['english_meaning'],
+          'part_of_speech': card['part_of_speech'] ?? '',
+          'hsk_level': hskLevel,
+          'example_sentence_chinese': card['example_sentence_chinese'] ?? '',
+          'example_sentence_pinyin': card['example_sentence_pinyin'] ?? '',
+          'example_sentence_english': card['example_sentence_english'] ?? '',
+          'quiz_options': jsonEncode(card['quiz_options'] ?? const []),
+          'correct_answer': card['english_meaning'],
+        });
+      }
+    });
+  }
+
   static Future<void> resetForTesting() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;

@@ -58,9 +58,12 @@ class _DashboardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
+      return const LessonsPage();
+    }
+    if (selectedNav == 2) {
       return const VocabRushPage();
     }
-    if (selectedNav == 4) {
+    if (selectedNav == 5) {
       return const AiTutorPage();
     }
 

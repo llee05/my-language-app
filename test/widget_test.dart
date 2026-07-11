@@ -58,7 +58,7 @@ void main() {
       await tester.tap(find.text('Vocab Rush'));
       await tester.pumpAndSettle();
 
-      expect(selected, 1);
+      expect(selected, 2);
     },
   );
 
@@ -79,6 +79,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('PICK THE CORRECT MEANING'), findsOneWidget);
     expect(find.text('90s'), findsOneWidget);
+  });
+
+  testWidgets('lessons page exposes level and AI topic options', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const HanziPathApp());
+
+    await tester.tap(find.text('Lessons'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
+    await tester.pump();
+
+    expect(find.text('Lesson Builder'), findsOneWidget);
+    expect(find.text('HSK level'), findsOneWidget);
+    expect(find.text('Ask AI for a lesson topic'), findsOneWidget);
+    expect(find.text('Generate lesson'), findsOneWidget);
   });
 
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {

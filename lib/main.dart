@@ -16,6 +16,7 @@ part 'features/ai_tutor/ai_tutor_page.dart';
 part 'features/dashboard/dashboard_page.dart';
 part 'features/dashboard/widgets/learning_panel.dart';
 part 'features/dashboard/widgets/progress_rail.dart';
+part 'features/lessons/lessons_page.dart';
 part 'features/vocab_rush/vocab_rush_page.dart';
 
 Future<void> main() async {
