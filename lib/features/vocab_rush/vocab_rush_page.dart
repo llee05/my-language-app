@@ -1,4 +1,4 @@
-part of 'main.dart';
+part of '../../main.dart';
 
 enum _RushDifficulty {
   beginner('入门', 'Beginner', 90, 1),

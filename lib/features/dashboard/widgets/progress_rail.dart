@@ -1,4 +1,4 @@
-part of 'main.dart';
+part of '../../../main.dart';
 
 class RightRail extends StatelessWidget {
   const RightRail({super.key, this.compact = false});

@@ -1,4 +1,4 @@
-part of 'main.dart';
+part of '../../main.dart';
 
 class AppColors {
   static const background = Color(0xFF2C2423);

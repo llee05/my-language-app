@@ -1,4 +1,4 @@
-part of 'main.dart';
+part of '../../../main.dart';
 
 class MainDashboard extends StatelessWidget {
   const MainDashboard({super.key});

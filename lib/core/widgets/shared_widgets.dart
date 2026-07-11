@@ -1,4 +1,4 @@
-part of 'main.dart';
+part of '../../main.dart';
 
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.label, {super.key});

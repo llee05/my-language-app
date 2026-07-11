@@ -9,14 +9,14 @@ import 'local_database.dart';
 import 'database/flashcard_seed.dart';
 import 'ai/ollama_service.dart';
 
-part 'app_colors.dart';
-part 'app_sidebar.dart';
-part 'ai_tutor_page.dart';
-part 'dashboard_page.dart';
-part 'learning_panel.dart';
-part 'progress_rail.dart';
-part 'shared_widgets.dart';
-part 'vocab_rush_page.dart';
+part 'core/theme/app_colors.dart';
+part 'core/widgets/app_sidebar.dart';
+part 'core/widgets/shared_widgets.dart';
+part 'features/ai_tutor/ai_tutor_page.dart';
+part 'features/dashboard/dashboard_page.dart';
+part 'features/dashboard/widgets/learning_panel.dart';
+part 'features/dashboard/widgets/progress_rail.dart';
+part 'features/vocab_rush/vocab_rush_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

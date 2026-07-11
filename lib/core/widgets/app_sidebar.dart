@@ -1,4 +1,4 @@
-part of 'main.dart';
+part of '../../main.dart';
 
 class AppSidebar extends StatelessWidget {
   const AppSidebar({super.key, this.selectedIndex = 0, this.onSelected});
