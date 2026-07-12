@@ -133,6 +133,40 @@ class LocalDatabase {
     );
   }
 
+  /// Returns the newest matching lesson, avoiding another AI request.
+  static Future<Map<String, dynamic>?> generatedLesson({
+    required String theme,
+    required int hskLevel,
+  }) async {
+    final db = await ensureInitialized();
+    final lessons = await db.query(
+      _lessonTable,
+      columns: ['id', 'lesson_title'],
+      where: 'LOWER(theme) = LOWER(?) AND hsk_level = ?',
+      whereArgs: [theme.trim(), hskLevel],
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (lessons.isEmpty) return null;
+
+    final lesson = lessons.single;
+    final rows = await db.query(
+      _cardTable,
+      where: 'lesson_id = ?',
+      whereArgs: [lesson['id']],
+      orderBy: 'id ASC',
+    );
+    if (rows.isEmpty) return null;
+
+    return {
+      'title': lesson['lesson_title'],
+      'cards': [
+        for (final row in rows)
+          {...row, 'quiz_options': jsonDecode(row['quiz_options'] as String)},
+      ],
+    };
+  }
+
   static Future<void> saveGeneratedLesson({
     required String title,
     required String theme,

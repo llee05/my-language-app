@@ -52,5 +52,13 @@ void main() {
     expect(cards, hasLength(1));
     expect(cards.single['chinese'], '吃');
     expect(cards.single['example_sentence_english'], 'I eat breakfast.');
+
+    final cached = await LocalDatabase.generatedLesson(
+      theme: 'ordering BREAKFAST',
+      hskLevel: 1,
+    );
+    expect(cached, isNotNull);
+    expect(cached!['title'], 'Ordering breakfast · HSK 1');
+    expect(cached['cards'], hasLength(1));
   });
 }

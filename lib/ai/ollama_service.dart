@@ -93,6 +93,8 @@ class OllamaService {
             'model': await _model(),
             'messages': messages,
             'stream': false,
+            // Avoid paying the model-loading cost again for subsequent lessons.
+            'keep_alive': '30m',
             'options': {'num_predict': maxTokens, 'temperature': temperature},
           }),
         )

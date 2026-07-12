@@ -65,6 +65,24 @@ class _LessonsPageState extends State<LessonsPage> {
       _notice = null;
     });
     try {
+      final topic = _topic;
+      final cached = await LocalDatabase.generatedLesson(
+        theme: topic,
+        hskLevel: _hskLevel,
+      );
+      if (cached != null) {
+        if (!mounted) return;
+        setState(() {
+          _lessonTitle = cached['title'] as String;
+          _cards = (cached['cards'] as List<dynamic>)
+              .cast<Map<String, dynamic>>();
+          _currentCard = 0;
+          _generating = false;
+          _notice = 'Loaded an existing lesson instantly.';
+        });
+        return;
+      }
+
       final vocabulary =
           (jsonDecode(
                     await rootBundle.loadString(
@@ -80,17 +98,17 @@ class _LessonsPageState extends State<LessonsPage> {
 
       List<Map<String, dynamic>> cards;
       try {
-        cards = await _generateWithAi(_topic, candidates.take(80).toList());
+        cards = await _generateWithAi(topic, candidates.take(40).toList());
       } catch (_) {
         cards = candidates.take(10).map(_fallbackCard).toList();
         _notice =
             'AI was unavailable, so a vocabulary-based lesson was created locally.';
       }
       if (cards.isEmpty) throw StateError('No vocabulary was available.');
-      final title = '$_topic · HSK $_hskLevel';
+      final title = '$topic · HSK $_hskLevel';
       await LocalDatabase.saveGeneratedLesson(
         title: title,
-        theme: _topic,
+        theme: topic,
         hskLevel: _hskLevel,
         cards: cards,
       );
@@ -143,7 +161,7 @@ class _LessonsPageState extends State<LessonsPage> {
         },
     ];
     final response = await OllamaService.instance.chatText(
-      maxTokens: 1400,
+      maxTokens: 800,
       temperature: 0.3,
       messages: [
         {
