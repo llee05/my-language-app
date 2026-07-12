@@ -8,6 +8,7 @@ class LessonsPage extends StatefulWidget {
 
 class _LessonsPageState extends State<LessonsPage> {
   final _topicController = TextEditingController();
+  final _pageController = PageController(viewportFraction: .82);
   int _hskLevel = 1;
   int? _selectedLessonId;
   List<Map<String, dynamic>> _topics = const [];
@@ -15,6 +16,7 @@ class _LessonsPageState extends State<LessonsPage> {
   String _lessonTitle = '';
   bool _loadingTopics = true;
   bool _generating = false;
+  int _currentCard = 0;
   String? _notice;
 
   @override
@@ -26,7 +28,17 @@ class _LessonsPageState extends State<LessonsPage> {
   @override
   void dispose() {
     _topicController.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  void _goToCard(int index) {
+    if (index < 0 || index >= _cards.length) return;
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _loadTopics() async {
@@ -86,6 +98,7 @@ class _LessonsPageState extends State<LessonsPage> {
       setState(() {
         _lessonTitle = title;
         _cards = cards;
+        _currentCard = 0;
         _generating = false;
       });
     } catch (error) {
@@ -296,12 +309,36 @@ class _LessonsPageState extends State<LessonsPage> {
       Expanded(
         child: PageView.builder(
           itemCount: _cards.length,
-          controller: PageController(viewportFraction: .82),
+          controller: _pageController,
+          onPageChanged: (index) => setState(() => _currentCard = index),
           itemBuilder: (context, index) => _LessonFlashcard(
             card: _cards[index],
             index: index,
             total: _cards.length,
           ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _currentCard == 0
+                  ? null
+                  : () => _goToCard(_currentCard - 1),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Previous'),
+            ),
+            const SizedBox(width: 16),
+            FilledButton.icon(
+              onPressed: _currentCard >= _cards.length - 1
+                  ? null
+                  : () => _goToCard(_currentCard + 1),
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Next'),
+            ),
+          ],
         ),
       ),
     ],
