@@ -47,6 +47,9 @@ class _LessonsPageState extends State<LessonsPage> {
     setState(() {
       _topics = topics;
       _selectedLessonId = topics.isEmpty ? null : topics.first['id'] as int;
+      if (topics.isNotEmpty) {
+        _hskLevel = topics.first['hsk_level'] as int;
+      }
       _loadingTopics = false;
     });
   }
@@ -54,8 +57,14 @@ class _LessonsPageState extends State<LessonsPage> {
   String get _topic {
     final custom = _topicController.text.trim();
     if (custom.isNotEmpty) return custom;
-    final selected = _topics.where((item) => item['id'] == _selectedLessonId);
-    return selected.isEmpty ? 'Daily Life' : selected.first['theme'] as String;
+    return _selectedTopic?['theme'] as String? ?? 'Daily Life';
+  }
+
+  Map<String, dynamic>? get _selectedTopic {
+    for (final topic in _topics) {
+      if (topic['id'] == _selectedLessonId) return topic;
+    }
+    return null;
   }
 
   Future<void> _generateLesson() async {
@@ -66,9 +75,13 @@ class _LessonsPageState extends State<LessonsPage> {
     });
     try {
       final topic = _topic;
+      final customTopic = _topicController.text.trim().isNotEmpty;
+      final hskLevel = customTopic
+          ? _hskLevel
+          : (_selectedTopic?['hsk_level'] as int? ?? _hskLevel);
       final cached = await LocalDatabase.generatedLesson(
         theme: topic,
-        hskLevel: _hskLevel,
+        hskLevel: hskLevel,
       );
       if (cached != null) {
         if (!mounted) return;
@@ -92,24 +105,28 @@ class _LessonsPageState extends State<LessonsPage> {
                   as List<dynamic>)
               .cast<Map<String, dynamic>>();
       final candidates = vocabulary
-          .where((word) => (word['hskLevel'] as int) <= _hskLevel)
+          .where((word) => (word['hskLevel'] as int) <= hskLevel)
           .toList();
       _rankForTopic(candidates, _topic);
 
       List<Map<String, dynamic>> cards;
       try {
-        cards = await _generateWithAi(topic, candidates.take(40).toList());
+        cards = await _generateWithAi(
+          topic,
+          hskLevel,
+          candidates.take(40).toList(),
+        );
       } catch (_) {
         cards = candidates.take(10).map(_fallbackCard).toList();
         _notice =
             'AI was unavailable, so a vocabulary-based lesson was created locally.';
       }
       if (cards.isEmpty) throw StateError('No vocabulary was available.');
-      final title = '$topic · HSK $_hskLevel';
+      final title = '$topic · HSK $hskLevel';
       await LocalDatabase.saveGeneratedLesson(
         title: title,
         theme: topic,
-        hskLevel: _hskLevel,
+        hskLevel: hskLevel,
         cards: cards,
       );
       if (!mounted) return;
@@ -149,6 +166,7 @@ class _LessonsPageState extends State<LessonsPage> {
 
   Future<List<Map<String, dynamic>>> _generateWithAi(
     String topic,
+    int hskLevel,
     List<Map<String, dynamic>> candidates,
   ) async {
     final supplied = [
@@ -175,7 +193,7 @@ class _LessonsPageState extends State<LessonsPage> {
         {
           'role': 'user',
           'content':
-              'Topic: $topic\nHSK: $_hskLevel\nVocabulary: ${jsonEncode(supplied)}',
+              'Topic: $topic\nHSK: $hskLevel\nVocabulary: ${jsonEncode(supplied)}',
         },
       ],
     );
@@ -238,6 +256,7 @@ class _LessonsPageState extends State<LessonsPage> {
             ),
             const SizedBox(height: 30),
             DropdownButtonFormField<int>(
+              key: ValueKey(_hskLevel),
               initialValue: _hskLevel,
               decoration: const InputDecoration(
                 labelText: 'HSK level',
@@ -266,7 +285,15 @@ class _LessonsPageState extends State<LessonsPage> {
                       child: Text(topic['theme'] as String),
                     ),
                 ],
-                onChanged: (value) => setState(() => _selectedLessonId = value),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedLessonId = value;
+                    final selected = _selectedTopic;
+                    if (selected != null) {
+                      _hskLevel = selected['hsk_level'] as int;
+                    }
+                  });
+                },
               ),
             const SizedBox(height: 18),
             TextField(
