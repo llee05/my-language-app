@@ -78,7 +78,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('PICK THE CORRECT MEANING'), findsOneWidget);
-    expect(find.text('90s'), findsOneWidget);
+    expect(find.text('180s'), findsOneWidget);
   });
 
   testWidgets('lessons page exposes level and AI topic options', (

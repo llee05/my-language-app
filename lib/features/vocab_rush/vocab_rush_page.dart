@@ -1,16 +1,27 @@
 part of '../../main.dart';
 
 enum _RushDifficulty {
-  beginner('入门', 'Beginner', 90, 1),
-  intermediate('进阶', 'Intermediate', 60, 3),
-  advanced('挑战', 'Advanced', 45, 6);
+  beginner('入门', 'Beginner', 1, 2),
+  intermediate('进阶', 'Intermediate', 3, 4),
+  advanced('挑战', 'Advanced', 5, 6);
 
-  const _RushDifficulty(this.chinese, this.english, this.seconds, this.maxHsk);
+  const _RushDifficulty(this.chinese, this.english, this.minHsk, this.maxHsk);
 
   final String chinese;
   final String english;
-  final int seconds;
+  final int minHsk;
   final int maxHsk;
+}
+
+enum _RushDuration {
+  threeMinutes('3 minutes', 180),
+  fiveMinutes('5 minutes', 300),
+  unlimited('Unlimited', null);
+
+  const _RushDuration(this.label, this.seconds);
+
+  final String label;
+  final int? seconds;
 }
 
 class VocabRushPage extends StatefulWidget {
@@ -23,6 +34,7 @@ class VocabRushPage extends StatefulWidget {
 class _VocabRushPageState extends State<VocabRushPage> {
   final _random = Random();
   _RushDifficulty _difficulty = _RushDifficulty.beginner;
+  _RushDuration _duration = _RushDuration.threeMinutes;
   Timer? _timer;
   List<Map<String, dynamic>> _cards = const [];
   Map<String, dynamic>? _card;
@@ -33,6 +45,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
   int _streak = 0;
   int _bestStreak = 0;
   int _attempts = 0;
+  int _mistakes = 0;
   bool _playing = false;
   bool _finished = false;
 
@@ -52,7 +65,10 @@ class _VocabRushPageState extends State<VocabRushPage> {
     if (!mounted) return;
     _cards = vocabulary
         .cast<Map<String, dynamic>>()
-        .where((card) => (card['hskLevel'] as int) <= _difficulty.maxHsk)
+        .where((card) {
+          final level = card['hskLevel'] as int;
+          return level >= _difficulty.minHsk && level <= _difficulty.maxHsk;
+        })
         .map(
           (card) => {
             'chinese': card['simplified'],
@@ -66,23 +82,26 @@ class _VocabRushPageState extends State<VocabRushPage> {
     setState(() {
       _playing = true;
       _finished = false;
-      _secondsLeft = _difficulty.seconds;
+      _secondsLeft = _duration.seconds ?? 0;
       _score = 0;
       _streak = 0;
       _bestStreak = 0;
       _attempts = 0;
+      _mistakes = 0;
       _selectedAnswer = null;
       _nextCard();
     });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      if (_secondsLeft <= 1) {
-        _finish();
-      } else {
-        setState(() => _secondsLeft--);
-      }
-    });
+    if (_duration.seconds != null) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        if (_secondsLeft <= 1) {
+          _finish();
+        } else {
+          setState(() => _secondsLeft--);
+        }
+      });
+    }
   }
 
   void _nextCard() {
@@ -112,12 +131,17 @@ class _VocabRushPageState extends State<VocabRushPage> {
         _bestStreak = max(_bestStreak, _streak);
       } else {
         _streak = 0;
+        _mistakes++;
       }
     });
 
     Future<void>.delayed(const Duration(milliseconds: 450), () {
       if (!mounted || !_playing) return;
-      setState(_nextCard);
+      if (_mistakes >= 3) {
+        _finish();
+      } else {
+        setState(_nextCard);
+      }
     });
   }
 
@@ -185,6 +209,25 @@ class _VocabRushPageState extends State<VocabRushPage> {
               _difficultyCard(difficulty),
           ],
         ),
+        const SizedBox(height: 24),
+        const Text(
+          'CHOOSE A TIME',
+          style: TextStyle(
+            letterSpacing: 1.5,
+            fontSize: 10,
+            color: AppColors.muted,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SegmentedButton<_RushDuration>(
+          segments: [
+            for (final duration in _RushDuration.values)
+              ButtonSegment(value: duration, label: Text(duration.label)),
+          ],
+          selected: {_duration},
+          onSelectionChanged: (selection) =>
+              setState(() => _duration = selection.first),
+        ),
         const SizedBox(height: 28),
         SizedBox(
           width: 285,
@@ -205,7 +248,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
         if (_finished) ...[
           const SizedBox(height: 30),
           Text(
-            'Time! You scored $_score ${_score == 1 ? 'word' : 'words'}.',
+            '${_mistakes >= 3 ? 'Three strikes!' : 'Time!'} You scored $_score ${_score == 1 ? 'word' : 'words'}.',
             style: const TextStyle(fontSize: 20, color: AppColors.text),
           ),
           const SizedBox(height: 12),
@@ -216,31 +259,39 @@ class _VocabRushPageState extends State<VocabRushPage> {
   }
 
   Widget _buildGame() {
-    final progress = _secondsLeft / _difficulty.seconds;
+    final durationSeconds = _duration.seconds;
+    final progress = durationSeconds == null
+        ? null
+        : _secondsLeft / durationSeconds;
     return Column(
       children: [
         Row(
           children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  color: progress < .25 ? AppColors.red : AppColors.gold,
-                  backgroundColor: AppColors.surface,
+            if (progress != null)
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    color: progress < .25 ? AppColors.red : AppColors.gold,
+                    backgroundColor: AppColors.surface,
+                  ),
                 ),
-              ),
-            ),
+              )
+            else
+              const Spacer(),
             const SizedBox(width: 14),
             Text(
-              '${_secondsLeft}s',
+              durationSeconds == null ? '∞' : '${_secondsLeft}s',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.text,
               ),
             ),
+            const SizedBox(width: 20),
+            _strikeMarker(),
           ],
         ),
         const SizedBox(height: 52),
@@ -337,7 +388,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '◷ ${difficulty.seconds}s   HSK ${difficulty.maxHsk}',
+              'HSK ${difficulty.minHsk}–${difficulty.maxHsk}',
               style: const TextStyle(fontSize: 9, color: AppColors.muted),
             ),
           ],
@@ -345,6 +396,29 @@ class _VocabRushPageState extends State<VocabRushPage> {
       ),
     );
   }
+
+  Widget _strikeMarker() => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        '$_mistakes/3',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.muted,
+        ),
+      ),
+      const SizedBox(width: 6),
+      for (var strike = 0; strike < 3; strike++) ...[
+        Icon(
+          Icons.close_rounded,
+          size: 20,
+          color: strike < _mistakes ? AppColors.red : AppColors.border,
+        ),
+        if (strike < 2) const SizedBox(width: 2),
+      ],
+    ],
+  );
 
   Widget _scoreRow() {
     return Row(
