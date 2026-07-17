@@ -390,7 +390,7 @@ class _LessonsPageState extends State<LessonsPage> {
   );
 }
 
-class _LessonFlashcard extends StatelessWidget {
+class _LessonFlashcard extends StatefulWidget {
   const _LessonFlashcard({
     required this.card,
     required this.index,
@@ -401,59 +401,129 @@ class _LessonFlashcard extends StatelessWidget {
   final int total;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '${index + 1} / $total',
-              style: const TextStyle(color: AppColors.muted),
-            ),
+  State<_LessonFlashcard> createState() => _LessonFlashcardState();
+}
+
+class _LessonFlashcardState extends State<_LessonFlashcard> {
+  bool _showAnswer = false;
+
+  void _flip() => setState(() => _showAnswer = !_showAnswer);
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: _showAnswer ? 'Flashcard answer' : 'Flashcard question',
+    hint: 'Tap to flip the card',
+    child: GestureDetector(
+      onTap: _flip,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        clipBehavior: Clip.antiAlias,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          transitionBuilder: (child, animation) {
+            final rotation = Tween(begin: pi, end: 0.0).animate(animation);
+            return AnimatedBuilder(
+              animation: rotation,
+              child: child,
+              builder: (context, child) => Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.rotationY(rotation.value),
+                child: child,
+              ),
+            );
+          },
+          layoutBuilder: (currentChild, previousChildren) => Stack(
+            fit: StackFit.expand,
+            children: [...previousChildren, ?currentChild],
           ),
-          const Spacer(),
-          Text(
-            card['chinese'] as String,
-            style: const TextStyle(
-              fontFamily: 'serif',
-              fontSize: 64,
-              color: AppColors.text,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            card['pinyin'] as String,
-            style: const TextStyle(fontSize: 18, color: AppColors.gold),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            card['english_meaning'] as String,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, color: AppColors.text),
-          ),
-          if ((card['example_sentence_chinese'] as String).isNotEmpty) ...[
-            const SizedBox(height: 28),
-            Text(card['example_sentence_chinese'] as String),
-            Text(
-              card['example_sentence_pinyin'] as String,
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            Text(
-              card['example_sentence_english'] as String,
-              style: const TextStyle(color: AppColors.muted),
-            ),
-          ],
-          const Spacer(),
-          const Tooltip(
-            message: 'Text-to-speech support is planned',
-            child: Icon(Icons.volume_up_outlined, color: AppColors.muted),
-          ),
-        ],
+          child: _showAnswer
+              ? _buildAnswer(key: const ValueKey('answer'))
+              : _buildQuestion(key: const ValueKey('question')),
+        ),
       ),
     ),
   );
+
+  Widget _buildQuestion({required Key key}) => _cardSide(
+    key: key,
+    children: [
+      const Spacer(),
+      Text(
+        widget.card['chinese'] as String,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontFamily: 'serif',
+          fontSize: 64,
+          color: AppColors.text,
+        ),
+      ),
+      const Spacer(),
+    ],
+  );
+
+  Widget _buildAnswer({required Key key}) => _cardSide(
+    key: key,
+    children: [
+      const Spacer(),
+      Text(
+        widget.card['pinyin'] as String,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 22, color: AppColors.gold),
+      ),
+      const SizedBox(height: 18),
+      Text(
+        widget.card['english_meaning'] as String,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 26, color: AppColors.text),
+      ),
+      if ((widget.card['example_sentence_chinese'] as String).isNotEmpty) ...[
+        const SizedBox(height: 28),
+        Text(
+          widget.card['example_sentence_chinese'] as String,
+          textAlign: TextAlign.center,
+        ),
+        Text(
+          widget.card['example_sentence_pinyin'] as String,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.muted),
+        ),
+        Text(
+          widget.card['example_sentence_english'] as String,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.muted),
+        ),
+      ],
+      const Spacer(),
+    ],
+  );
+
+  Widget _cardSide({required Key key, required List<Widget> children}) =>
+      Padding(
+        key: key,
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${widget.index + 1} / ${widget.total}',
+                style: const TextStyle(color: AppColors.muted),
+              ),
+            ),
+            ...children,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.flip, size: 18, color: AppColors.muted),
+                const SizedBox(width: 8),
+                Text(
+                  _showAnswer ? 'Tap for word' : 'Tap for answer',
+                  style: const TextStyle(color: AppColors.muted),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
 }
