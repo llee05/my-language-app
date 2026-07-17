@@ -16,7 +16,7 @@ enum _RushDifficulty {
 enum _RushDuration {
   threeMinutes('3 minutes', 180),
   fiveMinutes('5 minutes', 300),
-  unlimited('Unlimited', null);
+  unlimited('Survival', null);
 
   const _RushDuration(this.label, this.seconds);
 

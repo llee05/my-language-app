@@ -1,5 +1,38 @@
 part of '../../main.dart';
 
+const Map<int, List<String>> _hskTopicPools = {
+  1: [
+    'Daily Life',
+    'Greetings',
+    'Family',
+    'Food and Drinks',
+    'Numbers and Time',
+  ],
+  2: ['School', 'Shopping', 'Weather', 'Hobbies', 'Getting Around'],
+  3: [
+    'Vegetables',
+    'Dining Out',
+    'Work and Study',
+    'Travel Plans',
+    'Daily Routines',
+  ],
+  4: [
+    'Travel',
+    'Chinese Culture',
+    'Technology',
+    'Relationships',
+    'News and Media',
+  ],
+  5: ['Health', 'Society', 'Environment', 'Education', 'Arts and Literature'],
+  6: [
+    'Business',
+    'Economics',
+    'Politics',
+    'Science and Research',
+    'History and Philosophy',
+  ],
+};
+
 class LessonsPage extends StatefulWidget {
   const LessonsPage({super.key});
   @override
@@ -10,11 +43,10 @@ class _LessonsPageState extends State<LessonsPage> {
   final _topicController = TextEditingController();
   final _pageController = PageController(viewportFraction: .82);
   int _hskLevel = 1;
-  int? _selectedLessonId;
+  String _selectedTopicTheme = _hskTopicPools[1]!.first;
   List<Map<String, dynamic>> _topics = const [];
   List<Map<String, dynamic>> _cards = const [];
   String _lessonTitle = '';
-  bool _loadingTopics = true;
   bool _generating = false;
   int _currentCard = 0;
   String? _notice;
@@ -46,25 +78,23 @@ class _LessonsPageState extends State<LessonsPage> {
     if (!mounted) return;
     setState(() {
       _topics = topics;
-      _selectedLessonId = topics.isEmpty ? null : topics.first['id'] as int;
-      if (topics.isNotEmpty) {
-        _hskLevel = topics.first['hsk_level'] as int;
-      }
-      _loadingTopics = false;
     });
   }
 
   String get _topic {
     final custom = _topicController.text.trim();
     if (custom.isNotEmpty) return custom;
-    return _selectedTopic?['theme'] as String? ?? 'Daily Life';
+    return _selectedTopicTheme;
   }
 
-  Map<String, dynamic>? get _selectedTopic {
+  List<String> get _availableTopics {
+    final themes = <String>{...?_hskTopicPools[_hskLevel]};
     for (final topic in _topics) {
-      if (topic['id'] == _selectedLessonId) return topic;
+      if (topic['hsk_level'] == _hskLevel) {
+        themes.add(topic['theme'] as String);
+      }
     }
-    return null;
+    return themes.toList();
   }
 
   Future<void> _generateLesson() async {
@@ -75,10 +105,7 @@ class _LessonsPageState extends State<LessonsPage> {
     });
     try {
       final topic = _topic;
-      final customTopic = _topicController.text.trim().isNotEmpty;
-      final hskLevel = customTopic
-          ? _hskLevel
-          : (_selectedTopic?['hsk_level'] as int? ?? _hskLevel);
+      final hskLevel = _hskLevel;
       final cached = await LocalDatabase.generatedLesson(
         theme: topic,
         hskLevel: hskLevel,
@@ -266,35 +293,30 @@ class _LessonsPageState extends State<LessonsPage> {
                 for (var level = 1; level <= 6; level++)
                   DropdownMenuItem(value: level, child: Text('HSK $level')),
               ],
-              onChanged: (value) => setState(() => _hskLevel = value ?? 1),
+              onChanged: (value) {
+                final level = value ?? 1;
+                setState(() {
+                  _hskLevel = level;
+                  _selectedTopicTheme = _hskTopicPools[level]!.first;
+                });
+              },
             ),
             const SizedBox(height: 18),
-            if (_loadingTopics)
-              const Center(child: CircularProgressIndicator())
-            else
-              DropdownButtonFormField<int>(
-                initialValue: _selectedLessonId,
-                decoration: const InputDecoration(
-                  labelText: 'Previous or default topic',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  for (final topic in _topics)
-                    DropdownMenuItem(
-                      value: topic['id'] as int,
-                      child: Text(topic['theme'] as String),
-                    ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLessonId = value;
-                    final selected = _selectedTopic;
-                    if (selected != null) {
-                      _hskLevel = selected['hsk_level'] as int;
-                    }
-                  });
-                },
+            DropdownButtonFormField<String>(
+              key: ValueKey('topics-$_hskLevel'),
+              initialValue: _selectedTopicTheme,
+              decoration: const InputDecoration(
+                labelText: 'Topic for this HSK level',
+                border: OutlineInputBorder(),
               ),
+              items: [
+                for (final topic in _availableTopics)
+                  DropdownMenuItem(value: topic, child: Text(topic)),
+              ],
+              onChanged: (value) => setState(
+                () => _selectedTopicTheme = value ?? _availableTopics.first,
+              ),
+            ),
             const SizedBox(height: 18),
             TextField(
               controller: _topicController,

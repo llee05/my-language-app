@@ -33,7 +33,7 @@ void main() {
     expect(find.text('HSK 5–6'), findsOneWidget);
     expect(find.text('3 minutes'), findsOneWidget);
     expect(find.text('5 minutes'), findsOneWidget);
-    expect(find.text('Unlimited'), findsOneWidget);
+    expect(find.text('Survival'), findsOneWidget);
 
     await tester.tap(find.text('Advanced'));
     await tester.tap(find.text('5 minutes'));

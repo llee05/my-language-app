@@ -33,7 +33,7 @@ void main() {
 
     expect(find.text('Resume'), findsOneWidget);
     await tester.tap(find.text('Resume'));
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     expect(find.text('Resuming Family & Relationships…'), findsOneWidget);
   });
@@ -92,12 +92,21 @@ void main() {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 500)),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('Lesson Builder'), findsOneWidget);
     expect(find.text('HSK level'), findsOneWidget);
     expect(find.text('Ask AI for a lesson topic'), findsOneWidget);
     expect(find.text('Generate lesson'), findsOneWidget);
+    expect(find.text('Daily Life'), findsOneWidget);
+
+    await tester.tap(find.text('HSK 1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('HSK 2').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('School'), findsOneWidget);
+    expect(find.text('Daily Life'), findsNothing);
   });
 
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {
