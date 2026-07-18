@@ -1,32 +1,137 @@
 # HanziPath Project Brief
 
-HanziPath is a Flutter-based Mandarin learning app for beginner learners. It combines a structured lesson dashboard, HSK-aligned flashcard content, progress-oriented UI patterns, and an AI tutor named Long Laoshi to help learners practice Chinese in a low-pressure, conversational way.
+HanziPath is a local-first Flutter app that helps beginner Mandarin learners build a consistent study habit with HSK-aligned vocabulary, short flashcard lessons, vocabulary games, and an optional AI tutor named Long Laoshi.
 
-The app is currently focused on the learner experience: continuing lessons, browsing suggested study material, tracking light progress signals, and asking the AI tutor for compact explanations with Chinese, pinyin, English, and practical tips.
+The project is currently an early-stage prototype. It has a polished learner-facing shell and several working study activities, but its progress indicators are not yet connected to persistent learning history. The MVP milestone is to turn those activities into one complete daily learning loop:
+
+`Learn → Answer → Save result → Schedule review → Return tomorrow`
 
 ## Product Goals
 
-- Help beginner Mandarin learners build consistent daily practice habits.
-- Present HSK vocabulary and example sentences in a clean lesson flow.
-- Offer an always-available AI tutor for corrections, sentence practice, and quick explanations.
-- Keep the interface calm, focused, and suitable for repeated study sessions.
-- Support local-first learning data so the app can initialize with seeded content.
+- Help beginner Mandarin learners practise in short, repeatable daily sessions.
+- Present HSK vocabulary, pinyin, meanings, and examples in a focused lesson flow.
+- Retain learner progress locally and work without an account or internet connection.
+- Bring weak vocabulary back at useful intervals through spaced review.
+- Offer an optional AI tutor for corrections, sentence practice, and explanations.
+- Keep the interface calm, approachable, and suitable for repeated use.
 
-## Core Features
+## Current Features
 
-- Responsive Flutter dashboard with sidebar navigation for Home, Lessons, Vocabulary, Progress, and AI Tutor.
-- HSK flashcard lesson seed data with Chinese terms, pinyin, English meanings, examples, quiz options, and answer keys.
-- Local SQLite database initialization using `sqflite_common_ffi`.
-- AI tutor chat powered locally by Ollama.
-- Dark Mandarin study interface with XP, streak, lesson progress, and suggested lesson surfaces.
+- Responsive dashboard and sidebar navigation across desktop and mobile layouts.
+- A bundled dataset of more than 4,000 vocabulary entries across HSK levels 1–6.
+- Seeded and AI-assisted flashcard lessons with an offline vocabulary fallback.
+- Reusable generated lessons stored in a local SQLite database.
+- Flashcards containing Hanzi, pinyin, English meanings, and example sentences.
+- Vocab Rush, with HSK difficulty ranges, timed and survival modes, streaks, and three-strike scoring.
+- Long Laoshi, a local AI tutor powered by Ollama.
+- Dashboard surfaces for lessons, vocabulary mastery, XP, streaks, and weekly activity.
+- Flutter widget, startup, database, game, and vocabulary dataset tests.
+
+> [!NOTE]
+> Dashboard XP, streak, mastery, lesson progress, and weekly activity are currently presentation data. Connecting them to real study history is part of the MVP roadmap.
+
+## MVP Definition
+
+The MVP is complete when a learner can:
+
+1. Choose an HSK level and daily study target.
+2. Complete a short vocabulary lesson.
+3. Rate words as needing more or less practice.
+4. Close the app and later resume an unfinished lesson.
+5. Review weak or due vocabulary in a daily review queue.
+6. See XP, streak, mastery, and activity values based on real study sessions.
+7. Use every core learning feature without Ollama or an internet connection.
+
+## MVP Roadmap
+
+### 1. Persistent learning foundation
+
+- Add first-run learner setup for name, HSK level, and daily word target.
+- Introduce typed models and repositories between the UI and SQLite.
+- Add versioned database migrations.
+- Store learner profiles, settings, lesson sessions, review history, and per-card progress.
+- Track times seen, correct and incorrect answers, mastery, last review, next review, and review interval.
+
+**Milestone:** restarting the app preserves learner settings, lesson position, and card results.
+
+### 2. Complete lesson loop
+
+- Add `Again`, `Hard`, `Good`, and `Easy` ratings after revealing a flashcard.
+- Save every rating immediately and update the card's review schedule.
+- Add lesson progress and a completion summary with accuracy, learned words, review words, and XP.
+- Connect the dashboard's Resume action to the latest unfinished session.
+- Let learners browse and start seeded or previously generated lessons directly.
+
+**Milestone:** a learner can finish or resume a lesson and see the correct result after reopening the app.
+
+### 3. Daily review and vocabulary library
+
+- Implement a simple, explainable spaced-repetition scheduler.
+- Create a daily queue of cards that are new, weak, or due for review.
+- Build the Vocabulary page with Hanzi, pinyin, and English search.
+- Add filters for HSK level and unseen, learning, learned, and due states.
+- Add word detail views with meanings and example sentences.
+- Feed incorrect Vocab Rush answers into the learner's review queue.
+
+**Milestone:** the app automatically offers a useful review session each day.
+
+### 4. Live dashboard and progress
+
+- Replace the hard-coded greeting date and study target with current data.
+- Calculate XP, current streak, due reviews, learned words, and mastery from stored activity.
+- Resume the latest incomplete lesson from the dashboard.
+- Populate the seven-day activity chart from completed sessions.
+- Recommend the next appropriate lesson.
+- Build the Progress page already represented in navigation.
+
+**Milestone:** every displayed metric is based on actual learner activity.
+
+### 5. Reliability and release readiness
+
+- Keep startup and core study flows independent of Ollama availability.
+- Detect AI availability only when an AI-powered feature is opened.
+- Show the actual local Ollama model instead of a hard-coded model label.
+- Add consistent loading, empty, error, offline, and retry states.
+- Improve keyboard navigation, semantics, and screen-reader support.
+- Add tests for migrations, review scheduling, card ratings, lesson resume, streaks, offline fallback, and malformed AI responses.
+- Add learner-data reset and export options.
+- Validate and polish one primary release target before expanding platform-specific work.
+
+**Milestone:** a new learner can complete the full offline learning loop and safely retain progress between launches.
+
+## Deferred Until After MVP
+
+- Accounts and cloud synchronization
+- Social features and leaderboards
+- Subscriptions and payments
+- Speech recognition and pronunciation grading
+- Handwriting recognition
+- Push notifications
+- Large achievement systems
+- Additional game modes
+- AI-generated content as a requirement for core study
 
 ## Technical Snapshot
 
 - Framework: Flutter
 - Language: Dart
 - Local storage: SQLite via `sqflite_common_ffi`
-- AI integration: Ollama's local chat API through a lightweight HTTP client
-- Tests: Flutter widget and database startup tests
+- AI integration: Ollama local chat API through a lightweight HTTP client
+- Content: bundled HSK 1–6 JSON vocabulary dataset and seeded lessons
+- Tests: Flutter widget, startup, database, Vocab Rush, and dataset tests
+
+## Current Architecture
+
+- `lib/main.dart` initializes local services, configures the app theme, and assembles feature files.
+- `lib/core/widgets/app_sidebar.dart` defines the responsive application navigation.
+- `lib/features/dashboard/` contains the main shell, learning dashboard, and progress rail.
+- `lib/features/lessons/lessons_page.dart` builds, caches, and displays flashcard lessons.
+- `lib/features/vocab_rush/vocab_rush_page.dart` implements the vocabulary game.
+- `lib/features/ai_tutor/ai_tutor_page.dart` implements Long Laoshi's chat interface and response formatting.
+- `lib/ai/ollama_service.dart` manages communication with the local Ollama server.
+- `lib/local_database.dart` creates, seeds, and queries the SQLite database.
+- `lib/database/flashcard_seed.dart` contains the initial flashcard lessons.
+- `assets/data/hsk_vocabulary.json` contains the bundled HSK vocabulary dataset.
 
 ## Local Setup
 
@@ -36,45 +141,33 @@ Install dependencies:
 flutter pub get
 ```
 
-Make sure at least one Ollama model is installed:
-
-```sh
-ollama list
-```
-
-On Linux, macOS, and Windows, the app starts `ollama serve` automatically when
-needed. Ollama must be installed and its executable must be available on `PATH`.
-
 Run the app:
 
 ```sh
 flutter run
 ```
 
-Run tests:
+Run static analysis and tests:
 
 ```sh
+flutter analyze
 flutter test
 ```
 
-## Current Architecture
+### Optional AI tutor setup
 
-- `lib/main.dart` wires local database initialization and the root `HanziPathApp`.
-- `lib/dashboard_page.dart` defines the responsive shell and switches to the AI tutor view from the sidebar.
-- `lib/learning_panel.dart` renders the main lesson dashboard and suggested lesson cards.
-- `lib/ai_tutor_page.dart` implements the Long Laoshi chat interface and response formatting.
-- `lib/ai/ollama_service.dart` connects the tutor to the local Ollama server. It uses the first installed model by default; override it with `--dart-define=OLLAMA_MODEL=model-name`.
-- `lib/local_database.dart` creates and seeds the local SQLite schema.
-- `lib/database/flashcard_seed.dart` contains the current flashcard lesson content.
+The core MVP is intended to work without AI. To use Long Laoshi and AI-assisted lesson examples, install Ollama and ensure at least one model is available:
 
-## Near-Term Opportunities
+```sh
+ollama list
+```
 
-- Connect lesson cards to a full flashcard review flow.
-- Persist user progress, streaks, XP, completed cards, and tutor conversation history.
-- Add vocabulary search and review modes.
-- Expand HSK lesson coverage beyond the current seed set.
-- Add integration tests around tutor failure states and database seeding.
+On Linux, macOS, and Windows, the current prototype attempts to start `ollama serve` when needed. Ollama must be installed and available on `PATH`. The first installed model is used by default; override it with:
+
+```sh
+flutter run --dart-define=OLLAMA_MODEL=model-name
+```
 
 ## Project Status
 
-HanziPath is an early-stage learning app prototype with a functioning dashboard, seeded Mandarin lesson data, local database setup, and AI tutor integration. The next major milestone is turning the dashboard lesson surfaces into complete study and review workflows.
+HanziPath has the content, visual foundation, and initial activities needed for an MVP. Development is now focused on persistent learner state, assessed lesson sessions, spaced review, and truthful progress reporting. New modes and broader platform features should follow only after that core learning loop is reliable.
