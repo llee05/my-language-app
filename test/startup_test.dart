@@ -31,4 +31,26 @@ void main() {
     expect(savedProfile?.hskLevel, 3);
     expect(savedProfile?.dailyWordTarget, 20);
   });
+
+  testWidgets('learner setup recovers when saving fails', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LearnerSetupPage(
+          onComplete: (_) => Future<void>.error(Exception('database locked')),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextFormField), 'Mei');
+    await tester.tap(find.text('Start learning'));
+    await tester.pump();
+
+    expect(
+      find.text('Could not save your profile. Please try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('Start learning'), findsOneWidget);
+  });
 }

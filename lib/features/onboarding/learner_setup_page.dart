@@ -15,6 +15,7 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
   int _hskLevel = 1;
   int _dailyTarget = 10;
   bool _saving = false;
+  String? _saveError;
 
   static const _targets = [5, 10, 15, 20, 30];
 
@@ -26,15 +27,35 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
 
   Future<void> _continue() async {
     if (!_formKey.currentState!.validate() || _saving) return;
-    setState(() => _saving = true);
-    await widget.onComplete(
-      LearnerProfile(
-        name: _nameController.text.trim(),
-        hskLevel: _hskLevel,
-        dailyWordTarget: _dailyTarget,
-      ),
-    );
-    if (mounted) setState(() => _saving = false);
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
+    try {
+      await widget
+          .onComplete(
+            LearnerProfile(
+              name: _nameController.text.trim(),
+              hskLevel: _hskLevel,
+              dailyWordTarget: _dailyTarget,
+            ),
+          )
+          .timeout(const Duration(seconds: 10));
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _saveError =
+            'Saving took too long. Close any other copy of HanziPath and try again.';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _saveError = 'Could not save your profile. Please try again.';
+      });
+      debugPrint('Failed to save learner profile: $error');
+    }
   }
 
   @override
@@ -142,6 +163,30 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                             ),
                         ],
                       ),
+                      if (_saveError case final error?) ...[
+                        const SizedBox(height: 18),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              size: 18,
+                              color: AppColors.red,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                error,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.red,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 32),
                       SizedBox(
                         width: double.infinity,
