@@ -1,7 +1,9 @@
 part of '../../main.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  const DashboardPage({super.key, required this.profile});
+
+  final LearnerProfile profile;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -22,6 +24,7 @@ class _DashboardPageState extends State<DashboardPage> {
               : Drawer(
                   child: AppSidebar(
                     selectedIndex: selectedNav,
+                    hskLevel: widget.profile.hskLevel,
                     onSelected: (value) => setState(() => selectedNav = value),
                   ),
                 ),
@@ -32,13 +35,17 @@ class _DashboardPageState extends State<DashboardPage> {
                   width: 210,
                   child: AppSidebar(
                     selectedIndex: selectedNav,
+                    hskLevel: widget.profile.hskLevel,
                     onSelected: (value) => setState(() => selectedNav = value),
                   ),
                 ),
               Expanded(
                 child: Column(
                   children: [
-                    DashboardHeader(showMenu: !showSidebar),
+                    DashboardHeader(
+                      showMenu: !showSidebar,
+                      profile: widget.profile,
+                    ),
                     Expanded(child: _DashboardBody(selectedNav: selectedNav)),
                   ],
                 ),
@@ -91,8 +98,13 @@ class _DashboardBody extends StatelessWidget {
 }
 
 class DashboardHeader extends StatelessWidget {
-  const DashboardHeader({super.key, required this.showMenu});
+  const DashboardHeader({
+    super.key,
+    required this.showMenu,
+    required this.profile,
+  });
   final bool showMenu;
+  final LearnerProfile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -113,25 +125,25 @@ class DashboardHeader extends StatelessWidget {
             ),
             const SizedBox(width: 10),
           ],
-          const Expanded(
+          Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '早上好，学员',
+                  '你好，${profile.name}',
                   style: TextStyle(
                     fontFamily: 'serif',
                     fontSize: 20,
                     color: AppColors.text,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
-                  'Thursday, July 3rd  ·  2 lessons remaining today',
+                  'HSK ${profile.hskLevel}  ·  ${profile.dailyWordTarget} words today',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
               ],
             ),

@@ -18,6 +18,20 @@ void main() {
     expect(rows, isEmpty);
   });
 
+  test('learner profile is persisted in app data', () async {
+    await LocalDatabase.saveLearnerProfile({
+      'name': 'Mei',
+      'hskLevel': 3,
+      'dailyWordTarget': 20,
+    });
+
+    expect(await LocalDatabase.learnerProfile(), {
+      'name': 'Mei',
+      'hskLevel': 3,
+      'dailyWordTarget': 20,
+    });
+  });
+
   test('generated lessons are saved and offered as previous topics', () async {
     await LocalDatabase.resetForTesting();
     await LocalDatabase.ensureInitialized();

@@ -198,6 +198,36 @@ class LocalDatabase {
     });
   }
 
+  static Future<Map<String, dynamic>?> learnerProfile() async {
+    final db = await ensureInitialized();
+    final rows = await db.query(
+      _tableName,
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: ['learner_profile'],
+      limit: 1,
+    );
+    if (rows.isEmpty || rows.single['value'] == null) return null;
+
+    try {
+      return Map<String, dynamic>.from(
+        jsonDecode(rows.single['value'] as String) as Map,
+      );
+    } on FormatException {
+      return null;
+    } on TypeError {
+      return null;
+    }
+  }
+
+  static Future<void> saveLearnerProfile(Map<String, dynamic> profile) async {
+    final db = await ensureInitialized();
+    await db.insert(_tableName, {
+      'key': 'learner_profile',
+      'value': jsonEncode(profile),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   static Future<void> resetForTesting() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;

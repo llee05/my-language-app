@@ -1,8 +1,14 @@
 part of '../../main.dart';
 
 class AppSidebar extends StatelessWidget {
-  const AppSidebar({super.key, this.selectedIndex = 0, this.onSelected});
+  const AppSidebar({
+    super.key,
+    this.selectedIndex = 0,
+    this.hskLevel = 1,
+    this.onSelected,
+  });
   final int selectedIndex;
+  final int hskLevel;
   final ValueChanged<int>? onSelected;
 
   static const items = [
@@ -45,11 +51,11 @@ class AppSidebar extends StatelessWidget {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 31, top: 4, bottom: 24),
+              Padding(
+                padding: const EdgeInsets.only(left: 31, top: 4, bottom: 24),
                 child: Text(
-                  'Mandarin · Beginner',
-                  style: TextStyle(fontSize: 10, color: AppColors.muted),
+                  'Mandarin · HSK $hskLevel',
+                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
                 ),
               ),
               for (var i = 0; i < items.length; i++)

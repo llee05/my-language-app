@@ -17,6 +17,7 @@ part 'features/dashboard/dashboard_page.dart';
 part 'features/dashboard/widgets/learning_panel.dart';
 part 'features/dashboard/widgets/progress_rail.dart';
 part 'features/lessons/lessons_page.dart';
+part 'features/onboarding/learner_setup_page.dart';
 part 'features/vocab_rush/vocab_rush_page.dart';
 
 Future<void> main() async {
@@ -33,8 +34,76 @@ Future<void> main() async {
   runApp(const HanziPathApp());
 }
 
-class HanziPathApp extends StatelessWidget {
-  const HanziPathApp({super.key});
+class LearnerProfile {
+  const LearnerProfile({
+    required this.name,
+    required this.hskLevel,
+    required this.dailyWordTarget,
+  });
+
+  final String name;
+  final int hskLevel;
+  final int dailyWordTarget;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'hskLevel': hskLevel,
+    'dailyWordTarget': dailyWordTarget,
+  };
+
+  static LearnerProfile? fromJson(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    final name = json['name'];
+    final hskLevel = json['hskLevel'];
+    final dailyWordTarget = json['dailyWordTarget'];
+    if (name is! String ||
+        name.trim().isEmpty ||
+        hskLevel is! int ||
+        hskLevel < 1 ||
+        hskLevel > 6 ||
+        dailyWordTarget is! int ||
+        dailyWordTarget < 1) {
+      return null;
+    }
+    return LearnerProfile(
+      name: name.trim(),
+      hskLevel: hskLevel,
+      dailyWordTarget: dailyWordTarget,
+    );
+  }
+}
+
+class HanziPathApp extends StatefulWidget {
+  const HanziPathApp({super.key, this.initialProfile});
+
+  /// Primarily useful for previews and widget tests.
+  final LearnerProfile? initialProfile;
+
+  @override
+  State<HanziPathApp> createState() => _HanziPathAppState();
+}
+
+class _HanziPathAppState extends State<HanziPathApp> {
+  late Future<LearnerProfile?> _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = widget.initialProfile == null
+        ? _loadProfile()
+        : Future.value(widget.initialProfile);
+  }
+
+  Future<LearnerProfile?> _loadProfile() async {
+    final profile = await LocalDatabase.learnerProfile();
+    return LearnerProfile.fromJson(profile);
+  }
+
+  Future<void> _completeSetup(LearnerProfile profile) async {
+    await LocalDatabase.saveLearnerProfile(profile.toJson());
+    if (!mounted) return;
+    setState(() => _profile = Future.value(profile));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +142,32 @@ class HanziPathApp extends StatelessWidget {
           bodyMedium: TextStyle(fontSize: 13, color: AppColors.muted),
         ),
       ),
-      home: const DashboardPage(),
+      home: FutureBuilder<LearnerProfile?>(
+        future: _profile,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const _AppLoadingScreen();
+          }
+          final profile = snapshot.data;
+          if (profile == null) {
+            return LearnerSetupPage(onComplete: _completeSetup);
+          }
+          return DashboardPage(profile: profile);
+        },
+      ),
+    );
+  }
+}
+
+class _AppLoadingScreen extends StatelessWidget {
+  const _AppLoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(color: AppColors.red, strokeWidth: 2),
+      ),
     );
   }
 }

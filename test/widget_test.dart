@@ -3,13 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
 
+const testProfile = LearnerProfile(
+  name: 'Mei',
+  hskLevel: 2,
+  dailyWordTarget: 10,
+);
+
 void main() {
   testWidgets('dashboard renders core learning content', (tester) async {
-    await tester.pumpWidget(const HanziPathApp());
+    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pump();
 
     final firstLesson = flashcardLessons.first;
 
-    expect(find.text('早上好，学员'), findsOneWidget);
+    expect(find.text('你好，Mei'), findsOneWidget);
     expect(find.text(firstLesson['lesson_title'] as String), findsWidgets);
     expect(find.text('WEEKLY XP'), findsOneWidget);
   });
@@ -65,7 +72,8 @@ void main() {
   testWidgets('vocab rush starts a timed vocabulary game', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const HanziPathApp());
+    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pump();
 
     await tester.tap(find.text('Vocab Rush'));
     await tester.pumpAndSettle();
@@ -86,7 +94,8 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const HanziPathApp());
+    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pump();
 
     await tester.tap(find.text('Lessons'));
     await tester.runAsync(
@@ -113,7 +122,8 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const HanziPathApp());
+    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pump();
 
     expect(find.text('AI Tutor'), findsOneWidget);
     await tester.tap(find.text('AI Tutor'));
@@ -133,7 +143,7 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             drawer: Drawer(child: Text('drawer contents')),
-            body: DashboardHeader(showMenu: true),
+            body: DashboardHeader(showMenu: true, profile: testProfile),
           ),
         ),
       );
