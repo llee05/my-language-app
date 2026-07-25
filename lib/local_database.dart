@@ -16,6 +16,16 @@ class LocalDatabase {
   static const String _lessonTable = 'lessons';
   static const String _cardTable = 'cards';
 
+  static Future<String> databasePath() async {
+    Directory documentsDirectory;
+    try {
+      documentsDirectory = await getApplicationDocumentsDirectory();
+    } catch (_) {
+      documentsDirectory = Directory.current;
+    }
+    return p.join(documentsDirectory.path, _dbName);
+  }
+
   static Future<Database> ensureInitialized() async {
     if (_database != null) {
       return _database!;
@@ -24,17 +34,8 @@ class LocalDatabase {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    Directory documentsDirectory;
-    try {
-      documentsDirectory = await getApplicationDocumentsDirectory();
-    } catch (_) {
-      documentsDirectory = Directory.current;
-    }
-
-    final databasePath = p.join(documentsDirectory.path, _dbName);
-
     _database = await openDatabase(
-      databasePath,
+      await databasePath(),
       version: 1,
       onCreate: (db, version) async {
         await _createSchema(db);
@@ -228,6 +229,22 @@ class LocalDatabase {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  static Future<void> clearLearnerProfile() async {
+    final db = await ensureInitialized();
+    await db.delete(
+      _tableName,
+      where: 'key = ?',
+      whereArgs: ['learner_profile'],
+    );
+  }
+
+  static Future<void> resetAllData() async {
+    final database = _database;
+    _database = null;
+    await database?.close();
+    await databaseFactory.deleteDatabase(await databasePath());
+  }
+
   static Future<void> resetForTesting() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -238,15 +255,7 @@ class LocalDatabase {
       _database = null;
     }
 
-    Directory documentsDirectory;
-    try {
-      documentsDirectory = await getApplicationDocumentsDirectory();
-    } catch (_) {
-      documentsDirectory = Directory.current;
-    }
-
-    final databasePath = p.join(documentsDirectory.path, _dbName);
-    await databaseFactory.deleteDatabase(databasePath);
+    await databaseFactory.deleteDatabase(await databasePath());
   }
 
   static Future<void> close() async {

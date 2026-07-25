@@ -156,6 +156,46 @@ void main() {
     },
   );
 
+  testWidgets('settings edits profile and can reset onboarding', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    LearnerProfile? updatedProfile;
+    var resetOnboarding = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (profile) async => updatedProfile = profile,
+            onResetOnboarding: () async => resetOnboarding = true,
+            onResetAllData: () async {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Lin');
+    await tester.tap(find.text('HSK 4'));
+    await tester.tap(find.text('20 words'));
+    await tester.tap(find.text('Save changes'));
+    await tester.pump();
+
+    expect(updatedProfile?.name, 'Lin');
+    expect(updatedProfile?.hskLevel, 4);
+    expect(updatedProfile?.dailyWordTarget, 20);
+
+    await tester.ensureVisible(find.text('Reset onboarding only'));
+    await tester.tap(find.text('Reset onboarding only'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reset learner setup?'), findsOneWidget);
+    await tester.tap(find.text('Reset setup'));
+    await tester.pumpAndSettle();
+    expect(resetOnboarding, isTrue);
+  });
+
   testWidgets('locked lesson tile renders with reduced opacity', (
     tester,
   ) async {

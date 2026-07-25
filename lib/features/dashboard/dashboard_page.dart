@@ -1,9 +1,18 @@
 part of '../../main.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key, required this.profile});
+  const DashboardPage({
+    super.key,
+    required this.profile,
+    required this.onProfileChanged,
+    required this.onResetOnboarding,
+    required this.onResetAllData,
+  });
 
   final LearnerProfile profile;
+  final Future<void> Function(LearnerProfile profile) onProfileChanged;
+  final Future<void> Function() onResetOnboarding;
+  final Future<void> Function() onResetAllData;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -46,7 +55,15 @@ class _DashboardPageState extends State<DashboardPage> {
                       showMenu: !showSidebar,
                       profile: widget.profile,
                     ),
-                    Expanded(child: _DashboardBody(selectedNav: selectedNav)),
+                    Expanded(
+                      child: _DashboardBody(
+                        selectedNav: selectedNav,
+                        profile: widget.profile,
+                        onProfileChanged: widget.onProfileChanged,
+                        onResetOnboarding: widget.onResetOnboarding,
+                        onResetAllData: widget.onResetAllData,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -59,8 +76,18 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 class _DashboardBody extends StatelessWidget {
-  const _DashboardBody({required this.selectedNav});
+  const _DashboardBody({
+    required this.selectedNav,
+    required this.profile,
+    required this.onProfileChanged,
+    required this.onResetOnboarding,
+    required this.onResetAllData,
+  });
   final int selectedNav;
+  final LearnerProfile profile;
+  final Future<void> Function(LearnerProfile profile) onProfileChanged;
+  final Future<void> Function() onResetOnboarding;
+  final Future<void> Function() onResetAllData;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +99,14 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 5) {
       return const AiTutorPage();
+    }
+    if (selectedNav == 6) {
+      return SettingsPage(
+        profile: profile,
+        onProfileChanged: onProfileChanged,
+        onResetOnboarding: onResetOnboarding,
+        onResetAllData: onResetAllData,
+      );
     }
 
     return LayoutBuilder(

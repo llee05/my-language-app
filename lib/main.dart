@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'local_database.dart';
@@ -18,6 +19,7 @@ part 'features/dashboard/widgets/learning_panel.dart';
 part 'features/dashboard/widgets/progress_rail.dart';
 part 'features/lessons/lessons_page.dart';
 part 'features/onboarding/learner_setup_page.dart';
+part 'features/settings/settings_page.dart';
 part 'features/vocab_rush/vocab_rush_page.dart';
 
 Future<void> main() async {
@@ -105,6 +107,18 @@ class _HanziPathAppState extends State<HanziPathApp> {
     setState(() => _profile = Future.value(profile));
   }
 
+  Future<void> _resetOnboarding() async {
+    await LocalDatabase.clearLearnerProfile();
+    if (!mounted) return;
+    setState(() => _profile = Future.value());
+  }
+
+  Future<void> _resetAllData() async {
+    await LocalDatabase.resetAllData();
+    if (!mounted) return;
+    setState(() => _profile = Future.value());
+  }
+
   @override
   Widget build(BuildContext context) {
     const seed = Color(0xFFFF6B5F);
@@ -152,7 +166,12 @@ class _HanziPathAppState extends State<HanziPathApp> {
           if (profile == null) {
             return LearnerSetupPage(onComplete: _completeSetup);
           }
-          return DashboardPage(profile: profile);
+          return DashboardPage(
+            profile: profile,
+            onProfileChanged: _completeSetup,
+            onResetOnboarding: _resetOnboarding,
+            onResetAllData: _resetAllData,
+          );
         },
       ),
     );

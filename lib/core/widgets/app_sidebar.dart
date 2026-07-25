@@ -114,7 +114,17 @@ class AppSidebar extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               const Divider(),
-              const _NavItem(icon: Icons.settings_outlined, label: 'Settings'),
+              _NavItem(
+                icon: Icons.settings_outlined,
+                label: 'Settings',
+                selected: selectedIndex == items.length,
+                onTap: () {
+                  onSelected?.call(items.length);
+                  if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
             ],
           ),
         ),

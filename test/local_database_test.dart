@@ -30,6 +30,9 @@ void main() {
       'hskLevel': 3,
       'dailyWordTarget': 20,
     });
+
+    await LocalDatabase.clearLearnerProfile();
+    expect(await LocalDatabase.learnerProfile(), isNull);
   });
 
   test('generated lessons are saved and offered as previous topics', () async {
