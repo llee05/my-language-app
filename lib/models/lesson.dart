@@ -14,6 +14,7 @@ class LessonSummary {
 
 class Flashcard {
   const Flashcard({
+    this.id = 0,
     required this.chinese,
     required this.pinyin,
     required this.englishMeaning,
@@ -24,6 +25,7 @@ class Flashcard {
     this.quizOptions = const [],
   });
 
+  final int id;
   final String chinese;
   final String pinyin;
   final String englishMeaning;
@@ -39,6 +41,7 @@ class Flashcard {
     String? exampleEnglish,
   }) {
     return Flashcard(
+      id: id,
       chinese: chinese,
       pinyin: pinyin,
       englishMeaning: englishMeaning,

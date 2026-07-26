@@ -4,70 +4,99 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../local_database.dart';
 import '../models/learner_profile.dart';
+import '../models/learning_progress.dart';
 import '../models/lesson.dart';
 import 'development_repository.dart';
 import 'learner_repository.dart';
 import 'lesson_repository.dart';
+import 'progress_repository.dart';
+import 'settings_repository.dart';
 
 class SqliteLearnerRepository implements LearnerRepository {
   const SqliteLearnerRepository();
-
-  static const _profileKey = 'learner_profile';
 
   @override
   Future<LearnerProfile?> load() async {
     final db = await LocalDatabase.ensureInitialized();
     final rows = await db.query(
-      'app_data',
-      columns: ['value'],
-      where: 'key = ?',
-      whereArgs: [_profileKey],
+      'learner_profiles',
+      where: 'id = ?',
+      whereArgs: [1],
       limit: 1,
     );
-    if (rows.isEmpty || rows.single['value'] == null) return null;
-
-    try {
-      final json = jsonDecode(rows.single['value'] as String);
-      if (json is! Map<String, dynamic>) return null;
-      final name = json['name'];
-      final hskLevel = json['hskLevel'];
-      final dailyWordTarget = json['dailyWordTarget'];
-      if (name is! String ||
-          name.trim().isEmpty ||
-          hskLevel is! int ||
-          hskLevel < 1 ||
-          hskLevel > 6 ||
-          dailyWordTarget is! int ||
-          dailyWordTarget < 1) {
-        return null;
-      }
-      return LearnerProfile(
-        name: name.trim(),
-        hskLevel: hskLevel,
-        dailyWordTarget: dailyWordTarget,
-      );
-    } on FormatException {
-      return null;
-    }
+    if (rows.isEmpty) return null;
+    final row = rows.single;
+    return LearnerProfile(
+      name: row['name'] as String,
+      hskLevel: row['hsk_level'] as int,
+      dailyWordTarget: row['daily_word_target'] as int,
+    );
   }
 
   @override
   Future<void> save(LearnerProfile profile) async {
     final db = await LocalDatabase.ensureInitialized();
-    await db.insert('app_data', {
-      'key': _profileKey,
-      'value': jsonEncode({
-        'name': profile.name,
-        'hskLevel': profile.hskLevel,
-        'dailyWordTarget': profile.dailyWordTarget,
-      }),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final now = DateTime.now().toUtc().toIso8601String();
+    final values = {
+      'name': profile.name.trim(),
+      'hsk_level': profile.hskLevel,
+      'daily_word_target': profile.dailyWordTarget,
+      'updated_at': now,
+    };
+    final updated = await db.update(
+      'learner_profiles',
+      values,
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+    if (updated == 0) {
+      await db.insert('learner_profiles', {
+        'id': 1,
+        ...values,
+        'created_at': now,
+      });
+    }
   }
 
   @override
   Future<void> clear() async {
     final db = await LocalDatabase.ensureInitialized();
-    await db.delete('app_data', where: 'key = ?', whereArgs: [_profileKey]);
+    await db.delete('learner_profiles', where: 'id = ?', whereArgs: [1]);
+  }
+}
+
+class SqliteSettingsRepository implements SettingsRepository {
+  const SqliteSettingsRepository();
+
+  @override
+  Future<LearnerSettings> load() async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'learner_settings',
+      where: 'learner_id = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+    if (rows.isEmpty) return const LearnerSettings();
+    final row = rows.single;
+    return LearnerSettings(
+      showPinyin: row['show_pinyin'] == 1,
+      soundEnabled: row['sound_enabled'] == 1,
+      reminderEnabled: row['reminder_enabled'] == 1,
+      reminderHour: row['reminder_hour'] as int,
+    );
+  }
+
+  @override
+  Future<void> save(LearnerSettings settings) async {
+    final db = await LocalDatabase.ensureInitialized();
+    await db.insert('learner_settings', {
+      'learner_id': 1,
+      'show_pinyin': settings.showPinyin ? 1 : 0,
+      'sound_enabled': settings.soundEnabled ? 1 : 0,
+      'reminder_enabled': settings.reminderEnabled ? 1 : 0,
+      'reminder_hour': settings.reminderHour,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }
 
@@ -150,6 +179,7 @@ class SqliteLessonRepository implements LessonRepository {
   );
 
   Flashcard _cardFromRow(Map<String, Object?> row) => Flashcard(
+    id: row['id'] as int,
     chinese: row['chinese'] as String,
     pinyin: row['pinyin'] as String,
     englishMeaning: row['english_meaning'] as String,
@@ -159,6 +189,156 @@ class SqliteLessonRepository implements LessonRepository {
     exampleEnglish: row['example_sentence_english'] as String,
     quizOptions: (jsonDecode(row['quiz_options'] as String) as List)
         .cast<String>(),
+  );
+}
+
+class SqliteProgressRepository implements ProgressRepository {
+  const SqliteProgressRepository();
+
+  @override
+  Future<LessonSession> startSession(int lessonId) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final startedAt = DateTime.now().toUtc();
+    final id = await db.insert('lesson_sessions', {
+      'learner_id': 1,
+      'lesson_id': lessonId,
+      'started_at': startedAt.toIso8601String(),
+    });
+    return LessonSession(id: id, lessonId: lessonId, startedAt: startedAt);
+  }
+
+  @override
+  Future<void> updateSession(LessonSession session) async {
+    final db = await LocalDatabase.ensureInitialized();
+    await db.update(
+      'lesson_sessions',
+      {
+        'completed_at': session.completedAt?.toUtc().toIso8601String(),
+        'current_card_index': session.currentCardIndex,
+        'cards_reviewed': session.cardsReviewed,
+        'correct_answers': session.correctAnswers,
+      },
+      where: 'id = ? AND learner_id = ?',
+      whereArgs: [session.id, 1],
+    );
+  }
+
+  @override
+  Future<LessonSession?> activeSessionForLesson(int lessonId) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'lesson_sessions',
+      where: 'learner_id = ? AND lesson_id = ? AND completed_at IS NULL',
+      whereArgs: [1, lessonId],
+      orderBy: 'started_at DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : _sessionFromRow(rows.single);
+  }
+
+  @override
+  Future<void> recordReview({
+    required ReviewRecord review,
+    required CardProgress progress,
+  }) async {
+    if (review.cardId != progress.cardId) {
+      throw ArgumentError('Review and progress must refer to the same card.');
+    }
+    final db = await LocalDatabase.ensureInitialized();
+    await db.transaction((txn) async {
+      await txn.insert('review_history', {
+        'learner_id': 1,
+        'card_id': review.cardId,
+        'session_id': review.sessionId,
+        'reviewed_at': review.reviewedAt.toUtc().toIso8601String(),
+        'rating': review.rating.index,
+        'was_correct': review.wasCorrect ? 1 : 0,
+        'response_time_ms': review.responseTimeMs,
+      });
+      await txn.insert('card_progress', {
+        'learner_id': 1,
+        'card_id': progress.cardId,
+        'repetitions': progress.repetitions,
+        'lapses': progress.lapses,
+        'interval_days': progress.intervalDays,
+        'ease_factor': progress.easeFactor,
+        'due_at': progress.dueAt.toUtc().toIso8601String(),
+        'last_reviewed_at': progress.lastReviewedAt?.toUtc().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+  }
+
+  @override
+  Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'review_history',
+      where: cardId == null
+          ? 'learner_id = ?'
+          : 'learner_id = ? AND card_id = ?',
+      whereArgs: cardId == null ? [1] : [1, cardId],
+      orderBy: 'reviewed_at DESC',
+      limit: limit,
+    );
+    return rows.map(_reviewFromRow).toList(growable: false);
+  }
+
+  @override
+  Future<CardProgress?> progressForCard(int cardId) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'card_progress',
+      where: 'learner_id = ? AND card_id = ?',
+      whereArgs: [1, cardId],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : _progressFromRow(rows.single);
+  }
+
+  @override
+  Future<List<CardProgress>> dueCards(DateTime through) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'card_progress',
+      where: 'learner_id = ? AND due_at <= ?',
+      whereArgs: [1, through.toUtc().toIso8601String()],
+      orderBy: 'due_at ASC',
+    );
+    return rows.map(_progressFromRow).toList(growable: false);
+  }
+
+  LessonSession _sessionFromRow(Map<String, Object?> row) => LessonSession(
+    id: row['id'] as int,
+    lessonId: row['lesson_id'] as int,
+    startedAt: DateTime.parse(row['started_at'] as String),
+    completedAt: row['completed_at'] == null
+        ? null
+        : DateTime.parse(row['completed_at'] as String),
+    currentCardIndex: row['current_card_index'] as int,
+    cardsReviewed: row['cards_reviewed'] as int,
+    correctAnswers: row['correct_answers'] as int,
+  );
+
+  ReviewRecord _reviewFromRow(Map<String, Object?> row) => ReviewRecord(
+    id: row['id'] as int,
+    cardId: row['card_id'] as int,
+    sessionId: row['session_id'] as int?,
+    reviewedAt: DateTime.parse(row['reviewed_at'] as String),
+    rating: ReviewRating.values[row['rating'] as int],
+    wasCorrect: row['was_correct'] == 1,
+    responseTimeMs: row['response_time_ms'] as int?,
+  );
+
+  CardProgress _progressFromRow(Map<String, Object?> row) => CardProgress(
+    cardId: row['card_id'] as int,
+    repetitions: row['repetitions'] as int,
+    lapses: row['lapses'] as int,
+    intervalDays: row['interval_days'] as int,
+    easeFactor: (row['ease_factor'] as num).toDouble(),
+    dueAt: DateTime.parse(row['due_at'] as String),
+    lastReviewedAt: row['last_reviewed_at'] == null
+        ? null
+        : DateTime.parse(row['last_reviewed_at'] as String),
   );
 }
 
