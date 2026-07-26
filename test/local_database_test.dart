@@ -1,8 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/local_database.dart';
+import 'package:mylanguageapp/models/learner_profile.dart';
+import 'package:mylanguageapp/models/lesson.dart';
+import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const learners = SqliteLearnerRepository();
+  const lessons = SqliteLessonRepository();
 
   test('database initializes and starts empty', () async {
     await LocalDatabase.resetForTesting();
@@ -19,63 +24,66 @@ void main() {
   });
 
   test('learner profile is persisted in app data', () async {
-    await LocalDatabase.saveLearnerProfile({
-      'name': 'Mei',
-      'hskLevel': 3,
-      'dailyWordTarget': 20,
-    });
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 3, dailyWordTarget: 20),
+    );
 
-    expect(await LocalDatabase.learnerProfile(), {
-      'name': 'Mei',
-      'hskLevel': 3,
-      'dailyWordTarget': 20,
-    });
+    final profile = await learners.load();
+    expect(profile?.name, 'Mei');
+    expect(profile?.hskLevel, 3);
+    expect(profile?.dailyWordTarget, 20);
 
-    await LocalDatabase.clearLearnerProfile();
-    expect(await LocalDatabase.learnerProfile(), isNull);
+    await learners.clear();
+    expect(await learners.load(), isNull);
   });
 
   test('generated lessons are saved and offered as previous topics', () async {
     await LocalDatabase.resetForTesting();
     await LocalDatabase.ensureInitialized();
 
-    await LocalDatabase.saveGeneratedLesson(
-      title: 'Ordering breakfast · HSK 1',
-      theme: 'Ordering breakfast',
-      hskLevel: 1,
-      cards: const [
-        {
-          'chinese': '吃',
-          'pinyin': 'chī',
-          'english_meaning': 'to eat',
-          'part_of_speech': 'verb',
-          'example_sentence_chinese': '我吃早饭。',
-          'example_sentence_pinyin': 'Wǒ chī zǎofàn.',
-          'example_sentence_english': 'I eat breakfast.',
-        },
-      ],
+    await lessons.saveGenerated(
+      const Lesson(
+        summary: LessonSummary(
+          id: 0,
+          title: 'Ordering breakfast · HSK 1',
+          theme: 'Ordering breakfast',
+          hskLevel: 1,
+        ),
+        cards: [
+          Flashcard(
+            chinese: '吃',
+            pinyin: 'chī',
+            englishMeaning: 'to eat',
+            partOfSpeech: 'verb',
+            exampleChinese: '我吃早饭。',
+            examplePinyin: 'Wǒ chī zǎofàn.',
+            exampleEnglish: 'I eat breakfast.',
+          ),
+        ],
+      ),
     );
 
-    final topics = await LocalDatabase.lessonTopics();
-    expect(topics.first['lesson_title'], 'Ordering breakfast · HSK 1');
-    expect(topics.first['theme'], 'Ordering breakfast');
+    final topics = await lessons.topics();
+    expect(topics.first.title, 'Ordering breakfast · HSK 1');
+    expect(topics.first.theme, 'Ordering breakfast');
 
     final db = await LocalDatabase.ensureInitialized();
     final cards = await db.query(
       'cards',
       where: 'lesson_id = ?',
-      whereArgs: [topics.first['id']],
+      whereArgs: [topics.first.id],
     );
     expect(cards, hasLength(1));
     expect(cards.single['chinese'], '吃');
     expect(cards.single['example_sentence_english'], 'I eat breakfast.');
 
-    final cached = await LocalDatabase.generatedLesson(
+    final cached = await lessons.findGenerated(
       theme: 'ordering BREAKFAST',
       hskLevel: 1,
     );
     expect(cached, isNotNull);
-    expect(cached!['title'], 'Ordering breakfast · HSK 1');
-    expect(cached['cards'], hasLength(1));
+    expect(cached!.summary.title, 'Ordering breakfast · HSK 1');
+    expect(cached.cards, hasLength(1));
+    expect(cached.cards.single.chinese, '吃');
   });
 }

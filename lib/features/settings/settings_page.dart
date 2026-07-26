@@ -7,12 +7,14 @@ class SettingsPage extends StatefulWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    required this.developmentRepository,
   });
 
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final DevelopmentRepository developmentRepository;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -33,7 +35,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _nameController = TextEditingController(text: widget.profile.name);
     _hskLevel = widget.profile.hskLevel;
     _dailyTarget = widget.profile.dailyWordTarget;
-    _databasePath = LocalDatabase.databasePath();
+    _databasePath = widget.developmentRepository.databasePath();
   }
 
   @override

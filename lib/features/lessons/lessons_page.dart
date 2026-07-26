@@ -34,7 +34,9 @@ const Map<int, List<String>> _hskTopicPools = {
 };
 
 class LessonsPage extends StatefulWidget {
-  const LessonsPage({super.key});
+  const LessonsPage({super.key, required this.repository});
+
+  final LessonRepository repository;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -44,8 +46,8 @@ class _LessonsPageState extends State<LessonsPage> {
   final _pageController = PageController(viewportFraction: .82);
   int _hskLevel = 1;
   String _selectedTopicTheme = _hskTopicPools[1]!.first;
-  List<Map<String, dynamic>> _topics = const [];
-  List<Map<String, dynamic>> _cards = const [];
+  List<LessonSummary> _topics = const [];
+  List<Flashcard> _cards = const [];
   String _lessonTitle = '';
   bool _generating = false;
   int _currentCard = 0;
@@ -74,7 +76,7 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _loadTopics() async {
-    final topics = await LocalDatabase.lessonTopics();
+    final topics = await widget.repository.topics();
     if (!mounted) return;
     setState(() {
       _topics = topics;
@@ -90,8 +92,8 @@ class _LessonsPageState extends State<LessonsPage> {
   List<String> get _availableTopics {
     final themes = <String>{...?_hskTopicPools[_hskLevel]};
     for (final topic in _topics) {
-      if (topic['hsk_level'] == _hskLevel) {
-        themes.add(topic['theme'] as String);
+      if (topic.hskLevel == _hskLevel) {
+        themes.add(topic.theme);
       }
     }
     return themes.toList();
@@ -106,16 +108,15 @@ class _LessonsPageState extends State<LessonsPage> {
     try {
       final topic = _topic;
       final hskLevel = _hskLevel;
-      final cached = await LocalDatabase.generatedLesson(
+      final cached = await widget.repository.findGenerated(
         theme: topic,
         hskLevel: hskLevel,
       );
       if (cached != null) {
         if (!mounted) return;
         setState(() {
-          _lessonTitle = cached['title'] as String;
-          _cards = (cached['cards'] as List<dynamic>)
-              .cast<Map<String, dynamic>>();
+          _lessonTitle = cached.summary.title;
+          _cards = cached.cards;
           _currentCard = 0;
           _generating = false;
           _notice = 'Loaded an existing lesson instantly.';
@@ -136,7 +137,7 @@ class _LessonsPageState extends State<LessonsPage> {
           .toList();
       _rankForTopic(candidates, _topic);
 
-      List<Map<String, dynamic>> cards;
+      List<Flashcard> cards;
       try {
         cards = await _generateWithAi(
           topic,
@@ -150,11 +151,16 @@ class _LessonsPageState extends State<LessonsPage> {
       }
       if (cards.isEmpty) throw StateError('No vocabulary was available.');
       final title = '$topic · HSK $hskLevel';
-      await LocalDatabase.saveGeneratedLesson(
-        title: title,
-        theme: topic,
-        hskLevel: hskLevel,
-        cards: cards,
+      await widget.repository.saveGenerated(
+        Lesson(
+          summary: LessonSummary(
+            id: 0,
+            title: title,
+            theme: topic,
+            hskLevel: hskLevel,
+          ),
+          cards: cards,
+        ),
       );
       if (!mounted) return;
       setState(() {
@@ -191,7 +197,7 @@ class _LessonsPageState extends State<LessonsPage> {
     });
   }
 
-  Future<List<Map<String, dynamic>>> _generateWithAi(
+  Future<List<Flashcard>> _generateWithAi(
     String topic,
     int hskLevel,
     List<Map<String, dynamic>> candidates,
@@ -235,25 +241,20 @@ class _LessonsPageState extends State<LessonsPage> {
       if (index < 0 || index >= candidates.length || !used.add(index)) {
         throw const FormatException('AI selected invalid vocabulary.');
       }
-      return {
-        ..._fallbackCard(candidates[index]),
-        'example_sentence_chinese': item['exampleChinese'] ?? '',
-        'example_sentence_pinyin': item['examplePinyin'] ?? '',
-        'example_sentence_english': item['exampleEnglish'] ?? '',
-      };
+      return _fallbackCard(candidates[index]).copyWith(
+        exampleChinese: item['exampleChinese'] as String? ?? '',
+        examplePinyin: item['examplePinyin'] as String? ?? '',
+        exampleEnglish: item['exampleEnglish'] as String? ?? '',
+      );
     }).toList();
   }
 
-  Map<String, dynamic> _fallbackCard(Map<String, dynamic> word) => {
-    'chinese': word['simplified'],
-    'traditional': word['traditional'],
-    'pinyin': word['pinyin'],
-    'english_meaning': (word['meanings'] as List).first,
-    'part_of_speech': (word['partOfSpeech'] as List).join(', '),
-    'example_sentence_chinese': '',
-    'example_sentence_pinyin': '',
-    'example_sentence_english': '',
-  };
+  Flashcard _fallbackCard(Map<String, dynamic> word) => Flashcard(
+    chinese: word['simplified'] as String,
+    pinyin: word['pinyin'] as String,
+    englishMeaning: (word['meanings'] as List).first as String,
+    partOfSpeech: (word['partOfSpeech'] as List).join(', '),
+  );
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -418,7 +419,7 @@ class _LessonFlashcard extends StatefulWidget {
     required this.index,
     required this.total,
   });
-  final Map<String, dynamic> card;
+  final Flashcard card;
   final int index;
   final int total;
 
@@ -472,7 +473,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     children: [
       const Spacer(),
       Text(
-        widget.card['chinese'] as String,
+        widget.card.chinese,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontFamily: 'serif',
@@ -489,29 +490,26 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     children: [
       const Spacer(),
       Text(
-        widget.card['pinyin'] as String,
+        widget.card.pinyin,
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 22, color: AppColors.gold),
       ),
       const SizedBox(height: 18),
       Text(
-        widget.card['english_meaning'] as String,
+        widget.card.englishMeaning,
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 26, color: AppColors.text),
       ),
-      if ((widget.card['example_sentence_chinese'] as String).isNotEmpty) ...[
+      if (widget.card.exampleChinese.isNotEmpty) ...[
         const SizedBox(height: 28),
+        Text(widget.card.exampleChinese, textAlign: TextAlign.center),
         Text(
-          widget.card['example_sentence_chinese'] as String,
-          textAlign: TextAlign.center,
-        ),
-        Text(
-          widget.card['example_sentence_pinyin'] as String,
+          widget.card.examplePinyin,
           textAlign: TextAlign.center,
           style: const TextStyle(color: AppColors.muted),
         ),
         Text(
-          widget.card['example_sentence_english'] as String,
+          widget.card.exampleEnglish,
           textAlign: TextAlign.center,
           style: const TextStyle(color: AppColors.muted),
         ),

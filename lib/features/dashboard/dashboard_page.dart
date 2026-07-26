@@ -7,12 +7,16 @@ class DashboardPage extends StatefulWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    required this.lessonRepository,
+    required this.developmentRepository,
   });
 
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final LessonRepository lessonRepository;
+  final DevelopmentRepository developmentRepository;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -62,6 +66,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
                         onResetAllData: widget.onResetAllData,
+                        lessonRepository: widget.lessonRepository,
+                        developmentRepository: widget.developmentRepository,
                       ),
                     ),
                   ],
@@ -82,17 +88,21 @@ class _DashboardBody extends StatelessWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    required this.lessonRepository,
+    required this.developmentRepository,
   });
   final int selectedNav;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final LessonRepository lessonRepository;
+  final DevelopmentRepository developmentRepository;
 
   @override
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
-      return const LessonsPage();
+      return LessonsPage(repository: lessonRepository);
     }
     if (selectedNav == 2) {
       return const VocabRushPage();
@@ -106,6 +116,7 @@ class _DashboardBody extends StatelessWidget {
         onProfileChanged: onProfileChanged,
         onResetOnboarding: onResetOnboarding,
         onResetAllData: onResetAllData,
+        developmentRepository: developmentRepository,
       );
     }
 

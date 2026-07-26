@@ -9,6 +9,14 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'local_database.dart';
 import 'database/flashcard_seed.dart';
 import 'ai/ollama_service.dart';
+import 'models/learner_profile.dart';
+import 'models/lesson.dart';
+import 'repositories/app_dependencies.dart';
+import 'repositories/development_repository.dart';
+import 'repositories/lesson_repository.dart';
+
+export 'models/learner_profile.dart';
+export 'models/lesson.dart';
 
 part 'core/theme/app_colors.dart';
 part 'core/widgets/app_sidebar.dart';
@@ -36,50 +44,16 @@ Future<void> main() async {
   runApp(const HanziPathApp());
 }
 
-class LearnerProfile {
-  const LearnerProfile({
-    required this.name,
-    required this.hskLevel,
-    required this.dailyWordTarget,
-  });
-
-  final String name;
-  final int hskLevel;
-  final int dailyWordTarget;
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'hskLevel': hskLevel,
-    'dailyWordTarget': dailyWordTarget,
-  };
-
-  static LearnerProfile? fromJson(Map<String, dynamic>? json) {
-    if (json == null) return null;
-    final name = json['name'];
-    final hskLevel = json['hskLevel'];
-    final dailyWordTarget = json['dailyWordTarget'];
-    if (name is! String ||
-        name.trim().isEmpty ||
-        hskLevel is! int ||
-        hskLevel < 1 ||
-        hskLevel > 6 ||
-        dailyWordTarget is! int ||
-        dailyWordTarget < 1) {
-      return null;
-    }
-    return LearnerProfile(
-      name: name.trim(),
-      hskLevel: hskLevel,
-      dailyWordTarget: dailyWordTarget,
-    );
-  }
-}
-
 class HanziPathApp extends StatefulWidget {
-  const HanziPathApp({super.key, this.initialProfile});
+  const HanziPathApp({
+    super.key,
+    this.initialProfile,
+    this.dependencies = const AppDependencies(),
+  });
 
   /// Primarily useful for previews and widget tests.
   final LearnerProfile? initialProfile;
+  final AppDependencies dependencies;
 
   @override
   State<HanziPathApp> createState() => _HanziPathAppState();
@@ -97,24 +71,23 @@ class _HanziPathAppState extends State<HanziPathApp> {
   }
 
   Future<LearnerProfile?> _loadProfile() async {
-    final profile = await LocalDatabase.learnerProfile();
-    return LearnerProfile.fromJson(profile);
+    return widget.dependencies.learners.load();
   }
 
   Future<void> _completeSetup(LearnerProfile profile) async {
-    await LocalDatabase.saveLearnerProfile(profile.toJson());
+    await widget.dependencies.learners.save(profile);
     if (!mounted) return;
     setState(() => _profile = Future.value(profile));
   }
 
   Future<void> _resetOnboarding() async {
-    await LocalDatabase.clearLearnerProfile();
+    await widget.dependencies.learners.clear();
     if (!mounted) return;
     setState(() => _profile = Future.value());
   }
 
   Future<void> _resetAllData() async {
-    await LocalDatabase.resetAllData();
+    await widget.dependencies.development.resetAllData();
     if (!mounted) return;
     setState(() => _profile = Future.value());
   }
@@ -171,6 +144,8 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onProfileChanged: _completeSetup,
             onResetOnboarding: _resetOnboarding,
             onResetAllData: _resetAllData,
+            lessonRepository: widget.dependencies.lessons,
+            developmentRepository: widget.dependencies.development,
           );
         },
       ),

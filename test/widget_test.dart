@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 
 const testProfile = LearnerProfile(
   name: 'Mei',
@@ -172,6 +173,7 @@ void main() {
             onProfileChanged: (profile) async => updatedProfile = profile,
             onResetOnboarding: () async => resetOnboarding = true,
             onResetAllData: () async {},
+            developmentRepository: const SqliteDevelopmentRepository(),
           ),
         ),
       ),
