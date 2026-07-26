@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'database/flashcard_seed.dart';
+import 'database/migrations.dart';
 
 class LocalDatabase {
   LocalDatabase._();
@@ -15,8 +16,15 @@ class LocalDatabase {
   static const String _tableName = 'app_data';
   static const String _lessonTable = 'lessons';
   static const String _cardTable = 'cards';
+  static String? _databasePathOverride;
+
+  static void useDatabasePathForTesting(String? path) {
+    _databasePathOverride = path;
+  }
 
   static Future<String> databasePath() async {
+    if (_databasePathOverride case final path?) return path;
+
     Directory documentsDirectory;
     try {
       documentsDirectory = await getApplicationDocumentsDirectory();
@@ -36,14 +44,18 @@ class LocalDatabase {
 
     _database = await openDatabase(
       await databasePath(),
-      version: 1,
+      version: databaseSchemaVersion,
+      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: (db, version) async {
         await _createSchema(db);
+        await migrateDatabase(db, fromVersion: 1, toVersion: version);
         await _seedDefaultLessons(db);
       },
-      onOpen: (db) async {
-        await _createSchema(db);
-      },
+      onUpgrade: (db, oldVersion, newVersion) =>
+          migrateDatabase(db, fromVersion: oldVersion, toVersion: newVersion),
+      onDowngrade: (db, oldVersion, newVersion) => throw StateError(
+        'Database downgrade is not supported: $oldVersion → $newVersion.',
+      ),
     );
 
     await _maybeSeedDefaultLessons(_database!);

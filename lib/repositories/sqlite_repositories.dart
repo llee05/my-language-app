@@ -94,7 +94,7 @@ class SqliteLessonRepository implements LessonRepository {
     final lessons = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
-      where: 'LOWER(theme) = LOWER(?) AND hsk_level = ?',
+      where: 'theme = ? COLLATE NOCASE AND hsk_level = ?',
       whereArgs: [theme.trim(), hskLevel],
       orderBy: 'id DESC',
       limit: 1,
