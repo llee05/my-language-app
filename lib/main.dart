@@ -80,19 +80,25 @@ class _HanziPathAppState extends State<HanziPathApp> {
   Future<void> _completeSetup(LearnerProfile profile) async {
     await widget.dependencies.learners.save(profile);
     if (!mounted) return;
-    setState(() => _profile = Future.value(profile));
+    setState(() {
+      _profile = Future.value(profile);
+    });
   }
 
   Future<void> _resetOnboarding() async {
     await widget.dependencies.learners.clear();
     if (!mounted) return;
-    setState(() => _profile = Future.value());
+    setState(() {
+      _profile = Future.value();
+    });
   }
 
   Future<void> _resetAllData() async {
     await widget.dependencies.development.resetAllData();
     if (!mounted) return;
-    setState(() => _profile = Future.value());
+    setState(() {
+      _profile = Future.value();
+    });
   }
 
   @override
