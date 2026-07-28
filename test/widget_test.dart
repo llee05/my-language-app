@@ -123,7 +123,7 @@ void main() {
     expect(find.text('Daily Life'), findsNothing);
   });
 
-  testWidgets('lesson resumes its position and records a graded answer', (
+  testWidgets('lesson resumes its position and records a familiar word', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1000, 1100));
@@ -145,7 +145,12 @@ void main() {
 
     await tester.tap(find.text('学'));
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Good'));
+    await tester.tap(
+      find.widgetWithText(
+        OutlinedButton,
+        'Click if you are already familiar with this word',
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(progress.recordedReview?.cardId, 12);

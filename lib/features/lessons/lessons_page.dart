@@ -663,26 +663,11 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         ),
       ],
       const Spacer(),
-      const Text(
-        'How well did you remember?',
-        style: TextStyle(color: AppColors.muted),
-      ),
-      const SizedBox(height: 10),
-      Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        children: [
-          for (final choice in const [
-            (ReviewRating.again, 'Again'),
-            (ReviewRating.hard, 'Hard'),
-            (ReviewRating.good, 'Good'),
-            (ReviewRating.easy, 'Easy'),
-          ])
-            OutlinedButton(
-              onPressed: _submitting || _rated ? null : () => _rate(choice.$1),
-              child: Text(choice.$2),
-            ),
-        ],
+      OutlinedButton(
+        onPressed: _submitting || _rated
+            ? null
+            : () => _rate(ReviewRating.easy),
+        child: const Text('Click if you are already familiar with this word'),
       ),
       const SizedBox(height: 12),
     ],
