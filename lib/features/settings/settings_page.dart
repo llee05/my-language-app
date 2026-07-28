@@ -8,6 +8,7 @@ class SettingsPage extends StatefulWidget {
     required this.onResetOnboarding,
     required this.onResetAllData,
     required this.developmentRepository,
+    required this.settingsRepository,
   });
 
   final LearnerProfile profile;
@@ -15,6 +16,7 @@ class SettingsPage extends StatefulWidget {
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
   final DevelopmentRepository developmentRepository;
+  final SettingsRepository settingsRepository;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -25,6 +27,11 @@ class _SettingsPageState extends State<SettingsPage> {
   late int _hskLevel;
   late int _dailyTarget;
   bool _saving = false;
+  bool _loadingPreferences = true;
+  bool _showPinyin = true;
+  bool _soundEnabled = true;
+  bool _reminderEnabled = false;
+  int _reminderHour = 18;
   late final Future<String> _databasePath;
 
   static const _targets = [5, 10, 15, 20, 30];
@@ -36,6 +43,19 @@ class _SettingsPageState extends State<SettingsPage> {
     _hskLevel = widget.profile.hskLevel;
     _dailyTarget = widget.profile.dailyWordTarget;
     _databasePath = widget.developmentRepository.databasePath();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final settings = await widget.settingsRepository.load();
+    if (!mounted) return;
+    setState(() {
+      _showPinyin = settings.showPinyin;
+      _soundEnabled = settings.soundEnabled;
+      _reminderEnabled = settings.reminderEnabled;
+      _reminderHour = settings.reminderHour;
+      _loadingPreferences = false;
+    });
   }
 
   @override
@@ -54,6 +74,14 @@ class _SettingsPageState extends State<SettingsPage> {
           name: name,
           hskLevel: _hskLevel,
           dailyWordTarget: _dailyTarget,
+        ),
+      );
+      await widget.settingsRepository.save(
+        LearnerSettings(
+          showPinyin: _showPinyin,
+          soundEnabled: _soundEnabled,
+          reminderEnabled: _reminderEnabled,
+          reminderHour: _reminderHour,
         ),
       );
     } finally {
@@ -186,6 +214,75 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 20),
+        _SettingsCard(
+          title: 'Learning preferences',
+          subtitle: 'These preferences are restored on your next launch.',
+          child: _loadingPreferences
+              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : Column(
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Show pinyin'),
+                        value: _showPinyin,
+                        onChanged: (value) =>
+                            setState(() => _showPinyin = value),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Sound'),
+                        value: _soundEnabled,
+                        onChanged: (value) =>
+                            setState(() => _soundEnabled = value),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Daily reminder'),
+                        value: _reminderEnabled,
+                        onChanged: (value) =>
+                            setState(() => _reminderEnabled = value),
+                      ),
+                    ),
+                    if (_reminderEnabled)
+                      DropdownButtonFormField<int>(
+                        initialValue: _reminderHour,
+                        decoration: const InputDecoration(
+                          labelText: 'Reminder time',
+                        ),
+                        items: [
+                          for (var hour = 0; hour < 24; hour++)
+                            DropdownMenuItem(
+                              value: hour,
+                              child: Text(
+                                '${hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)}:00 '
+                                '${hour < 12 ? 'AM' : 'PM'}',
+                              ),
+                            ),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => _reminderHour = value ?? 18),
+                      ),
+                    const SizedBox(height: 18),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.icon(
+                        onPressed: _saving ? null : _save,
+                        icon: const Icon(Icons.save_outlined),
+                        label: const Text('Save preferences'),
+                      ),
+                    ),
+                  ],
+                ),
         ),
         if (kDebugMode) ...[
           const SizedBox(height: 20),

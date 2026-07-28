@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/repositories/lesson_repository.dart';
+import 'package:mylanguageapp/repositories/progress_repository.dart';
+import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 
 const testProfile = LearnerProfile(
@@ -119,6 +123,37 @@ void main() {
     expect(find.text('Daily Life'), findsNothing);
   });
 
+  testWidgets('lesson resumes its position and records a graded answer', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _MemoryLessonRepository();
+    final progress = _MemoryProgressRepository();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(repository: lessons, progressRepository: progress),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pageView = tester.widget<PageView>(find.byType(PageView));
+    expect(pageView.controller?.page, 1);
+
+    await tester.tap(find.text('学'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Good'));
+    await tester.pumpAndSettle();
+
+    expect(progress.recordedReview?.cardId, 12);
+    expect(progress.recordedReview?.wasCorrect, isTrue);
+    expect(progress.savedSession?.currentCardIndex, 2);
+    expect(progress.savedSession?.isComplete, isTrue);
+  });
+
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -164,6 +199,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     LearnerProfile? updatedProfile;
     var resetOnboarding = false;
+    final settingsRepository = _MemorySettingsRepository();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -174,6 +210,7 @@ void main() {
             onResetOnboarding: () async => resetOnboarding = true,
             onResetAllData: () async {},
             developmentRepository: const SqliteDevelopmentRepository(),
+            settingsRepository: settingsRepository,
           ),
         ),
       ),
@@ -189,13 +226,53 @@ void main() {
     expect(updatedProfile?.hskLevel, 4);
     expect(updatedProfile?.dailyWordTarget, 20);
 
-    await tester.ensureVisible(find.text('Reset onboarding only'));
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Reset onboarding only'));
     await tester.pumpAndSettle();
     expect(find.text('Reset learner setup?'), findsOneWidget);
     await tester.tap(find.text('Reset setup'));
     await tester.pumpAndSettle();
     expect(resetOnboarding, isTrue);
+  });
+
+  testWidgets('settings restores and saves learning preferences', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final repository = _MemorySettingsRepository(
+      const LearnerSettings(showPinyin: false, soundEnabled: false),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: const SqliteDevelopmentRepository(),
+            settingsRepository: repository,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+
+    final pinyinSwitch = tester.widget<SwitchListTile>(
+      find.widgetWithText(SwitchListTile, 'Show pinyin'),
+    );
+    expect(pinyinSwitch.value, isFalse);
+    await tester.tap(find.text('Show pinyin'));
+    await tester.tap(find.text('Save preferences'));
+    await tester.pumpAndSettle();
+
+    expect(repository.settings.showPinyin, isTrue);
+    expect(repository.settings.soundEnabled, isFalse);
   });
 
   testWidgets('locked lesson tile renders with reduced opacity', (
@@ -229,4 +306,86 @@ void main() {
     expect(find.text('Travel & Directions'), findsOneWidget);
     expect(find.text('+80 XP'), findsOneWidget);
   });
+}
+
+class _MemorySettingsRepository implements SettingsRepository {
+  _MemorySettingsRepository([this.settings = const LearnerSettings()]);
+
+  LearnerSettings settings;
+
+  @override
+  Future<LearnerSettings> load() async => settings;
+
+  @override
+  Future<void> save(LearnerSettings settings) async {
+    this.settings = settings;
+  }
+}
+
+class _MemoryLessonRepository implements LessonRepository {
+  final lesson = const Lesson(
+    summary: LessonSummary(
+      id: 7,
+      title: 'Saved lesson',
+      theme: 'Saved',
+      hskLevel: 1,
+    ),
+    cards: [
+      Flashcard(id: 11, chinese: '你', pinyin: 'nǐ', englishMeaning: 'you'),
+      Flashcard(id: 12, chinese: '学', pinyin: 'xué', englishMeaning: 'study'),
+    ],
+  );
+
+  @override
+  Future<Lesson?> findGenerated({
+    required String theme,
+    required int hskLevel,
+  }) async => lesson;
+
+  @override
+  Future<void> saveGenerated(Lesson lesson) async {}
+
+  @override
+  Future<List<LessonSummary>> topics() async => [lesson.summary];
+}
+
+class _MemoryProgressRepository implements ProgressRepository {
+  LessonSession? savedSession;
+  ReviewRecord? recordedReview;
+
+  final _active = LessonSession(
+    id: 3,
+    lessonId: 7,
+    startedAt: DateTime.utc(2026, 7, 28),
+    currentCardIndex: 1,
+  );
+
+  @override
+  Future<LessonSession?> activeSessionForLesson(int lessonId) async => _active;
+
+  @override
+  Future<List<CardProgress>> dueCards(DateTime through) async => const [];
+
+  @override
+  Future<CardProgress?> progressForCard(int cardId) async => null;
+
+  @override
+  Future<void> recordReview({
+    required ReviewRecord review,
+    required CardProgress progress,
+  }) async {
+    recordedReview = review;
+  }
+
+  @override
+  Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async =>
+      const [];
+
+  @override
+  Future<LessonSession> startSession(int lessonId) async => _active;
+
+  @override
+  Future<void> updateSession(LessonSession session) async {
+    savedSession = session;
+  }
 }

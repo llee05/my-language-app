@@ -34,9 +34,14 @@ const Map<int, List<String>> _hskTopicPools = {
 };
 
 class LessonsPage extends StatefulWidget {
-  const LessonsPage({super.key, required this.repository});
+  const LessonsPage({
+    super.key,
+    required this.repository,
+    required this.progressRepository,
+  });
 
   final LessonRepository repository;
+  final ProgressRepository progressRepository;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -51,6 +56,7 @@ class _LessonsPageState extends State<LessonsPage> {
   String _lessonTitle = '';
   bool _generating = false;
   int _currentCard = 0;
+  LessonSession? _session;
   String? _notice;
 
   @override
@@ -80,6 +86,48 @@ class _LessonsPageState extends State<LessonsPage> {
     if (!mounted) return;
     setState(() {
       _topics = topics;
+    });
+    for (final topic in topics) {
+      final session = await widget.progressRepository.activeSessionForLesson(
+        topic.id,
+      );
+      if (session == null) continue;
+      final lesson = await widget.repository.findGenerated(
+        theme: topic.theme,
+        hskLevel: topic.hskLevel,
+      );
+      if (lesson != null && mounted) {
+        await _openLesson(lesson, session: session, resumed: true);
+      }
+      break;
+    }
+  }
+
+  Future<void> _openLesson(
+    Lesson lesson, {
+    LessonSession? session,
+    bool resumed = false,
+  }) async {
+    final active =
+        session ??
+        await widget.progressRepository.activeSessionForLesson(
+          lesson.summary.id,
+        ) ??
+        await widget.progressRepository.startSession(lesson.summary.id);
+    if (!mounted) return;
+    final index = active.currentCardIndex.clamp(0, lesson.cards.length - 1);
+    setState(() {
+      _lessonTitle = lesson.summary.title;
+      _cards = lesson.cards;
+      _currentCard = index;
+      _session = active;
+      _generating = false;
+      if (resumed || index > 0) {
+        _notice = 'Resumed at card ${index + 1}.';
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) _pageController.jumpToPage(index);
     });
   }
 
@@ -113,14 +161,10 @@ class _LessonsPageState extends State<LessonsPage> {
         hskLevel: hskLevel,
       );
       if (cached != null) {
-        if (!mounted) return;
-        setState(() {
-          _lessonTitle = cached.summary.title;
-          _cards = cached.cards;
-          _currentCard = 0;
-          _generating = false;
-          _notice = 'Loaded an existing lesson instantly.';
-        });
+        await _openLesson(cached);
+        if (mounted && _currentCard == 0) {
+          setState(() => _notice = 'Loaded an existing lesson instantly.');
+        }
         return;
       }
 
@@ -162,13 +206,12 @@ class _LessonsPageState extends State<LessonsPage> {
           cards: cards,
         ),
       );
-      if (!mounted) return;
-      setState(() {
-        _lessonTitle = title;
-        _cards = cards;
-        _currentCard = 0;
-        _generating = false;
-      });
+      final saved = await widget.repository.findGenerated(
+        theme: topic,
+        hskLevel: hskLevel,
+      );
+      if (saved == null) throw StateError('The lesson could not be reloaded.');
+      await _openLesson(saved);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -255,6 +298,89 @@ class _LessonsPageState extends State<LessonsPage> {
     englishMeaning: (word['meanings'] as List).first as String,
     partOfSpeech: (word['partOfSpeech'] as List).join(', '),
   );
+
+  Future<void> _savePosition(int index) async {
+    final session = _session;
+    if (session == null || session.isComplete) return;
+    final updated = LessonSession(
+      id: session.id,
+      lessonId: session.lessonId,
+      startedAt: session.startedAt,
+      currentCardIndex: index,
+      cardsReviewed: session.cardsReviewed,
+      correctAnswers: session.correctAnswers,
+    );
+    _session = updated;
+    await widget.progressRepository.updateSession(updated);
+  }
+
+  Future<void> _recordAnswer(Flashcard card, ReviewRating rating) async {
+    final session = _session;
+    if (session == null || card.id == 0) return;
+    final previous = await widget.progressRepository.progressForCard(card.id);
+    final now = DateTime.now().toUtc();
+    final correct = rating != ReviewRating.again;
+    final previousInterval = previous?.reviewInterval ?? 0;
+    final previousEase = previous?.easeFactor ?? 2.5;
+    final interval = switch (rating) {
+      ReviewRating.again => 1,
+      ReviewRating.hard => max(1, (previousInterval * 1.2).round()),
+      ReviewRating.good =>
+        previousInterval == 0
+            ? 1
+            : max(1, (previousInterval * previousEase).round()),
+      ReviewRating.easy =>
+        previousInterval == 0
+            ? 4
+            : max(2, (previousInterval * previousEase * 1.3).round()),
+    };
+    final ease = switch (rating) {
+      ReviewRating.again => max(1.3, previousEase - .2),
+      ReviewRating.hard => max(1.3, previousEase - .15),
+      ReviewRating.good => previousEase,
+      ReviewRating.easy => previousEase + .15,
+    };
+    await widget.progressRepository.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: card.id,
+        sessionId: session.id,
+        reviewedAt: now,
+        rating: rating,
+        wasCorrect: correct,
+      ),
+      progress: CardProgress(
+        cardId: card.id,
+        repetitions: correct ? (previous?.repetitions ?? 0) + 1 : 0,
+        lapses:
+            (previous?.lapses ?? 0) + (rating == ReviewRating.again ? 1 : 0),
+        reviewInterval: interval,
+        easeFactor: ease,
+        nextReview: now.add(Duration(days: interval)),
+        lastReview: now,
+      ),
+    );
+
+    final isLast = _currentCard >= _cards.length - 1;
+    final nextIndex = isLast ? _cards.length : _currentCard + 1;
+    final updated = LessonSession(
+      id: session.id,
+      lessonId: session.lessonId,
+      startedAt: session.startedAt,
+      completedAt: isLast ? now : null,
+      currentCardIndex: nextIndex,
+      cardsReviewed: session.cardsReviewed + 1,
+      correctAnswers: session.correctAnswers + (correct ? 1 : 0),
+    );
+    _session = updated;
+    await widget.progressRepository.updateSession(updated);
+    if (!mounted) return;
+    if (isLast) {
+      setState(() => _notice = 'Lesson complete — your reviews were saved.');
+    } else {
+      _goToCard(nextIndex);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -358,7 +484,10 @@ class _LessonsPageState extends State<LessonsPage> {
         child: Row(
           children: [
             IconButton(
-              onPressed: () => setState(() => _cards = const []),
+              onPressed: () => setState(() {
+                _cards = const [];
+                _session = null;
+              }),
               icon: const Icon(Icons.arrow_back),
             ),
             Expanded(
@@ -378,11 +507,15 @@ class _LessonsPageState extends State<LessonsPage> {
         child: PageView.builder(
           itemCount: _cards.length,
           controller: _pageController,
-          onPageChanged: (index) => setState(() => _currentCard = index),
+          onPageChanged: (index) {
+            setState(() => _currentCard = index);
+            _savePosition(index);
+          },
           itemBuilder: (context, index) => _LessonFlashcard(
             card: _cards[index],
             index: index,
             total: _cards.length,
+            onRated: (rating) => _recordAnswer(_cards[index], rating),
           ),
         ),
       ),
@@ -418,10 +551,12 @@ class _LessonFlashcard extends StatefulWidget {
     required this.card,
     required this.index,
     required this.total,
+    required this.onRated,
   });
   final Flashcard card;
   final int index;
   final int total;
+  final Future<void> Function(ReviewRating rating) onRated;
 
   @override
   State<_LessonFlashcard> createState() => _LessonFlashcardState();
@@ -429,8 +564,21 @@ class _LessonFlashcard extends StatefulWidget {
 
 class _LessonFlashcardState extends State<_LessonFlashcard> {
   bool _showAnswer = false;
+  bool _submitting = false;
+  bool _rated = false;
 
   void _flip() => setState(() => _showAnswer = !_showAnswer);
+
+  Future<void> _rate(ReviewRating rating) async {
+    if (_submitting || _rated) return;
+    setState(() => _submitting = true);
+    await widget.onRated(rating);
+    if (!mounted) return;
+    setState(() {
+      _submitting = false;
+      _rated = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -515,6 +663,28 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         ),
       ],
       const Spacer(),
+      const Text(
+        'How well did you remember?',
+        style: TextStyle(color: AppColors.muted),
+      ),
+      const SizedBox(height: 10),
+      Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 8,
+        children: [
+          for (final choice in const [
+            (ReviewRating.again, 'Again'),
+            (ReviewRating.hard, 'Hard'),
+            (ReviewRating.good, 'Good'),
+            (ReviewRating.easy, 'Easy'),
+          ])
+            OutlinedButton(
+              onPressed: _submitting || _rated ? null : () => _rate(choice.$1),
+              child: Text(choice.$2),
+            ),
+        ],
+      ),
+      const SizedBox(height: 12),
     ],
   );
 

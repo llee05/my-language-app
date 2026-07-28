@@ -8,6 +8,8 @@ class DashboardPage extends StatefulWidget {
     required this.onResetOnboarding,
     required this.onResetAllData,
     required this.lessonRepository,
+    required this.progressRepository,
+    required this.settingsRepository,
     required this.developmentRepository,
   });
 
@@ -16,6 +18,8 @@ class DashboardPage extends StatefulWidget {
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
   final LessonRepository lessonRepository;
+  final ProgressRepository progressRepository;
+  final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
 
   @override
@@ -67,6 +71,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         onResetOnboarding: widget.onResetOnboarding,
                         onResetAllData: widget.onResetAllData,
                         lessonRepository: widget.lessonRepository,
+                        progressRepository: widget.progressRepository,
+                        settingsRepository: widget.settingsRepository,
                         developmentRepository: widget.developmentRepository,
                       ),
                     ),
@@ -89,6 +95,8 @@ class _DashboardBody extends StatelessWidget {
     required this.onResetOnboarding,
     required this.onResetAllData,
     required this.lessonRepository,
+    required this.progressRepository,
+    required this.settingsRepository,
     required this.developmentRepository,
   });
   final int selectedNav;
@@ -97,12 +105,17 @@ class _DashboardBody extends StatelessWidget {
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
   final LessonRepository lessonRepository;
+  final ProgressRepository progressRepository;
+  final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
 
   @override
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
-      return LessonsPage(repository: lessonRepository);
+      return LessonsPage(
+        repository: lessonRepository,
+        progressRepository: progressRepository,
+      );
     }
     if (selectedNav == 2) {
       return const VocabRushPage();
@@ -117,6 +130,7 @@ class _DashboardBody extends StatelessWidget {
         onResetOnboarding: onResetOnboarding,
         onResetAllData: onResetAllData,
         developmentRepository: developmentRepository,
+        settingsRepository: settingsRepository,
       );
     }
 

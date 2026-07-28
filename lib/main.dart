@@ -10,10 +10,13 @@ import 'local_database.dart';
 import 'database/flashcard_seed.dart';
 import 'ai/ollama_service.dart';
 import 'models/learner_profile.dart';
+import 'models/learning_progress.dart';
 import 'models/lesson.dart';
 import 'repositories/app_dependencies.dart';
 import 'repositories/development_repository.dart';
 import 'repositories/lesson_repository.dart';
+import 'repositories/progress_repository.dart';
+import 'repositories/settings_repository.dart';
 
 export 'models/learner_profile.dart';
 export 'models/lesson.dart';
@@ -145,6 +148,8 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onResetOnboarding: _resetOnboarding,
             onResetAllData: _resetAllData,
             lessonRepository: widget.dependencies.lessons,
+            progressRepository: widget.dependencies.progress,
+            settingsRepository: widget.dependencies.settings,
             developmentRepository: widget.dependencies.development,
           );
         },
