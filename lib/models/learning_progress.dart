@@ -59,19 +59,40 @@ class ReviewRecord {
 class CardProgress {
   const CardProgress({
     required this.cardId,
-    required this.dueAt,
+    DateTime? nextReview,
+    DateTime? dueAt,
     this.repetitions = 0,
     this.lapses = 0,
-    this.intervalDays = 0,
+    int? reviewInterval,
+    int? intervalDays,
     this.easeFactor = 2.5,
-    this.lastReviewedAt,
-  });
+    DateTime? lastReview,
+    DateTime? lastReviewedAt,
+    this.timesSeen = 0,
+    this.correctAnswers = 0,
+    this.incorrectAnswers = 0,
+    this.mastery = 0,
+  }) : assert(nextReview != null || dueAt != null),
+       nextReview = nextReview ?? dueAt!,
+       reviewInterval = reviewInterval ?? intervalDays ?? 0,
+       lastReview = lastReview ?? lastReviewedAt;
 
   final int cardId;
+  final int timesSeen;
+  final int correctAnswers;
+  final int incorrectAnswers;
+
+  /// Correct answers divided by times seen, from 0.0 to 1.0.
+  final double mastery;
   final int repetitions;
   final int lapses;
-  final int intervalDays;
+  final int reviewInterval;
   final double easeFactor;
-  final DateTime dueAt;
-  final DateTime? lastReviewedAt;
+  final DateTime nextReview;
+  final DateTime? lastReview;
+
+  // Compatibility aliases for the original scheduling terminology.
+  int get intervalDays => reviewInterval;
+  DateTime get dueAt => nextReview;
+  DateTime? get lastReviewedAt => lastReview;
 }

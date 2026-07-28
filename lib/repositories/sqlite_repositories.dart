@@ -255,9 +255,29 @@ class SqliteProgressRepository implements ProgressRepository {
         'was_correct': review.wasCorrect ? 1 : 0,
         'response_time_ms': review.responseTimeMs,
       });
+      final totals = (await txn.rawQuery(
+        '''
+        SELECT
+          COUNT(*) AS times_seen,
+          COALESCE(SUM(CASE WHEN was_correct = 1 THEN 1 ELSE 0 END), 0)
+            AS correct_answers,
+          COALESCE(SUM(CASE WHEN was_correct = 0 THEN 1 ELSE 0 END), 0)
+            AS incorrect_answers
+        FROM review_history
+        WHERE learner_id = ? AND card_id = ?
+        ''',
+        [1, review.cardId],
+      )).single;
+      final timesSeen = totals['times_seen'] as int;
+      final correctAnswers = totals['correct_answers'] as int;
+      final incorrectAnswers = totals['incorrect_answers'] as int;
       await txn.insert('card_progress', {
         'learner_id': 1,
         'card_id': progress.cardId,
+        'times_seen': timesSeen,
+        'correct_answers': correctAnswers,
+        'incorrect_answers': incorrectAnswers,
+        'mastery': timesSeen == 0 ? 0.0 : correctAnswers / timesSeen,
         'repetitions': progress.repetitions,
         'lapses': progress.lapses,
         'interval_days': progress.intervalDays,
@@ -331,6 +351,10 @@ class SqliteProgressRepository implements ProgressRepository {
 
   CardProgress _progressFromRow(Map<String, Object?> row) => CardProgress(
     cardId: row['card_id'] as int,
+    timesSeen: row['times_seen'] as int,
+    correctAnswers: row['correct_answers'] as int,
+    incorrectAnswers: row['incorrect_answers'] as int,
+    mastery: (row['mastery'] as num).toDouble(),
     repetitions: row['repetitions'] as int,
     lapses: row['lapses'] as int,
     intervalDays: row['interval_days'] as int,

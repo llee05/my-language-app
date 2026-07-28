@@ -44,21 +44,23 @@ void main() {
     expect(rows, isEmpty);
   });
 
-  test('version 1 database migrates to version 3 without data loss', () async {
-    await LocalDatabase.resetForTesting();
-    final path = await LocalDatabase.databasePath();
-    final legacyDb = await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, _) async {
-        await db.execute('''
+  test(
+    'version 1 database migrates to latest version without data loss',
+    () async {
+      await LocalDatabase.resetForTesting();
+      final path = await LocalDatabase.databasePath();
+      final legacyDb = await openDatabase(
+        path,
+        version: 1,
+        onCreate: (db, _) async {
+          await db.execute('''
           CREATE TABLE app_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             key TEXT NOT NULL UNIQUE,
             value TEXT
           )
         ''');
-        await db.execute('''
+          await db.execute('''
           CREATE TABLE lessons (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             lesson_title TEXT NOT NULL,
@@ -66,7 +68,7 @@ void main() {
             hsk_level INTEGER NOT NULL
           )
         ''');
-        await db.execute('''
+          await db.execute('''
           CREATE TABLE cards (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             lesson_id INTEGER NOT NULL,
@@ -82,49 +84,50 @@ void main() {
             correct_answer TEXT NOT NULL
           )
         ''');
-        await db.insert('app_data', {
-          'key': 'legacy_marker',
-          'value': 'preserve me',
-        });
-        await db.insert('app_data', {
-          'key': 'learner_profile',
-          'value': jsonEncode({
-            'name': 'Legacy learner',
-            'hskLevel': 2,
-            'dailyWordTarget': 15,
-          }),
-        });
-        await db.insert('lessons', {
-          'lesson_title': 'Legacy lesson',
-          'theme': 'Legacy',
-          'hsk_level': 1,
-        });
-      },
-    );
-    await legacyDb.close();
+          await db.insert('app_data', {
+            'key': 'legacy_marker',
+            'value': 'preserve me',
+          });
+          await db.insert('app_data', {
+            'key': 'learner_profile',
+            'value': jsonEncode({
+              'name': 'Legacy learner',
+              'hskLevel': 2,
+              'dailyWordTarget': 15,
+            }),
+          });
+          await db.insert('lessons', {
+            'lesson_title': 'Legacy lesson',
+            'theme': 'Legacy',
+            'hsk_level': 1,
+          });
+        },
+      );
+      await legacyDb.close();
 
-    final upgraded = await LocalDatabase.ensureInitialized();
-    final version = await upgraded.getVersion();
-    final marker = await upgraded.query(
-      'app_data',
-      where: 'key = ?',
-      whereArgs: ['legacy_marker'],
-    );
-    final indexes = await upgraded.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type = 'index'",
-    );
+      final upgraded = await LocalDatabase.ensureInitialized();
+      final version = await upgraded.getVersion();
+      final marker = await upgraded.query(
+        'app_data',
+        where: 'key = ?',
+        whereArgs: ['legacy_marker'],
+      );
+      final indexes = await upgraded.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'index'",
+      );
 
-    expect(version, 3);
-    expect(marker.single['value'], 'preserve me');
-    expect(
-      indexes.map((row) => row['name']),
-      containsAll(['idx_lessons_theme_hsk', 'idx_cards_lesson_id']),
-    );
-    final migratedProfile = await learners.load();
-    expect(migratedProfile?.name, 'Legacy learner');
-    expect(migratedProfile?.hskLevel, 2);
-    expect(migratedProfile?.dailyWordTarget, 15);
-  });
+      expect(version, 4);
+      expect(marker.single['value'], 'preserve me');
+      expect(
+        indexes.map((row) => row['name']),
+        containsAll(['idx_lessons_theme_hsk', 'idx_cards_lesson_id']),
+      );
+      final migratedProfile = await learners.load();
+      expect(migratedProfile?.name, 'Legacy learner');
+      expect(migratedProfile?.hskLevel, 2);
+      expect(migratedProfile?.dailyWordTarget, 15);
+    },
+  );
 
   test('learner profile is persisted in its typed repository', () async {
     await learners.save(
@@ -261,6 +264,13 @@ void main() {
     expect(history.single.rating, ReviewRating.good);
     expect(history.single.responseTimeMs, 1200);
     expect(cardProgress?.repetitions, 1);
+    expect(cardProgress?.timesSeen, 1);
+    expect(cardProgress?.correctAnswers, 1);
+    expect(cardProgress?.incorrectAnswers, 0);
+    expect(cardProgress?.mastery, 1);
+    expect(cardProgress?.lastReview, reviewedAt);
+    expect(cardProgress?.nextReview, dueAt);
+    expect(cardProgress?.reviewInterval, 3);
     expect(cardProgress?.intervalDays, 3);
     expect(cardProgress?.dueAt, dueAt);
     expect(await progress.dueCards(dueAt), hasLength(1));

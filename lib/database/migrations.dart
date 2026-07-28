@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 3;
+const int databaseSchemaVersion = 4;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -132,6 +132,70 @@ final Map<int, MigrationStep> databaseMigrations = {
         // Invalid legacy data is treated as incomplete onboarding.
       }
     }
+  },
+  4: (db) async {
+    await db.execute(
+      'ALTER TABLE card_progress '
+      'ADD COLUMN times_seen INTEGER NOT NULL DEFAULT 0',
+    );
+    await db.execute(
+      'ALTER TABLE card_progress '
+      'ADD COLUMN correct_answers INTEGER NOT NULL DEFAULT 0',
+    );
+    await db.execute(
+      'ALTER TABLE card_progress '
+      'ADD COLUMN incorrect_answers INTEGER NOT NULL DEFAULT 0',
+    );
+    await db.execute(
+      'ALTER TABLE card_progress '
+      'ADD COLUMN mastery REAL NOT NULL DEFAULT 0',
+    );
+
+    // Existing installations already have the source-of-truth review events.
+    // Backfill the new summary columns rather than losing that history.
+    await db.execute('''
+      UPDATE card_progress
+      SET times_seen = (
+            SELECT COUNT(*)
+            FROM review_history
+            WHERE review_history.learner_id = card_progress.learner_id
+              AND review_history.card_id = card_progress.card_id
+          ),
+          correct_answers = (
+            SELECT COUNT(*)
+            FROM review_history
+            WHERE review_history.learner_id = card_progress.learner_id
+              AND review_history.card_id = card_progress.card_id
+              AND review_history.was_correct = 1
+          ),
+          incorrect_answers = (
+            SELECT COUNT(*)
+            FROM review_history
+            WHERE review_history.learner_id = card_progress.learner_id
+              AND review_history.card_id = card_progress.card_id
+              AND review_history.was_correct = 0
+          ),
+          mastery = CASE
+            WHEN (
+              SELECT COUNT(*)
+              FROM review_history
+              WHERE review_history.learner_id = card_progress.learner_id
+                AND review_history.card_id = card_progress.card_id
+            ) = 0 THEN 0
+            ELSE CAST((
+              SELECT COUNT(*)
+              FROM review_history
+              WHERE review_history.learner_id = card_progress.learner_id
+                AND review_history.card_id = card_progress.card_id
+                AND review_history.was_correct = 1
+            ) AS REAL) / (
+              SELECT COUNT(*)
+              FROM review_history
+              WHERE review_history.learner_id = card_progress.learner_id
+                AND review_history.card_id = card_progress.card_id
+            )
+          END
+    ''');
   },
 };
 
