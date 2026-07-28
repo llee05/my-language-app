@@ -58,6 +58,8 @@ class _LessonsPageState extends State<LessonsPage> {
   int _currentCard = 0;
   LessonSession? _session;
   String? _notice;
+  final Set<int> _learnedCardIds = {};
+  final Set<int> _reviewCardIds = {};
 
   @override
   void initState() {
@@ -116,6 +118,8 @@ class _LessonsPageState extends State<LessonsPage> {
         await widget.progressRepository.startSession(lesson.summary.id);
     if (!mounted) return;
     final index = active.currentCardIndex.clamp(0, lesson.cards.length - 1);
+    await _loadSessionWordCounts(active, lesson.cards);
+    if (!mounted) return;
     setState(() {
       _lessonTitle = lesson.summary.title;
       _cards = lesson.cards;
@@ -129,6 +133,33 @@ class _LessonsPageState extends State<LessonsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_pageController.hasClients) _pageController.jumpToPage(index);
     });
+  }
+
+  Future<void> _loadSessionWordCounts(
+    LessonSession session,
+    List<Flashcard> cards,
+  ) async {
+    final learned = <int>{};
+    final review = <int>{};
+    for (final card in cards.where((card) => card.id != 0)) {
+      final history = await widget.progressRepository.reviewHistory(
+        cardId: card.id,
+      );
+      final reviewedInSession = history.any(
+        (record) => record.sessionId == session.id,
+      );
+      if (!reviewedInSession) continue;
+      final hadEarlierReview = history.any(
+        (record) => record.sessionId != session.id,
+      );
+      (hadEarlierReview ? review : learned).add(card.id);
+    }
+    _learnedCardIds
+      ..clear()
+      ..addAll(learned);
+    _reviewCardIds
+      ..clear()
+      ..addAll(review);
   }
 
   String get _topic {
@@ -361,13 +392,16 @@ class _LessonsPageState extends State<LessonsPage> {
       ),
     );
 
-    final isLast = _currentCard >= _cards.length - 1;
-    final nextIndex = isLast ? _cards.length : _currentCard + 1;
+    final isComplete = session.cardsReviewed + 1 >= _cards.length;
+    final reviewedCardIds = {..._learnedCardIds, ..._reviewCardIds, card.id};
+    final nextIndex = isComplete
+        ? _cards.length
+        : _nextUnreviewedCardIndex(reviewedCardIds);
     final updated = LessonSession(
       id: session.id,
       lessonId: session.lessonId,
       startedAt: session.startedAt,
-      completedAt: isLast ? now : null,
+      completedAt: isComplete ? now : null,
       currentCardIndex: nextIndex,
       cardsReviewed: session.cardsReviewed + 1,
       correctAnswers: session.correctAnswers + (correct ? 1 : 0),
@@ -375,11 +409,22 @@ class _LessonsPageState extends State<LessonsPage> {
     _session = updated;
     await widget.progressRepository.updateSession(updated);
     if (!mounted) return;
-    if (isLast) {
+    setState(() {
+      (previous == null ? _learnedCardIds : _reviewCardIds).add(card.id);
+    });
+    if (isComplete) {
       setState(() => _notice = 'Lesson complete — your reviews were saved.');
     } else {
       _goToCard(nextIndex);
     }
+  }
+
+  int _nextUnreviewedCardIndex(Set<int> reviewedCardIds) {
+    for (var offset = 1; offset <= _cards.length; offset++) {
+      final index = (_currentCard + offset) % _cards.length;
+      if (!reviewedCardIds.contains(_cards[index].id)) return index;
+    }
+    return (_currentCard + 1) % _cards.length;
   }
 
   @override
@@ -487,62 +532,221 @@ class _LessonsPageState extends State<LessonsPage> {
               onPressed: () => setState(() {
                 _cards = const [];
                 _session = null;
+                _learnedCardIds.clear();
+                _reviewCardIds.clear();
               }),
               icon: const Icon(Icons.arrow_back),
             ),
             Expanded(
-              child: Text(
-                _lessonTitle,
-                style: const TextStyle(fontSize: 18, color: AppColors.text),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _lessonTitle,
+                    style: const TextStyle(fontSize: 18, color: AppColors.text),
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: _lessonProgress,
+                    minHeight: 6,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${_session?.cardsReviewed ?? 0} of '
+                    '${_cards.length} words completed',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              '${_cards.length} cards',
-              style: const TextStyle(color: AppColors.muted),
             ),
           ],
         ),
       ),
       Expanded(
-        child: PageView.builder(
-          itemCount: _cards.length,
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() => _currentCard = index);
-            _savePosition(index);
-          },
-          itemBuilder: (context, index) => _LessonFlashcard(
-            card: _cards[index],
-            index: index,
-            total: _cards.length,
-            onRated: (rating) => _recordAnswer(_cards[index], rating),
+        child: _session?.isComplete == true
+            ? _buildCompletionSummary()
+            : PageView.builder(
+                itemCount: _cards.length,
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() => _currentCard = index);
+                  _savePosition(index);
+                },
+                itemBuilder: (context, index) => _LessonFlashcard(
+                  card: _cards[index],
+                  index: index,
+                  total: _cards.length,
+                  onRated: (rating) => _recordAnswer(_cards[index], rating),
+                ),
+              ),
+      ),
+      if (_session?.isComplete != true)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _currentCard == 0
+                    ? null
+                    : () => _goToCard(_currentCard - 1),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Previous'),
+              ),
+              const SizedBox(width: 16),
+              FilledButton.icon(
+                onPressed: _currentCard >= _cards.length - 1
+                    ? null
+                    : () => _goToCard(_currentCard + 1),
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('Next'),
+              ),
+            ],
+          ),
+        ),
+    ],
+  );
+
+  double get _lessonProgress {
+    if (_cards.isEmpty) return 0;
+    return ((_session?.cardsReviewed ?? 0) / _cards.length).clamp(0, 1);
+  }
+
+  int get _xpEarned =>
+      (_learnedCardIds.length * 10) + (_reviewCardIds.length * 5);
+
+  Widget _buildCompletionSummary() {
+    final reviewed = _session?.cardsReviewed ?? 0;
+    final correct = _session?.correctAnswers ?? 0;
+    final accuracy = reviewed == 0 ? 0 : ((correct / reviewed) * 100).round();
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.emoji_events_outlined,
+                    size: 52,
+                    color: AppColors.gold,
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Lesson complete!',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _lessonTitle,
+                    style: const TextStyle(color: AppColors.muted),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _SummaryStat(
+                        icon: Icons.track_changes,
+                        label: 'Accuracy',
+                        value: '$accuracy%',
+                      ),
+                      _SummaryStat(
+                        icon: Icons.school_outlined,
+                        label: 'Learned words',
+                        value: '${_learnedCardIds.length}',
+                      ),
+                      _SummaryStat(
+                        icon: Icons.replay_outlined,
+                        label: 'Review words',
+                        value: '${_reviewCardIds.length}',
+                      ),
+                      _SummaryStat(
+                        icon: Icons.bolt,
+                        label: 'XP earned',
+                        value: '+$_xpEarned XP',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  FilledButton.icon(
+                    onPressed: () => setState(() {
+                      _cards = const [];
+                      _session = null;
+                      _learnedCardIds.clear();
+                      _reviewCardIds.clear();
+                      _notice = null;
+                    }),
+                    icon: const Icon(Icons.check),
+                    label: const Text('Done'),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    );
+  }
+}
+
+class _SummaryStat extends StatelessWidget {
+  const _SummaryStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 120,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+        child: Column(
           children: [
-            OutlinedButton.icon(
-              onPressed: _currentCard == 0
-                  ? null
-                  : () => _goToCard(_currentCard - 1),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Previous'),
+            Icon(icon, color: AppColors.gold),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
             ),
-            const SizedBox(width: 16),
-            FilledButton.icon(
-              onPressed: _currentCard >= _cards.length - 1
-                  ? null
-                  : () => _goToCard(_currentCard + 1),
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('Next'),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: AppColors.muted),
             ),
           ],
         ),
       ),
-    ],
+    ),
   );
 }
 

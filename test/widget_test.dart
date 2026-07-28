@@ -157,6 +157,11 @@ void main() {
     expect(progress.recordedReview?.wasCorrect, isTrue);
     expect(progress.savedSession?.currentCardIndex, 2);
     expect(progress.savedSession?.isComplete, isTrue);
+    expect(find.text('Lesson complete!'), findsOneWidget);
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('Learned words'), findsOneWidget);
+    expect(find.text('Review words'), findsOneWidget);
+    expect(find.text('+10 XP'), findsOneWidget);
   });
 
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {
@@ -363,6 +368,8 @@ class _MemoryProgressRepository implements ProgressRepository {
     lessonId: 7,
     startedAt: DateTime.utc(2026, 7, 28),
     currentCardIndex: 1,
+    cardsReviewed: 1,
+    correctAnswers: 1,
   );
 
   @override

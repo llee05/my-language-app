@@ -58,7 +58,8 @@ The MVP is complete when a learner can:
 
 - Mark a revealed flashcard as already familiar with a single button.
 - Save every rating immediately and update the card's review schedule.
-- Add lesson progress and a completion summary with accuracy, learned words, review words, and XP.
+- Lesson progress and a completion summary show accuracy, learned words,
+  review words, and XP earned.
 - Connect the dashboard's Resume action to the latest unfinished session.
 - Let learners browse and start seeded or previously generated lessons directly.
 

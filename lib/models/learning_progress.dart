@@ -57,7 +57,7 @@ class ReviewRecord {
 }
 
 class CardProgress {
-  const CardProgress({
+  CardProgress({
     required this.cardId,
     DateTime? nextReview,
     DateTime? dueAt,
