@@ -60,7 +60,7 @@ The MVP is complete when a learner can:
 - Save every rating immediately and update the card's review schedule.
 - Lesson progress and a completion summary show accuracy, learned words,
   review words, and XP earned.
-- Connect the dashboard's Resume action to the latest unfinished session.
+- The dashboard's Resume action opens the latest unfinished lesson session.
 - Let learners browse and start seeded or previously generated lessons directly.
 
 **Milestone:** a learner can finish or resume a lesson and see the correct result after reopening the app.

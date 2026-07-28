@@ -66,6 +66,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     Expanded(
                       child: _DashboardBody(
                         selectedNav: selectedNav,
+                        onResumeLesson: () => setState(() => selectedNav = 1),
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -90,6 +91,7 @@ class _DashboardPageState extends State<DashboardPage> {
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.selectedNav,
+    required this.onResumeLesson,
     required this.profile,
     required this.onProfileChanged,
     required this.onResetOnboarding,
@@ -100,6 +102,7 @@ class _DashboardBody extends StatelessWidget {
     required this.developmentRepository,
   });
   final int selectedNav;
+  final VoidCallback onResumeLesson;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
@@ -142,14 +145,19 @@ class _DashboardBody extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(child: MainDashboard()),
+                    child: SingleChildScrollView(
+                      child: MainDashboard(onResume: onResumeLesson),
+                    ),
                   ),
                   const SizedBox(width: 300, child: RightRail()),
                 ],
               )
-            : const SingleChildScrollView(
+            : SingleChildScrollView(
                 child: Column(
-                  children: [MainDashboard(), RightRail(compact: true)],
+                  children: [
+                    MainDashboard(onResume: onResumeLesson),
+                    const RightRail(compact: true),
+                  ],
                 ),
               );
       },

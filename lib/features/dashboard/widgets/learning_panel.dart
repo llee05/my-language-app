@@ -1,7 +1,9 @@
 part of '../../../main.dart';
 
 class MainDashboard extends StatelessWidget {
-  const MainDashboard({super.key});
+  const MainDashboard({super.key, required this.onResume});
+
+  final VoidCallback onResume;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,7 @@ class MainDashboard extends StatelessWidget {
             duration: '20 cards',
             xpReward: 60,
             progress: 0.35,
+            onResume: onResume,
           ),
           const SizedBox(height: 26),
           const SectionLabel('SUGGESTED LESSONS'),
@@ -54,6 +57,7 @@ class ContinueCard extends StatelessWidget {
     required this.level,
     required this.duration,
     required this.xpReward,
+    required this.onResume,
     this.progress = .35,
   });
 
@@ -62,6 +66,7 @@ class ContinueCard extends StatelessWidget {
   final int level;
   final String duration;
   final int xpReward;
+  final VoidCallback onResume;
   final double progress;
 
   @override
@@ -135,9 +140,7 @@ class ContinueCard extends StatelessWidget {
             ],
           );
           final button = FilledButton.icon(
-            onPressed: () => ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Resuming $lessonTitle…'))),
+            onPressed: onResume,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.red,
               foregroundColor: Colors.white,

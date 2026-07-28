@@ -237,6 +237,19 @@ class SqliteProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<LessonSession?> latestActiveSession() async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'lesson_sessions',
+      where: 'learner_id = ? AND completed_at IS NULL',
+      whereArgs: [1],
+      orderBy: 'started_at DESC, id DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : _sessionFromRow(rows.single);
+  }
+
+  @override
   Future<void> recordReview({
     required ReviewRecord review,
     required CardProgress progress,

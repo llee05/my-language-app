@@ -89,19 +89,19 @@ class _LessonsPageState extends State<LessonsPage> {
     setState(() {
       _topics = topics;
     });
-    for (final topic in topics) {
-      final session = await widget.progressRepository.activeSessionForLesson(
-        topic.id,
-      );
-      if (session == null) continue;
-      final lesson = await widget.repository.findGenerated(
-        theme: topic.theme,
-        hskLevel: topic.hskLevel,
-      );
-      if (lesson != null && mounted) {
-        await _openLesson(lesson, session: session, resumed: true);
-      }
-      break;
+    final session = await widget.progressRepository.latestActiveSession();
+    if (session == null) return;
+    final matchingTopics = topics.where(
+      (topic) => topic.id == session.lessonId,
+    );
+    if (matchingTopics.isEmpty) return;
+    final topic = matchingTopics.first;
+    final lesson = await widget.repository.findGenerated(
+      theme: topic.theme,
+      hskLevel: topic.hskLevel,
+    );
+    if (lesson != null && mounted) {
+      await _openLesson(lesson, session: session, resumed: true);
     }
   }
 

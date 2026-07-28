@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/repositories/development_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
@@ -26,11 +27,10 @@ void main() {
     expect(find.text('WEEKLY XP'), findsOneWidget);
   });
 
-  testWidgets('continue card shows snack bar when resume is tapped', (
-    tester,
-  ) async {
+  testWidgets('continue card invokes resume when tapped', (tester) async {
+    var resumed = false;
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: ContinueCard(
             lessonTitle: 'Family & Relationships',
@@ -38,6 +38,7 @@ void main() {
             level: 1,
             duration: '20 cards',
             xpReward: 60,
+            onResume: () => resumed = true,
           ),
         ),
       ),
@@ -47,7 +48,36 @@ void main() {
     await tester.tap(find.text('Resume'));
     await tester.pump();
 
-    expect(find.text('Resuming Family & Relationships…'), findsOneWidget);
+    expect(resumed, isTrue);
+  });
+
+  testWidgets('dashboard resumes the latest unfinished lesson', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _MemoryLessonRepository();
+    final progress = _MemoryProgressRepository();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: lessons,
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Resumed at card 2.'), findsOneWidget);
+    expect(find.text('1 of 2 words completed'), findsOneWidget);
   });
 
   testWidgets(
@@ -332,6 +362,14 @@ class _MemorySettingsRepository implements SettingsRepository {
   }
 }
 
+class _MemoryDevelopmentRepository implements DevelopmentRepository {
+  @override
+  Future<String> databasePath() async => 'memory';
+
+  @override
+  Future<void> resetAllData() async {}
+}
+
 class _MemoryLessonRepository implements LessonRepository {
   final lesson = const Lesson(
     summary: LessonSummary(
@@ -374,6 +412,9 @@ class _MemoryProgressRepository implements ProgressRepository {
 
   @override
   Future<LessonSession?> activeSessionForLesson(int lessonId) async => _active;
+
+  @override
+  Future<LessonSession?> latestActiveSession() async => _active;
 
   @override
   Future<List<CardProgress>> dueCards(DateTime through) async => const [];
