@@ -118,6 +118,7 @@ class _DashboardBody extends StatelessWidget {
       return LessonsPage(
         repository: lessonRepository,
         progressRepository: progressRepository,
+        settingsRepository: settingsRepository,
       );
     }
     if (selectedNav == 2) {

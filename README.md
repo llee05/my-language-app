@@ -22,6 +22,8 @@ The project is currently an early-stage prototype. It has a polished learner-fac
 - Seeded and AI-assisted flashcard lessons with an offline vocabulary fallback.
 - Reusable generated lessons stored in a local SQLite database.
 - Flashcards containing Hanzi, pinyin, English meanings, and example sentences.
+- On-device Mandarin pronunciation audio on lesson flashcards, controlled by
+  the saved sound preference.
 - Vocab Rush, with HSK difficulty ranges, timed and survival modes, streaks, and three-strike scoring.
 - Long Laoshi, a local AI tutor powered by Ollama.
 - Dashboard surfaces for lessons, vocabulary mastery, XP, streaks, and weekly activity.
@@ -118,6 +120,7 @@ The MVP is complete when a learner can:
 - Language: Dart
 - Local storage: SQLite via `sqflite_common_ffi`
 - AI integration: Ollama local chat API through a lightweight HTTP client
+- Audio: on-device Mandarin text-to-speech via `flutter_tts`
 - Content: bundled HSK 1–6 JSON vocabulary dataset and seeded lessons
 - Tests: Flutter widget, startup, database, Vocab Rush, and dataset tests
 
@@ -154,6 +157,18 @@ Run static analysis and tests:
 flutter analyze
 flutter test
 ```
+
+### Pronunciation audio
+
+Lesson flashcards include a speaker button that reads the displayed Mandarin
+word aloud using the device's text-to-speech engine. Audio is generated on the
+device and does not require Ollama. It can be enabled or disabled under
+**Settings → Sound**.
+
+Mandarin pronunciation is supported on Android, iOS, macOS, Windows, and the
+web when a compatible Chinese voice is installed. Linux is not currently
+supported by the selected text-to-speech plugin. If playback is unavailable,
+install a Simplified Chinese (`zh-CN`) system voice and restart the app.
 
 ### Optional AI tutor setup
 

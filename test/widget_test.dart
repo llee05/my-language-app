@@ -165,7 +165,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: LessonsPage(repository: lessons, progressRepository: progress),
+          body: LessonsPage(
+            repository: lessons,
+            progressRepository: progress,
+            settingsRepository: _MemorySettingsRepository(),
+          ),
         ),
       ),
     );
@@ -173,6 +177,7 @@ void main() {
 
     final pageView = tester.widget<PageView>(find.byType(PageView));
     expect(pageView.controller?.page, 1);
+    expect(find.byTooltip('Hear Mandarin pronunciation'), findsWidgets);
 
     await tester.tap(find.text('学'));
     await tester.pump(const Duration(milliseconds: 400));

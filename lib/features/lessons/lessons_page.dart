@@ -38,10 +38,12 @@ class LessonsPage extends StatefulWidget {
     super.key,
     required this.repository,
     required this.progressRepository,
+    required this.settingsRepository,
   });
 
   final LessonRepository repository;
   final ProgressRepository progressRepository;
+  final SettingsRepository settingsRepository;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -60,18 +62,48 @@ class _LessonsPageState extends State<LessonsPage> {
   String? _notice;
   final Set<int> _learnedCardIds = {};
   final Set<int> _reviewCardIds = {};
+  final FlutterTts _tts = FlutterTts();
+  bool _soundEnabled = true;
 
   @override
   void initState() {
     super.initState();
     _loadTopics();
+    _loadSoundPreference();
   }
 
   @override
   void dispose() {
     _topicController.dispose();
     _pageController.dispose();
+    _tts.stop();
     super.dispose();
+  }
+
+  Future<void> _loadSoundPreference() async {
+    final settings = await widget.settingsRepository.load();
+    if (!mounted) return;
+    setState(() => _soundEnabled = settings.soundEnabled);
+  }
+
+  Future<void> _speak(Flashcard card) async {
+    if (!_soundEnabled) return;
+    try {
+      await _tts.stop();
+      await _tts.setLanguage('zh-CN');
+      await _tts.setSpeechRate(.42);
+      await _tts.setPitch(1);
+      await _tts.speak(card.chinese);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Mandarin audio is unavailable. Check your device text-to-speech voices.',
+          ),
+        ),
+      );
+    }
   }
 
   void _goToCard(int index) {
@@ -581,6 +613,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   index: index,
                   total: _cards.length,
                   onRated: (rating) => _recordAnswer(_cards[index], rating),
+                  onSpeak: _soundEnabled ? () => _speak(_cards[index]) : null,
                 ),
               ),
       ),
@@ -756,11 +789,13 @@ class _LessonFlashcard extends StatefulWidget {
     required this.index,
     required this.total,
     required this.onRated,
+    required this.onSpeak,
   });
   final Flashcard card;
   final int index;
   final int total;
   final Future<void> Function(ReviewRating rating) onRated;
+  final Future<void> Function()? onSpeak;
 
   @override
   State<_LessonFlashcard> createState() => _LessonFlashcardState();
@@ -833,6 +868,13 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
           color: AppColors.text,
         ),
       ),
+      IconButton(
+        tooltip: widget.onSpeak == null
+            ? 'Pronunciation audio is disabled in Settings'
+            : 'Hear Mandarin pronunciation',
+        onPressed: widget.onSpeak,
+        icon: const Icon(Icons.volume_up_outlined),
+      ),
       const Spacer(),
     ],
   );
@@ -845,6 +887,13 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         widget.card.pinyin,
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 22, color: AppColors.gold),
+      ),
+      IconButton(
+        tooltip: widget.onSpeak == null
+            ? 'Pronunciation audio is disabled in Settings'
+            : 'Hear Mandarin pronunciation',
+        onPressed: widget.onSpeak,
+        icon: const Icon(Icons.volume_up_outlined),
       ),
       const SizedBox(height: 18),
       Text(
