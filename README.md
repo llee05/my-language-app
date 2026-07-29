@@ -36,10 +36,10 @@ The project is currently an early-stage prototype. It has a polished learner-fac
 
 The MVP is complete when a learner can:
 
-1. Choose an HSK level and daily study target.
-2. Complete a short vocabulary lesson.
+1. ~~Choose an HSK level and daily study target.~~
+2. ~~Complete a short vocabulary lesson.~~
 3. Rate words as needing more or less practice.
-4. Close the app and later resume an unfinished lesson.
+4. ~~Close the app and later resume an unfinished lesson.~~
 5. Review weak or due vocabulary in a daily review queue.
 6. See XP, streak, mastery, and activity values based on real study sessions.
 7. Use every core learning feature without Ollama or an internet connection.
@@ -48,28 +48,32 @@ The MVP is complete when a learner can:
 
 ### 1. Persistent learning foundation
 
-- Add first-run learner setup for name, HSK level, and daily word target.
-- Introduce typed models and repositories between the UI and SQLite.
-- Add versioned database migrations.
-- Store learner profiles, settings, lesson sessions, review history, and per-card progress.
-- Track times seen, correct and incorrect answers, mastery, last review, next review, and review interval.
+- ~~Add first-run learner setup for name, HSK level, and daily word target.~~
+- ~~Introduce typed models and repositories between the UI and SQLite.~~
+- ~~Add versioned database migrations.~~
+- ~~Store learner profiles, settings, lesson sessions, review history, and
+  per-card progress.~~
+- ~~Track times seen, correct and incorrect answers, mastery, last review,
+  next review, and review interval.~~
 
-**Milestone:** restarting the app preserves learner settings, lesson position, and card results.
+**Milestone:** ~~restarting the app preserves learner settings, lesson
+position, and card results.~~
 
 ### 2. Complete lesson loop
 
-- Mark a revealed flashcard as already familiar with a single button.
-- Save every rating immediately and update the card's review schedule.
-- Lesson progress and a completion summary show accuracy, learned words,
-  review words, and XP earned.
-- The dashboard's Resume action opens the latest unfinished lesson session.
+- ~~Mark a revealed flashcard as already familiar with a single button.~~
+- ~~Save every rating immediately and update the card's review schedule.~~
+- ~~Lesson progress and a completion summary show accuracy, learned words,
+  review words, and XP earned.~~
+- ~~The dashboard's Resume action opens the latest unfinished lesson session.~~
 - Let learners browse and start seeded or previously generated lessons directly.
 
-**Milestone:** a learner can finish or resume a lesson and see the correct result after reopening the app.
+**Milestone:** ~~a learner can finish or resume a lesson and see the correct
+result after reopening the app.~~
 
 ### 3. Daily review and vocabulary library
 
-- Implement a simple, explainable spaced-repetition scheduler.
+- ~~Implement a simple, explainable spaced-repetition scheduler.~~
 - Create a daily queue of cards that are new, weak, or due for review.
 - Build the Vocabulary page with Hanzi, pinyin, and English search.
 - Add filters for HSK level and unseen, learning, learned, and due states.
@@ -82,7 +86,7 @@ The MVP is complete when a learner can:
 
 - Replace the hard-coded greeting date and study target with current data.
 - Calculate XP, current streak, due reviews, learned words, and mastery from stored activity.
-- Resume the latest incomplete lesson from the dashboard.
+- ~~Resume the latest incomplete lesson from the dashboard.~~
 - Populate the seven-day activity chart from completed sessions.
 - Recommend the next appropriate lesson.
 - Build the Progress page already represented in navigation.
