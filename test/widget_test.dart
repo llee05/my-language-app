@@ -104,11 +104,12 @@ void main() {
 
     await tester.tap(find.text('Lessons'));
     await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+      () => Future<void>.delayed(const Duration(seconds: 2)),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Lesson Builder'), findsOneWidget);
+    expect(find.text('Lesson Library'), findsOneWidget);
+    expect(find.text('Create a lesson'), findsOneWidget);
     expect(find.text('HSK level'), findsOneWidget);
     expect(find.text('Ask AI for a lesson topic'), findsOneWidget);
     expect(find.text('Generate lesson'), findsOneWidget);
@@ -140,6 +141,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Resume'), findsOneWidget);
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
     final pageView = tester.widget<PageView>(find.byType(PageView));
     expect(pageView.controller?.page, 1);
 
@@ -162,6 +168,33 @@ void main() {
     expect(find.text('Learned words'), findsOneWidget);
     expect(find.text('Review words'), findsOneWidget);
     expect(find.text('+10 XP'), findsOneWidget);
+  });
+
+  testWidgets('saved lesson can be started directly from the lesson library', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _MemoryLessonRepository();
+    final progress = _MemoryProgressRepository(hasActiveSession: false);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(repository: lessons, progressRepository: progress),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Start'), findsOneWidget);
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+
+    expect(progress.startedLessonId, 7);
+    expect(find.byType(PageView), findsOneWidget);
+    expect(find.text('Saved lesson'), findsOneWidget);
   });
 
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {
@@ -347,6 +380,10 @@ class _MemoryLessonRepository implements LessonRepository {
   );
 
   @override
+  Future<Lesson?> findById(int id) async =>
+      id == lesson.summary.id ? lesson : null;
+
+  @override
   Future<Lesson?> findGenerated({
     required String theme,
     required int hskLevel,
@@ -360,8 +397,12 @@ class _MemoryLessonRepository implements LessonRepository {
 }
 
 class _MemoryProgressRepository implements ProgressRepository {
+  _MemoryProgressRepository({this.hasActiveSession = true});
+
+  final bool hasActiveSession;
   LessonSession? savedSession;
   ReviewRecord? recordedReview;
+  int? startedLessonId;
 
   final _active = LessonSession(
     id: 3,
@@ -373,7 +414,8 @@ class _MemoryProgressRepository implements ProgressRepository {
   );
 
   @override
-  Future<LessonSession?> activeSessionForLesson(int lessonId) async => _active;
+  Future<LessonSession?> activeSessionForLesson(int lessonId) async =>
+      hasActiveSession ? _active : null;
 
   @override
   Future<List<CardProgress>> dueCards(DateTime through) async => const [];
@@ -394,7 +436,10 @@ class _MemoryProgressRepository implements ProgressRepository {
       const [];
 
   @override
-  Future<LessonSession> startSession(int lessonId) async => _active;
+  Future<LessonSession> startSession(int lessonId) async {
+    startedLessonId = lessonId;
+    return _active;
+  }
 
   @override
   Future<void> updateSession(LessonSession session) async {
