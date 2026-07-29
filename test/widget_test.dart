@@ -76,7 +76,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Saved lesson'), findsOneWidget);
-    expect(find.text('Resumed at card 2.'), findsOneWidget);
+    final pageView = tester.widget<PageView>(find.byType(PageView));
+    expect(pageView.controller?.page, 1);
     expect(find.text('1 of 2 words completed'), findsOneWidget);
   });
 
