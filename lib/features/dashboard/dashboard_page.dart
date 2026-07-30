@@ -28,6 +28,21 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int selectedNav = 0;
+  bool _resumeLatestLesson = false;
+
+  void _selectNavigation(int value) {
+    setState(() {
+      selectedNav = value;
+      _resumeLatestLesson = false;
+    });
+  }
+
+  void _resumeLesson() {
+    setState(() {
+      selectedNav = 1;
+      _resumeLatestLesson = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +57,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: AppSidebar(
                     selectedIndex: selectedNav,
                     hskLevel: widget.profile.hskLevel,
-                    onSelected: (value) => setState(() => selectedNav = value),
+                    onSelected: _selectNavigation,
                   ),
                 ),
           body: Row(
@@ -53,7 +68,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: AppSidebar(
                     selectedIndex: selectedNav,
                     hskLevel: widget.profile.hskLevel,
-                    onSelected: (value) => setState(() => selectedNav = value),
+                    onSelected: _selectNavigation,
                   ),
                 ),
               Expanded(
@@ -66,7 +81,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     Expanded(
                       child: _DashboardBody(
                         selectedNav: selectedNav,
-                        onResumeLesson: () => setState(() => selectedNav = 1),
+                        resumeLatestLesson: _resumeLatestLesson,
+                        onResumeLesson: _resumeLesson,
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -91,6 +107,7 @@ class _DashboardPageState extends State<DashboardPage> {
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.selectedNav,
+    required this.resumeLatestLesson,
     required this.onResumeLesson,
     required this.profile,
     required this.onProfileChanged,
@@ -102,6 +119,7 @@ class _DashboardBody extends StatelessWidget {
     required this.developmentRepository,
   });
   final int selectedNav;
+  final bool resumeLatestLesson;
   final VoidCallback onResumeLesson;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
@@ -119,6 +137,7 @@ class _DashboardBody extends StatelessWidget {
         repository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
+        resumeLatest: resumeLatestLesson,
       );
     }
     if (selectedNav == 2) {

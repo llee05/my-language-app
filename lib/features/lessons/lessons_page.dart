@@ -39,11 +39,13 @@ class LessonsPage extends StatefulWidget {
     required this.repository,
     required this.progressRepository,
     required this.settingsRepository,
+    this.resumeLatest = false,
   });
 
   final LessonRepository repository;
   final ProgressRepository progressRepository;
   final SettingsRepository settingsRepository;
+  final bool resumeLatest;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -54,6 +56,9 @@ class _LessonsPageState extends State<LessonsPage> {
   int _hskLevel = 1;
   String _selectedTopicTheme = _hskTopicPools[1]!.first;
   List<LessonSummary> _topics = const [];
+  Map<int, LessonSession> _activeSessions = const {};
+  bool _loadingTopics = true;
+  String? _libraryError;
   List<Flashcard> _cards = const [];
   String _lessonTitle = '';
   bool _generating = false;
@@ -116,25 +121,48 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _loadTopics() async {
-    final topics = await widget.repository.topics();
-    if (!mounted) return;
-    setState(() {
-      _topics = topics;
-    });
-    final session = await widget.progressRepository.latestActiveSession();
-    if (session == null) return;
-    final matchingTopics = topics.where(
-      (topic) => topic.id == session.lessonId,
-    );
-    if (matchingTopics.isEmpty) return;
-    final topic = matchingTopics.first;
-    final lesson = await widget.repository.findGenerated(
-      theme: topic.theme,
-      hskLevel: topic.hskLevel,
-    );
-    if (lesson != null && mounted) {
-      await _openLesson(lesson, session: session, resumed: true);
+    try {
+      final topics = await widget.repository.topics();
+      final sessions = <int, LessonSession>{};
+      for (final topic in topics) {
+        final session = await widget.progressRepository.activeSessionForLesson(
+          topic.id,
+        );
+        if (session != null) sessions[topic.id] = session;
+      }
+      if (!mounted) return;
+      setState(() {
+        _topics = topics;
+        _activeSessions = sessions;
+        _loadingTopics = false;
+        _libraryError = null;
+      });
+      if (!widget.resumeLatest) return;
+      final session = await widget.progressRepository.latestActiveSession();
+      if (session == null) return;
+      final lesson = await widget.repository.findById(session.lessonId);
+      if (lesson != null && mounted) {
+        await _openLesson(lesson, session: session, resumed: true);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadingTopics = false;
+        _libraryError = 'Could not load lessons: $error';
+      });
     }
+  }
+
+  Future<void> _startLesson(LessonSummary summary) async {
+    setState(() => _notice = null);
+    final lesson = await widget.repository.findById(summary.id);
+    if (!mounted) return;
+    if (lesson == null) {
+      setState(() => _notice = 'This lesson could not be loaded.');
+      return;
+    }
+    final session = _activeSessions[summary.id];
+    await _openLesson(lesson, session: session, resumed: session != null);
   }
 
   Future<void> _openLesson(
@@ -474,7 +502,7 @@ class _LessonsPageState extends State<LessonsPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              '课程生成器',
+              '课程',
               style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 36,
@@ -482,10 +510,51 @@ class _LessonsPageState extends State<LessonsPage> {
               ),
             ),
             const Text(
-              'Lesson Builder',
+              'Lesson Library',
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 24),
+            if (_loadingTopics)
+              const Text(
+                'Loading saved lessons…',
+                style: TextStyle(color: AppColors.muted),
+              )
+            else if (_libraryError != null)
+              Text(
+                _libraryError!,
+                style: const TextStyle(color: AppColors.gold),
+              )
+            else if (_topics.isEmpty)
+              const Text(
+                'No saved lessons yet. Create your first lesson below.',
+                style: TextStyle(color: AppColors.muted),
+              )
+            else
+              for (final topic in _topics) ...[
+                _LessonLibraryCard(
+                  summary: topic,
+                  isActive: _activeSessions.containsKey(topic.id),
+                  onPressed: () => _startLesson(topic),
+                ),
+                const SizedBox(height: 10),
+              ],
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 20),
+            const Text(
+              'Create a lesson',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Choose a topic or ask AI for something new.',
+              style: TextStyle(color: AppColors.muted),
+            ),
+            const SizedBox(height: 20),
             DropdownButtonFormField<int>(
               key: ValueKey(_hskLevel),
               initialValue: _hskLevel,
@@ -775,6 +844,71 @@ class _SummaryStat extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12, color: AppColors.muted),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _LessonLibraryCard extends StatelessWidget {
+  const _LessonLibraryCard({
+    required this.summary,
+    required this.isActive,
+    required this.onPressed,
+  });
+
+  final LessonSummary summary;
+  final bool isActive;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: AppColors.darkRed,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.menu_book_outlined),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    summary.title,
+                    style: const TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${summary.theme} · HSK ${summary.hskLevel}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: onPressed,
+              child: Text(isActive ? 'Resume' : 'Start'),
             ),
           ],
         ),

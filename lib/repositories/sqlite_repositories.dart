@@ -115,6 +115,20 @@ class SqliteLessonRepository implements LessonRepository {
   }
 
   @override
+  Future<Lesson?> findById(int id) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final lessons = await db.query(
+      'lessons',
+      columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (lessons.isEmpty) return null;
+    return _lessonFromSummary(db, _summaryFromRow(lessons.single));
+  }
+
+  @override
   Future<Lesson?> findGenerated({
     required String theme,
     required int hskLevel,
@@ -130,7 +144,10 @@ class SqliteLessonRepository implements LessonRepository {
     );
     if (lessons.isEmpty) return null;
 
-    final summary = _summaryFromRow(lessons.single);
+    return _lessonFromSummary(db, _summaryFromRow(lessons.single));
+  }
+
+  Future<Lesson?> _lessonFromSummary(Database db, LessonSummary summary) async {
     final rows = await db.query(
       'cards',
       where: 'lesson_id = ?',
