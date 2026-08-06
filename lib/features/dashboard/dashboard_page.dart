@@ -31,18 +31,63 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int selectedNav = 0;
   bool _resumeLatestLesson = false;
+  bool _startDailyReview = false;
+  bool _loadingDailyReview = true;
+  int _pendingReviewCount = 0;
+  bool _dailyReviewComplete = false;
+  bool _resumeDailyReview = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDailyReviewPrompt();
+  }
+
+  Future<void> _loadDailyReviewPrompt() async {
+    try {
+      final now = DateTime.now();
+      final queue = await widget.progressRepository.dailyQueue(
+        forDay: now,
+        limit: widget.profile.dailyWordTarget,
+        maxHskLevel: widget.profile.hskLevel,
+      );
+      final session = await widget.dailyReviewSessionRepository?.load(now);
+      if (!mounted) return;
+      setState(() {
+        _pendingReviewCount = queue.length;
+        _dailyReviewComplete = session?.isComplete ?? queue.isEmpty;
+        _resumeDailyReview =
+            session != null &&
+            !session.isComplete &&
+            session.currentPosition > 0;
+        _loadingDailyReview = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingDailyReview = false);
+    }
+  }
 
   void _selectNavigation(int value) {
     setState(() {
       selectedNav = value;
       _resumeLatestLesson = false;
+      _startDailyReview = false;
     });
+    if (value == 0) unawaited(_loadDailyReviewPrompt());
   }
 
   void _resumeLesson() {
     setState(() {
       selectedNav = 1;
       _resumeLatestLesson = true;
+    });
+  }
+
+  void _openDailyReview() {
+    setState(() {
+      selectedNav = 4;
+      _startDailyReview = true;
     });
   }
 
@@ -84,7 +129,14 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: _DashboardBody(
                         selectedNav: selectedNav,
                         resumeLatestLesson: _resumeLatestLesson,
+                        startDailyReview: _startDailyReview,
                         onResumeLesson: _resumeLesson,
+                        onStartDailyReview: _openDailyReview,
+                        onDailyReviewCompleted: _loadDailyReviewPrompt,
+                        loadingDailyReview: _loadingDailyReview,
+                        pendingReviewCount: _pendingReviewCount,
+                        dailyReviewComplete: _dailyReviewComplete,
+                        resumeDailyReview: _resumeDailyReview,
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -112,7 +164,14 @@ class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.selectedNav,
     required this.resumeLatestLesson,
+    required this.startDailyReview,
     required this.onResumeLesson,
+    required this.onStartDailyReview,
+    required this.onDailyReviewCompleted,
+    required this.loadingDailyReview,
+    required this.pendingReviewCount,
+    required this.dailyReviewComplete,
+    required this.resumeDailyReview,
     required this.profile,
     required this.onProfileChanged,
     required this.onResetOnboarding,
@@ -125,7 +184,14 @@ class _DashboardBody extends StatelessWidget {
   });
   final int selectedNav;
   final bool resumeLatestLesson;
+  final bool startDailyReview;
   final VoidCallback onResumeLesson;
+  final VoidCallback onStartDailyReview;
+  final VoidCallback onDailyReviewCompleted;
+  final bool loadingDailyReview;
+  final int pendingReviewCount;
+  final bool dailyReviewComplete;
+  final bool resumeDailyReview;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
@@ -162,6 +228,8 @@ class _DashboardBody extends StatelessWidget {
         progressRepository: progressRepository,
         sessionRepository: dailyReviewSessionRepository,
         settingsRepository: settingsRepository,
+        startImmediately: startDailyReview,
+        onSessionCompleted: onDailyReviewCompleted,
       );
     }
     if (selectedNav == 5) {
@@ -187,7 +255,14 @@ class _DashboardBody extends StatelessWidget {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      child: MainDashboard(onResume: onResumeLesson),
+                      child: MainDashboard(
+                        onResume: onResumeLesson,
+                        onStartReview: onStartDailyReview,
+                        loadingReview: loadingDailyReview,
+                        pendingReviewCount: pendingReviewCount,
+                        reviewComplete: dailyReviewComplete,
+                        resumeReview: resumeDailyReview,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 300, child: RightRail()),
@@ -196,7 +271,14 @@ class _DashboardBody extends StatelessWidget {
             : SingleChildScrollView(
                 child: Column(
                   children: [
-                    MainDashboard(onResume: onResumeLesson),
+                    MainDashboard(
+                      onResume: onResumeLesson,
+                      onStartReview: onStartDailyReview,
+                      loadingReview: loadingDailyReview,
+                      pendingReviewCount: pendingReviewCount,
+                      reviewComplete: dailyReviewComplete,
+                      resumeReview: resumeDailyReview,
+                    ),
                     const RightRail(compact: true),
                   ],
                 ),

@@ -1,9 +1,22 @@
 part of '../../../main.dart';
 
 class MainDashboard extends StatelessWidget {
-  const MainDashboard({super.key, required this.onResume});
+  const MainDashboard({
+    super.key,
+    required this.onResume,
+    required this.onStartReview,
+    required this.loadingReview,
+    required this.pendingReviewCount,
+    required this.reviewComplete,
+    required this.resumeReview,
+  });
 
   final VoidCallback onResume;
+  final VoidCallback onStartReview;
+  final bool loadingReview;
+  final int pendingReviewCount;
+  final bool reviewComplete;
+  final bool resumeReview;
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +28,16 @@ class MainDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SectionLabel('DAILY REVIEW'),
+          const SizedBox(height: 12),
+          _DailyReviewPrompt(
+            loading: loadingReview,
+            pendingCount: pendingReviewCount,
+            complete: reviewComplete,
+            resume: resumeReview,
+            onPressed: onStartReview,
+          ),
+          const SizedBox(height: 26),
           const SectionLabel('CONTINUE LEARNING'),
           const SizedBox(height: 12),
           ContinueCard(
@@ -47,6 +70,63 @@ class MainDashboard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DailyReviewPrompt extends StatelessWidget {
+  const _DailyReviewPrompt({
+    required this.loading,
+    required this.pendingCount,
+    required this.complete,
+    required this.resume,
+    required this.onPressed,
+  });
+
+  final bool loading;
+  final int pendingCount;
+  final bool complete;
+  final bool resume;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      border: Border.all(color: AppColors.border),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: loading
+        ? const LinearProgressIndicator(color: AppColors.red)
+        : complete
+        ? const Row(
+            children: [
+              Icon(Icons.task_alt, color: AppColors.teal),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Daily review complete — you’re all done!',
+                  style: TextStyle(color: AppColors.text),
+                ),
+              ),
+            ],
+          )
+        : Row(
+            children: [
+              const Icon(Icons.style_outlined, color: AppColors.gold),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
+                  style: const TextStyle(color: AppColors.text),
+                ),
+              ),
+              FilledButton(
+                onPressed: pendingCount == 0 ? null : onPressed,
+                child: Text(resume ? 'Resume review' : 'Start review'),
+              ),
+            ],
+          ),
+  );
 }
 
 class ContinueCard extends StatelessWidget {

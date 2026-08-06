@@ -5,6 +5,7 @@ import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
+import 'package:mylanguageapp/repositories/app_dependencies.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
@@ -18,7 +19,15 @@ const testProfile = LearnerProfile(
 
 void main() {
   testWidgets('dashboard renders core learning content', (tester) async {
-    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
     await tester.pump();
 
     final firstLesson = flashcardLessons.first;
@@ -82,6 +91,92 @@ void main() {
     expect(find.text('1 of 2 words completed'), findsOneWidget);
   });
 
+  testWidgets('dashboard shows pending daily review and resumes it', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 2,
+          chinese: '二',
+          pinyin: 'èr',
+          englishMeaning: 'two',
+        ),
+        reason: DailyQueueReason.weak,
+      ),
+    ];
+    final sessions = _MemoryDailyReviewSessionRepository(
+      DailyReviewSession(
+        id: 9,
+        date: DateTime.now(),
+        queuedCardIds: const [1, 2],
+        currentPosition: 1,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: _MemoryProgressRepository(queue: queue),
+          dailyReviewSessionRepository: sessions,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 card pending today'), findsOneWidget);
+    expect(find.text('Resume review'), findsOneWidget);
+    await tester.tap(find.text('Resume review'));
+    await tester.pumpAndSettle();
+    expect(find.text('Daily review'), findsOneWidget);
+    expect(find.text('二'), findsOneWidget);
+  });
+
+  testWidgets('dashboard replaces completed review with all-done state', (
+    tester,
+  ) async {
+    final sessions = _MemoryDailyReviewSessionRepository(
+      DailyReviewSession(
+        id: 10,
+        date: DateTime.now(),
+        queuedCardIds: const [1],
+        currentPosition: 1,
+        completedAt: DateTime.now(),
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: _MemoryProgressRepository(),
+          dailyReviewSessionRepository: sessions,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Daily review complete — you’re all done!'),
+      findsOneWidget,
+    );
+    expect(find.text('Start review'), findsNothing);
+    expect(find.text('Resume review'), findsNothing);
+  });
+
   testWidgets(
     'app sidebar invokes onSelected callback when an item is tapped',
     (tester) async {
@@ -109,7 +204,15 @@ void main() {
   testWidgets('vocab rush starts a timed vocabulary game', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
     await tester.pump();
 
     await tester.tap(find.text('Vocab Rush'));
@@ -387,7 +490,15 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
     await tester.pump();
 
     await tester.tap(find.text('Lessons'));
@@ -498,7 +609,15 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const HanziPathApp(initialProfile: testProfile));
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
     await tester.pump();
 
     expect(find.text('AI Tutor'), findsOneWidget);

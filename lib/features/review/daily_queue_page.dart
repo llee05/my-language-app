@@ -11,6 +11,8 @@ class DailyQueuePage extends StatefulWidget {
     this.sessionRepository,
     this.settingsRepository,
     this.onStartReview,
+    this.startImmediately = false,
+    this.onSessionCompleted,
     this.today,
     this.clock,
   });
@@ -20,6 +22,8 @@ class DailyQueuePage extends StatefulWidget {
   final DailyReviewSessionRepository? sessionRepository;
   final SettingsRepository? settingsRepository;
   final FutureOr<void> Function(DailyReviewSession session)? onStartReview;
+  final bool startImmediately;
+  final VoidCallback? onSessionCompleted;
   final DateTime? today;
   final DateTime Function()? clock;
 
@@ -38,6 +42,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   bool _reviewing = false;
   int _reviewStartPosition = 0;
   bool _showPinyin = true;
+  bool _consumedImmediateStart = false;
 
   DateTime _systemTime() => widget.clock?.call() ?? DateTime.now();
 
@@ -108,6 +113,12 @@ class _DailyQueuePageState extends State<DailyQueuePage>
             );
         _showPinyin = settings?.showPinyin ?? true;
       });
+      if (widget.startImmediately &&
+          !_consumedImmediateStart &&
+          queue.isNotEmpty) {
+        _consumedImmediateStart = true;
+        await _startReview();
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -235,6 +246,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     final completed = nextPosition >= session.queuedCardIds.length;
     if (completed) {
       await sessions.complete(sessionId: session.id, completedAt: now);
+      widget.onSessionCompleted?.call();
     } else {
       await sessions.update(
         DailyReviewSession(
