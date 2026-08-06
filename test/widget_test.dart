@@ -583,6 +583,9 @@ class _MemoryProgressRepository implements ProgressRepository {
   Future<CardProgress?> progressForCard(int cardId) async => null;
 
   @override
+  Future<List<VocabularyCardProgress>> vocabularyProgress() async => const [];
+
+  @override
   Future<void> recordReview({
     required ReviewRecord review,
     required CardProgress progress,

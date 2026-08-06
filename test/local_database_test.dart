@@ -275,6 +275,12 @@ void main() {
     expect(cardProgress?.intervalDays, 3);
     expect(cardProgress?.dueAt, dueAt);
     expect(await progress.dueCards(dueAt), hasLength(1));
+    final vocabularyProgress = await progress.vocabularyProgress();
+    final vocabularyCard = vocabularyProgress.singleWhere(
+      (item) => item.progress.cardId == cardId,
+    );
+    expect(vocabularyCard.chinese, lesson.cards.first.chinese);
+    expect(vocabularyCard.progress.mastery, 1);
   });
 
   test('daily queue prioritizes due, weak, then new cards', () async {

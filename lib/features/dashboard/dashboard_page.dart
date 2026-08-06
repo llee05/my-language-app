@@ -147,7 +147,7 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 3) {
-      return const VocabularyPage();
+      return VocabularyPage(progressRepository: progressRepository);
     }
     if (selectedNav == 4) {
       return DailyQueuePage(

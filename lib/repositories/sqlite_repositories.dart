@@ -415,6 +415,33 @@ class SqliteProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<List<VocabularyCardProgress>> vocabularyProgress() async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.rawQuery(
+      '''
+      SELECT
+        cards.chinese,
+        cards.pinyin,
+        card_progress.*
+      FROM card_progress
+      INNER JOIN cards ON cards.id = card_progress.card_id
+      WHERE card_progress.learner_id = ?
+      ORDER BY card_progress.last_reviewed_at DESC, cards.id ASC
+    ''',
+      [1],
+    );
+    return rows
+        .map(
+          (row) => VocabularyCardProgress(
+            chinese: row['chinese'] as String,
+            pinyin: row['pinyin'] as String,
+            progress: _progressFromRow(row),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
   Future<List<DailyQueueCard>> dailyQueue({
     required DateTime forDay,
     required int limit,

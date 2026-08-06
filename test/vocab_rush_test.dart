@@ -222,6 +222,9 @@ class _RushProgressRepository implements ProgressRepository {
   Future<CardProgress?> progressForCard(int cardId) async => null;
 
   @override
+  Future<List<VocabularyCardProgress>> vocabularyProgress() async => const [];
+
+  @override
   Future<List<DailyQueueCard>> dailyQueue({
     required DateTime forDay,
     required int limit,

@@ -112,3 +112,15 @@ class DailyQueueCard {
   final DailyQueueReason reason;
   final CardProgress? progress;
 }
+
+class VocabularyCardProgress {
+  const VocabularyCardProgress({
+    required this.chinese,
+    required this.pinyin,
+    required this.progress,
+  });
+
+  final String chinese;
+  final String pinyin;
+  final CardProgress progress;
+}

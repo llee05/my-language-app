@@ -1,10 +1,21 @@
 part of '../../main.dart';
 
+enum VocabularyLearningState { unseen, learning, learned, due }
+
 class VocabularyPage extends StatefulWidget {
-  const VocabularyPage({super.key, this.initialEntries});
+  const VocabularyPage({
+    super.key,
+    this.progressRepository = const SqliteProgressRepository(),
+    this.initialEntries,
+    this.initialProgress,
+    this.clock,
+  });
 
   /// Allows focused previews and tests without loading the bundled asset.
   final List<Map<String, dynamic>>? initialEntries;
+  final ProgressRepository progressRepository;
+  final List<VocabularyCardProgress>? initialProgress;
+  final DateTime Function()? clock;
 
   @override
   State<VocabularyPage> createState() => _VocabularyPageState();
@@ -16,6 +27,9 @@ class _VocabularyPageState extends State<VocabularyPage> {
   bool _loading = true;
   String? _error;
   int? _hskLevel;
+  VocabularyLearningState? _learningState;
+
+  DateTime _now() => widget.clock?.call() ?? DateTime.now();
 
   @override
   void initState() {
@@ -37,10 +51,30 @@ class _VocabularyPageState extends State<VocabularyPage> {
                 await rootBundle.loadString('assets/data/hsk_vocabulary.json'),
               )
               as List<dynamic>);
+      final progress =
+          widget.initialProgress ??
+          (widget.initialEntries == null
+              ? await widget.progressRepository.vocabularyProgress()
+              : const <VocabularyCardProgress>[]);
+      final progressByWord = <String, CardProgress>{};
+      for (final item in progress) {
+        progressByWord.putIfAbsent(
+          _vocabularyProgressKey(item.chinese, item.pinyin),
+          () => item.progress,
+        );
+      }
       final entries = source
-          .map(
-            (item) => _VocabularyEntry.fromJson(item as Map<String, dynamic>),
-          )
+          .map((item) {
+            final json = item as Map<String, dynamic>;
+            return _VocabularyEntry.fromJson(
+              json,
+              progress:
+                  progressByWord[_vocabularyProgressKey(
+                    json['simplified'] as String,
+                    json['pinyin'] as String,
+                  )],
+            );
+          })
           .toList(growable: false);
       if (!mounted) return;
       setState(() {
@@ -63,6 +97,10 @@ class _VocabularyPageState extends State<VocabularyPage> {
     return _entries
         .where((entry) {
           if (_hskLevel != null && entry.hskLevel != _hskLevel) return false;
+          if (_learningState != null &&
+              entry.learningState(_now()) != _learningState) {
+            return false;
+          }
           if (query.isEmpty) return true;
           return entry.simplified.toLowerCase().contains(query) ||
               entry.traditional.toLowerCase().contains(query) ||
@@ -157,6 +195,28 @@ class _VocabularyPageState extends State<VocabularyPage> {
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _LevelChip(
+                      label: 'All states',
+                      selected: _learningState == null,
+                      onSelected: () => setState(() => _learningState = null),
+                    ),
+                    for (final state in VocabularyLearningState.values) ...[
+                      const SizedBox(width: 8),
+                      _LevelChip(
+                        label: _learningStateLabel(state),
+                        selected: _learningState == state,
+                        onSelected: () =>
+                            setState(() => _learningState = state),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
               Expanded(child: _buildContent()),
             ],
@@ -211,6 +271,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) => _VocabularyListItem(
               entry: results[index],
+              learningState: results[index].learningState(_now()),
               onTap: () => _openDetails(results[index]),
             ),
           ),
@@ -231,9 +292,13 @@ class _VocabularyEntry {
     required this.exampleChinese,
     required this.examplePinyin,
     required this.exampleEnglish,
+    this.progress,
   });
 
-  factory _VocabularyEntry.fromJson(Map<String, dynamic> json) {
+  factory _VocabularyEntry.fromJson(
+    Map<String, dynamic> json, {
+    CardProgress? progress,
+  }) {
     final simplified = json['simplified'] as String;
     final example = _seededVocabularyExamples[simplified];
     return _VocabularyEntry(
@@ -262,6 +327,7 @@ class _VocabularyEntry {
                   example?['example_sentence_english'] ??
                   '')
               as String,
+      progress: progress,
     );
   }
 
@@ -274,16 +340,32 @@ class _VocabularyEntry {
   final String exampleChinese;
   final String examplePinyin;
   final String exampleEnglish;
+  final CardProgress? progress;
 
   String get normalizedPinyin => _normalizePinyin(pinyin);
   String get compactPinyin => normalizedPinyin.replaceAll(' ', '');
   bool get hasExample => exampleChinese.isNotEmpty;
+
+  VocabularyLearningState learningState(DateTime now) {
+    final value = progress;
+    if (value == null || value.timesSeen == 0) {
+      return VocabularyLearningState.unseen;
+    }
+    if (!value.nextReview.isAfter(now)) return VocabularyLearningState.due;
+    if (value.mastery >= .8) return VocabularyLearningState.learned;
+    return VocabularyLearningState.learning;
+  }
 }
 
 class _VocabularyListItem extends StatelessWidget {
-  const _VocabularyListItem({required this.entry, required this.onTap});
+  const _VocabularyListItem({
+    required this.entry,
+    required this.learningState,
+    required this.onTap,
+  });
 
   final _VocabularyEntry entry;
+  final VocabularyLearningState learningState;
   final VoidCallback onTap;
 
   @override
@@ -374,6 +456,8 @@ class _VocabularyListItem extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  _VocabularyStateBadge(state: learningState),
+                  const SizedBox(height: 8),
                   const Icon(
                     Icons.chevron_right,
                     size: 20,
@@ -383,6 +467,37 @@ class _VocabularyListItem extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VocabularyStateBadge extends StatelessWidget {
+  const _VocabularyStateBadge({required this.state});
+
+  final VocabularyLearningState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (state) {
+      VocabularyLearningState.unseen => AppColors.muted,
+      VocabularyLearningState.learning => AppColors.gold,
+      VocabularyLearningState.learned => AppColors.teal,
+      VocabularyLearningState.due => AppColors.red,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        _learningStateLabel(state),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -716,3 +831,13 @@ String _normalizePinyin(String value) {
       .replaceAll(RegExp(r"[\s']+"), ' ')
       .trim();
 }
+
+String _vocabularyProgressKey(String chinese, String pinyin) =>
+    '$chinese|${_normalizePinyin(pinyin).replaceAll(' ', '')}';
+
+String _learningStateLabel(VocabularyLearningState state) => switch (state) {
+  VocabularyLearningState.unseen => 'Unseen',
+  VocabularyLearningState.learning => 'Learning',
+  VocabularyLearningState.learned => 'Learned',
+  VocabularyLearningState.due => 'To review',
+};

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/models/learning_progress.dart';
 
 const _entries = [
   {
@@ -37,11 +38,55 @@ const _entries = [
   },
 ];
 
+final _now = DateTime.utc(2026, 8, 6, 12);
+final _progress = [
+  VocabularyCardProgress(
+    chinese: '你好',
+    pinyin: 'nǐ hǎo',
+    progress: CardProgress(
+      cardId: 1,
+      timesSeen: 5,
+      correctAnswers: 5,
+      mastery: 1,
+      dueAt: _now.add(const Duration(days: 2)),
+    ),
+  ),
+  VocabularyCardProgress(
+    chinese: '学习',
+    pinyin: 'xué xí',
+    progress: CardProgress(
+      cardId: 2,
+      timesSeen: 4,
+      correctAnswers: 2,
+      incorrectAnswers: 2,
+      mastery: .5,
+      dueAt: _now.add(const Duration(days: 1)),
+    ),
+  ),
+  VocabularyCardProgress(
+    chinese: '图书馆',
+    pinyin: 'tú shū guǎn',
+    progress: CardProgress(
+      cardId: 3,
+      timesSeen: 3,
+      correctAnswers: 3,
+      mastery: 1,
+      dueAt: _now.subtract(const Duration(hours: 1)),
+    ),
+  ),
+];
+
 void main() {
   Future<void> pumpPage(WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: VocabularyPage(initialEntries: _entries)),
+      MaterialApp(
+        home: Scaffold(
+          body: VocabularyPage(
+            initialEntries: _entries,
+            initialProgress: _progress,
+            clock: () => _now,
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -93,6 +138,30 @@ void main() {
     expect(find.text('图书馆'), findsOneWidget);
     expect(find.text('你好'), findsNothing);
     expect(find.text('1 word'), findsOneWidget);
+  });
+
+  testWidgets('filters vocabulary by learning state', (tester) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Unseen'));
+    await tester.pump();
+    expect(find.text('罕见词'), findsOneWidget);
+    expect(find.text('你好'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Learning'));
+    await tester.pump();
+    expect(find.text('学习'), findsOneWidget);
+    expect(find.text('罕见词'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Learned'));
+    await tester.pump();
+    expect(find.text('你好'), findsOneWidget);
+    expect(find.text('学习'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'To review'));
+    await tester.pump();
+    expect(find.text('图书馆'), findsOneWidget);
+    expect(find.text('你好'), findsNothing);
   });
 
   testWidgets('opens word details with every meaning and example sentence', (
