@@ -46,7 +46,7 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
       setState(() {
         _saving = false;
         _saveError =
-            'Saving took too long. Close any other copy of HanziPath and try again.';
+            'Saving took too long. Close any other copy of TingShuo and try again.';
       });
     } catch (error) {
       if (!mounted) return;
@@ -237,7 +237,7 @@ class _SetupBrand extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '汉字路',
+              '听说 TingShuo',
               style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 20,

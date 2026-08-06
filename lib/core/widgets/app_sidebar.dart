@@ -40,7 +40,7 @@ class AppSidebar extends StatelessWidget {
                   SizedBox(width: 9),
                   Flexible(
                     child: Text(
-                      '汉字路',
+                      '听说 TingShuo',
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'serif',

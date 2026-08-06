@@ -1,6 +1,6 @@
-# HanziPath Project Brief
+# TingShuo Project Brief
 
-HanziPath is a local-first Flutter app that helps beginner Mandarin learners build a consistent study habit with HSK-aligned vocabulary, short flashcard lessons, vocabulary games, and an optional AI tutor named Long Laoshi.
+TingShuo is a local-first Flutter app that helps beginner Mandarin learners build a consistent study habit with HSK-aligned vocabulary, short flashcard lessons, vocabulary games, and an optional AI tutor named Long Laoshi.
 
 The project is currently an early-stage prototype. It has a polished learner-facing shell and several working study activities, but its progress indicators are not yet connected to persistent learning history. The MVP milestone is to turn those activities into one complete daily learning loop:
 
@@ -190,4 +190,4 @@ flutter run --dart-define=OLLAMA_MODEL=model-name
 
 ## Project Status
 
-HanziPath has the content, visual foundation, and initial activities needed for an MVP. Development is now focused on persistent learner state, assessed lesson sessions, spaced review, and truthful progress reporting. New modes and broader platform features should follow only after that core learning loop is reliable.
+TingShuo has the content, visual foundation, and initial activities needed for an MVP. Development is now focused on persistent learner state, assessed lesson sessions, spaced review, and truthful progress reporting. New modes and broader platform features should follow only after that core learning loop is reliable.

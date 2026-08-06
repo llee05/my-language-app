@@ -113,7 +113,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
     const seed = Color(0xFFFF6B5F);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'HanziPath',
+      title: 'TingShuo',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: AppColors.background,
