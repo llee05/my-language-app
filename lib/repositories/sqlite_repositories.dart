@@ -7,6 +7,7 @@ import '../models/learner_profile.dart';
 import '../models/learning_progress.dart';
 import '../models/lesson.dart';
 import 'development_repository.dart';
+import 'daily_review_session_repository.dart';
 import 'learner_repository.dart';
 import 'lesson_repository.dart';
 import 'progress_repository.dart';
@@ -323,7 +324,6 @@ class SqliteProgressRepository implements ProgressRepository {
     return rows.isEmpty ? null : _sessionFromRow(rows.single);
   }
 
-  @override
   Future<DailyReviewSession?> dailyReviewSession(DateTime forDay) async {
     final db = await LocalDatabase.ensureInitialized();
     final rows = await db.query(
@@ -335,7 +335,6 @@ class SqliteProgressRepository implements ProgressRepository {
     return rows.isEmpty ? null : _dailyReviewSessionFromRow(rows.single);
   }
 
-  @override
   Future<void> updateDailyReviewSession(DailyReviewSession session) async {
     if (session.currentPosition < 0 ||
         session.currentPosition > session.queuedCardIds.length) {
@@ -487,7 +486,8 @@ class SqliteProgressRepository implements ProgressRepository {
   }) async {
     if (limit <= 0) return const [];
     final db = await LocalDatabase.ensureInitialized();
-    final existing = await dailyReviewSession(forDay);
+    const sessions = SqliteDailyReviewSessionRepository();
+    final existing = await sessions.load(forDay);
     if (existing != null) {
       return _queueCardsByIds(db, existing.queuedCardIds);
     }
@@ -501,15 +501,11 @@ class SqliteProgressRepository implements ProgressRepository {
     );
     final cardIds = queue.map((item) => item.card.id).toList(growable: false);
     try {
-      await db.insert('daily_review_sessions', {
-        'learner_id': 1,
-        'session_date': _localDateKey(forDay),
-        'queued_card_ids': jsonEncode(cardIds),
-      });
+      await sessions.create(date: forDay, queuedCardIds: cardIds);
       return queue;
     } on DatabaseException {
       // Another caller may have created today's unique session concurrently.
-      final saved = await dailyReviewSession(forDay);
+      final saved = await sessions.load(forDay);
       if (saved == null) rethrow;
       return _queueCardsByIds(db, saved.queuedCardIds);
     }
@@ -715,6 +711,83 @@ class SqliteProgressRepository implements ProgressRepository {
         ? null
         : DateTime.parse(row['last_reviewed_at'] as String),
   );
+}
+
+class SqliteDailyReviewSessionRepository
+    implements DailyReviewSessionRepository {
+  const SqliteDailyReviewSessionRepository();
+
+  static const _progress = SqliteProgressRepository();
+
+  @override
+  Future<DailyReviewSession> create({
+    required DateTime date,
+    required List<int> queuedCardIds,
+  }) async {
+    final existing = await load(date);
+    if (existing != null) return existing;
+
+    final db = await LocalDatabase.ensureInitialized();
+    late final int id;
+    try {
+      id = await db.insert('daily_review_sessions', {
+        'learner_id': 1,
+        'session_date': _localDateKey(date),
+        'queued_card_ids': jsonEncode(queuedCardIds),
+      });
+    } on DatabaseException {
+      final restored = await load(date);
+      if (restored != null) return restored;
+      rethrow;
+    }
+    return DailyReviewSession(
+      id: id,
+      date: DateTime(date.year, date.month, date.day),
+      queuedCardIds: List.unmodifiable(queuedCardIds),
+    );
+  }
+
+  @override
+  Future<DailyReviewSession?> load(DateTime date) =>
+      _progress.dailyReviewSession(date);
+
+  @override
+  Future<void> update(DailyReviewSession session) =>
+      _progress.updateDailyReviewSession(session);
+
+  @override
+  Future<void> complete({
+    required int sessionId,
+    required DateTime completedAt,
+  }) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'daily_review_sessions',
+      columns: ['queued_card_ids'],
+      where: 'id = ? AND learner_id = ?',
+      whereArgs: [sessionId, 1],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      throw StateError('Daily review session $sessionId does not exist.');
+    }
+    final cardCount =
+        (jsonDecode(rows.single['queued_card_ids'] as String) as List).length;
+    await db.update(
+      'daily_review_sessions',
+      {
+        'current_position': cardCount,
+        'completed_at': completedAt.toUtc().toIso8601String(),
+      },
+      where: 'id = ? AND learner_id = ?',
+      whereArgs: [sessionId, 1],
+    );
+  }
+
+  String _localDateKey(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 }
 
 class SqliteDevelopmentRepository implements DevelopmentRepository {

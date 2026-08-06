@@ -5,8 +5,6 @@ abstract interface class ProgressRepository {
   Future<void> updateSession(LessonSession session);
   Future<LessonSession?> activeSessionForLesson(int lessonId);
   Future<LessonSession?> latestActiveSession();
-  Future<DailyReviewSession?> dailyReviewSession(DateTime forDay);
-  Future<void> updateDailyReviewSession(DailyReviewSession session);
 
   Future<void> recordReview({
     required ReviewRecord review,

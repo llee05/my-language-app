@@ -242,12 +242,6 @@ class _RushProgressRepository implements ProgressRepository {
   Future<LessonSession?> latestActiveSession() async => null;
 
   @override
-  Future<DailyReviewSession?> dailyReviewSession(DateTime forDay) async => null;
-
-  @override
-  Future<void> updateDailyReviewSession(DailyReviewSession session) async {}
-
-  @override
   Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async =>
       const [];
 

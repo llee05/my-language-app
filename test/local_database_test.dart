@@ -7,6 +7,7 @@ import 'package:mylanguageapp/local_database.dart';
 import 'package:mylanguageapp/models/learner_profile.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/models/lesson.dart';
+import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -16,6 +17,8 @@ void main() {
   const lessons = SqliteLessonRepository();
   const settings = SqliteSettingsRepository();
   const progress = SqliteProgressRepository();
+  const DailyReviewSessionRepository dailyReviews =
+      SqliteDailyReviewSessionRepository();
   late Directory testDirectory;
 
   setUpAll(() async {
@@ -352,14 +355,14 @@ void main() {
       );
       final day = DateTime(2026, 8, 6, 9);
       final originalQueue = await progress.dailyQueue(forDay: day, limit: 3);
-      final original = await progress.dailyReviewSession(day);
+      final original = await dailyReviews.load(day);
 
       expect(original, isNotNull);
       expect(
         original!.queuedCardIds,
         originalQueue.map((item) => item.card.id),
       );
-      await progress.updateDailyReviewSession(
+      await dailyReviews.update(
         DailyReviewSession(
           id: original.id,
           date: original.date,
@@ -373,11 +376,52 @@ void main() {
         forDay: DateTime(2026, 8, 6, 20),
         limit: 1,
       );
-      final restored = await progress.dailyReviewSession(day);
+      final restored = await dailyReviews.load(day);
 
       expect(restoredQueue.map((item) => item.card.id), original.queuedCardIds);
       expect(restored?.currentPosition, 2);
-      expect(await progress.dailyReviewSession(DateTime(2026, 8, 7)), isNull);
+      expect(await dailyReviews.load(DateTime(2026, 8, 7)), isNull);
+
+      final completedAt = DateTime.utc(2026, 8, 6, 21);
+      await dailyReviews.complete(
+        sessionId: restored!.id,
+        completedAt: completedAt,
+      );
+      final completed = await dailyReviews.load(day);
+      expect(completed?.currentPosition, original.queuedCardIds.length);
+      expect(completed?.completedAt, completedAt);
+    },
+  );
+
+  test(
+    'daily review repository creates once and rolls over at midnight',
+    () async {
+      await LocalDatabase.resetForTesting();
+      await LocalDatabase.ensureInitialized();
+      await learners.save(
+        const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 2),
+      );
+      final cards = await progress.dailyQueue(
+        forDay: DateTime(2026, 8, 6, 8),
+        limit: 2,
+      );
+      final ids = cards.map((item) => item.card.id).toList();
+
+      final morning = await dailyReviews.load(DateTime(2026, 8, 6, 8));
+      final restored = await dailyReviews.create(
+        date: DateTime(2026, 8, 6, 23, 59),
+        queuedCardIds: ids.reversed.toList(),
+      );
+      final nextDay = await dailyReviews.create(
+        date: DateTime(2026, 8, 7),
+        queuedCardIds: ids.reversed.toList(),
+      );
+
+      expect(restored.id, morning?.id);
+      expect(restored.queuedCardIds, ids);
+      expect(nextDay.id, isNot(restored.id));
+      expect(nextDay.date, DateTime(2026, 8, 7));
+      expect(nextDay.queuedCardIds, ids.reversed);
     },
   );
 

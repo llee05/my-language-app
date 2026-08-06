@@ -1,4 +1,5 @@
 import 'development_repository.dart';
+import 'daily_review_session_repository.dart';
 import 'learner_repository.dart';
 import 'lesson_repository.dart';
 import 'progress_repository.dart';
@@ -12,6 +13,7 @@ class AppDependencies {
     this.development = const SqliteDevelopmentRepository(),
     this.settings = const SqliteSettingsRepository(),
     this.progress = const SqliteProgressRepository(),
+    this.dailyReviews = const SqliteDailyReviewSessionRepository(),
   });
 
   final LearnerRepository learners;
@@ -19,4 +21,5 @@ class AppDependencies {
   final DevelopmentRepository development;
   final SettingsRepository settings;
   final ProgressRepository progress;
+  final DailyReviewSessionRepository dailyReviews;
 }
