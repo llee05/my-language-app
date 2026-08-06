@@ -295,6 +295,28 @@ void main() {
     await tester.tap(find.text('Reveal meaning'));
     await tester.pump();
     expect(find.text('one'), findsOneWidget);
+    expect(find.text('Again'), findsOneWidget);
+    expect(find.text('Hard'), findsOneWidget);
+    expect(find.text('Good'), findsOneWidget);
+    expect(find.text('Easy'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Next'))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.ensureVisible(find.text('Good'));
+    await tester.tap(find.text('Good'));
+    await tester.pumpAndSettle();
+    expect(find.text('Good selected'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('review-answer-good')),
+        matching: find.byIcon(Icons.check),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Next'));
     await tester.pump();

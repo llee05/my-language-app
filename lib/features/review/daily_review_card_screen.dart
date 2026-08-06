@@ -21,6 +21,7 @@ class DailyReviewCardScreen extends StatefulWidget {
 class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   late int _position;
   bool _meaningRevealed = false;
+  final Map<int, ReviewRating> _answers = {};
 
   @override
   void initState() {
@@ -39,12 +40,17 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
     });
   }
 
+  void _selectAnswer(ReviewRating rating) {
+    setState(() => _answers[_position] = rating);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.queue.isEmpty) {
       return const Center(child: Text('There are no cards to review.'));
     }
     final card = widget.queue[_position].card;
+    final selectedAnswer = _answers[_position];
     return ColoredBox(
       color: AppColors.background,
       child: Padding(
@@ -114,7 +120,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                         ),
                       ],
                       const SizedBox(height: 28),
-                      if (_meaningRevealed)
+                      if (_meaningRevealed) ...[
                         Text(
                           card.englishMeaning,
                           key: const Key('daily-review-meaning'),
@@ -123,8 +129,41 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                             color: AppColors.text,
                             fontSize: 24,
                           ),
-                        )
-                      else
+                        ),
+                        const SizedBox(height: 26),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: ReviewRating.values
+                              .map(
+                                (rating) => _ReviewAnswerButton(
+                                  rating: rating,
+                                  selected: selectedAnswer == rating,
+                                  onPressed: () => _selectAnswer(rating),
+                                ),
+                              )
+                              .toList(growable: false),
+                        ),
+                        const SizedBox(height: 14),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          child: selectedAnswer == null
+                              ? const Text(
+                                  'Choose how well you remembered this card.',
+                                  key: Key('review-answer-prompt'),
+                                  style: TextStyle(color: AppColors.muted),
+                                )
+                              : Text(
+                                  '${_ratingLabel(selectedAnswer)} selected',
+                                  key: const Key('selected-review-answer'),
+                                  style: const TextStyle(
+                                    color: AppColors.teal,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ] else
                         OutlinedButton(
                           onPressed: () =>
                               setState(() => _meaningRevealed = true),
@@ -148,7 +187,9 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _position == widget.queue.length - 1
+                    onPressed:
+                        _position == widget.queue.length - 1 ||
+                            selectedAnswer == null
                         ? null
                         : () => _move(1),
                     icon: const Icon(Icons.arrow_forward),
@@ -163,3 +204,40 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
     );
   }
 }
+
+class _ReviewAnswerButton extends StatelessWidget {
+  const _ReviewAnswerButton({
+    required this.rating,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final ReviewRating rating;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _ratingLabel(rating);
+    if (selected) {
+      return FilledButton.icon(
+        key: Key('review-answer-${rating.name}'),
+        onPressed: onPressed,
+        icon: const Icon(Icons.check, size: 17),
+        label: Text(label),
+      );
+    }
+    return OutlinedButton(
+      key: Key('review-answer-${rating.name}'),
+      onPressed: onPressed,
+      child: Text(label),
+    );
+  }
+}
+
+String _ratingLabel(ReviewRating rating) => switch (rating) {
+  ReviewRating.again => 'Again',
+  ReviewRating.hard => 'Hard',
+  ReviewRating.good => 'Good',
+  ReviewRating.easy => 'Easy',
+};
