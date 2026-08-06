@@ -9,6 +9,7 @@ class DashboardPage extends StatefulWidget {
     required this.onResetAllData,
     required this.lessonRepository,
     required this.progressRepository,
+    this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
   });
@@ -19,6 +20,7 @@ class DashboardPage extends StatefulWidget {
   final Future<void> Function() onResetAllData;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
+  final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
 
@@ -89,6 +91,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         onResetAllData: widget.onResetAllData,
                         lessonRepository: widget.lessonRepository,
                         progressRepository: widget.progressRepository,
+                        dailyReviewSessionRepository:
+                            widget.dailyReviewSessionRepository,
                         settingsRepository: widget.settingsRepository,
                         developmentRepository: widget.developmentRepository,
                       ),
@@ -115,6 +119,7 @@ class _DashboardBody extends StatelessWidget {
     required this.onResetAllData,
     required this.lessonRepository,
     required this.progressRepository,
+    this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
   });
@@ -127,6 +132,7 @@ class _DashboardBody extends StatelessWidget {
   final Future<void> Function() onResetAllData;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
+  final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
 
@@ -153,6 +159,7 @@ class _DashboardBody extends StatelessWidget {
       return DailyQueuePage(
         profile: profile,
         progressRepository: progressRepository,
+        sessionRepository: dailyReviewSessionRepository,
       );
     }
     if (selectedNav == 5) {

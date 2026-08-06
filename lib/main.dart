@@ -15,6 +15,7 @@ import 'models/learning_progress.dart';
 import 'models/lesson.dart';
 import 'repositories/app_dependencies.dart';
 import 'repositories/development_repository.dart';
+import 'repositories/daily_review_session_repository.dart';
 import 'repositories/lesson_repository.dart';
 import 'repositories/progress_repository.dart';
 import 'repositories/settings_repository.dart';
@@ -159,6 +160,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onResetAllData: _resetAllData,
             lessonRepository: widget.dependencies.lessons,
             progressRepository: widget.dependencies.progress,
+            dailyReviewSessionRepository: widget.dependencies.dailyReviews,
             settingsRepository: widget.dependencies.settings,
             developmentRepository: widget.dependencies.development,
           );

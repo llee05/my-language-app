@@ -8,12 +8,16 @@ class DailyQueuePage extends StatefulWidget {
     super.key,
     required this.profile,
     required this.progressRepository,
+    this.sessionRepository,
+    this.onStartReview,
     this.today,
     this.clock,
   });
 
   final LearnerProfile profile;
   final ProgressRepository progressRepository;
+  final DailyReviewSessionRepository? sessionRepository;
+  final FutureOr<void> Function(DailyReviewSession session)? onStartReview;
   final DateTime? today;
   final DateTime Function()? clock;
 
@@ -28,6 +32,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   String? _error;
   Timer? _midnightTimer;
   DateTime? _loadedDay;
+  DailyReviewSession? _session;
 
   DateTime _systemTime() => widget.clock?.call() ?? DateTime.now();
 
@@ -79,12 +84,14 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         limit: widget.profile.dailyWordTarget,
         maxHskLevel: widget.profile.hskLevel,
       );
+      final session = await widget.sessionRepository?.load(day);
       if (!mounted) return;
       setState(() {
         _queue = queue;
         _loading = false;
         _error = null;
         _loadedDay = day;
+        _session = session;
       });
     } catch (error) {
       if (!mounted) return;
@@ -104,17 +111,36 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              '每日复习',
-              style: TextStyle(
-                fontFamily: 'serif',
-                fontSize: 36,
-                color: AppColors.text,
-              ),
-            ),
-            const Text(
-              'Today’s review queue',
-              style: TextStyle(fontSize: 16, color: AppColors.muted),
+            Row(
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '每日复习',
+                        style: TextStyle(
+                          fontFamily: 'serif',
+                          fontSize: 36,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      Text(
+                        'Today’s review queue',
+                        style: TextStyle(fontSize: 16, color: AppColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                FilledButton.icon(
+                  onPressed: !_loading && _queue.isNotEmpty
+                      ? _startReview
+                      : null,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(_isResumable ? 'Resume review' : 'Start review'),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -130,6 +156,18 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     );
   }
 
+  bool get _isResumable =>
+      _session != null &&
+      !_session!.isComplete &&
+      _session!.currentPosition > 0 &&
+      _session!.currentPosition < _session!.queuedCardIds.length;
+
+  Future<void> _startReview() async {
+    final session = _session;
+    if (session == null || _queue.isEmpty) return;
+    await widget.onStartReview?.call(session);
+  }
+
   Widget _buildContent() {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -140,22 +178,24 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       );
     }
     if (_queue.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.task_alt, size: 46, color: AppColors.teal),
-            SizedBox(height: 12),
-            Text(
-              'You’re all caught up.',
-              style: TextStyle(color: AppColors.text, fontSize: 18),
-            ),
-            SizedBox(height: 5),
-            Text(
-              'There are no cards in today’s queue.',
-              style: TextStyle(color: AppColors.muted),
-            ),
-          ],
+      return const SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.task_alt, size: 46, color: AppColors.teal),
+              SizedBox(height: 12),
+              Text(
+                'You’re all caught up.',
+                style: TextStyle(color: AppColors.text, fontSize: 18),
+              ),
+              SizedBox(height: 5),
+              Text(
+                'There are no cards in today’s queue.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+            ],
+          ),
         ),
       );
     }

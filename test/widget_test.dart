@@ -4,6 +4,7 @@ import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
+import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
@@ -176,6 +177,7 @@ void main() {
     expect(find.text('1 New'), findsOneWidget);
     expect(find.text('复习'), findsOneWidget);
     expect(find.text('新'), findsOneWidget);
+    expect(find.text('Start review'), findsOneWidget);
   });
 
   testWidgets('daily queue reloads at local midnight', (tester) async {
@@ -201,6 +203,74 @@ void main() {
 
     expect(progress.dailyQueueCalls, 2);
     expect(progress.requestedDays.last.day, 7);
+  });
+
+  testWidgets('review action starts or resumes the persisted session', (
+    tester,
+  ) async {
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 1,
+          chinese: '一',
+          pinyin: 'yī',
+          englishMeaning: 'one',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+      DailyQueueCard(
+        card: Flashcard(
+          id: 2,
+          chinese: '二',
+          pinyin: 'èr',
+          englishMeaning: 'two',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+    ];
+    final sessions = _MemoryDailyReviewSessionRepository(
+      DailyReviewSession(
+        id: 8,
+        date: DateTime(2026, 8, 6),
+        queuedCardIds: const [1, 2],
+        currentPosition: 1,
+      ),
+    );
+    DailyReviewSession? started;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: _MemoryProgressRepository(queue: queue),
+          sessionRepository: sessions,
+          today: DateTime(2026, 8, 6),
+          onStartReview: (session) => started = session,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Resume review'), findsOneWidget);
+    await tester.tap(find.text('Resume review'));
+    expect(started?.id, 8);
+  });
+
+  testWidgets('start review is disabled for an empty queue', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: _MemoryProgressRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Start review'),
+    );
+    expect(button.onPressed, isNull);
   });
 
   test('daily queue reset is the next local midnight', () {
@@ -607,4 +677,31 @@ class _MemoryProgressRepository implements ProgressRepository {
   Future<void> updateSession(LessonSession session) async {
     savedSession = session;
   }
+}
+
+class _MemoryDailyReviewSessionRepository
+    implements DailyReviewSessionRepository {
+  _MemoryDailyReviewSessionRepository(this.session);
+
+  DailyReviewSession? session;
+
+  @override
+  Future<DailyReviewSession?> load(DateTime date) async => session;
+
+  @override
+  Future<DailyReviewSession> create({
+    required DateTime date,
+    required List<int> queuedCardIds,
+  }) async => session!;
+
+  @override
+  Future<void> update(DailyReviewSession session) async {
+    this.session = session;
+  }
+
+  @override
+  Future<void> complete({
+    required int sessionId,
+    required DateTime completedAt,
+  }) async {}
 }
