@@ -277,6 +277,61 @@ void main() {
     expect(await progress.dueCards(dueAt), hasLength(1));
   });
 
+  test('daily queue prioritizes due, weak, then new cards', () async {
+    await LocalDatabase.resetForTesting();
+    final db = await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 2, dailyWordTarget: 3),
+    );
+    final cardRows = await db.query('cards', columns: ['id'], limit: 3);
+    final dueCardId = cardRows[0]['id'] as int;
+    final weakCardId = cardRows[1]['id'] as int;
+    final newCardId = cardRows[2]['id'] as int;
+    final today = DateTime.utc(2026, 8, 6);
+
+    await progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: dueCardId,
+        reviewedAt: today.subtract(const Duration(days: 3)),
+        rating: ReviewRating.good,
+        wasCorrect: true,
+      ),
+      progress: CardProgress(
+        cardId: dueCardId,
+        dueAt: today.subtract(const Duration(days: 1)),
+        lastReviewedAt: today.subtract(const Duration(days: 3)),
+      ),
+    );
+    await progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: weakCardId,
+        reviewedAt: today.subtract(const Duration(days: 1)),
+        rating: ReviewRating.again,
+        wasCorrect: false,
+      ),
+      progress: CardProgress(
+        cardId: weakCardId,
+        dueAt: today.add(const Duration(days: 5)),
+        lastReviewedAt: today.subtract(const Duration(days: 1)),
+      ),
+    );
+
+    final queue = await progress.dailyQueue(forDay: today, limit: 3);
+
+    expect(queue.map((item) => item.card.id), [
+      dueCardId,
+      weakCardId,
+      newCardId,
+    ]);
+    expect(queue.map((item) => item.reason), [
+      DailyQueueReason.due,
+      DailyQueueReason.weak,
+      DailyQueueReason.newWord,
+    ]);
+  });
+
   test('all milestone tables, progress columns, and indexes exist', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();

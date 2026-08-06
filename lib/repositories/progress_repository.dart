@@ -13,4 +13,10 @@ abstract interface class ProgressRepository {
   Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit});
   Future<CardProgress?> progressForCard(int cardId);
   Future<List<CardProgress>> dueCards(DateTime through);
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  });
 }

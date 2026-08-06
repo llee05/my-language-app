@@ -125,6 +125,59 @@ void main() {
     expect(find.text('180s'), findsOneWidget);
   });
 
+  testWidgets('progress tab shows the prioritized daily review queue', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final progress = _MemoryProgressRepository(
+      queue: [
+        DailyQueueCard(
+          card: const Flashcard(
+            id: 1,
+            chinese: '复习',
+            pinyin: 'fùxí',
+            englishMeaning: 'to review',
+          ),
+          reason: DailyQueueReason.due,
+          progress: CardProgress(cardId: 1, dueAt: DateTime.utc(2026, 8, 5)),
+        ),
+        const DailyQueueCard(
+          card: Flashcard(
+            id: 2,
+            chinese: '新',
+            pinyin: 'xīn',
+            englishMeaning: 'new',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Today’s review queue'), findsOneWidget);
+    expect(find.text('1 Due'), findsOneWidget);
+    expect(find.text('1 New'), findsOneWidget);
+    expect(find.text('复习'), findsOneWidget);
+    expect(find.text('新'), findsOneWidget);
+  });
+
   testWidgets('lessons page exposes level and AI topic options', (
     tester,
   ) async {
@@ -445,9 +498,13 @@ class _MemoryLessonRepository implements LessonRepository {
 }
 
 class _MemoryProgressRepository implements ProgressRepository {
-  _MemoryProgressRepository({this.hasActiveSession = true});
+  _MemoryProgressRepository({
+    this.hasActiveSession = true,
+    this.queue = const [],
+  });
 
   final bool hasActiveSession;
+  final List<DailyQueueCard> queue;
   LessonSession? savedSession;
   ReviewRecord? recordedReview;
   int? startedLessonId;
@@ -470,6 +527,14 @@ class _MemoryProgressRepository implements ProgressRepository {
 
   @override
   Future<List<CardProgress>> dueCards(DateTime through) async => const [];
+
+  @override
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  }) async => queue.take(limit).toList(growable: false);
 
   @override
   Future<CardProgress?> progressForCard(int cardId) async => null;

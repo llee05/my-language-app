@@ -31,6 +31,7 @@ part 'features/dashboard/widgets/learning_panel.dart';
 part 'features/dashboard/widgets/progress_rail.dart';
 part 'features/lessons/lessons_page.dart';
 part 'features/onboarding/learner_setup_page.dart';
+part 'features/review/daily_queue_page.dart';
 part 'features/settings/settings_page.dart';
 part 'features/vocab_rush/vocab_rush_page.dart';
 part 'features/vocabulary/vocabulary_page.dart';

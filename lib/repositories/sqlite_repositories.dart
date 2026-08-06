@@ -357,6 +357,115 @@ class SqliteProgressRepository implements ProgressRepository {
     return rows.map(_progressFromRow).toList(growable: false);
   }
 
+  @override
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  }) async {
+    if (limit <= 0) return const [];
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.rawQuery(
+      '''
+      SELECT
+        cards.*,
+        card_progress.times_seen AS progress_times_seen,
+        card_progress.correct_answers AS progress_correct_answers,
+        card_progress.incorrect_answers AS progress_incorrect_answers,
+        card_progress.mastery AS progress_mastery,
+        card_progress.repetitions AS progress_repetitions,
+        card_progress.lapses AS progress_lapses,
+        card_progress.interval_days AS progress_interval_days,
+        card_progress.ease_factor AS progress_ease_factor,
+        card_progress.due_at AS progress_due_at,
+        card_progress.last_reviewed_at AS progress_last_reviewed_at
+      FROM cards
+      LEFT JOIN card_progress
+        ON card_progress.card_id = cards.id
+        AND card_progress.learner_id = ?
+      WHERE cards.hsk_level <= ?
+      ORDER BY cards.id ASC
+    ''',
+      [1, maxHskLevel],
+    );
+
+    final endOfDay = forDay.isUtc
+        ? DateTime.utc(forDay.year, forDay.month, forDay.day + 1)
+        : DateTime(forDay.year, forDay.month, forDay.day + 1).toUtc();
+    final due = <DailyQueueCard>[];
+    final weak = <DailyQueueCard>[];
+    final newCards = <DailyQueueCard>[];
+
+    for (final row in rows) {
+      final card = _queueCardFromRow(row);
+      final dueAt = row['progress_due_at'] as String?;
+      if (dueAt == null) {
+        newCards.add(
+          DailyQueueCard(card: card, reason: DailyQueueReason.newWord),
+        );
+        continue;
+      }
+      final progress = CardProgress(
+        cardId: card.id,
+        timesSeen: row['progress_times_seen'] as int,
+        correctAnswers: row['progress_correct_answers'] as int,
+        incorrectAnswers: row['progress_incorrect_answers'] as int,
+        mastery: (row['progress_mastery'] as num).toDouble(),
+        repetitions: row['progress_repetitions'] as int,
+        lapses: row['progress_lapses'] as int,
+        intervalDays: row['progress_interval_days'] as int,
+        easeFactor: (row['progress_ease_factor'] as num).toDouble(),
+        dueAt: DateTime.parse(dueAt),
+        lastReviewedAt: row['progress_last_reviewed_at'] == null
+            ? null
+            : DateTime.parse(row['progress_last_reviewed_at'] as String),
+      );
+      if (progress.dueAt.isBefore(endOfDay)) {
+        due.add(
+          DailyQueueCard(
+            card: card,
+            reason: DailyQueueReason.due,
+            progress: progress,
+          ),
+        );
+      } else if (progress.mastery < weakThreshold) {
+        weak.add(
+          DailyQueueCard(
+            card: card,
+            reason: DailyQueueReason.weak,
+            progress: progress,
+          ),
+        );
+      }
+    }
+
+    due.sort((a, b) => a.progress!.dueAt.compareTo(b.progress!.dueAt));
+    weak.sort((a, b) {
+      final mastery = a.progress!.mastery.compareTo(b.progress!.mastery);
+      if (mastery != 0) return mastery;
+      return (a.progress!.lastReview ?? DateTime.fromMillisecondsSinceEpoch(0))
+          .compareTo(
+            b.progress!.lastReview ?? DateTime.fromMillisecondsSinceEpoch(0),
+          );
+    });
+
+    return [...due, ...weak, ...newCards].take(limit).toList(growable: false);
+  }
+
+  Flashcard _queueCardFromRow(Map<String, Object?> row) => Flashcard(
+    id: row['id'] as int,
+    chinese: row['chinese'] as String,
+    pinyin: row['pinyin'] as String,
+    englishMeaning: row['english_meaning'] as String,
+    partOfSpeech: row['part_of_speech'] as String,
+    exampleChinese: row['example_sentence_chinese'] as String,
+    examplePinyin: row['example_sentence_pinyin'] as String,
+    exampleEnglish: row['example_sentence_english'] as String,
+    quizOptions: (jsonDecode(row['quiz_options'] as String) as List)
+        .cast<String>(),
+  );
+
   LessonSession _sessionFromRow(Map<String, Object?> row) => LessonSession(
     id: row['id'] as int,
     lessonId: row['lesson_id'] as int,

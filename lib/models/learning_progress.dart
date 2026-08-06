@@ -1,3 +1,5 @@
+import 'lesson.dart';
+
 class LearnerSettings {
   const LearnerSettings({
     this.showPinyin = true,
@@ -95,4 +97,18 @@ class CardProgress {
   int get intervalDays => reviewInterval;
   DateTime get dueAt => nextReview;
   DateTime? get lastReviewedAt => lastReview;
+}
+
+enum DailyQueueReason { due, weak, newWord }
+
+class DailyQueueCard {
+  const DailyQueueCard({
+    required this.card,
+    required this.reason,
+    this.progress,
+  });
+
+  final Flashcard card;
+  final DailyQueueReason reason;
+  final CardProgress? progress;
 }
