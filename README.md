@@ -1,147 +1,46 @@
-# TingShuo Project Brief
+# 听说 TingShuo
 
-TingShuo is a local-first Flutter app that helps beginner Mandarin learners build a consistent study habit with HSK-aligned vocabulary, short flashcard lessons, vocabulary games, and an optional AI tutor named Long Laoshi.
+**TingShuo v1.0.0 Beta 1** is a local-first Flutter app for building a
+consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
+spaced daily review, a searchable vocabulary library, Vocab Rush, and an
+optional local AI tutor named Long Laoshi.
 
-The project is currently an early-stage prototype. It has a polished learner-facing shell and several working study activities, but its progress indicators are not yet connected to persistent learning history. The MVP milestone is to turn those activities into one complete daily learning loop:
+> [!IMPORTANT]
+> This is a beta release. Learning data is stored only on the device, and the
+> dashboard's XP, streak, mastery, lesson recommendations, and weekly activity
+> are still presentation data. See [Beta limitations](#beta-limitations).
 
-`Learn → Answer → Save result → Schedule review → Return tomorrow`
+## Beta Highlights
 
-## Product Goals
-
-- Help beginner Mandarin learners practise in short, repeatable daily sessions.
-- Present HSK vocabulary, pinyin, meanings, and examples in a focused lesson flow.
-- Retain learner progress locally and work without an account or internet connection.
-- Bring weak vocabulary back at useful intervals through spaced review.
-- Offer an optional AI tutor for corrections, sentence practice, and explanations.
-- Keep the interface calm, approachable, and suitable for repeated use.
-
-## Current Features
-
-- Responsive dashboard and sidebar navigation across desktop and mobile layouts.
-- A bundled dataset of more than 4,000 vocabulary entries across HSK levels 1–6.
+- First-run setup for the learner's name, HSK level, and daily word target.
+- More than 4,000 bundled vocabulary entries across HSK levels 1–6.
 - Seeded and AI-assisted flashcard lessons with an offline vocabulary fallback.
-- Reusable generated lessons stored in a local SQLite database.
-- Flashcards containing Hanzi, pinyin, English meanings, and example sentences.
-- On-device Mandarin pronunciation audio on lesson flashcards, controlled by
-  the saved sound preference.
-- Vocab Rush, with HSK difficulty ranges, timed and survival modes, streaks, and three-strike scoring.
-- Long Laoshi, a local AI tutor powered by Ollama.
-- Dashboard surfaces for lessons, vocabulary mastery, XP, streaks, and weekly activity.
-- Flutter widget, startup, database, game, and vocabulary dataset tests.
+- Hanzi, pinyin, English meanings, example sentences, and on-device Mandarin
+  pronunciation.
+- Immediate card ratings, persisted lesson position, completion summaries, and
+  the ability to resume an unfinished lesson after restarting the app.
+- A daily review queue that prioritises due and weak cards before new words.
+- Spaced-review scheduling, resumable daily sessions, and a daily completion
+  summary.
+- Vocabulary search by Hanzi, pinyin, or English, with HSK and learning-state
+  filters plus word detail views.
+- Vocab Rush timed and survival modes; incorrect answers are added to the
+  learner's review data.
+- Long Laoshi, an optional local AI tutor powered by Ollama.
+- Responsive desktop and mobile layouts, local settings, and versioned SQLite
+  migrations.
 
-> [!NOTE]
-> Dashboard XP, streak, mastery, lesson progress, and weekly activity are currently presentation data. Connecting them to real study history is part of the MVP roadmap.
+The core study and review flow works without an account, internet connection,
+or Ollama.
 
-## MVP Definition
+## Getting Started
 
-The MVP is complete when a learner can:
+### Requirements
 
-1. ~~Choose an HSK level and daily study target.~~
-2. ~~Complete a short vocabulary lesson.~~
-3. Rate words as needing more or less practice.
-4. ~~Close the app and later resume an unfinished lesson.~~
-5. Review weak or due vocabulary in a daily review queue.
-6. See XP, streak, mastery, and activity values based on real study sessions.
-7. Use every core learning feature without Ollama or an internet connection.
-
-## MVP Roadmap
-
-### 1. Persistent learning foundation
-
-- ~~Add first-run learner setup for name, HSK level, and daily word target.~~
-- ~~Introduce typed models and repositories between the UI and SQLite.~~
-- ~~Add versioned database migrations.~~
-- ~~Store learner profiles, settings, lesson sessions, review history, and
-  per-card progress.~~
-- ~~Track times seen, correct and incorrect answers, mastery, last review,
-  next review, and review interval.~~
-
-**Milestone:** ~~restarting the app preserves learner settings, lesson
-position, and card results.~~
-
-### 2. Complete lesson loop
-
-- ~~Mark a revealed flashcard as already familiar with a single button.~~
-- ~~Save every rating immediately and update the card's review schedule.~~
-- ~~Lesson progress and a completion summary show accuracy, learned words,
-  review words, and XP earned.~~
-- ~~The dashboard's Resume action opens the latest unfinished lesson session.~~
-- Let learners browse and start seeded or previously generated lessons directly.
-
-**Milestone:** ~~a learner can finish or resume a lesson and see the correct
-result after reopening the app.~~
-
-### 3. Daily review and vocabulary library
-
-- ~~Implement a simple, explainable spaced-repetition scheduler.~~
-- Create a daily queue of cards that are new, weak, or due for review.
-- Build the Vocabulary page with Hanzi, pinyin, and English search.
-- Add filters for HSK level and unseen, learning, learned, and due states.
-- Add word detail views with meanings and example sentences.
-- Feed incorrect Vocab Rush answers into the learner's review queue.
-
-**Milestone:** the app automatically offers a useful review session each day.
-
-### 4. Live dashboard and progress
-
-- Replace the hard-coded greeting date and study target with current data.
-- Calculate XP, current streak, due reviews, learned words, and mastery from stored activity.
-- ~~Resume the latest incomplete lesson from the dashboard.~~
-- Populate the seven-day activity chart from completed sessions.
-- Recommend the next appropriate lesson.
-- Build the Progress page already represented in navigation.
-
-**Milestone:** every displayed metric is based on actual learner activity.
-
-### 5. Reliability and release readiness
-
-- Keep startup and core study flows independent of Ollama availability.
-- Detect AI availability only when an AI-powered feature is opened.
-- Show the actual local Ollama model instead of a hard-coded model label.
-- Add consistent loading, empty, error, offline, and retry states.
-- Improve keyboard navigation, semantics, and screen-reader support.
-- Add tests for migrations, review scheduling, card ratings, lesson resume, streaks, offline fallback, and malformed AI responses.
-- Add learner-data reset and export options.
-- Validate and polish one primary release target before expanding platform-specific work.
-
-**Milestone:** a new learner can complete the full offline learning loop and safely retain progress between launches.
-
-## Deferred Until After MVP
-
-- Accounts and cloud synchronization
-- Social features and leaderboards
-- Subscriptions and payments
-- Speech recognition and pronunciation grading
-- Handwriting recognition
-- Push notifications
-- Large achievement systems
-- Additional game modes
-- AI-generated content as a requirement for core study
-
-## Technical Snapshot
-
-- Framework: Flutter
-- Language: Dart
-- Local storage: SQLite via `sqflite_common_ffi`
-- AI integration: Ollama local chat API through a lightweight HTTP client
-- Audio: on-device Mandarin text-to-speech via `flutter_tts`
-- Content: bundled HSK 1–6 JSON vocabulary dataset and seeded lessons
-- Tests: Flutter widget, startup, database, Vocab Rush, and dataset tests
-
-## Current Architecture
-
-- `lib/main.dart` initializes local services, configures the app theme, and assembles feature files.
-- `lib/core/widgets/app_sidebar.dart` defines the responsive application navigation.
-- `lib/features/dashboard/` contains the main shell, learning dashboard, and progress rail.
-- `lib/features/lessons/lessons_page.dart` builds, caches, and displays flashcard lessons.
-- `lib/features/vocab_rush/vocab_rush_page.dart` implements the vocabulary game.
-- `lib/features/ai_tutor/ai_tutor_page.dart` implements Long Laoshi's chat interface and response formatting.
-- `lib/ai/ollama_service.dart` manages communication with the local Ollama server.
-- `lib/local_database.dart` creates, seeds, and queries the SQLite database.
-- `lib/database/flashcard_seed.dart` contains the initial flashcard lessons.
-- `assets/data/hsk_vocabulary.json` contains the bundled HSK vocabulary dataset.
-
-## Local Setup
+- A Flutter SDK compatible with Dart `^3.12.2`
+- A supported Flutter desktop, mobile, or web toolchain for the target platform
+- Optional: [Ollama](https://ollama.com/) for Long Laoshi and AI-assisted
+  lesson content
 
 Install dependencies:
 
@@ -149,45 +48,126 @@ Install dependencies:
 flutter pub get
 ```
 
-Run the app:
+Run TingShuo:
 
 ```sh
 flutter run
 ```
 
-Run static analysis and tests:
+On first launch, choose a name, current HSK level, and daily word target. These
+settings and subsequent learning history are saved in a local SQLite database.
+
+## Using the Beta
+
+### Lessons
+
+Open **Lessons** to start a bundled lesson or revisit a locally generated one.
+Reveal each answer and rate the word; TingShuo saves every rating immediately
+and schedules the card's next review. An unfinished lesson can be resumed from
+the dashboard or Lessons page.
+
+### Daily review
+
+Open **Progress** or use the dashboard prompt to review today's queue. Due and
+weak vocabulary is shown first, followed by new words up to the configured
+daily target. Session position and answers are persisted, so a review can be
+continued later the same day.
+
+### Vocabulary and Vocab Rush
+
+The **Vocabulary** page supports Hanzi, pinyin, and English search, HSK 1–6
+filters, and unseen, learning, learned, and due states. **Vocab Rush** provides
+timed and survival challenges; missed vocabulary is recorded as weak and can
+return in daily review.
+
+### Pronunciation audio
+
+The speaker button on lesson cards uses the device's text-to-speech engine and
+does not require Ollama. Sound can be enabled or disabled under
+**Settings → Sound**.
+
+Mandarin speech is available on Android, iOS, macOS, Windows, and web when a
+compatible Chinese voice is installed. Linux is not currently supported by the
+selected text-to-speech plugin. If playback is unavailable, install a
+Simplified Chinese (`zh-CN`) system voice and restart the app.
+
+### Optional AI tutor
+
+Install Ollama and make at least one model available:
+
+```sh
+ollama list
+```
+
+On Linux, macOS, and Windows, TingShuo attempts to start `ollama serve` when
+needed. Ollama must be installed and available on `PATH`. The first installed
+model is used by default; select another model at launch with:
+
+```sh
+flutter run --dart-define=OLLAMA_MODEL=model-name
+```
+
+If Ollama is missing or unavailable, the rest of the app remains usable.
+
+## Beta Limitations
+
+- Dashboard XP, streak, mastery, recommended lessons, recent activity, and the
+  seven-day chart are not yet calculated from stored learning history.
+- The **Progress** navigation item currently opens daily review; a dedicated
+  analytics view is planned.
+- The daily reminder preference is saved locally but does not yet schedule a
+  system notification.
+- There are no accounts, cloud sync, or cross-device backup. Resetting all
+  local data is permanent.
+- AI responses require a locally running Ollama model and may vary in quality.
+- Speech recognition, pronunciation grading, and handwriting recognition are
+  outside this beta's scope.
+
+Please treat beta learning data as non-critical until export and backup tools
+are available.
+
+## Development
+
+Run static analysis and the test suite:
 
 ```sh
 flutter analyze
 flutter test
 ```
 
-### Pronunciation audio
+The suite covers startup and onboarding, database migrations and persistence,
+lesson and daily-review flows, spaced scheduling, vocabulary data and search,
+and Vocab Rush review integration.
 
-Lesson flashcards include a speaker button that reads the displayed Mandarin
-word aloud using the device's text-to-speech engine. Audio is generated on the
-device and does not require Ollama. It can be enabled or disabled under
-**Settings → Sound**.
+### Technical snapshot
 
-Mandarin pronunciation is supported on Android, iOS, macOS, Windows, and the
-web when a compatible Chinese voice is installed. Linux is not currently
-supported by the selected text-to-speech plugin. If playback is unavailable,
-install a Simplified Chinese (`zh-CN`) system voice and restart the app.
+- **Framework:** Flutter
+- **Language:** Dart
+- **Storage:** SQLite via `sqflite_common_ffi`
+- **AI:** Ollama's local chat API through a lightweight HTTP client
+- **Audio:** on-device Mandarin text-to-speech via `flutter_tts`
+- **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
 
-### Optional AI tutor setup
+### Project structure
 
-The core MVP is intended to work without AI. To use Long Laoshi and AI-assisted lesson examples, install Ollama and ensure at least one model is available:
-
-```sh
-ollama list
+```text
+lib/
+├── ai/                 # Ollama integration and AI lesson support
+├── core/               # Theme and shared navigation/widgets
+├── database/           # Migrations and seeded lessons
+├── features/           # Dashboard, lessons, review, vocabulary, game, tutor
+├── models/             # Learner, lesson, and progress models
+├── repositories/       # Persistence interfaces and SQLite implementations
+└── services/           # Spaced-review scheduler
 ```
 
-On Linux, macOS, and Windows, the current prototype attempts to start `ollama serve` when needed. Ollama must be installed and available on `PATH`. The first installed model is used by default; override it with:
+## Release
 
-```sh
-flutter run --dart-define=OLLAMA_MODEL=model-name
-```
+Current version: **1.0.0-beta.1+1**
 
-## Project Status
+The beta milestone delivers a complete local loop:
 
-TingShuo has the content, visual foundation, and initial activities needed for an MVP. Development is now focused on persistent learner state, assessed lesson sessions, spaced review, and truthful progress reporting. New modes and broader platform features should follow only after that core learning loop is reliable.
+`Learn → Rate → Save → Schedule review → Return tomorrow`
+
+Work after Beta 1 is focused on live progress analytics, release reliability,
+accessibility, learner-data export, and notification support.
