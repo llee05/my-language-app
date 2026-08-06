@@ -143,6 +143,9 @@ class _DashboardBody extends StatelessWidget {
     if (selectedNav == 2) {
       return const VocabRushPage();
     }
+    if (selectedNav == 3) {
+      return const VocabularyPage();
+    }
     if (selectedNav == 5) {
       return const AiTutorPage();
     }
