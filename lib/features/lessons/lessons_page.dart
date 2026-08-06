@@ -411,26 +411,12 @@ class _LessonsPageState extends State<LessonsPage> {
     final previous = await widget.progressRepository.progressForCard(card.id);
     final now = DateTime.now().toUtc();
     final correct = rating != ReviewRating.again;
-    final previousInterval = previous?.reviewInterval ?? 0;
-    final previousEase = previous?.easeFactor ?? 2.5;
-    final interval = switch (rating) {
-      ReviewRating.again => 1,
-      ReviewRating.hard => max(1, (previousInterval * 1.2).round()),
-      ReviewRating.good =>
-        previousInterval == 0
-            ? 1
-            : max(1, (previousInterval * previousEase).round()),
-      ReviewRating.easy =>
-        previousInterval == 0
-            ? 4
-            : max(2, (previousInterval * previousEase * 1.3).round()),
-    };
-    final ease = switch (rating) {
-      ReviewRating.again => max(1.3, previousEase - .2),
-      ReviewRating.hard => max(1.3, previousEase - .15),
-      ReviewRating.good => previousEase,
-      ReviewRating.easy => previousEase + .15,
-    };
+    final scheduled = scheduleCardReview(
+      cardId: card.id,
+      rating: rating,
+      reviewedAt: now,
+      previous: previous,
+    );
     await widget.progressRepository.recordReview(
       review: ReviewRecord(
         id: 0,
@@ -440,16 +426,7 @@ class _LessonsPageState extends State<LessonsPage> {
         rating: rating,
         wasCorrect: correct,
       ),
-      progress: CardProgress(
-        cardId: card.id,
-        repetitions: correct ? (previous?.repetitions ?? 0) + 1 : 0,
-        lapses:
-            (previous?.lapses ?? 0) + (rating == ReviewRating.again ? 1 : 0),
-        reviewInterval: interval,
-        easeFactor: ease,
-        nextReview: now.add(Duration(days: interval)),
-        lastReview: now,
-      ),
+      progress: scheduled,
     );
 
     final isComplete = session.cardsReviewed + 1 >= _cards.length;

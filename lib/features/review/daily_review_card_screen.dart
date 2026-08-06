@@ -7,12 +7,19 @@ class DailyReviewCardScreen extends StatefulWidget {
     this.initialPosition = 0,
     this.showPinyin = true,
     this.onClose,
+    this.onAnswer,
   });
 
   final List<DailyQueueCard> queue;
   final int initialPosition;
   final bool showPinyin;
   final VoidCallback? onClose;
+  final Future<void> Function(
+    int position,
+    Flashcard card,
+    ReviewRating rating,
+  )?
+  onAnswer;
 
   @override
   State<DailyReviewCardScreen> createState() => _DailyReviewCardScreenState();
@@ -22,6 +29,8 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   late int _position;
   bool _meaningRevealed = false;
   final Map<int, ReviewRating> _answers = {};
+  bool _savingAnswer = false;
+  String? _answerError;
 
   @override
   void initState() {
@@ -40,8 +49,26 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
     });
   }
 
-  void _selectAnswer(ReviewRating rating) {
-    setState(() => _answers[_position] = rating);
+  Future<void> _selectAnswer(ReviewRating rating) async {
+    if (_savingAnswer || _answers.containsKey(_position)) return;
+    setState(() {
+      _savingAnswer = true;
+      _answerError = null;
+    });
+    try {
+      await widget.onAnswer?.call(
+        _position,
+        widget.queue[_position].card,
+        rating,
+      );
+      if (!mounted) return;
+      setState(() => _answers[_position] = rating);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _answerError = 'Could not save this answer. Try again.');
+    } finally {
+      if (mounted) setState(() => _savingAnswer = false);
+    }
   }
 
   @override
@@ -140,11 +167,21 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                                 (rating) => _ReviewAnswerButton(
                                   rating: rating,
                                   selected: selectedAnswer == rating,
-                                  onPressed: () => _selectAnswer(rating),
+                                  onPressed:
+                                      _savingAnswer || selectedAnswer != null
+                                      ? null
+                                      : () => _selectAnswer(rating),
                                 ),
                               )
                               .toList(growable: false),
                         ),
+                        if (_answerError != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _answerError!,
+                            style: const TextStyle(color: AppColors.red),
+                          ),
+                        ],
                         const SizedBox(height: 14),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 180),
@@ -214,7 +251,7 @@ class _ReviewAnswerButton extends StatelessWidget {
 
   final ReviewRating rating;
   final bool selected;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

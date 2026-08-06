@@ -237,12 +237,13 @@ void main() {
       ),
     );
     DailyReviewSession? started;
+    final progress = _MemoryProgressRepository(queue: queue);
 
     await tester.pumpWidget(
       MaterialApp(
         home: DailyQueuePage(
           profile: testProfile,
-          progressRepository: _MemoryProgressRepository(queue: queue),
+          progressRepository: progress,
           sessionRepository: sessions,
           today: DateTime(2026, 8, 6),
           onStartReview: (session) => started = session,
@@ -257,6 +258,19 @@ void main() {
     expect(started?.id, 8);
     expect(find.text('2 of 2'), findsOneWidget);
     expect(find.text('二'), findsOneWidget);
+
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Good'));
+    await tester.tap(find.text('Good'));
+    await tester.pumpAndSettle();
+
+    expect(progress.recordedReview?.cardId, 2);
+    expect(progress.recordedReview?.rating, ReviewRating.good);
+    expect(progress.savedProgress?.reviewInterval, 1);
+    expect(progress.savedProgress?.mastery, 0);
+    expect(sessions.session?.currentPosition, 2);
+    expect(sessions.session?.isComplete, isTrue);
   });
 
   testWidgets('daily review card reveals meaning and navigates locally', (
@@ -695,6 +709,7 @@ class _MemoryProgressRepository implements ProgressRepository {
   final List<DateTime> requestedDays = [];
   LessonSession? savedSession;
   ReviewRecord? recordedReview;
+  CardProgress? savedProgress;
   int? startedLessonId;
 
   final _active = LessonSession(
@@ -740,6 +755,7 @@ class _MemoryProgressRepository implements ProgressRepository {
     required CardProgress progress,
   }) async {
     recordedReview = review;
+    savedProgress = progress;
   }
 
   @override
@@ -782,5 +798,14 @@ class _MemoryDailyReviewSessionRepository
   Future<void> complete({
     required int sessionId,
     required DateTime completedAt,
-  }) async {}
+  }) async {
+    final current = session!;
+    session = DailyReviewSession(
+      id: current.id,
+      date: current.date,
+      queuedCardIds: current.queuedCardIds,
+      currentPosition: current.queuedCardIds.length,
+      completedAt: completedAt,
+    );
+  }
 }

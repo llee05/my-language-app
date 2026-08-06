@@ -123,6 +123,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         queue: _queue,
         initialPosition: _session!.currentPosition,
         showPinyin: _showPinyin,
+        onAnswer: _recordAnswer,
         onClose: () => setState(() => _reviewing = false),
       );
     }
@@ -190,6 +191,60 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     await widget.onStartReview?.call(session);
     if (!mounted) return;
     setState(() => _reviewing = true);
+  }
+
+  Future<void> _recordAnswer(
+    int position,
+    Flashcard card,
+    ReviewRating rating,
+  ) async {
+    final session = _session;
+    final sessions = widget.sessionRepository;
+    if (session == null || sessions == null || card.id == 0) return;
+
+    final now = _systemTime().toUtc();
+    final previous = await widget.progressRepository.progressForCard(card.id);
+    final scheduled = scheduleCardReview(
+      cardId: card.id,
+      rating: rating,
+      reviewedAt: now,
+      previous: previous,
+    );
+    await widget.progressRepository.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: card.id,
+        reviewedAt: now,
+        rating: rating,
+        wasCorrect: rating != ReviewRating.again,
+      ),
+      progress: scheduled,
+    );
+
+    final nextPosition = position + 1;
+    final completed = nextPosition >= session.queuedCardIds.length;
+    if (completed) {
+      await sessions.complete(sessionId: session.id, completedAt: now);
+    } else {
+      await sessions.update(
+        DailyReviewSession(
+          id: session.id,
+          date: session.date,
+          queuedCardIds: session.queuedCardIds,
+          currentPosition: nextPosition,
+        ),
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      _session = DailyReviewSession(
+        id: session.id,
+        date: session.date,
+        queuedCardIds: session.queuedCardIds,
+        currentPosition: nextPosition,
+        completedAt: completed ? now : null,
+      );
+    });
   }
 
   Widget _buildContent() {
