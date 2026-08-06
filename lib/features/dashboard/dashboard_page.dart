@@ -160,6 +160,7 @@ class _DashboardBody extends StatelessWidget {
         profile: profile,
         progressRepository: progressRepository,
         sessionRepository: dailyReviewSessionRepository,
+        settingsRepository: settingsRepository,
       );
     }
     if (selectedNav == 5) {

@@ -253,7 +253,64 @@ void main() {
 
     expect(find.text('Resume review'), findsOneWidget);
     await tester.tap(find.text('Resume review'));
+    await tester.pumpAndSettle();
     expect(started?.id, 8);
+    expect(find.text('2 of 2'), findsOneWidget);
+    expect(find.text('二'), findsOneWidget);
+  });
+
+  testWidgets('daily review card reveals meaning and navigates locally', (
+    tester,
+  ) async {
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 1,
+          chinese: '一',
+          pinyin: 'yī',
+          englishMeaning: 'one',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+      DailyQueueCard(
+        card: Flashcard(
+          id: 2,
+          chinese: '二',
+          pinyin: 'èr',
+          englishMeaning: 'two',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+    ];
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: DailyReviewCardScreen(queue: queue, showPinyin: false),
+      ),
+    );
+
+    expect(find.text('1 of 2'), findsOneWidget);
+    expect(find.text('一'), findsOneWidget);
+    expect(find.text('yī'), findsNothing);
+    expect(find.text('one'), findsNothing);
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    expect(find.text('one'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    expect(find.text('2 of 2'), findsOneWidget);
+    expect(find.text('二'), findsOneWidget);
+    expect(find.text('two'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Next'))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.text('Previous'));
+    await tester.pump();
+    expect(find.text('一'), findsOneWidget);
   });
 
   testWidgets('start review is disabled for an empty queue', (tester) async {

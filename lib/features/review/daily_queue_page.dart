@@ -9,6 +9,7 @@ class DailyQueuePage extends StatefulWidget {
     required this.profile,
     required this.progressRepository,
     this.sessionRepository,
+    this.settingsRepository,
     this.onStartReview,
     this.today,
     this.clock,
@@ -17,6 +18,7 @@ class DailyQueuePage extends StatefulWidget {
   final LearnerProfile profile;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? sessionRepository;
+  final SettingsRepository? settingsRepository;
   final FutureOr<void> Function(DailyReviewSession session)? onStartReview;
   final DateTime? today;
   final DateTime Function()? clock;
@@ -33,6 +35,8 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   Timer? _midnightTimer;
   DateTime? _loadedDay;
   DailyReviewSession? _session;
+  bool _reviewing = false;
+  bool _showPinyin = true;
 
   DateTime _systemTime() => widget.clock?.call() ?? DateTime.now();
 
@@ -85,13 +89,23 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         maxHskLevel: widget.profile.hskLevel,
       );
       final session = await widget.sessionRepository?.load(day);
+      final settings = await widget.settingsRepository?.load();
       if (!mounted) return;
       setState(() {
         _queue = queue;
         _loading = false;
         _error = null;
         _loadedDay = day;
-        _session = session;
+        _session =
+            session ??
+            DailyReviewSession(
+              id: 0,
+              date: DateTime(day.year, day.month, day.day),
+              queuedCardIds: queue
+                  .map((item) => item.card.id)
+                  .toList(growable: false),
+            );
+        _showPinyin = settings?.showPinyin ?? true;
       });
     } catch (error) {
       if (!mounted) return;
@@ -104,6 +118,14 @@ class _DailyQueuePageState extends State<DailyQueuePage>
 
   @override
   Widget build(BuildContext context) {
+    if (_reviewing && _session != null && _queue.isNotEmpty) {
+      return DailyReviewCardScreen(
+        queue: _queue,
+        initialPosition: _session!.currentPosition,
+        showPinyin: _showPinyin,
+        onClose: () => setState(() => _reviewing = false),
+      );
+    }
     return ColoredBox(
       color: AppColors.background,
       child: Padding(
@@ -166,6 +188,8 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     final session = _session;
     if (session == null || _queue.isEmpty) return;
     await widget.onStartReview?.call(session);
+    if (!mounted) return;
+    setState(() => _reviewing = true);
   }
 
   Widget _buildContent() {
