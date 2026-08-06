@@ -104,7 +104,7 @@ void main() {
           pinyin: 'èr',
           englishMeaning: 'two',
         ),
-        reason: DailyQueueReason.weak,
+        reason: DailyQueueReason.newWord,
       ),
     ];
     final sessions = _MemoryDailyReviewSessionRepository(
@@ -487,7 +487,7 @@ void main() {
           pinyin: 'èr',
           englishMeaning: 'two',
         ),
-        reason: DailyQueueReason.newWord,
+        reason: DailyQueueReason.weak,
       ),
     ];
     await tester.pumpWidget(
@@ -541,6 +541,22 @@ void main() {
     await tester.tap(find.text('Previous'));
     await tester.pump();
     expect(find.text('一'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Again'));
+    await tester.tap(find.text('Again'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finish'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Daily review complete!'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+    expect(find.text('1'), findsNWidgets(2));
+    expect(find.text('+15 XP'), findsOneWidget);
   });
 
   testWidgets('start review is disabled for an empty queue', (tester) async {
