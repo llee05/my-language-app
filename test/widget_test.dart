@@ -271,6 +271,16 @@ void main() {
     expect(progress.savedProgress?.mastery, 0);
     expect(sessions.session?.currentPosition, 2);
     expect(sessions.session?.isComplete, isTrue);
+
+    expect(find.text('Good selected'), findsOneWidget);
+    await tester.tap(find.text('Finish'));
+    await tester.pumpAndSettle();
+    expect(find.text('Daily review complete!'), findsOneWidget);
+    expect(find.text('Cards reviewed'), findsOneWidget);
+    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('Learned words'), findsOneWidget);
+    expect(find.text('Review words'), findsOneWidget);
+    expect(find.text('+10 XP'), findsOneWidget);
   });
 
   testWidgets('daily review card reveals meaning and navigates locally', (
@@ -339,7 +349,7 @@ void main() {
     expect(find.text('two'), findsNothing);
     expect(
       tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Next'))
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Finish'))
           .onPressed,
       isNull,
     );

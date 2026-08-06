@@ -31,6 +31,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   final Map<int, ReviewRating> _answers = {};
   bool _savingAnswer = false;
   String? _answerError;
+  bool _showSummary = false;
 
   @override
   void initState() {
@@ -76,6 +77,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
     if (widget.queue.isEmpty) {
       return const Center(child: Text('There are no cards to review.'));
     }
+    if (_showSummary) return _buildCompletionSummary();
     final card = widget.queue[_position].card;
     final selectedAnswer = _answers[_position];
     return ColoredBox(
@@ -224,13 +226,19 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed:
-                        _position == widget.queue.length - 1 ||
-                            selectedAnswer == null
+                    onPressed: selectedAnswer == null
                         ? null
+                        : _position == widget.queue.length - 1
+                        ? () => setState(() => _showSummary = true)
                         : () => _move(1),
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Next'),
+                    icon: Icon(
+                      _position == widget.queue.length - 1
+                          ? Icons.check
+                          : Icons.arrow_forward,
+                    ),
+                    label: Text(
+                      _position == widget.queue.length - 1 ? 'Finish' : 'Next',
+                    ),
                   ),
                 ),
               ],
@@ -240,6 +248,126 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
       ),
     );
   }
+
+  Widget _buildCompletionSummary() {
+    final reviewed = _answers.length;
+    final correct = _answers.values
+        .where((rating) => rating != ReviewRating.again)
+        .length;
+    final accuracy = reviewed == 0 ? 0 : ((correct / reviewed) * 100).round();
+    final answeredPositions = _answers.keys;
+    final learned = answeredPositions
+        .where(
+          (index) => widget.queue[index].reason == DailyQueueReason.newWord,
+        )
+        .length;
+    final reviewWords = reviewed - learned;
+    final xp = learned * 10 + reviewWords * 5;
+    return ColoredBox(
+      color: AppColors.background,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.emoji_events_outlined,
+                      size: 54,
+                      color: AppColors.gold,
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Daily review complete!',
+                      style: TextStyle(
+                        color: AppColors.text,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        _DailyReviewSummaryStat(
+                          label: 'Cards reviewed',
+                          value: '$reviewed',
+                        ),
+                        _DailyReviewSummaryStat(
+                          label: 'Accuracy',
+                          value: '$accuracy%',
+                        ),
+                        _DailyReviewSummaryStat(
+                          label: 'Learned words',
+                          value: '$learned',
+                        ),
+                        _DailyReviewSummaryStat(
+                          label: 'Review words',
+                          value: '$reviewWords',
+                        ),
+                        _DailyReviewSummaryStat(
+                          label: 'XP earned',
+                          value: '+$xp XP',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    FilledButton.icon(
+                      onPressed: widget.onClose,
+                      icon: const Icon(Icons.check),
+                      label: const Text('Done'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyReviewSummaryStat extends StatelessWidget {
+  const _DailyReviewSummaryStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 150,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      border: Border.all(color: AppColors.border),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: AppColors.text,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.muted),
+        ),
+      ],
+    ),
+  );
 }
 
 class _ReviewAnswerButton extends StatelessWidget {
