@@ -9,6 +9,10 @@ const _entries = [
     'pinyin': 'nǐ hǎo',
     'meanings': ['hello', 'hi'],
     'hskLevel': 1,
+    'partOfSpeech': ['phrase'],
+    'exampleChinese': '你好，很高兴认识你。',
+    'examplePinyin': 'nǐ hǎo, hěn gāoxìng rènshì nǐ.',
+    'exampleEnglish': 'Hello, nice to meet you.',
   },
   {
     'simplified': '学习',
@@ -23,6 +27,13 @@ const _entries = [
     'pinyin': 'tú shū guǎn',
     'meanings': ['library'],
     'hskLevel': 2,
+  },
+  {
+    'simplified': '罕见词',
+    'traditional': '罕見詞',
+    'pinyin': 'hǎn jiàn cí',
+    'meanings': ['rare word'],
+    'hskLevel': 6,
   },
 ];
 
@@ -82,5 +93,39 @@ void main() {
     expect(find.text('图书馆'), findsOneWidget);
     expect(find.text('你好'), findsNothing);
     expect(find.text('1 word'), findsOneWidget);
+  });
+
+  testWidgets('opens word details with every meaning and example sentence', (
+    tester,
+  ) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.text('你好'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Word details'), findsOneWidget);
+    expect(find.text('Meanings'), findsOneWidget);
+    expect(find.text('hello'), findsOneWidget);
+    expect(find.text('hi'), findsOneWidget);
+    expect(find.text('Example sentence'), findsOneWidget);
+    expect(find.text('你好，很高兴认识你。'), findsOneWidget);
+    expect(find.text('nǐ hǎo, hěn gāoxìng rènshì nǐ.'), findsOneWidget);
+    expect(find.text('Hello, nice to meet you.'), findsOneWidget);
+  });
+
+  testWidgets('shows an honest empty state when an example is unavailable', (
+    tester,
+  ) async {
+    await pumpPage(tester);
+
+    await tester.enterText(find.byKey(const Key('vocabulary-search')), '罕见词');
+    await tester.pump();
+    await tester.tap(find.text('罕见词').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('example-sentence-unavailable')),
+      findsOneWidget,
+    );
   });
 }

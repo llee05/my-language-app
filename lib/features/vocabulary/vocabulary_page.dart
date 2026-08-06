@@ -78,6 +78,14 @@ class _VocabularyPageState extends State<VocabularyPage> {
         .toList(growable: false);
   }
 
+  void _openDetails(_VocabularyEntry entry) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _VocabularyDetailPage(entry: entry),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
@@ -201,8 +209,10 @@ class _VocabularyPageState extends State<VocabularyPage> {
           child: ListView.separated(
             itemCount: results.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, index) =>
-                _VocabularyListItem(entry: results[index]),
+            itemBuilder: (context, index) => _VocabularyListItem(
+              entry: results[index],
+              onTap: () => _openDetails(results[index]),
+            ),
           ),
         ),
       ],
@@ -217,15 +227,41 @@ class _VocabularyEntry {
     required this.pinyin,
     required this.meanings,
     required this.hskLevel,
+    required this.partOfSpeech,
+    required this.exampleChinese,
+    required this.examplePinyin,
+    required this.exampleEnglish,
   });
 
   factory _VocabularyEntry.fromJson(Map<String, dynamic> json) {
+    final simplified = json['simplified'] as String;
+    final example = _seededVocabularyExamples[simplified];
     return _VocabularyEntry(
-      simplified: json['simplified'] as String,
+      simplified: simplified,
       traditional: json['traditional'] as String,
       pinyin: json['pinyin'] as String,
       meanings: (json['meanings'] as List<dynamic>).cast<String>(),
       hskLevel: json['hskLevel'] as int,
+      partOfSpeech: (json['partOfSpeech'] as List<dynamic>? ?? const [])
+          .cast<String>(),
+      exampleChinese:
+          (json['exampleChinese'] ??
+                  json['example_sentence_chinese'] ??
+                  example?['example_sentence_chinese'] ??
+                  '')
+              as String,
+      examplePinyin:
+          (json['examplePinyin'] ??
+                  json['example_sentence_pinyin'] ??
+                  example?['example_sentence_pinyin'] ??
+                  '')
+              as String,
+      exampleEnglish:
+          (json['exampleEnglish'] ??
+                  json['example_sentence_english'] ??
+                  example?['example_sentence_english'] ??
+                  '')
+              as String,
     );
   }
 
@@ -234,95 +270,388 @@ class _VocabularyEntry {
   final String pinyin;
   final List<String> meanings;
   final int hskLevel;
+  final List<String> partOfSpeech;
+  final String exampleChinese;
+  final String examplePinyin;
+  final String exampleEnglish;
 
   String get normalizedPinyin => _normalizePinyin(pinyin);
   String get compactPinyin => normalizedPinyin.replaceAll(' ', '');
+  bool get hasExample => exampleChinese.isNotEmpty;
 }
 
 class _VocabularyListItem extends StatelessWidget {
-  const _VocabularyListItem({required this.entry});
+  const _VocabularyListItem({required this.entry, required this.onTap});
+
+  final _VocabularyEntry entry;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final showTraditional = entry.traditional != entry.simplified;
+    return Material(
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColors.border.withValues(alpha: .65)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 92,
+                child: Text(
+                  entry.simplified,
+                  style: const TextStyle(
+                    fontFamily: 'serif',
+                    fontSize: 30,
+                    height: 1.15,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.pinyin,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                    if (showTraditional) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        'Traditional: ${entry.traditional}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.faint,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 6),
+                    Text(
+                      entry.meanings.join(' · '),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.red.withValues(alpha: .13),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      'HSK ${entry.hskLevel}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.red,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: AppColors.muted,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VocabularyDetailPage extends StatelessWidget {
+  const _VocabularyDetailPage({required this.entry});
 
   final _VocabularyEntry entry;
 
   @override
   Widget build(BuildContext context) {
-    final showTraditional = entry.traditional != entry.simplified;
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        title: const Text('Word details'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DetailHeader(entry: entry),
+                const SizedBox(height: 18),
+                _DetailSection(
+                  title: 'Meanings',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (
+                        var index = 0;
+                        index < entry.meanings.length;
+                        index++
+                      )
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == entry.meanings.length - 1 ? 0 : 12,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 28,
+                                child: Text(
+                                  '${index + 1}.',
+                                  style: const TextStyle(
+                                    color: AppColors.red,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  entry.meanings[index],
+                                  style: const TextStyle(
+                                    color: AppColors.text,
+                                    fontSize: 15,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _DetailSection(
+                  title: 'Example sentence',
+                  child: entry.hasExample
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              entry.exampleChinese,
+                              key: const Key('example-sentence-chinese'),
+                              style: const TextStyle(
+                                fontFamily: 'serif',
+                                color: AppColors.text,
+                                fontSize: 24,
+                              ),
+                            ),
+                            if (entry.examplePinyin.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                entry.examplePinyin,
+                                style: const TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                            if (entry.exampleEnglish.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                entry.exampleEnglish,
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ],
+                        )
+                      : const Row(
+                          children: [
+                            Icon(
+                              Icons.menu_book_outlined,
+                              color: AppColors.muted,
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'No example sentence is available for this word yet.',
+                                key: Key('example-sentence-unavailable'),
+                                style: TextStyle(color: AppColors.muted),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailHeader extends StatelessWidget {
+  const _DetailHeader({required this.entry});
+
+  final _VocabularyEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.border.withValues(alpha: .65)),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: 92,
-            child: Text(
-              entry.simplified,
-              style: const TextStyle(
-                fontFamily: 'serif',
-                fontSize: 30,
-                height: 1.15,
-                color: AppColors.text,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  entry.simplified,
+                  style: const TextStyle(
+                    fontFamily: 'serif',
+                    fontSize: 54,
+                    height: 1.05,
+                    color: AppColors.text,
+                  ),
+                ),
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.red.withValues(alpha: .13),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  'HSK ${entry.hskLevel}',
+                  style: const TextStyle(
+                    color: AppColors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            entry.pinyin,
+            style: const TextStyle(
+              color: AppColors.gold,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          if (entry.traditional != entry.simplified) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Traditional: ${entry.traditional}',
+              style: const TextStyle(color: AppColors.muted),
+            ),
+          ],
+          if (entry.partOfSpeech.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Text(
-                  entry.pinyin,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.gold,
+                for (final label in entry.partOfSpeech)
+                  Chip(
+                    visualDensity: VisualDensity.compact,
+                    label: Text(label),
+                    side: const BorderSide(color: AppColors.border),
+                    backgroundColor: AppColors.surfaceLight,
                   ),
-                ),
-                if (showTraditional) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    'Traditional: ${entry.traditional}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.faint,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 6),
-                Text(
-                  entry.meanings.join(' · '),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.text, height: 1.4),
-                ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.red.withValues(alpha: .13),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Text(
-              'HSK ${entry.hskLevel}',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.red,
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
+
+class _DetailSection extends StatelessWidget {
+  const _DetailSection({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.border.withValues(alpha: .65)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.text,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+final Map<String, Map<String, dynamic>> _seededVocabularyExamples = () {
+  final examples = <String, Map<String, dynamic>>{};
+  for (final lesson in flashcardLessons) {
+    for (final card in (lesson['cards'] as List<dynamic>)) {
+      final data = card as Map<String, dynamic>;
+      examples.putIfAbsent(data['chinese'] as String, () => data);
+    }
+  }
+  return examples;
+}();
 
 class _LevelChip extends StatelessWidget {
   const _LevelChip({
