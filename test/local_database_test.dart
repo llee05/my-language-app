@@ -117,11 +117,15 @@ void main() {
         "SELECT name FROM sqlite_master WHERE type = 'index'",
       );
 
-      expect(version, 4);
+      expect(version, 5);
       expect(marker.single['value'], 'preserve me');
       expect(
         indexes.map((row) => row['name']),
-        containsAll(['idx_lessons_theme_hsk', 'idx_cards_lesson_id']),
+        containsAll([
+          'idx_lessons_theme_hsk',
+          'idx_cards_lesson_id',
+          'idx_daily_review_sessions_date',
+        ]),
       );
       final migratedProfile = await learners.load();
       expect(migratedProfile?.name, 'Legacy learner');
@@ -337,6 +341,45 @@ void main() {
       DailyQueueReason.newWord,
     ]);
   });
+
+  test(
+    'daily review session restores its queue and position until midnight',
+    () async {
+      await LocalDatabase.resetForTesting();
+      await LocalDatabase.ensureInitialized();
+      await learners.save(
+        const LearnerProfile(name: 'Mei', hskLevel: 2, dailyWordTarget: 3),
+      );
+      final day = DateTime(2026, 8, 6, 9);
+      final originalQueue = await progress.dailyQueue(forDay: day, limit: 3);
+      final original = await progress.dailyReviewSession(day);
+
+      expect(original, isNotNull);
+      expect(
+        original!.queuedCardIds,
+        originalQueue.map((item) => item.card.id),
+      );
+      await progress.updateDailyReviewSession(
+        DailyReviewSession(
+          id: original.id,
+          date: original.date,
+          queuedCardIds: original.queuedCardIds,
+          currentPosition: 2,
+        ),
+      );
+
+      await LocalDatabase.close();
+      final restoredQueue = await progress.dailyQueue(
+        forDay: DateTime(2026, 8, 6, 20),
+        limit: 1,
+      );
+      final restored = await progress.dailyReviewSession(day);
+
+      expect(restoredQueue.map((item) => item.card.id), original.queuedCardIds);
+      expect(restored?.currentPosition, 2);
+      expect(await progress.dailyReviewSession(DateTime(2026, 8, 7)), isNull);
+    },
+  );
 
   test('incorrect Vocab Rush words persist into the daily queue', () async {
     await LocalDatabase.resetForTesting();
@@ -704,7 +747,7 @@ void main() {
       await versionThree.close();
 
       final upgraded = await LocalDatabase.ensureInitialized();
-      expect(await upgraded.getVersion(), 4);
+      expect(await upgraded.getVersion(), 5);
       final restored = await progress.progressForCard(cardId);
       expect(restored?.timesSeen, 3);
       expect(restored?.correctAnswers, 2);

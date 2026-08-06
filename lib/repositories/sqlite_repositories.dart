@@ -324,6 +324,43 @@ class SqliteProgressRepository implements ProgressRepository {
   }
 
   @override
+  Future<DailyReviewSession?> dailyReviewSession(DateTime forDay) async {
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.query(
+      'daily_review_sessions',
+      where: 'learner_id = ? AND session_date = ?',
+      whereArgs: [1, _localDateKey(forDay)],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : _dailyReviewSessionFromRow(rows.single);
+  }
+
+  @override
+  Future<void> updateDailyReviewSession(DailyReviewSession session) async {
+    if (session.currentPosition < 0 ||
+        session.currentPosition > session.queuedCardIds.length) {
+      throw ArgumentError.value(
+        session.currentPosition,
+        'currentPosition',
+        'Must be within the queued card range.',
+      );
+    }
+    final db = await LocalDatabase.ensureInitialized();
+    final updated = await db.update(
+      'daily_review_sessions',
+      {
+        'current_position': session.currentPosition,
+        'completed_at': session.completedAt?.toUtc().toIso8601String(),
+      },
+      where: 'id = ? AND learner_id = ? AND session_date = ?',
+      whereArgs: [session.id, 1, _localDateKey(session.date)],
+    );
+    if (updated == 0) {
+      throw StateError('Daily review session ${session.id} does not exist.');
+    }
+  }
+
+  @override
   Future<void> recordReview({
     required ReviewRecord review,
     required CardProgress progress,
@@ -450,6 +487,41 @@ class SqliteProgressRepository implements ProgressRepository {
   }) async {
     if (limit <= 0) return const [];
     final db = await LocalDatabase.ensureInitialized();
+    final existing = await dailyReviewSession(forDay);
+    if (existing != null) {
+      return _queueCardsByIds(db, existing.queuedCardIds);
+    }
+
+    final queue = await _buildDailyQueue(
+      db,
+      forDay: forDay,
+      limit: limit,
+      weakThreshold: weakThreshold,
+      maxHskLevel: maxHskLevel,
+    );
+    final cardIds = queue.map((item) => item.card.id).toList(growable: false);
+    try {
+      await db.insert('daily_review_sessions', {
+        'learner_id': 1,
+        'session_date': _localDateKey(forDay),
+        'queued_card_ids': jsonEncode(cardIds),
+      });
+      return queue;
+    } on DatabaseException {
+      // Another caller may have created today's unique session concurrently.
+      final saved = await dailyReviewSession(forDay);
+      if (saved == null) rethrow;
+      return _queueCardsByIds(db, saved.queuedCardIds);
+    }
+  }
+
+  Future<List<DailyQueueCard>> _buildDailyQueue(
+    Database db, {
+    required DateTime forDay,
+    required int limit,
+    required double weakThreshold,
+    required int maxHskLevel,
+  }) async {
     final rows = await db.rawQuery(
       '''
       SELECT
@@ -537,6 +609,40 @@ class SqliteProgressRepository implements ProgressRepository {
     return [...due, ...weak, ...newCards].take(limit).toList(growable: false);
   }
 
+  Future<List<DailyQueueCard>> _queueCardsByIds(
+    Database db,
+    List<int> cardIds,
+  ) async {
+    if (cardIds.isEmpty) return const [];
+    final placeholders = List.filled(cardIds.length, '?').join(', ');
+    final rows = await db.rawQuery('''
+      SELECT cards.*, card_progress.*,
+        card_progress.due_at AS saved_due_at
+      FROM cards
+      LEFT JOIN card_progress
+        ON card_progress.card_id = cards.id
+        AND card_progress.learner_id = 1
+      WHERE cards.id IN ($placeholders)
+      ''', cardIds);
+    final rowsById = {for (final row in rows) row['id'] as int: row};
+    return cardIds
+        .where(rowsById.containsKey)
+        .map((id) {
+          final row = rowsById[id]!;
+          final card = _queueCardFromRow(row);
+          final dueAt = row['saved_due_at'] as String?;
+          if (dueAt == null) {
+            return DailyQueueCard(card: card, reason: DailyQueueReason.newWord);
+          }
+          final progress = _progressFromRow(row);
+          final reason = progress.dueAt.isBefore(DateTime.now().toUtc())
+              ? DailyQueueReason.due
+              : DailyQueueReason.weak;
+          return DailyQueueCard(card: card, reason: reason, progress: progress);
+        })
+        .toList(growable: false);
+  }
+
   Flashcard _queueCardFromRow(Map<String, Object?> row) => Flashcard(
     id: row['id'] as int,
     chinese: row['chinese'] as String,
@@ -561,6 +667,28 @@ class SqliteProgressRepository implements ProgressRepository {
     cardsReviewed: row['cards_reviewed'] as int,
     correctAnswers: row['correct_answers'] as int,
   );
+
+  DailyReviewSession _dailyReviewSessionFromRow(Map<String, Object?> row) {
+    final parts = (row['session_date'] as String)
+        .split('-')
+        .map(int.parse)
+        .toList();
+    return DailyReviewSession(
+      id: row['id'] as int,
+      date: DateTime(parts[0], parts[1], parts[2]),
+      queuedCardIds: (jsonDecode(row['queued_card_ids'] as String) as List)
+          .cast<int>(),
+      currentPosition: row['current_position'] as int,
+      completedAt: row['completed_at'] == null
+          ? null
+          : DateTime.parse(row['completed_at'] as String),
+    );
+  }
+
+  String _localDateKey(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 
   ReviewRecord _reviewFromRow(Map<String, Object?> row) => ReviewRecord(
     id: row['id'] as int,

@@ -36,6 +36,26 @@ class LessonSession {
   bool get isComplete => completedAt != null;
 }
 
+class DailyReviewSession {
+  const DailyReviewSession({
+    required this.id,
+    required this.date,
+    required this.queuedCardIds,
+    this.currentPosition = 0,
+    this.completedAt,
+  });
+
+  final int id;
+
+  /// The learner's local calendar day for this queue (time is midnight).
+  final DateTime date;
+  final List<int> queuedCardIds;
+  final int currentPosition;
+  final DateTime? completedAt;
+
+  bool get isComplete => completedAt != null;
+}
+
 enum ReviewRating { again, hard, good, easy }
 
 class ReviewRecord {

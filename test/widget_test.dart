@@ -565,6 +565,12 @@ class _MemoryProgressRepository implements ProgressRepository {
   Future<LessonSession?> latestActiveSession() async => _active;
 
   @override
+  Future<DailyReviewSession?> dailyReviewSession(DateTime forDay) async => null;
+
+  @override
+  Future<void> updateDailyReviewSession(DailyReviewSession session) async {}
+
+  @override
   Future<List<CardProgress>> dueCards(DateTime through) async => const [];
 
   @override
