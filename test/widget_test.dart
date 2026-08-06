@@ -237,7 +237,7 @@ void main() {
       ),
     );
     DailyReviewSession? started;
-    final progress = _MemoryProgressRepository(queue: queue);
+    final progress = _MemoryProgressRepository(queue: [queue[1]]);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -256,7 +256,7 @@ void main() {
     await tester.tap(find.text('Resume review'));
     await tester.pumpAndSettle();
     expect(started?.id, 8);
-    expect(find.text('2 of 2'), findsOneWidget);
+    expect(find.text('1 of 1'), findsOneWidget);
     expect(find.text('二'), findsOneWidget);
 
     await tester.tap(find.text('Reveal meaning'));
@@ -808,4 +808,10 @@ class _MemoryDailyReviewSessionRepository
       completedAt: completedAt,
     );
   }
+
+  @override
+  Future<void> enqueueCard({
+    required DateTime date,
+    required int cardId,
+  }) async {}
 }

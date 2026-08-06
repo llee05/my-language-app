@@ -378,7 +378,10 @@ void main() {
       );
       final restored = await dailyReviews.load(day);
 
-      expect(restoredQueue.map((item) => item.card.id), original.queuedCardIds);
+      expect(
+        restoredQueue.map((item) => item.card.id),
+        original.queuedCardIds.skip(2),
+      );
       expect(restored?.currentPosition, 2);
       expect(await dailyReviews.load(DateTime(2026, 8, 7)), isNull);
 
@@ -390,6 +393,17 @@ void main() {
       final completed = await dailyReviews.load(day);
       expect(completed?.currentPosition, original.queuedCardIds.length);
       expect(completed?.completedAt, completedAt);
+
+      await dailyReviews.enqueueCard(
+        date: day,
+        cardId: original.queuedCardIds.first,
+      );
+      final restoredWeakCard = await progress.dailyQueue(forDay: day, limit: 3);
+      final reopened = await dailyReviews.load(day);
+      expect(restoredWeakCard.map((item) => item.card.id), [
+        original.queuedCardIds.first,
+      ]);
+      expect(reopened?.isComplete, isFalse);
     },
   );
 

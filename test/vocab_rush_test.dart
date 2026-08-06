@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 
@@ -98,6 +99,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final lessons = _RushLessonRepository();
     final progress = _RushProgressRepository();
+    final dailyReviews = _RushDailyReviewSessionRepository();
     const vocabulary = [
       {
         'simplified': '错',
@@ -134,6 +136,7 @@ void main() {
           body: VocabRushPage(
             lessonRepository: lessons,
             progressRepository: progress,
+            dailyReviewSessionRepository: dailyReviews,
             initialVocabulary: vocabulary,
           ),
         ),
@@ -167,6 +170,7 @@ void main() {
     expect(progress.savedProgress?.lapses, 1);
     expect(progress.savedProgress?.reviewInterval, 1);
     expect(progress.savedProgress?.easeFactor, closeTo(2.3, .0001));
+    expect(dailyReviews.enqueuedCardId, 42);
     await tester.pump(const Duration(milliseconds: 500));
   });
 }
@@ -251,4 +255,35 @@ class _RushProgressRepository implements ProgressRepository {
 
   @override
   Future<void> updateSession(LessonSession session) async {}
+}
+
+class _RushDailyReviewSessionRepository
+    implements DailyReviewSessionRepository {
+  int? enqueuedCardId;
+
+  @override
+  Future<void> enqueueCard({
+    required DateTime date,
+    required int cardId,
+  }) async {
+    enqueuedCardId = cardId;
+  }
+
+  @override
+  Future<DailyReviewSession> create({
+    required DateTime date,
+    required List<int> queuedCardIds,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<DailyReviewSession?> load(DateTime date) async => null;
+
+  @override
+  Future<void> update(DailyReviewSession session) async {}
+
+  @override
+  Future<void> complete({
+    required int sessionId,
+    required DateTime completedAt,
+  }) async {}
 }

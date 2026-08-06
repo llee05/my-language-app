@@ -36,6 +36,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   DateTime? _loadedDay;
   DailyReviewSession? _session;
   bool _reviewing = false;
+  int _reviewStartPosition = 0;
   bool _showPinyin = true;
 
   DateTime _systemTime() => widget.clock?.call() ?? DateTime.now();
@@ -121,10 +122,16 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     if (_reviewing && _session != null && _queue.isNotEmpty) {
       return DailyReviewCardScreen(
         queue: _queue,
-        initialPosition: _session!.currentPosition,
+        initialPosition: 0,
         showPinyin: _showPinyin,
         onAnswer: _recordAnswer,
-        onClose: () => setState(() => _reviewing = false),
+        onClose: () {
+          setState(() {
+            _reviewing = false;
+            _loading = true;
+          });
+          unawaited(_loadQueue());
+        },
       );
     }
     return ColoredBox(
@@ -190,7 +197,10 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     if (session == null || _queue.isEmpty) return;
     await widget.onStartReview?.call(session);
     if (!mounted) return;
-    setState(() => _reviewing = true);
+    setState(() {
+      _reviewStartPosition = session.currentPosition;
+      _reviewing = true;
+    });
   }
 
   Future<void> _recordAnswer(
@@ -221,7 +231,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       progress: scheduled,
     );
 
-    final nextPosition = position + 1;
+    final nextPosition = _reviewStartPosition + position + 1;
     final completed = nextPosition >= session.queuedCardIds.length;
     if (completed) {
       await sessions.complete(sessionId: session.id, completedAt: now);

@@ -489,7 +489,10 @@ class SqliteProgressRepository implements ProgressRepository {
     const sessions = SqliteDailyReviewSessionRepository();
     final existing = await sessions.load(forDay);
     if (existing != null) {
-      return _queueCardsByIds(db, existing.queuedCardIds);
+      return _queueCardsByIds(
+        db,
+        existing.queuedCardIds.skip(existing.currentPosition).toList(),
+      );
     }
 
     final queue = await _buildDailyQueue(
@@ -507,7 +510,10 @@ class SqliteProgressRepository implements ProgressRepository {
       // Another caller may have created today's unique session concurrently.
       final saved = await sessions.load(forDay);
       if (saved == null) rethrow;
-      return _queueCardsByIds(db, saved.queuedCardIds);
+      return _queueCardsByIds(
+        db,
+        saved.queuedCardIds.skip(saved.currentPosition).toList(),
+      );
     }
   }
 
@@ -782,6 +788,44 @@ class SqliteDailyReviewSessionRepository
       where: 'id = ? AND learner_id = ?',
       whereArgs: [sessionId, 1],
     );
+  }
+
+  @override
+  Future<void> enqueueCard({
+    required DateTime date,
+    required int cardId,
+  }) async {
+    final db = await LocalDatabase.ensureInitialized();
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'daily_review_sessions',
+        where: 'learner_id = ? AND session_date = ?',
+        whereArgs: [1, _localDateKey(date)],
+        limit: 1,
+      );
+      if (rows.isEmpty) return;
+      final row = rows.single;
+      final ids = (jsonDecode(row['queued_card_ids'] as String) as List)
+          .cast<int>();
+      var position = row['current_position'] as int;
+      final existingIndex = ids.indexOf(cardId);
+      if (existingIndex >= position) return;
+      if (existingIndex >= 0) {
+        ids.removeAt(existingIndex);
+        position--;
+      }
+      ids.add(cardId);
+      await txn.update(
+        'daily_review_sessions',
+        {
+          'queued_card_ids': jsonEncode(ids),
+          'current_position': position,
+          'completed_at': null,
+        },
+        where: 'id = ? AND learner_id = ?',
+        whereArgs: [row['id'], 1],
+      );
+    });
   }
 
   String _localDateKey(DateTime date) =>

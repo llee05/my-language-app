@@ -150,6 +150,7 @@ class _DashboardBody extends StatelessWidget {
       return VocabRushPage(
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,
+        dailyReviewSessionRepository: dailyReviewSessionRepository,
       );
     }
     if (selectedNav == 3) {

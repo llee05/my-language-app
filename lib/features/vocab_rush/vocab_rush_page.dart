@@ -29,11 +29,13 @@ class VocabRushPage extends StatefulWidget {
     super.key,
     this.lessonRepository = const SqliteLessonRepository(),
     this.progressRepository = const SqliteProgressRepository(),
+    this.dailyReviewSessionRepository,
     this.initialVocabulary,
   });
 
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
+  final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final List<Map<String, dynamic>>? initialVocabulary;
 
   @override
@@ -192,6 +194,10 @@ class _VocabRushPageState extends State<VocabRushPage> {
           nextReview: now.add(const Duration(days: 1)),
           lastReview: now,
         ),
+      );
+      await widget.dailyReviewSessionRepository?.enqueueCard(
+        date: DateTime.now(),
+        cardId: card.id,
       );
     } catch (_) {
       if (!mounted) return;

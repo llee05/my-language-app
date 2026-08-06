@@ -12,4 +12,5 @@ abstract interface class DailyReviewSessionRepository {
     required int sessionId,
     required DateTime completedAt,
   });
+  Future<void> enqueueCard({required DateTime date, required int cardId});
 }
