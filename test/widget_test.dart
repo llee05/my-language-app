@@ -172,7 +172,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Today’s review queue'), findsOneWidget);
-    expect(find.text('1 Due'), findsOneWidget);
+    expect(find.text('1 To review'), findsOneWidget);
     expect(find.text('1 New'), findsOneWidget);
     expect(find.text('复习'), findsOneWidget);
     expect(find.text('新'), findsOneWidget);

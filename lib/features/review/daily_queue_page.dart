@@ -72,7 +72,7 @@ class _DailyQueuePageState extends State<DailyQueuePage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Due and weak cards come first, followed by new words. '
+              'Cards to review and weak cards come first, followed by new words. '
               'Daily target: ${widget.profile.dailyWordTarget}.',
               style: const TextStyle(color: AppColors.muted),
             ),
@@ -130,7 +130,11 @@ class _DailyQueuePageState extends State<DailyQueuePage> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _QueueCount(label: 'Due', count: dueCount, color: AppColors.red),
+            _QueueCount(
+              label: 'To review',
+              count: dueCount,
+              color: AppColors.red,
+            ),
             _QueueCount(label: 'Weak', count: weakCount, color: AppColors.gold),
             _QueueCount(label: 'New', count: newCount, color: AppColors.teal),
           ],
@@ -186,7 +190,7 @@ class _QueueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (item.reason) {
-      DailyQueueReason.due => ('Due', AppColors.red),
+      DailyQueueReason.due => ('To review', AppColors.red),
       DailyQueueReason.weak => ('Weak', AppColors.gold),
       DailyQueueReason.newWord => ('New', AppColors.teal),
     };
