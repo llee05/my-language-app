@@ -178,6 +178,37 @@ void main() {
     expect(find.text('新'), findsOneWidget);
   });
 
+  testWidgets('daily queue reloads at local midnight', (tester) async {
+    var systemTime = DateTime(2026, 8, 6, 23, 59, 59);
+    final progress = _MemoryProgressRepository();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DailyQueuePage(
+            profile: testProfile,
+            progressRepository: progress,
+            clock: () => systemTime,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(progress.dailyQueueCalls, 1);
+
+    systemTime = DateTime(2026, 8, 7);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+
+    expect(progress.dailyQueueCalls, 2);
+    expect(progress.requestedDays.last.day, 7);
+  });
+
+  test('daily queue reset is the next local midnight', () {
+    final reset = nextDailyQueueReset(DateTime(2026, 12, 31, 23, 30));
+    expect(reset, DateTime(2027, 1, 1));
+    expect(reset.isUtc, isFalse);
+  });
+
   testWidgets('lessons page exposes level and AI topic options', (
     tester,
   ) async {
@@ -511,6 +542,8 @@ class _MemoryProgressRepository implements ProgressRepository {
 
   final bool hasActiveSession;
   final List<DailyQueueCard> queue;
+  int dailyQueueCalls = 0;
+  final List<DateTime> requestedDays = [];
   LessonSession? savedSession;
   ReviewRecord? recordedReview;
   int? startedLessonId;
@@ -540,7 +573,11 @@ class _MemoryProgressRepository implements ProgressRepository {
     required int limit,
     double weakThreshold = .7,
     int maxHskLevel = 6,
-  }) async => queue.take(limit).toList(growable: false);
+  }) async {
+    dailyQueueCalls++;
+    requestedDays.add(forDay);
+    return queue.take(limit).toList(growable: false);
+  }
 
   @override
   Future<CardProgress?> progressForCard(int cardId) async => null;

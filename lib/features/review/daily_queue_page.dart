@@ -1,36 +1,81 @@
 part of '../../main.dart';
 
+DateTime nextDailyQueueReset(DateTime systemTime) =>
+    DateTime(systemTime.year, systemTime.month, systemTime.day + 1);
+
 class DailyQueuePage extends StatefulWidget {
   const DailyQueuePage({
     super.key,
     required this.profile,
     required this.progressRepository,
     this.today,
+    this.clock,
   });
 
   final LearnerProfile profile;
   final ProgressRepository progressRepository;
   final DateTime? today;
+  final DateTime Function()? clock;
 
   @override
   State<DailyQueuePage> createState() => _DailyQueuePageState();
 }
 
-class _DailyQueuePageState extends State<DailyQueuePage> {
+class _DailyQueuePageState extends State<DailyQueuePage>
+    with WidgetsBindingObserver {
   List<DailyQueueCard> _queue = const [];
   bool _loading = true;
   String? _error;
+  Timer? _midnightTimer;
+  DateTime? _loadedDay;
+
+  DateTime _systemTime() => widget.clock?.call() ?? DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadQueue();
+    _scheduleMidnightReset();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _midnightTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final now = _systemTime();
+    if (_loadedDay == null || !_isSameDay(_loadedDay!, now)) {
+      _resetQueue();
+    }
+    _scheduleMidnightReset();
+  }
+
+  void _scheduleMidnightReset() {
+    _midnightTimer?.cancel();
+    final now = _systemTime();
+    final delay = nextDailyQueueReset(now).difference(now);
+    _midnightTimer = Timer(delay, () {
+      _resetQueue();
+      _scheduleMidnightReset();
+    });
+  }
+
+  void _resetQueue() {
+    if (mounted) setState(() => _loading = true);
+    unawaited(_loadQueue());
   }
 
   Future<void> _loadQueue() async {
     try {
+      final day = widget.today ?? _systemTime();
       final queue = await widget.progressRepository.dailyQueue(
-        forDay: widget.today ?? DateTime.now(),
+        forDay: day,
         limit: widget.profile.dailyWordTarget,
         maxHskLevel: widget.profile.hskLevel,
       );
@@ -39,6 +84,7 @@ class _DailyQueuePageState extends State<DailyQueuePage> {
         _queue = queue;
         _loading = false;
         _error = null;
+        _loadedDay = day;
       });
     } catch (error) {
       if (!mounted) return;
@@ -152,6 +198,11 @@ class _DailyQueuePageState extends State<DailyQueuePage> {
     );
   }
 }
+
+bool _isSameDay(DateTime first, DateTime second) =>
+    first.year == second.year &&
+    first.month == second.month &&
+    first.day == second.day;
 
 class _QueueCount extends StatelessWidget {
   const _QueueCount({
