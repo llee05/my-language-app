@@ -18,6 +18,7 @@ import 'repositories/development_repository.dart';
 import 'repositories/lesson_repository.dart';
 import 'repositories/progress_repository.dart';
 import 'repositories/settings_repository.dart';
+import 'repositories/sqlite_repositories.dart';
 
 export 'models/learner_profile.dart';
 export 'models/lesson.dart';

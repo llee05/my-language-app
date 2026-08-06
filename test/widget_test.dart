@@ -491,6 +491,12 @@ class _MemoryLessonRepository implements LessonRepository {
   }) async => lesson;
 
   @override
+  Future<Flashcard> findOrCreateVocabularyCard({
+    required Flashcard card,
+    required int hskLevel,
+  }) async => card;
+
+  @override
   Future<void> saveGenerated(Lesson lesson) async {}
 
   @override

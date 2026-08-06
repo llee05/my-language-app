@@ -332,6 +332,58 @@ void main() {
     ]);
   });
 
+  test('incorrect Vocab Rush words persist into the daily queue', () async {
+    await LocalDatabase.resetForTesting();
+    await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 200),
+    );
+    const rushCard = Flashcard(
+      chinese: '错题',
+      pinyin: 'cuò tí',
+      englishMeaning: 'incorrect question',
+      partOfSpeech: 'noun',
+    );
+    final stored = await lessons.findOrCreateVocabularyCard(
+      card: rushCard,
+      hskLevel: 1,
+    );
+    final duplicate = await lessons.findOrCreateVocabularyCard(
+      card: rushCard,
+      hskLevel: 1,
+    );
+    final now = DateTime.utc(2026, 8, 6, 10);
+    await progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: stored.id,
+        reviewedAt: now,
+        rating: ReviewRating.again,
+        wasCorrect: false,
+      ),
+      progress: CardProgress(
+        cardId: stored.id,
+        lapses: 1,
+        intervalDays: 1,
+        easeFactor: 2.3,
+        dueAt: now.add(const Duration(days: 1)),
+        lastReviewedAt: now,
+      ),
+    );
+
+    final queue = await progress.dailyQueue(
+      forDay: now,
+      limit: 200,
+      maxHskLevel: 1,
+    );
+    final queued = queue.singleWhere((item) => item.card.id == stored.id);
+
+    expect(duplicate.id, stored.id);
+    expect(queued.card.chinese, '错题');
+    expect(queued.reason, DailyQueueReason.weak);
+    expect(queued.progress?.incorrectAnswers, 1);
+  });
+
   test('all milestone tables, progress columns, and indexes exist', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();

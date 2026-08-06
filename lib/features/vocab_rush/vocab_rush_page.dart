@@ -25,7 +25,16 @@ enum _RushDuration {
 }
 
 class VocabRushPage extends StatefulWidget {
-  const VocabRushPage({super.key});
+  const VocabRushPage({
+    super.key,
+    this.lessonRepository = const SqliteLessonRepository(),
+    this.progressRepository = const SqliteProgressRepository(),
+    this.initialVocabulary,
+  });
+
+  final LessonRepository lessonRepository;
+  final ProgressRepository progressRepository;
+  final List<Map<String, dynamic>>? initialVocabulary;
 
   @override
   State<VocabRushPage> createState() => _VocabRushPageState();
@@ -58,10 +67,11 @@ class _VocabRushPageState extends State<VocabRushPage> {
   Future<void> _start() async {
     _timer?.cancel();
     final vocabulary =
-        jsonDecode(
+        widget.initialVocabulary ??
+        (jsonDecode(
               await rootBundle.loadString('assets/data/hsk_vocabulary.json'),
             )
-            as List<dynamic>;
+            as List<dynamic>);
     if (!mounted) return;
     _cards = vocabulary
         .cast<Map<String, dynamic>>()
@@ -74,6 +84,9 @@ class _VocabRushPageState extends State<VocabRushPage> {
             'chinese': card['simplified'],
             'pinyin': card['pinyin'],
             'english_meaning': (card['meanings'] as List<dynamic>).first,
+            'hsk_level': card['hskLevel'],
+            'part_of_speech':
+                (card['partOfSpeech'] as List<dynamic>? ?? const []).join(', '),
           },
         )
         .toList();
@@ -135,6 +148,8 @@ class _VocabRushPageState extends State<VocabRushPage> {
       }
     });
 
+    if (!correct) unawaited(_addMistakeToReviewQueue());
+
     Future<void>.delayed(const Duration(milliseconds: 450), () {
       if (!mounted || !_playing) return;
       if (_mistakes >= 3) {
@@ -143,6 +158,49 @@ class _VocabRushPageState extends State<VocabRushPage> {
         setState(_nextCard);
       }
     });
+  }
+
+  Future<void> _addMistakeToReviewQueue() async {
+    final source = _card;
+    if (source == null) return;
+    try {
+      final card = await widget.lessonRepository.findOrCreateVocabularyCard(
+        card: Flashcard(
+          chinese: source['chinese'] as String,
+          pinyin: source['pinyin'] as String,
+          englishMeaning: source['english_meaning'] as String,
+          partOfSpeech: source['part_of_speech'] as String,
+        ),
+        hskLevel: source['hsk_level'] as int,
+      );
+      final previous = await widget.progressRepository.progressForCard(card.id);
+      final now = DateTime.now().toUtc();
+      await widget.progressRepository.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: card.id,
+          reviewedAt: now,
+          rating: ReviewRating.again,
+          wasCorrect: false,
+        ),
+        progress: CardProgress(
+          cardId: card.id,
+          repetitions: 0,
+          lapses: (previous?.lapses ?? 0) + 1,
+          reviewInterval: 1,
+          easeFactor: max(1.3, (previous?.easeFactor ?? 2.5) - .2),
+          nextReview: now.add(const Duration(days: 1)),
+          lastReview: now,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Could not add that word to your review queue.'),
+        ),
+      );
+    }
   }
 
   void _finish() {

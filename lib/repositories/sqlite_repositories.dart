@@ -147,6 +147,63 @@ class SqliteLessonRepository implements LessonRepository {
     return _lessonFromSummary(db, _summaryFromRow(lessons.single));
   }
 
+  @override
+  Future<Flashcard> findOrCreateVocabularyCard({
+    required Flashcard card,
+    required int hskLevel,
+  }) async {
+    final db = await LocalDatabase.ensureInitialized();
+    return db.transaction((txn) async {
+      final existing = await txn.query(
+        'cards',
+        where: 'chinese = ? AND pinyin = ? COLLATE NOCASE',
+        whereArgs: [card.chinese, card.pinyin],
+        orderBy: 'id ASC',
+        limit: 1,
+      );
+      if (existing.isNotEmpty) return _cardFromRow(existing.single);
+
+      final lessons = await txn.query(
+        'lessons',
+        columns: ['id'],
+        where: 'theme = ? AND hsk_level = ?',
+        whereArgs: ['Vocab Rush', hskLevel],
+        limit: 1,
+      );
+      final lessonId = lessons.isEmpty
+          ? await txn.insert('lessons', {
+              'lesson_title': 'Vocab Rush · HSK $hskLevel',
+              'theme': 'Vocab Rush',
+              'hsk_level': hskLevel,
+            })
+          : lessons.single['id'] as int;
+      final cardId = await txn.insert('cards', {
+        'lesson_id': lessonId,
+        'chinese': card.chinese,
+        'pinyin': card.pinyin,
+        'english_meaning': card.englishMeaning,
+        'part_of_speech': card.partOfSpeech,
+        'hsk_level': hskLevel,
+        'example_sentence_chinese': card.exampleChinese,
+        'example_sentence_pinyin': card.examplePinyin,
+        'example_sentence_english': card.exampleEnglish,
+        'quiz_options': jsonEncode(card.quizOptions),
+        'correct_answer': card.englishMeaning,
+      });
+      return Flashcard(
+        id: cardId,
+        chinese: card.chinese,
+        pinyin: card.pinyin,
+        englishMeaning: card.englishMeaning,
+        partOfSpeech: card.partOfSpeech,
+        exampleChinese: card.exampleChinese,
+        examplePinyin: card.examplePinyin,
+        exampleEnglish: card.exampleEnglish,
+        quizOptions: card.quizOptions,
+      );
+    });
+  }
+
   Future<Lesson?> _lessonFromSummary(Database db, LessonSummary summary) async {
     final rows = await db.query(
       'cards',
