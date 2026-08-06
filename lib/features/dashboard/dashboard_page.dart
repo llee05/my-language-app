@@ -12,6 +12,7 @@ class DashboardPage extends StatefulWidget {
     this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
+    this.clock,
   });
 
   final LearnerProfile profile;
@@ -23,6 +24,7 @@ class DashboardPage extends StatefulWidget {
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
+  final DateTime Function()? clock;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -45,7 +47,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadDailyReviewPrompt() async {
     try {
-      final now = DateTime.now();
+      final now = widget.clock?.call() ?? DateTime.now();
       final queue = await widget.progressRepository.dailyQueue(
         forDay: now,
         limit: widget.profile.dailyWordTarget,
@@ -147,6 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             widget.dailyReviewSessionRepository,
                         settingsRepository: widget.settingsRepository,
                         developmentRepository: widget.developmentRepository,
+                        clock: widget.clock,
                       ),
                     ),
                   ],
@@ -181,6 +184,7 @@ class _DashboardBody extends StatelessWidget {
     this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
+    this.clock,
   });
   final int selectedNav;
   final bool resumeLatestLesson;
@@ -201,6 +205,7 @@ class _DashboardBody extends StatelessWidget {
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
+  final DateTime Function()? clock;
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +235,7 @@ class _DashboardBody extends StatelessWidget {
         settingsRepository: settingsRepository,
         startImmediately: startDailyReview,
         onSessionCompleted: onDailyReviewCompleted,
+        clock: clock,
       );
     }
     if (selectedNav == 5) {

@@ -178,6 +178,87 @@ void main() {
   });
 
   testWidgets(
+    'daily review journey creates, resumes, completes, and resets next day',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      var now = DateTime(2026, 8, 6, 9);
+      final reviews = _JourneyReviewRepository();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DashboardPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            lessonRepository: _MemoryLessonRepository(),
+            progressRepository: reviews,
+            dailyReviewSessionRepository: reviews,
+            settingsRepository: _MemorySettingsRepository(),
+            developmentRepository: _MemoryDevelopmentRepository(),
+            clock: () => now,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reviews.createdSessionCount, 1);
+      expect(find.text('2 cards pending today'), findsOneWidget);
+      expect(find.text('Start review'), findsOneWidget);
+
+      await tester.tap(find.text('Start review'));
+      await tester.pumpAndSettle();
+      expect(find.text('一'), findsOneWidget);
+      await tester.tap(find.text('Reveal meaning'));
+      await tester.pump();
+      await tester.ensureVisible(find.text('Good'));
+      await tester.tap(find.text('Good'));
+      await tester.pumpAndSettle();
+      expect(reviews.sessions['2026-08-06']?.currentPosition, 1);
+
+      await tester.tap(find.byTooltip('Back to review queue'));
+      await tester.pumpAndSettle();
+      expect(find.text('Resume review'), findsOneWidget);
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 card pending today'), findsOneWidget);
+      expect(find.text('Resume review'), findsOneWidget);
+
+      await tester.tap(find.text('Resume review'));
+      await tester.pumpAndSettle();
+      expect(find.text('二'), findsOneWidget);
+      await tester.tap(find.text('Reveal meaning'));
+      await tester.pump();
+      await tester.ensureVisible(find.text('Again'));
+      await tester.tap(find.text('Again'));
+      await tester.pumpAndSettle();
+      expect(reviews.sessions['2026-08-06']?.isComplete, isTrue);
+      expect(reviews.reviewCount, 2);
+
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+      expect(find.text('Daily review complete!'), findsOneWidget);
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Daily review complete — you’re all done!'),
+        findsOneWidget,
+      );
+
+      now = DateTime(2026, 8, 7, 8);
+      await tester.tap(find.text('Lessons'));
+      await tester.pump();
+      await tester.tap(find.text('Home'));
+      await tester.pumpAndSettle();
+      expect(reviews.createdSessionCount, 2);
+      expect(find.text('2 cards pending today'), findsOneWidget);
+      expect(find.text('Start review'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'app sidebar invokes onSelected callback when an item is tapped',
     (tester) async {
       var selected = -1;
@@ -943,4 +1024,133 @@ class _MemoryDailyReviewSessionRepository
     required DateTime date,
     required int cardId,
   }) async {}
+}
+
+class _JourneyReviewRepository
+    implements ProgressRepository, DailyReviewSessionRepository {
+  static const _cards = [
+    DailyQueueCard(
+      card: Flashcard(id: 1, chinese: '一', pinyin: 'yī', englishMeaning: 'one'),
+      reason: DailyQueueReason.newWord,
+    ),
+    DailyQueueCard(
+      card: Flashcard(id: 2, chinese: '二', pinyin: 'èr', englishMeaning: 'two'),
+      reason: DailyQueueReason.weak,
+    ),
+  ];
+
+  final Map<String, DailyReviewSession> sessions = {};
+  final Map<int, CardProgress> progress = {};
+  int createdSessionCount = 0;
+  int reviewCount = 0;
+
+  String _key(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+
+  @override
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  }) async {
+    final key = _key(forDay);
+    final session =
+        sessions[key] ??
+        await create(
+          date: forDay,
+          queuedCardIds: _cards.map((item) => item.card.id).toList(),
+        );
+    return _cards
+        .skip(session.currentPosition)
+        .take(limit)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<DailyReviewSession> create({
+    required DateTime date,
+    required List<int> queuedCardIds,
+  }) async {
+    final key = _key(date);
+    final existing = sessions[key];
+    if (existing != null) return existing;
+    final session = DailyReviewSession(
+      id: createdSessionCount + 1,
+      date: DateTime(date.year, date.month, date.day),
+      queuedCardIds: List.unmodifiable(queuedCardIds),
+    );
+    sessions[key] = session;
+    createdSessionCount++;
+    return session;
+  }
+
+  @override
+  Future<DailyReviewSession?> load(DateTime date) async => sessions[_key(date)];
+
+  @override
+  Future<void> update(DailyReviewSession session) async {
+    sessions[_key(session.date)] = session;
+  }
+
+  @override
+  Future<void> complete({
+    required int sessionId,
+    required DateTime completedAt,
+  }) async {
+    final entry = sessions.entries.singleWhere(
+      (entry) => entry.value.id == sessionId,
+    );
+    final current = entry.value;
+    sessions[entry.key] = DailyReviewSession(
+      id: current.id,
+      date: current.date,
+      queuedCardIds: current.queuedCardIds,
+      currentPosition: current.queuedCardIds.length,
+      completedAt: completedAt,
+    );
+  }
+
+  @override
+  Future<void> enqueueCard({
+    required DateTime date,
+    required int cardId,
+  }) async {}
+
+  @override
+  Future<CardProgress?> progressForCard(int cardId) async => progress[cardId];
+
+  @override
+  Future<void> recordReview({
+    required ReviewRecord review,
+    required CardProgress progress,
+  }) async {
+    reviewCount++;
+    this.progress[progress.cardId] = progress;
+  }
+
+  @override
+  Future<LessonSession?> activeSessionForLesson(int lessonId) async => null;
+
+  @override
+  Future<List<CardProgress>> dueCards(DateTime through) async => const [];
+
+  @override
+  Future<LessonSession?> latestActiveSession() async => null;
+
+  @override
+  Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async =>
+      const [];
+
+  @override
+  Future<LessonSession> startSession(int lessonId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> updateSession(LessonSession session) async {}
+
+  @override
+  Future<List<VocabularyCardProgress>> vocabularyProgress() async => const [];
 }
