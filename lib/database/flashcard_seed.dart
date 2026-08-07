@@ -1317,9 +1317,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "tǐjiǎn",
         "english_meaning": "medical checkup",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢体检。",
-        "example_sentence_pinyin": "Wǒ xǐhuān tǐjiǎn.",
-        "example_sentence_english": "I like medical checkup.",
+        "example_sentence_chinese": "医生建议我每年做一次体检。",
+        "example_sentence_pinyin":
+            "Yīshēng jiànyì wǒ měinián zuò yí cì tǐjiǎn.",
+        "example_sentence_english":
+            "The doctor recommends that I have a checkup every year.",
         "quiz_options": [
           "medical checkup",
           "something else",
@@ -1333,9 +1335,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "yàofáng",
         "english_meaning": "pharmacy",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢药房。",
-        "example_sentence_pinyin": "Wǒ xǐhuān yàofáng.",
-        "example_sentence_english": "I like pharmacy.",
+        "example_sentence_chinese": "这家药房晚上十点才关门。",
+        "example_sentence_pinyin":
+            "Zhè jiā yàofáng wǎnshang shí diǎn cái guānmén.",
+        "example_sentence_english":
+            "This pharmacy does not close until ten at night.",
         "quiz_options": [
           "pharmacy",
           "something else",
@@ -1349,9 +1353,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "zhèngzhuàng",
         "english_meaning": "symptom",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢症状。",
-        "example_sentence_pinyin": "Wǒ xǐhuān zhèngzhuàng.",
-        "example_sentence_english": "I like symptom.",
+        "example_sentence_chinese": "如果症状没有改善，请尽快联系医生。",
+        "example_sentence_pinyin":
+            "Rúguǒ zhèngzhuàng méiyǒu gǎishàn, qǐng jǐnkuài liánxì yīshēng.",
+        "example_sentence_english":
+            "If your symptoms do not improve, contact a doctor as soon as possible.",
         "quiz_options": [
           "symptom",
           "something else",
@@ -1365,9 +1371,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "kāngfù",
         "english_meaning": "to recover",
         "part_of_speech": "verb",
-        "example_sentence_chinese": "我每天康复。",
-        "example_sentence_pinyin": "Wǒ měitiān kāngfù.",
-        "example_sentence_english": "I to recover every day.",
+        "example_sentence_chinese": "经过几个月的治疗，他终于康复了。",
+        "example_sentence_pinyin":
+            "Jīngguò jǐ ge yuè de zhìliáo, tā zhōngyú kāngfù le.",
+        "example_sentence_english":
+            "After several months of treatment, he finally recovered.",
         "quiz_options": [
           "to recover",
           "something else",
@@ -1381,9 +1389,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "yìmiáo",
         "english_meaning": "vaccine",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢疫苗。",
-        "example_sentence_pinyin": "Wǒ xǐhuān yìmiáo.",
-        "example_sentence_english": "I like vaccine.",
+        "example_sentence_chinese": "出国以前，我需要接种这种疫苗。",
+        "example_sentence_pinyin":
+            "Chūguó yǐqián, wǒ xūyào jiēzhòng zhè zhǒng yìmiáo.",
+        "example_sentence_english":
+            "I need to receive this vaccine before going abroad.",
         "quiz_options": [
           "vaccine",
           "something else",
@@ -1397,9 +1407,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "shǒushù",
         "english_meaning": "surgery",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢手术。",
-        "example_sentence_pinyin": "Wǒ xǐhuān shǒushù.",
-        "example_sentence_english": "I like surgery.",
+        "example_sentence_chinese": "手术很顺利，病人明天就能回家。",
+        "example_sentence_pinyin":
+            "Shǒushù hěn shùnlì, bìngrén míngtiān jiù néng huí jiā.",
+        "example_sentence_english":
+            "The surgery went smoothly, and the patient can go home tomorrow.",
         "quiz_options": [
           "surgery",
           "something else",
@@ -1413,9 +1425,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "yíngyǎng",
         "english_meaning": "nutrition",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢营养。",
-        "example_sentence_pinyin": "Wǒ xǐhuān yíngyǎng.",
-        "example_sentence_english": "I like nutrition.",
+        "example_sentence_chinese": "这种早餐既方便，又有营养。",
+        "example_sentence_pinyin":
+            "Zhè zhǒng zǎocān jì fāngbiàn, yòu yǒu yíngyǎng.",
+        "example_sentence_english":
+            "This breakfast is both convenient and nutritious.",
         "quiz_options": [
           "nutrition",
           "something else",
@@ -1429,9 +1443,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "fùzhěn",
         "english_meaning": "follow-up appointment",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢复诊。",
-        "example_sentence_pinyin": "Wǒ xǐhuān fùzhěn.",
-        "example_sentence_english": "I like follow-up appointment.",
+        "example_sentence_chinese": "医生让我两周以后回来复诊。",
+        "example_sentence_pinyin":
+            "Yīshēng ràng wǒ liǎng zhōu yǐhòu huílai fùzhěn.",
+        "example_sentence_english":
+            "The doctor asked me to return for a follow-up in two weeks.",
         "quiz_options": [
           "follow-up appointment",
           "something else",
@@ -1445,9 +1461,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "jízhěn",
         "english_meaning": "emergency room",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢急诊。",
-        "example_sentence_pinyin": "Wǒ xǐhuān jízhěn.",
-        "example_sentence_english": "I like emergency room.",
+        "example_sentence_chinese": "他突然呼吸困难，被送进了急诊。",
+        "example_sentence_pinyin":
+            "Tā tūrán hūxī kùnnan, bèi sòngjìn le jízhěn.",
+        "example_sentence_english":
+            "He suddenly had trouble breathing and was taken to the emergency room.",
         "quiz_options": [
           "emergency room",
           "something else",
@@ -1461,9 +1479,10 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "shēntǐ",
         "english_meaning": "body; health",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢身体。",
-        "example_sentence_pinyin": "Wǒ xǐhuān shēntǐ.",
-        "example_sentence_english": "I like body; health.",
+        "example_sentence_chinese": "工作再忙，也要注意身体。",
+        "example_sentence_pinyin": "Gōngzuò zài máng, yě yào zhùyì shēntǐ.",
+        "example_sentence_english":
+            "No matter how busy work gets, you should look after your health.",
         "quiz_options": [
           "body; health",
           "something else",
@@ -1477,9 +1496,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "téngtòng",
         "english_meaning": "pain",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢疼痛。",
-        "example_sentence_pinyin": "Wǒ xǐhuān téngtòng.",
-        "example_sentence_english": "I like pain.",
+        "example_sentence_chinese": "这种疼痛已经影响到我的睡眠了。",
+        "example_sentence_pinyin":
+            "Zhè zhǒng téngtòng yǐjīng yǐngxiǎng dào wǒ de shuìmián le.",
+        "example_sentence_english":
+            "This pain has already begun to affect my sleep.",
         "quiz_options": [
           "pain",
           "something else",
@@ -1493,9 +1514,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "guòmǐn",
         "english_meaning": "allergic",
         "part_of_speech": "adjective",
-        "example_sentence_chinese": "我喜欢过敏。",
-        "example_sentence_pinyin": "Wǒ xǐhuān guòmǐn.",
-        "example_sentence_english": "I like allergic.",
+        "example_sentence_chinese": "我对花生过敏，所以买东西时会仔细看标签。",
+        "example_sentence_pinyin":
+            "Wǒ duì huāshēng guòmǐn, suǒyǐ mǎi dōngxi shí huì zǐxì kàn biāoqiān.",
+        "example_sentence_english":
+            "I am allergic to peanuts, so I check labels carefully when shopping.",
         "quiz_options": [
           "allergic",
           "something else",
@@ -1509,9 +1532,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "jiǎnchá",
         "english_meaning": "to examine",
         "part_of_speech": "verb",
-        "example_sentence_chinese": "我每天检查。",
-        "example_sentence_pinyin": "Wǒ měitiān jiǎnchá.",
-        "example_sentence_english": "I to examine every day.",
+        "example_sentence_chinese": "护士先给我量了血压，医生才开始检查。",
+        "example_sentence_pinyin":
+            "Hùshi xiān gěi wǒ liáng le xuèyā, yīshēng cái kāishǐ jiǎnchá.",
+        "example_sentence_english":
+            "The nurse took my blood pressure before the doctor began the examination.",
         "quiz_options": [
           "to examine",
           "something else",
@@ -1525,9 +1550,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "chǔfāng",
         "english_meaning": "prescription",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢处方。",
-        "example_sentence_pinyin": "Wǒ xǐhuān chǔfāng.",
-        "example_sentence_english": "I like prescription.",
+        "example_sentence_chinese": "没有医生的处方，你不能购买这种药。",
+        "example_sentence_pinyin":
+            "Méiyǒu yīshēng de chǔfāng, nǐ bù néng gòumǎi zhè zhǒng yào.",
+        "example_sentence_english":
+            "You cannot buy this medicine without a doctor's prescription.",
         "quiz_options": [
           "prescription",
           "something else",
@@ -1541,9 +1568,10 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "tǐwēn",
         "english_meaning": "temperature",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢体温。",
-        "example_sentence_pinyin": "Wǒ xǐhuān tǐwēn.",
-        "example_sentence_english": "I like temperature.",
+        "example_sentence_chinese": "孩子的体温升到了三十九度。",
+        "example_sentence_pinyin": "Háizi de tǐwēn shēngdào le sānshíjiǔ dù.",
+        "example_sentence_english":
+            "The child's temperature rose to thirty-nine degrees.",
         "quiz_options": [
           "temperature",
           "something else",
@@ -1557,9 +1585,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "yàowù",
         "english_meaning": "medicine",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢药物。",
-        "example_sentence_pinyin": "Wǒ xǐhuān yàowù.",
-        "example_sentence_english": "I like medicine.",
+        "example_sentence_chinese": "服用任何药物之前，都应该了解它的副作用。",
+        "example_sentence_pinyin":
+            "Fúyòng rènhé yàowù zhīqián, dōu yīnggāi liǎojiě tā de fùzuòyòng.",
+        "example_sentence_english":
+            "Before taking any medication, you should understand its side effects.",
         "quiz_options": [
           "medicine",
           "something else",
@@ -1573,9 +1603,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "tóutòng",
         "english_meaning": "headache",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢头痛。",
-        "example_sentence_pinyin": "Wǒ xǐhuān tóutòng.",
-        "example_sentence_english": "I like headache.",
+        "example_sentence_chinese": "我从早上开始头痛，现在越来越严重。",
+        "example_sentence_pinyin":
+            "Wǒ cóng zǎoshang kāishǐ tóutòng, xiànzài yuèláiyuè yánzhòng.",
+        "example_sentence_english":
+            "I have had a headache since this morning, and it is getting worse.",
         "quiz_options": [
           "headache",
           "something else",
@@ -1589,9 +1621,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "yǐnshí",
         "english_meaning": "diet",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢饮食。",
-        "example_sentence_pinyin": "Wǒ xǐhuān yǐnshí.",
-        "example_sentence_english": "I like diet.",
+        "example_sentence_chinese": "规律的饮食有助于保持身体健康。",
+        "example_sentence_pinyin":
+            "Guīlǜ de yǐnshí yǒuzhù yú bǎochí shēntǐ jiànkāng.",
+        "example_sentence_english":
+            "Regular eating habits help maintain good health.",
         "quiz_options": [
           "diet",
           "something else",
@@ -1605,9 +1639,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "yùndòng",
         "english_meaning": "exercise",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢运动。",
-        "example_sentence_pinyin": "Wǒ xǐhuān yùndòng.",
-        "example_sentence_english": "I like exercise.",
+        "example_sentence_chinese": "适量运动不仅能减轻压力，还能改善睡眠。",
+        "example_sentence_pinyin":
+            "Shìliàng yùndòng bùjǐn néng jiǎnqīng yālì, hái néng gǎishàn shuìmián.",
+        "example_sentence_english":
+            "Moderate exercise can reduce stress as well as improve sleep.",
         "quiz_options": [
           "exercise",
           "something else",
@@ -1621,9 +1657,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
         "pinyin": "kāngfù zhōngxīn",
         "english_meaning": "rehabilitation center",
         "part_of_speech": "noun",
-        "example_sentence_chinese": "我喜欢康复中心。",
-        "example_sentence_pinyin": "Wǒ xǐhuān kāngfù zhōngxīn.",
-        "example_sentence_english": "I like rehabilitation center.",
+        "example_sentence_chinese": "出院后，她每天都去康复中心做训练。",
+        "example_sentence_pinyin":
+            "Chūyuàn hòu, tā měitiān dōu qù kāngfù zhōngxīn zuò xùnliàn.",
+        "example_sentence_english":
+            "After leaving hospital, she went to the rehabilitation center for training every day.",
         "quiz_options": [
           "rehabilitation center",
           "something else",
