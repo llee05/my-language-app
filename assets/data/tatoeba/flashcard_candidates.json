@@ -1,0 +1,6702 @@
+[
+  {
+    "target": "你好",
+    "hskLevel": 1,
+    "candidateCount": 73,
+    "candidates": [
+      {
+        "chineseId": 886132,
+        "chinese": "你好，你是小川先生嗎？",
+        "englishId": 419465,
+        "english": "Hello, are you Mr Ogawa?",
+        "score": 106
+      },
+      {
+        "chineseId": 6169152,
+        "chinese": "祝你好運。你會需要它。",
+        "englishId": 3361237,
+        "english": "Good luck. You'll need it.",
+        "score": 104
+      },
+      {
+        "chineseId": 6822553,
+        "chinese": "休息几天会对你好的。",
+        "englishId": 73000,
+        "english": "A few days' rest will do you good.",
+        "score": 104
+      },
+      {
+        "chineseId": 10019632,
+        "chinese": "你好！我叫汤姆。你叫什么？",
+        "englishId": 7587437,
+        "english": "Hi, my name is Tom. What's your name?",
+        "score": 103
+      },
+      {
+        "chineseId": 7767612,
+        "chinese": "你好！你还在那里吗？",
+        "englishId": 7767782,
+        "english": "Hello! Are you still there?",
+        "score": 103
+      },
+      {
+        "chineseId": 334625,
+        "chinese": "这药会让你好受点。",
+        "englishId": 56571,
+        "english": "This medicine will make you feel better.",
+        "score": 101
+      },
+      {
+        "chineseId": 5842644,
+        "chinese": "我会给点你好东西。",
+        "englishId": 5320769,
+        "english": "I'll get you something nice.",
+        "score": 101
+      },
+      {
+        "chineseId": 6142042,
+        "chinese": "你好，你是何塞嗎？",
+        "englishId": 7773695,
+        "english": "Hello, are you Jose?",
+        "score": 100
+      },
+      {
+        "chineseId": 2575657,
+        "chinese": "你好苏珊，你好吗？",
+        "englishId": 54605,
+        "english": "Hi, Susan. How are you?",
+        "score": 100
+      },
+      {
+        "chineseId": 5856913,
+        "chinese": "你好湯姆！你什麼時候來的？",
+        "englishId": 7775076,
+        "english": "Hello Tom! What time are you coming?",
+        "score": 100
+      },
+      {
+        "chineseId": 5254676,
+        "chinese": "你好，紅衣服的女生！",
+        "englishId": 1098107,
+        "english": "Hello, girl with the red dress!",
+        "score": 99
+      },
+      {
+        "chineseId": 1335302,
+        "chinese": "你好，我都快饿死了！",
+        "englishId": 1335324,
+        "english": "Hello, I'm so hungry!",
+        "score": 99
+      }
+    ]
+  },
+  {
+    "target": "谢谢",
+    "hskLevel": 1,
+    "candidateCount": 118,
+    "candidates": [
+      {
+        "chineseId": 2254371,
+        "chinese": "谢谢你的圣诞节礼物。",
+        "englishId": 2254343,
+        "english": "Thank you for the Christmas gift.",
+        "score": 106
+      },
+      {
+        "chineseId": 812349,
+        "chinese": "谢谢你把我加为好友。",
+        "englishId": 647604,
+        "english": "Thanks for adding me as a friend.",
+        "score": 106
+      },
+      {
+        "chineseId": 1990260,
+        "chinese": "谢谢你烤的美味蛋糕。",
+        "englishId": 1716451,
+        "english": "Thank you for baking this delicious cake.",
+        "score": 106
+      },
+      {
+        "chineseId": 2024174,
+        "chinese": "汤姆谢谢我送他礼物。",
+        "englishId": 37041,
+        "english": "Tom thanked me for the gift.",
+        "score": 104
+      },
+      {
+        "chineseId": 5951841,
+        "chinese": "谢谢你答应来见我。",
+        "englishId": 5951801,
+        "english": "Thank you for agreeing to meet with us.",
+        "score": 103
+      },
+      {
+        "chineseId": 4517845,
+        "chinese": "谢谢您的迅速回复。",
+        "englishId": 1157722,
+        "english": "Thanks for your quick answer.",
+        "score": 103
+      },
+      {
+        "chineseId": 1416163,
+        "chinese": "谢谢。也许我们会回来的。",
+        "englishId": 67367,
+        "english": "Thanks. Maybe we'll come back.",
+        "score": 103
+      },
+      {
+        "chineseId": 1541584,
+        "chinese": "谢谢你邀请我吃饭。",
+        "englishId": 324609,
+        "english": "Thank you for inviting me to dinner.",
+        "score": 103
+      },
+      {
+        "chineseId": 1867004,
+        "chinese": "谢谢你送给我儿子礼物。",
+        "englishId": 251373,
+        "english": "Thank you for the present you gave my son.",
+        "score": 103
+      },
+      {
+        "chineseId": 2744467,
+        "chinese": "谢谢你送的巧克力。",
+        "englishId": 2744463,
+        "english": "Thank you for your chocolate.",
+        "score": 103
+      },
+      {
+        "chineseId": 3283113,
+        "chinese": "不用，谢谢，我怀孕了。",
+        "englishId": 3283007,
+        "english": "No thanks, I'm pregnant.",
+        "score": 101
+      },
+      {
+        "chineseId": 396374,
+        "chinese": "我先谢谢你的帮忙。",
+        "englishId": 54482,
+        "english": "Thank you in advance for your help.",
+        "score": 101
+      }
+    ]
+  },
+  {
+    "target": "学习",
+    "hskLevel": 1,
+    "candidateCount": 319,
+    "candidates": [
+      {
+        "chineseId": 1770677,
+        "chinese": "学习世界语非常有趣。",
+        "englishId": 1563779,
+        "english": "It's really fun to learn Esperanto.",
+        "score": 106
+      },
+      {
+        "chineseId": 3488739,
+        "chinese": "她的哥哥学习很认真。",
+        "englishId": 7770408,
+        "english": "Her brother takes studying very seriously.",
+        "score": 104
+      },
+      {
+        "chineseId": 3488718,
+        "chinese": "他的弟弟很认真学习。",
+        "englishId": 520727,
+        "english": "His brother studies very hard.",
+        "score": 104
+      },
+      {
+        "chineseId": 392017,
+        "chinese": "我们每天都学习英文。",
+        "englishId": 249388,
+        "english": "We study English every day.",
+        "score": 104
+      },
+      {
+        "chineseId": 13843232,
+        "chinese": "我学习道本语很久了。",
+        "englishId": 13843240,
+        "english": "I've been studying Toki Pona for a long time.",
+        "score": 104
+      },
+      {
+        "chineseId": 3488703,
+        "chinese": "他的弟弟学习很认真。",
+        "englishId": 10259168,
+        "english": "His little brother studies seriously.",
+        "score": 104
+      },
+      {
+        "chineseId": 1878338,
+        "chinese": "我们在学习西班牙语。",
+        "englishId": 1592896,
+        "english": "We are learning Spanish.",
+        "score": 104
+      },
+      {
+        "chineseId": 8899417,
+        "chinese": "他急切地学习了日语。",
+        "englishId": 302311,
+        "english": "He studied Japanese eagerly.",
+        "score": 104
+      },
+      {
+        "chineseId": 3488706,
+        "chinese": "他的哥哥学习很认真。",
+        "englishId": 520727,
+        "english": "His brother studies very hard.",
+        "score": 104
+      },
+      {
+        "chineseId": 3488712,
+        "chinese": "他的哥哥很认真学习。",
+        "englishId": 520727,
+        "english": "His brother studies very hard.",
+        "score": 104
+      },
+      {
+        "chineseId": 4408178,
+        "chinese": "你每天必须学习五页。",
+        "englishId": 4407717,
+        "english": "You must study five pages per day.",
+        "score": 104
+      },
+      {
+        "chineseId": 1361985,
+        "chinese": "我在学习计算机科学。",
+        "englishId": 7784861,
+        "english": "I'm studying computer science.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "老师",
+    "hskLevel": 1,
+    "candidateCount": 206,
+    "candidates": [
+      {
+        "chineseId": 14007962,
+        "chinese": "老师开始问我们问题。",
+        "englishId": 6851167,
+        "english": "The teacher began to ask us questions.",
+        "score": 106
+      },
+      {
+        "chineseId": 396829,
+        "chinese": "老师说明了词的意思。",
+        "englishId": 272887,
+        "english": "The teacher explained the meaning of the word to us.",
+        "score": 106
+      },
+      {
+        "chineseId": 2257013,
+        "chinese": "老师指出了你的错误。",
+        "englishId": 272861,
+        "english": "The teacher pointed out your mistakes.",
+        "score": 106
+      },
+      {
+        "chineseId": 904812,
+        "chinese": "那位士兵变成老师了。",
+        "englishId": 237789,
+        "english": "The soldier became a teacher.",
+        "score": 104
+      },
+      {
+        "chineseId": 813629,
+        "chinese": "她非常尊敬她的老师。",
+        "englishId": 315468,
+        "english": "She has great respect for her teacher.",
+        "score": 104
+      },
+      {
+        "chineseId": 13890594,
+        "chinese": "我想当一名英语老师。",
+        "englishId": 26333,
+        "english": "I would like to be an English teacher.",
+        "score": 104
+      },
+      {
+        "chineseId": 13880544,
+        "chinese": "汤姆不是我们的老师。",
+        "englishId": 8970041,
+        "english": "Tom isn't our teacher.",
+        "score": 104
+      },
+      {
+        "chineseId": 10966832,
+        "chinese": "你们学校有多少老师？",
+        "englishId": 12113443,
+        "english": "How many teachers are there at your school?",
+        "score": 104
+      },
+      {
+        "chineseId": 512495,
+        "chinese": "她是个非常好的老师。",
+        "englishId": 311752,
+        "english": "She is a very good teacher.",
+        "score": 104
+      },
+      {
+        "chineseId": 718456,
+        "chinese": "他说话就像一位老师。",
+        "englishId": 292971,
+        "english": "He talks as if he were a teacher.",
+        "score": 104
+      },
+      {
+        "chineseId": 9969969,
+        "chinese": "你为何想当一个老师？",
+        "englishId": 2019219,
+        "english": "Why did you want to become a teacher?",
+        "score": 104
+      },
+      {
+        "chineseId": 8934218,
+        "chinese": "你是一名很好的老师。",
+        "englishId": 2543874,
+        "english": "You're a very good teacher.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "学生",
+    "hskLevel": 1,
+    "candidateCount": 219,
+    "candidates": [
+      {
+        "chineseId": 9963172,
+        "chinese": "学生们表演哈姆雷特。",
+        "englishId": 12231657,
+        "english": "The pupils performed Hamlet.",
+        "score": 106
+      },
+      {
+        "chineseId": 353592,
+        "chinese": "这个学生自暴自弃了。",
+        "englishId": 48905,
+        "english": "The student gave himself up to despair.",
+        "score": 104
+      },
+      {
+        "chineseId": 333344,
+        "chinese": "她班上大约有40个学生。",
+        "englishId": 308988,
+        "english": "There are about forty students in her class.",
+        "score": 104
+      },
+      {
+        "chineseId": 333354,
+        "chinese": "我们班有四十个学生。",
+        "englishId": 506898,
+        "english": "There are forty students in our class.",
+        "score": 104
+      },
+      {
+        "chineseId": 336240,
+        "chinese": "我是这个学校的学生。",
+        "englishId": 253572,
+        "english": "I am a student of this school.",
+        "score": 104
+      },
+      {
+        "chineseId": 348886,
+        "chinese": "今天有不少学生缺课。",
+        "englishId": 63605,
+        "english": "Quite a few students are absent today.",
+        "score": 104
+      },
+      {
+        "chineseId": 530704,
+        "chinese": "这个学校有很多学生。",
+        "englishId": 59930,
+        "english": "This school has many students.",
+        "score": 104
+      },
+      {
+        "chineseId": 686606,
+        "chinese": "很多学生买了这本书。",
+        "englishId": 274912,
+        "english": "Many students bought the book.",
+        "score": 104
+      },
+      {
+        "chineseId": 1360196,
+        "chinese": "没有学生去参加派对。",
+        "englishId": 50046,
+        "english": "No student went to the party.",
+        "score": 104
+      },
+      {
+        "chineseId": 1502337,
+        "chinese": "你们学校有多少学生？",
+        "englishId": 70777,
+        "english": "How many students are there in your school?",
+        "score": 104
+      },
+      {
+        "chineseId": 1659801,
+        "chinese": "我们班有三十名学生。",
+        "englishId": 1663409,
+        "english": "There are 30 students in our class.",
+        "score": 104
+      },
+      {
+        "chineseId": 332794,
+        "chinese": "我妹妹21岁，是个大学生。",
+        "englishId": 322318,
+        "english": "My sister is twenty-one years old and a college student.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "学校",
+    "hskLevel": 1,
+    "candidateCount": 194,
+    "candidates": [
+      {
+        "chineseId": 333198,
+        "chinese": "学校因大雪停课一天。",
+        "englishId": 272573,
+        "english": "School was closed for the day due to the snow.",
+        "score": 106
+      },
+      {
+        "chineseId": 334981,
+        "chinese": "这所学校是1970年建成的。",
+        "englishId": 48943,
+        "english": "This school was founded in 1970.",
+        "score": 104
+      },
+      {
+        "chineseId": 334145,
+        "chinese": "我走路10分钟能到学校 。",
+        "englishId": 1616,
+        "english": "I can walk to school in 10 minutes.",
+        "score": 104
+      },
+      {
+        "chineseId": 10966745,
+        "chinese": "明天星期一，我去学校。",
+        "englishId": 13949866,
+        "english": "Tomorrow's Monday and I'm going to school.",
+        "score": 104
+      },
+      {
+        "chineseId": 336240,
+        "chinese": "我是这个学校的学生。",
+        "englishId": 253572,
+        "english": "I am a student of this school.",
+        "score": 104
+      },
+      {
+        "chineseId": 336653,
+        "chinese": "我们通常步行去学校。",
+        "englishId": 263265,
+        "english": "We usually walk to school.",
+        "score": 104
+      },
+      {
+        "chineseId": 5865542,
+        "chinese": "你的学校有图书馆吗？",
+        "englishId": 1827560,
+        "english": "Does your school have a library?",
+        "score": 104
+      },
+      {
+        "chineseId": 530704,
+        "chinese": "这个学校有很多学生。",
+        "englishId": 59930,
+        "english": "This school has many students.",
+        "score": 104
+      },
+      {
+        "chineseId": 634835,
+        "chinese": "她非常喜欢她的学校。",
+        "englishId": 487223,
+        "english": "She likes her school a lot.",
+        "score": 104
+      },
+      {
+        "chineseId": 10966832,
+        "chinese": "你们学校有多少老师？",
+        "englishId": 12113443,
+        "english": "How many teachers are there at your school?",
+        "score": 104
+      },
+      {
+        "chineseId": 1502337,
+        "chinese": "你们学校有多少学生？",
+        "englishId": 70777,
+        "english": "How many students are there in your school?",
+        "score": 104
+      },
+      {
+        "chineseId": 1516158,
+        "chinese": "你能去学校接小孩吗？",
+        "englishId": 1514222,
+        "english": "Can you fetch the children from school?",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "中文",
+    "hskLevel": 1,
+    "candidateCount": 134,
+    "candidates": [
+      {
+        "chineseId": 3667683,
+        "chinese": "中文是有四声的语言。",
+        "englishId": 5313713,
+        "english": "Chinese is a language that has four tones.",
+        "score": 106
+      },
+      {
+        "chineseId": 717385,
+        "chinese": "中文学起来太容易了。",
+        "englishId": 717387,
+        "english": "Chinese is too easy to learn.",
+        "score": 106
+      },
+      {
+        "chineseId": 10024448,
+        "chinese": "我加了新的中文翻译。",
+        "englishId": 10379328,
+        "english": "I added a new Chinese translation.",
+        "score": 104
+      },
+      {
+        "chineseId": 502851,
+        "chinese": "我上周开始学中文了。",
+        "englishId": 1883,
+        "english": "I started learning Chinese last week.",
+        "score": 104
+      },
+      {
+        "chineseId": 10192350,
+        "chinese": "你有没有看过中文书？",
+        "englishId": 1722890,
+        "english": "Have you ever read a book in Chinese?",
+        "score": 104
+      },
+      {
+        "chineseId": 10192322,
+        "chinese": "汤姆是中文文学教授。",
+        "englishId": 681378,
+        "english": "Tom is a professor of Chinese literature.",
+        "score": 104
+      },
+      {
+        "chineseId": 811817,
+        "chinese": "你能用中文數到十嗎？",
+        "englishId": 277506,
+        "english": "Can you count to ten in Chinese?",
+        "score": 104
+      },
+      {
+        "chineseId": 811821,
+        "chinese": "你會講中文或俄語嗎？",
+        "englishId": 277505,
+        "english": "Can you speak either Chinese or Russian?",
+        "score": 104
+      },
+      {
+        "chineseId": 835757,
+        "chinese": "凱特幾乎不會說中文。",
+        "englishId": 62681,
+        "english": "Kate can hardly speak Chinese.",
+        "score": 104
+      },
+      {
+        "chineseId": 10192333,
+        "chinese": "我的室友在学习中文。",
+        "englishId": 5099473,
+        "english": "My roommate is studying Chinese.",
+        "score": 104
+      },
+      {
+        "chineseId": 859024,
+        "chinese": "我是在北京學的中文。",
+        "englishId": 844672,
+        "english": "It was in Beijing that I studied Chinese.",
+        "score": 104
+      },
+      {
+        "chineseId": 1511039,
+        "chinese": "我喜歡學中文和英文。",
+        "englishId": 1510614,
+        "english": "I like to learn Chinese and English.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "饭",
+    "hskLevel": 1,
+    "candidateCount": 341,
+    "candidates": [
+      {
+        "chineseId": 1602434,
+        "chinese": "中餐常有米饭或面条。",
+        "englishId": 10581617,
+        "english": "Rice and noodles are commonplace in Chinese cuisine.",
+        "score": 104
+      },
+      {
+        "chineseId": 332731,
+        "chinese": "他们午饭吃了三明治。",
+        "englishId": 307154,
+        "english": "They ate sandwiches for lunch.",
+        "score": 104
+      },
+      {
+        "chineseId": 332840,
+        "chinese": "妈妈为我准备了午饭。",
+        "englishId": 320758,
+        "english": "Mother prepared lunch for me.",
+        "score": 104
+      },
+      {
+        "chineseId": 366859,
+        "chinese": "玛丽用5美元买了午饭。",
+        "englishId": 616188,
+        "english": "Mary paid five dollars for her lunch.",
+        "score": 104
+      },
+      {
+        "chineseId": 400336,
+        "chinese": "我们先吃饭，然后再走。",
+        "englishId": 400331,
+        "english": "First we'll eat, and then we'll go.",
+        "score": 104
+      },
+      {
+        "chineseId": 401032,
+        "chinese": "我妹妹正在厨房做饭。",
+        "englishId": 245594,
+        "english": "My sister is cooking in the kitchen.",
+        "score": 104
+      },
+      {
+        "chineseId": 12686147,
+        "chinese": "有谁想一起去吃饭吗？",
+        "englishId": 4197700,
+        "english": "Anybody wanna grab something to eat with me?",
+        "score": 104
+      },
+      {
+        "chineseId": 428001,
+        "chinese": "我们的抓饭是四块钱。",
+        "englishId": 427998,
+        "english": "Our pilaf is four yuan.",
+        "score": 104
+      },
+      {
+        "chineseId": 431118,
+        "chinese": "我们的饭店是最好的。",
+        "englishId": 431117,
+        "english": "Our restaurant is the best.",
+        "score": 104
+      },
+      {
+        "chineseId": 504875,
+        "chinese": "在你们国家吃米饭吗？",
+        "englishId": 17151,
+        "english": "Do you eat rice in your country?",
+        "score": 104
+      },
+      {
+        "chineseId": 8496255,
+        "chinese": "我们几乎没空吃早饭。",
+        "englishId": 277801,
+        "english": "We hardly have time to eat breakfast.",
+        "score": 104
+      },
+      {
+        "chineseId": 766751,
+        "chinese": "一家人一起吃了晚饭。",
+        "englishId": 49308,
+        "english": "The family ate dinner together.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "书",
+    "hskLevel": 1,
+    "candidateCount": 699,
+    "candidates": [
+      {
+        "chineseId": 408844,
+        "chinese": "书桌上的词典是我的。",
+        "englishId": 20544,
+        "english": "The dictionary on the desk is mine.",
+        "score": 106
+      },
+      {
+        "chineseId": 9989899,
+        "chinese": "书架上放着很多字典。",
+        "englishId": 10551512,
+        "english": "There are a lot of dictionaries in the bookcase.",
+        "score": 106
+      },
+      {
+        "chineseId": 1446791,
+        "chinese": "我看书的时候睡着了。",
+        "englishId": 322096,
+        "english": "I fell asleep while reading.",
+        "score": 104
+      },
+      {
+        "chineseId": 333927,
+        "chinese": "她为一本书收集材料。",
+        "englishId": 317035,
+        "english": "She is collecting material for a book.",
+        "score": 104
+      },
+      {
+        "chineseId": 334828,
+        "chinese": "我发现读这本书很难。",
+        "englishId": 387494,
+        "english": "I find this book is very difficult to read.",
+        "score": 104
+      },
+      {
+        "chineseId": 13946943,
+        "chinese": "《围城》的作者是钱钟书。",
+        "englishId": 13946973,
+        "english": "The author of Fortress Besieged is Qian Zhongshu.",
+        "score": 104
+      },
+      {
+        "chineseId": 340649,
+        "chinese": "读这种的书有什么用？",
+        "englishId": 54617,
+        "english": "What is the good of reading such books?",
+        "score": 104
+      },
+      {
+        "chineseId": 352043,
+        "chinese": "我的英语书不多于10本。",
+        "englishId": 259267,
+        "english": "I have no more than ten English books.",
+        "score": 104
+      },
+      {
+        "chineseId": 394454,
+        "chinese": "百货商店前有个书店。",
+        "englishId": 50232,
+        "english": "There is a bookstore in front of the department store.",
+        "score": 104
+      },
+      {
+        "chineseId": 487630,
+        "chinese": "这本书值得再看一遍。",
+        "englishId": 57003,
+        "english": "This book is worth reading again.",
+        "score": 104
+      },
+      {
+        "chineseId": 589838,
+        "chinese": "这本书的名字是什么？",
+        "englishId": 43949,
+        "english": "What is the title of the book?",
+        "score": 104
+      },
+      {
+        "chineseId": 636202,
+        "chinese": "我还是应该买你的书。",
+        "englishId": 398757,
+        "english": "I still have to buy your book.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "朋友",
+    "hskLevel": 1,
+    "candidateCount": 824,
+    "candidates": [
+      {
+        "chineseId": 13513723,
+        "chinese": "湯姆交過很多女朋友。",
+        "englishId": 13507332,
+        "english": "Tom has had a lot of girlfriends.",
+        "score": 104
+      },
+      {
+        "chineseId": 1691681,
+        "chinese": "我在等待朋友的回信。",
+        "englishId": 13949874,
+        "english": "I'm waiting for a reply from my friend.",
+        "score": 104
+      },
+      {
+        "chineseId": 346847,
+        "chinese": "你應該小心選擇朋友。",
+        "englishId": 324354,
+        "english": "You should be careful in your choice of friends.",
+        "score": 104
+      },
+      {
+        "chineseId": 349760,
+        "chinese": "她在這裏有不少朋友。",
+        "englishId": 310806,
+        "english": "She has a good many friends here.",
+        "score": 104
+      },
+      {
+        "chineseId": 361766,
+        "chinese": "我和瑪莉成了好朋友。",
+        "englishId": 32029,
+        "english": "Mary and I became good friends.",
+        "score": 104
+      },
+      {
+        "chineseId": 365904,
+        "chinese": "杰克是我的一個朋友。",
+        "englishId": 53114,
+        "english": "Jack is one of my friends.",
+        "score": 104
+      },
+      {
+        "chineseId": 409326,
+        "chinese": "我不喜欢你的女朋友。",
+        "englishId": 409324,
+        "english": "I don't like your girlfriend.",
+        "score": 104
+      },
+      {
+        "chineseId": 432317,
+        "chinese": "听说你有新女朋友了。",
+        "englishId": 432314,
+        "english": "I hear you've got a new girlfriend.",
+        "score": 104
+      },
+      {
+        "chineseId": 465833,
+        "chinese": "我们永远都会是朋友。",
+        "englishId": 247890,
+        "english": "We'll always be friends.",
+        "score": 104
+      },
+      {
+        "chineseId": 486675,
+        "chinese": "你的朋友叫甚麼名字？",
+        "englishId": 486669,
+        "english": "What's your friend's name?",
+        "score": 104
+      },
+      {
+        "chineseId": 685082,
+        "chinese": "我踫見了一個老朋友。",
+        "englishId": 19512,
+        "english": "I ran into an old friend.",
+        "score": 104
+      },
+      {
+        "chineseId": 685535,
+        "chinese": "好多朋友和熟人来了。",
+        "englishId": 1539877,
+        "english": "Quite a lot of friends and acquaintances have come.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "听",
+    "hskLevel": 1,
+    "candidateCount": 440,
+    "candidates": [
+      {
+        "chineseId": 432317,
+        "chinese": "听说你有新女朋友了。",
+        "englishId": 432314,
+        "english": "I hear you've got a new girlfriend.",
+        "score": 106
+      },
+      {
+        "chineseId": 5558575,
+        "chinese": "汤姆会听从我的建议。",
+        "englishId": 5553248,
+        "english": "Tom will follow my advice.",
+        "score": 104
+      },
+      {
+        "chineseId": 332867,
+        "chinese": "这音乐值得听许多次。",
+        "englishId": 49426,
+        "english": "That music is worth listening to many times.",
+        "score": 104
+      },
+      {
+        "chineseId": 334281,
+        "chinese": "她还没听到这个消息。",
+        "englishId": 1230744,
+        "english": "She still hasn't heard this news.",
+        "score": 104
+      },
+      {
+        "chineseId": 13071571,
+        "chinese": "我听说你是位艺术家。",
+        "englishId": 3431047,
+        "english": "I hear you're an artist.",
+        "score": 104
+      },
+      {
+        "chineseId": 396369,
+        "chinese": "我不想再听你抱怨了。",
+        "englishId": 2122,
+        "english": "I don't want to hear any more of your complaining.",
+        "score": 104
+      },
+      {
+        "chineseId": 406741,
+        "chinese": "我们经常听到你唱歌。",
+        "englishId": 71489,
+        "english": "We often hear you sing.",
+        "score": 104
+      },
+      {
+        "chineseId": 8463640,
+        "chinese": "我整夜都能听到狗叫。",
+        "englishId": 8456700,
+        "english": "I could hear dogs barking all night.",
+        "score": 104
+      },
+      {
+        "chineseId": 4879020,
+        "chinese": "那时候就该听汤姆的。",
+        "englishId": 12135582,
+        "english": "I should've listened to Tom at that time.",
+        "score": 104
+      },
+      {
+        "chineseId": 763742,
+        "chinese": "我听到这个非常开心。",
+        "englishId": 254848,
+        "english": "I am supremely glad to hear it.",
+        "score": 104
+      },
+      {
+        "chineseId": 774433,
+        "chinese": "我听到窗外有人大叫。",
+        "englishId": 274179,
+        "english": "I heard someone shout outside the window.",
+        "score": 104
+      },
+      {
+        "chineseId": 11239871,
+        "chinese": "我放松时会听古典乐。",
+        "englishId": 11239867,
+        "english": "I relax while listening to classical music.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "看",
+    "hskLevel": 1,
+    "candidateCount": 2627,
+    "candidates": [
+      {
+        "chineseId": 9534809,
+        "chinese": "看起来他什么都知道。",
+        "englishId": 290359,
+        "english": "It seems that he knows everything.",
+        "score": 106
+      },
+      {
+        "chineseId": 332711,
+        "chinese": "看那座被雪覆盖的山。",
+        "englishId": 68030,
+        "english": "Look at that mountain which is covered with snow.",
+        "score": 106
+      },
+      {
+        "chineseId": 345705,
+        "chinese": "看來快要颳暴風雨了。",
+        "englishId": 326653,
+        "english": "It seems that there will be a storm soon.",
+        "score": 106
+      },
+      {
+        "chineseId": 372211,
+        "chinese": "看來你已經決定好了。",
+        "englishId": 240991,
+        "english": "I see your mind's made up.",
+        "score": 106
+      },
+      {
+        "chineseId": 780379,
+        "chinese": "看見那樣, 他站了起來。",
+        "englishId": 569701,
+        "english": "Seeing that, he stood up.",
+        "score": 106
+      },
+      {
+        "chineseId": 785971,
+        "chinese": "看到他的帽子，她笑了。",
+        "englishId": 316442,
+        "english": "She laughed at the sight of his hat.",
+        "score": 106
+      },
+      {
+        "chineseId": 894056,
+        "chinese": "看看桌上的那張相片。",
+        "englishId": 20583,
+        "english": "Look at that picture on the desk.",
+        "score": 106
+      },
+      {
+        "chineseId": 5576766,
+        "chinese": "看来他会在下个月来。",
+        "englishId": 519418,
+        "english": "It looks like he'll be coming here next month.",
+        "score": 106
+      },
+      {
+        "chineseId": 5631906,
+        "chinese": "看起来全都太奇怪了。",
+        "englishId": 3820559,
+        "english": "It all seems so strange.",
+        "score": 106
+      },
+      {
+        "chineseId": 5906570,
+        "chinese": "看外面正在发生什么。",
+        "englishId": 5906524,
+        "english": "Look at what's happening outside.",
+        "score": 106
+      },
+      {
+        "chineseId": 5907501,
+        "chinese": "看来汤姆热恋着玛丽。",
+        "englishId": 2539138,
+        "english": "It looks like Tom has a crush on Mary.",
+        "score": 106
+      },
+      {
+        "chineseId": 7841409,
+        "chinese": "看来她已经收到了钱。",
+        "englishId": 313114,
+        "english": "It seemed that she had already received the money.",
+        "score": 106
+      }
+    ]
+  },
+  {
+    "target": "去",
+    "hskLevel": 1,
+    "candidateCount": 3728,
+    "candidates": [
+      {
+        "chineseId": 6142573,
+        "chinese": "去歷史系或者教育系。",
+        "englishId": 7803081,
+        "english": "Go to the history department or education department.",
+        "score": 106
+      },
+      {
+        "chineseId": 336682,
+        "chinese": "去年冬天下了好多雪。",
+        "englishId": 19429,
+        "english": "There was a lot of snow last winter.",
+        "score": 106
+      },
+      {
+        "chineseId": 13519205,
+        "chinese": "去南韓的機票多少錢？",
+        "englishId": 13185723,
+        "english": "How much is a plane ticket to South Korea?",
+        "score": 106
+      },
+      {
+        "chineseId": 802094,
+        "chinese": "去年我從高中畢業了。",
+        "englishId": 11092242,
+        "english": "I finished high school last year.",
+        "score": 106
+      },
+      {
+        "chineseId": 802093,
+        "chinese": "去年她從高中畢業了。",
+        "englishId": 313213,
+        "english": "She graduated from high school last year.",
+        "score": 106
+      },
+      {
+        "chineseId": 385104,
+        "chinese": "去年八月份你在哪儿？",
+        "englishId": 6389644,
+        "english": "Where were you in August last year?",
+        "score": 106
+      },
+      {
+        "chineseId": 777713,
+        "chinese": "我們將要去爬那座山。",
+        "englishId": 68370,
+        "english": "We are going to climb that mountain.",
+        "score": 104
+      },
+      {
+        "chineseId": 332832,
+        "chinese": "你会代替我去派对吗？",
+        "englishId": 251405,
+        "english": "Will you go to the party instead of me?",
+        "score": 104
+      },
+      {
+        "chineseId": 333111,
+        "chinese": "我登上去伦敦的火车。",
+        "englishId": 29257,
+        "english": "I got on the train for London.",
+        "score": 104
+      },
+      {
+        "chineseId": 13890322,
+        "chinese": "汤姆往冰箱里面看去。",
+        "englishId": 3122258,
+        "english": "Tom looked into the fridge.",
+        "score": 104
+      },
+      {
+        "chineseId": 13881405,
+        "chinese": "我不会让你跳下去的。",
+        "englishId": 13881459,
+        "english": "I won't let you jump down.",
+        "score": 104
+      },
+      {
+        "chineseId": 333434,
+        "chinese": "我们过去常在公园玩。",
+        "englishId": 248379,
+        "english": "We used to play in the park.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "来",
+    "hskLevel": 1,
+    "candidateCount": 2310,
+    "candidates": [
+      {
+        "chineseId": 1397392,
+        "chinese": "来抽签决定谁先走吧。",
+        "englishId": 63035,
+        "english": "Let's draw lots to decide who goes first.",
+        "score": 106
+      },
+      {
+        "chineseId": 1397017,
+        "chinese": "来好好利用大周末吧。",
+        "englishId": 278050,
+        "english": "Let's take advantage of the long weekend.",
+        "score": 106
+      },
+      {
+        "chineseId": 9501195,
+        "chinese": "汤姆看起来有点惊讶。",
+        "englishId": 8367402,
+        "english": "Tom looked a little startled.",
+        "score": 104
+      },
+      {
+        "chineseId": 75,
+        "chinese": "你是从哪个国家来的？",
+        "englishId": 679856,
+        "english": "What country are you from?",
+        "score": 104
+      },
+      {
+        "chineseId": 332894,
+        "chinese": "他进来的同时，铃响了。",
+        "englishId": 284085,
+        "english": "He came in, and at the same time the bell rang.",
+        "score": 104
+      },
+      {
+        "chineseId": 333042,
+        "chinese": "这辆车保养起来很贵。",
+        "englishId": 58753,
+        "english": "It is expensive running this car.",
+        "score": 104
+      },
+      {
+        "chineseId": 13999384,
+        "chinese": "他从来都没有爱过我。",
+        "englishId": 13910300,
+        "english": "He never loved me.",
+        "score": 104
+      },
+      {
+        "chineseId": 13994839,
+        "chinese": "告诉汤姆我要回来了。",
+        "englishId": 3200094,
+        "english": "Tell Tom I'm coming back.",
+        "score": 104
+      },
+      {
+        "chineseId": 335057,
+        "chinese": "为什么你不来看我们？",
+        "englishId": 1439,
+        "english": "Why don't you come visit us?",
+        "score": 104
+      },
+      {
+        "chineseId": 335064,
+        "chinese": "你从来没课还是怎样？",
+        "englishId": 1429,
+        "english": "You never have class or what?!",
+        "score": 104
+      },
+      {
+        "chineseId": 335284,
+        "chinese": "你想把耳朵露出来吗？",
+        "englishId": 264399,
+        "english": "Would you like your ears to show?",
+        "score": 104
+      },
+      {
+        "chineseId": 335532,
+        "chinese": "你本应该来得更早的。",
+        "englishId": 16378,
+        "english": "You should have come earlier.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "坐",
+    "hskLevel": 1,
+    "candidateCount": 393,
+    "candidates": [
+      {
+        "chineseId": 811924,
+        "chinese": "坐飛機將花你多少錢？",
+        "englishId": 317999,
+        "english": "How much will it cost you to go by air?",
+        "score": 106
+      },
+      {
+        "chineseId": 864330,
+        "chinese": "瑪麗正坐在辦公桌旁。",
+        "englishId": 31949,
+        "english": "Mary is sitting at the desk.",
+        "score": 104
+      },
+      {
+        "chineseId": 361880,
+        "chinese": "這張椅子坐得很舒服。",
+        "englishId": 61332,
+        "english": "I feel quite at ease when I sit in this chair.",
+        "score": 104
+      },
+      {
+        "chineseId": 405261,
+        "chinese": "大家都想坐在她旁边。",
+        "englishId": 32165,
+        "english": "Everybody wants to sit beside her.",
+        "score": 104
+      },
+      {
+        "chineseId": 13498144,
+        "chinese": "我們老師坐車去學校。",
+        "englishId": 13575927,
+        "english": "Our teacher goes to school by car.",
+        "score": 104
+      },
+      {
+        "chineseId": 453731,
+        "chinese": "他坐在那里看着窗外。",
+        "englishId": 2754968,
+        "english": "He sat there looking out the window.",
+        "score": 104
+      },
+      {
+        "chineseId": 9401515,
+        "chinese": "萨米坐在游泳池旁边。",
+        "englishId": 13545868,
+        "english": "Sami is sitting by the swimming pool.",
+        "score": 104
+      },
+      {
+        "chineseId": 710750,
+        "chinese": "我從來沒有坐過飛機。",
+        "englishId": 261428,
+        "english": "I've never flown in an airplane.",
+        "score": 104
+      },
+      {
+        "chineseId": 13249539,
+        "chinese": "我們一起舒服地坐著。",
+        "englishId": 7155802,
+        "english": "We sit comfortably together.",
+        "score": 104
+      },
+      {
+        "chineseId": 793299,
+        "chinese": "你愛坐哪裡就坐哪裡。",
+        "englishId": 64505,
+        "english": "Sit wherever you like.",
+        "score": 104
+      },
+      {
+        "chineseId": 345975,
+        "chinese": "我們一言不發地坐著。",
+        "englishId": 273688,
+        "english": "We sat in total silence.",
+        "score": 104
+      },
+      {
+        "chineseId": 826293,
+        "chinese": "讓我們坐公共汽車去。",
+        "englishId": 450028,
+        "english": "Let's go by bus.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "吃",
+    "hskLevel": 1,
+    "candidateCount": 1671,
+    "candidates": [
+      {
+        "chineseId": 4265770,
+        "chinese": "吃生蛋可能是危險的。",
+        "englishId": 4770634,
+        "english": "Eating raw eggs could be bad for you.",
+        "score": 106
+      },
+      {
+        "chineseId": 5854742,
+        "chinese": "吃完飯，大家都很累了。",
+        "englishId": 7794440,
+        "english": "After eating the meal, everyone is tired.",
+        "score": 106
+      },
+      {
+        "chineseId": 512929,
+        "chinese": "吃得太多对健康不好。",
+        "englishId": 536360,
+        "english": "Eating too much is bad for your health.",
+        "score": 106
+      },
+      {
+        "chineseId": 1878291,
+        "chinese": "吃鱼有益于你的健康。",
+        "englishId": 19341,
+        "english": "Eating fish is good for your health.",
+        "score": 106
+      },
+      {
+        "chineseId": 834364,
+        "chinese": "他常常在那裡吃早餐。",
+        "englishId": 290089,
+        "english": "He often eats breakfast there.",
+        "score": 104
+      },
+      {
+        "chineseId": 344982,
+        "chinese": "我吃完晚飯後看電視。",
+        "englishId": 262091,
+        "english": "I watch television after supper.",
+        "score": 104
+      },
+      {
+        "chineseId": 375444,
+        "chinese": "艾美莉晚餐吃了豆腐。",
+        "englishId": 65276,
+        "english": "Emily ate tofu at dinner.",
+        "score": 104
+      },
+      {
+        "chineseId": 379103,
+        "chinese": "這個蘋果是最好吃的。",
+        "englishId": 60355,
+        "english": "This is the most delicious apple.",
+        "score": 104
+      },
+      {
+        "chineseId": 13943520,
+        "chinese": "你早餐想吃水煮蛋吗？",
+        "englishId": 277776,
+        "english": "Do you want a boiled egg for breakfast?",
+        "score": 104
+      },
+      {
+        "chineseId": 5581626,
+        "chinese": "我一吃冰淇淋就高興。",
+        "englishId": 920260,
+        "english": "Eating ice cream always puts me in a happy mood.",
+        "score": 104
+      },
+      {
+        "chineseId": 10059152,
+        "chinese": "每天吃无花果健康吗？",
+        "englishId": 10059140,
+        "english": "Is it OK to eat figs every day?",
+        "score": 104
+      },
+      {
+        "chineseId": 392921,
+        "chinese": "你今早有沒有吃早餐？",
+        "englishId": 242153,
+        "english": "Did you have breakfast this morning?",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "喝",
+    "hskLevel": 1,
+    "candidateCount": 575,
+    "candidates": [
+      {
+        "chineseId": 7768201,
+        "chinese": "喝红酒是不是还太早？",
+        "englishId": 2347033,
+        "english": "Is it too early for red wine?",
+        "score": 106
+      },
+      {
+        "chineseId": 1644403,
+        "chinese": "喝完之後就得離開喔。",
+        "englishId": 9401962,
+        "english": "We need to go after drinking.",
+        "score": 106
+      },
+      {
+        "chineseId": 10724580,
+        "chinese": "我在跟幾個朋友喝酒。",
+        "englishId": 7779327,
+        "english": "Me and a few friends are drinking wine.",
+        "score": 104
+      },
+      {
+        "chineseId": 13890618,
+        "chinese": "那个男人想喝点东西。",
+        "englishId": 45336,
+        "english": "The man wanted to have a drink.",
+        "score": 104
+      },
+      {
+        "chineseId": 346112,
+        "chinese": "這碗湯大鹹了，喝不下。",
+        "englishId": 60994,
+        "english": "This soup is too salty to eat.",
+        "score": 104
+      },
+      {
+        "chineseId": 348883,
+        "chinese": "你喜欢喝茶；还是咖啡？",
+        "englishId": 64220,
+        "english": "Which would you rather have, tea or coffee?",
+        "score": 104
+      },
+      {
+        "chineseId": 349275,
+        "chinese": "为什么喜欢喝浓咖啡？",
+        "englishId": 36465,
+        "english": "Why do you like coffee strong?",
+        "score": 104
+      },
+      {
+        "chineseId": 366829,
+        "chinese": "恐怕咖啡已經喝完了。",
+        "englishId": 62238,
+        "english": "I'm afraid there isn't any coffee left.",
+        "score": 104
+      },
+      {
+        "chineseId": 369123,
+        "chinese": "我給你買點東西喝吧。",
+        "englishId": 71096,
+        "english": "Let me get you something to drink.",
+        "score": 104
+      },
+      {
+        "chineseId": 13544343,
+        "chinese": "我喝咖啡通常加牛奶。",
+        "englishId": 5112670,
+        "english": "I usually drink my coffee with milk.",
+        "score": 104
+      },
+      {
+        "chineseId": 435711,
+        "chinese": "他喝咖啡不喜歡加糖。",
+        "englishId": 296685,
+        "english": "He likes coffee without sugar.",
+        "score": 104
+      },
+      {
+        "chineseId": 691985,
+        "chinese": "我爸爸不吸煙、不喝酒。",
+        "englishId": 251642,
+        "english": "My father neither smokes nor drinks.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "睡觉",
+    "hskLevel": 1,
+    "candidateCount": 161,
+    "candidates": [
+      {
+        "chineseId": 7774351,
+        "chinese": "我很累，还没地方睡觉。",
+        "englishId": 7105613,
+        "english": "I'm very tired and don't have a place to sleep.",
+        "score": 104
+      },
+      {
+        "chineseId": 333718,
+        "chinese": "我睡觉前总要洗个澡。",
+        "englishId": 254902,
+        "english": "I always take a bath before going to bed.",
+        "score": 104
+      },
+      {
+        "chineseId": 333994,
+        "chinese": "他白天睡觉，晚上工作。",
+        "englishId": 1211531,
+        "english": "He sleeps during the day and works at night.",
+        "score": 104
+      },
+      {
+        "chineseId": 465507,
+        "chinese": "在地毯上睡觉好极了。",
+        "englishId": 465502,
+        "english": "Sleeping on a carpet is great.",
+        "score": 104
+      },
+      {
+        "chineseId": 674239,
+        "chinese": "昨天我十点去睡觉了。",
+        "englishId": 1113624,
+        "english": "I went to bed at ten yesterday.",
+        "score": 104
+      },
+      {
+        "chineseId": 5684086,
+        "chinese": "我听着噪音不能睡觉。",
+        "englishId": 5373198,
+        "english": "I can't sleep with all that noise.",
+        "score": 104
+      },
+      {
+        "chineseId": 5919880,
+        "chinese": "这是我去睡觉的地方。",
+        "englishId": 2454447,
+        "english": "This is where I sleep.",
+        "score": 104
+      },
+      {
+        "chineseId": 796768,
+        "chinese": "请安静！孩子们在睡觉。",
+        "englishId": 272035,
+        "english": "Be quiet. The kids are asleep.",
+        "score": 104
+      },
+      {
+        "chineseId": 1416273,
+        "chinese": "上床睡觉之前请关灯。",
+        "englishId": 1490637,
+        "english": "Please turn off the light before you go to sleep.",
+        "score": 104
+      },
+      {
+        "chineseId": 939776,
+        "chinese": "我的妻子在试图睡觉。",
+        "englishId": 63572,
+        "english": "My wife's trying to sleep.",
+        "score": 104
+      },
+      {
+        "chineseId": 2782522,
+        "chinese": "我不能吵，宝宝在睡觉。",
+        "englishId": 1725219,
+        "english": "I cannot make noise. The baby is sleeping.",
+        "score": 104
+      },
+      {
+        "chineseId": 5574496,
+        "chinese": "我在公交车上睡觉了。",
+        "englishId": 4077314,
+        "english": "I slept on the bus.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "工作",
+    "hskLevel": 1,
+    "candidateCount": 977,
+    "candidates": [
+      {
+        "chineseId": 5763042,
+        "chinese": "工作之前先收好思绪。",
+        "englishId": 245325,
+        "english": "Collect your thoughts before you begin your work.",
+        "score": 106
+      },
+      {
+        "chineseId": 993690,
+        "chinese": "工作之后我直接回家。",
+        "englishId": 997830,
+        "english": "After work I go straight home.",
+        "score": 106
+      },
+      {
+        "chineseId": 795802,
+        "chinese": "他無法得到這份工作。",
+        "englishId": 47600,
+        "english": "He couldn't get the job.",
+        "score": 104
+      },
+      {
+        "chineseId": 333994,
+        "chinese": "他白天睡觉，晚上工作。",
+        "englishId": 1211531,
+        "english": "He sleeps during the day and works at night.",
+        "score": 104
+      },
+      {
+        "chineseId": 346010,
+        "chinese": "我會活到老工作到老。",
+        "englishId": 258983,
+        "english": "I'll work as long as I live.",
+        "score": 104
+      },
+      {
+        "chineseId": 13807623,
+        "chinese": "湯姆得找下一份工作。",
+        "englishId": 10895214,
+        "english": "Tom will have to find another job.",
+        "score": 104
+      },
+      {
+        "chineseId": 406420,
+        "chinese": "他從早上工作到夜晚。",
+        "englishId": 13559238,
+        "english": "He worked from morning until night.",
+        "score": 104
+      },
+      {
+        "chineseId": 348930,
+        "chinese": "我工作了一整天，很累。",
+        "englishId": 256099,
+        "english": "I'm very tired from working all day.",
+        "score": 104
+      },
+      {
+        "chineseId": 357930,
+        "chinese": "我努力工作养家糊口。",
+        "englishId": 256523,
+        "english": "I worked hard in order to support my family.",
+        "score": 104
+      },
+      {
+        "chineseId": 383385,
+        "chinese": "你把工作做完了沒有？",
+        "englishId": 47601,
+        "english": "Are you through with the work?",
+        "score": 104
+      },
+      {
+        "chineseId": 390931,
+        "chinese": "他年輕時很勤奮工作。",
+        "englishId": 265734,
+        "english": "In his younger days he worked very hard.",
+        "score": 104
+      },
+      {
+        "chineseId": 6452028,
+        "chinese": "我必须立刻开始工作。",
+        "englishId": 6452030,
+        "english": "I must start working at once.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "家",
+    "hskLevel": 1,
+    "candidateCount": 2346,
+    "candidates": [
+      {
+        "chineseId": 6288100,
+        "chinese": "家裡人一起吃了晚飯。",
+        "englishId": 49308,
+        "english": "The family ate dinner together.",
+        "score": 106
+      },
+      {
+        "chineseId": 838640,
+        "chinese": "他順道去了這家書店。",
+        "englishId": 303802,
+        "english": "He dropped in at the bookstore.",
+        "score": 104
+      },
+      {
+        "chineseId": 75,
+        "chinese": "你是从哪个国家来的？",
+        "englishId": 679856,
+        "english": "What country are you from?",
+        "score": 104
+      },
+      {
+        "chineseId": 332903,
+        "chinese": "昨晚我邻居家着火了。",
+        "englishId": 244732,
+        "english": "A fire broke out in my neighborhood last night.",
+        "score": 104
+      },
+      {
+        "chineseId": 14007085,
+        "chinese": "湯姆會在家等我們的。",
+        "englishId": 11961745,
+        "english": "Tom will be waiting for us at home.",
+        "score": 104
+      },
+      {
+        "chineseId": 334785,
+        "chinese": "我很抱歉那么晚回家。",
+        "englishId": 20433,
+        "english": "I'm very sorry I came home so late.",
+        "score": 104
+      },
+      {
+        "chineseId": 335890,
+        "chinese": "他十年中第一次回家。",
+        "englishId": 73396,
+        "english": "He returned home for the first time in ten years.",
+        "score": 104
+      },
+      {
+        "chineseId": 13914753,
+        "chinese": "他从不把工资带回家。",
+        "englishId": 4874216,
+        "english": "He never brings the paycheck home.",
+        "score": 104
+      },
+      {
+        "chineseId": 343216,
+        "chinese": "他是有錢人家的兒子。",
+        "englishId": 304463,
+        "english": "He is the son of a wealthy family.",
+        "score": 104
+      },
+      {
+        "chineseId": 345924,
+        "chinese": "日本是个富有的国家。",
+        "englishId": 281606,
+        "english": "Japan is a rich country.",
+        "score": 104
+      },
+      {
+        "chineseId": 13881215,
+        "chinese": "他家的布局非常温馨。",
+        "englishId": 6218470,
+        "english": "His home is furnished in a very cozy way.",
+        "score": 104
+      },
+      {
+        "chineseId": 13665608,
+        "chinese": "我陪家人度過聖誕夜。",
+        "englishId": 2267234,
+        "english": "I'm spending Christmas Eve with my family.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "考试",
+    "hskLevel": 2,
+    "candidateCount": 73,
+    "candidates": [
+      {
+        "chineseId": 5911659,
+        "chinese": "他考试失败了，但他不太在意。",
+        "englishId": 298272,
+        "english": "He failed the exam, but he doesn't care too much.",
+        "score": 104
+      },
+      {
+        "chineseId": 11837364,
+        "chinese": "我正在准备明天的数学考试。",
+        "englishId": 11837365,
+        "english": "I am preparing for tomorrow's math exam.",
+        "score": 104
+      },
+      {
+        "chineseId": 11837360,
+        "chinese": "我们下周有一场重要的考试。",
+        "englishId": 11837361,
+        "english": "We have an important exam next week.",
+        "score": 104
+      },
+      {
+        "chineseId": 1324993,
+        "chinese": "她有勇气去查询考试的结果。",
+        "englishId": 1790826,
+        "english": "She had the courage to go and inquire about the results of the exam.",
+        "score": 104
+      },
+      {
+        "chineseId": 3065791,
+        "chinese": "全部的学生们都考试及格了。",
+        "englishId": 2951488,
+        "english": "All the students passed the test.",
+        "score": 104
+      },
+      {
+        "chineseId": 1300706,
+        "chinese": "考试不及格意味着再等待一年。",
+        "englishId": 263456,
+        "english": "Failing the examination means waiting for another year.",
+        "score": 103
+      },
+      {
+        "chineseId": 473013,
+        "chinese": "考试后，我们对了一下写的答案。",
+        "englishId": 39452,
+        "english": "After the exam we compared the answers we'd written.",
+        "score": 103
+      },
+      {
+        "chineseId": 333834,
+        "chinese": "节日和考试碰巧在同一天。",
+        "englishId": 64481,
+        "english": "The date of the festival coincides with that of the exam.",
+        "score": 101
+      },
+      {
+        "chineseId": 334668,
+        "chinese": "好好努力，你就能通过考试。",
+        "englishId": 27548,
+        "english": "Work hard, and you will pass the examination.",
+        "score": 101
+      },
+      {
+        "chineseId": 1416248,
+        "chinese": "这个学期我们有两次考试。",
+        "englishId": 241988,
+        "english": "We have two examinations during this term.",
+        "score": 101
+      },
+      {
+        "chineseId": 839833,
+        "chinese": "田中先生好像通过了考试。",
+        "englishId": 355184,
+        "english": "It seems that Mr Tanaka has passed the exam.",
+        "score": 101
+      },
+      {
+        "chineseId": 869142,
+        "chinese": "今天我们有一场数学考试。",
+        "englishId": 248707,
+        "english": "We had an examination in mathematics today.",
+        "score": 101
+      }
+    ]
+  },
+  {
+    "target": "图书馆",
+    "hskLevel": 2,
+    "candidateCount": 69,
+    "candidates": [
+      {
+        "chineseId": 8589633,
+        "chinese": "我记得我把书还到图书馆了。",
+        "englishId": 43885,
+        "english": "I remember returning the book to the library.",
+        "score": 104
+      },
+      {
+        "chineseId": 333746,
+        "chinese": "他们给图书馆提供了很多书。",
+        "englishId": 8920069,
+        "english": "They've furnished the library with a lot of books.",
+        "score": 104
+      },
+      {
+        "chineseId": 963656,
+        "chinese": "请不要在图书馆的书上涂写。",
+        "englishId": 963650,
+        "english": "Please do not write in this library book.",
+        "score": 104
+      },
+      {
+        "chineseId": 1577239,
+        "chinese": "我突然想到，他可能在图书馆 。",
+        "englishId": 1577255,
+        "english": "It occurred to me that he might be in the library.",
+        "score": 104
+      },
+      {
+        "chineseId": 1659820,
+        "chinese": "我们学校的图书馆藏书很多。",
+        "englishId": 1663379,
+        "english": "There are a lot of books in our school's library.",
+        "score": 104
+      },
+      {
+        "chineseId": 464852,
+        "chinese": "我今天得把这本书还给图书馆。",
+        "englishId": 253748,
+        "english": "I have to return this book to the library today.",
+        "score": 101
+      },
+      {
+        "chineseId": 705011,
+        "chinese": "有时我会在图书馆看见他。",
+        "englishId": 255199,
+        "english": "I see him in the library now and then.",
+        "score": 101
+      },
+      {
+        "chineseId": 3538014,
+        "chinese": "我校图书馆藏书二百五十万册。",
+        "englishId": 7779336,
+        "english": "My school library has a collection of 2.5 million books.",
+        "score": 101
+      },
+      {
+        "chineseId": 8932585,
+        "chinese": "她丢了很多的图书馆的书。",
+        "englishId": 1818758,
+        "english": "She lost many library books.",
+        "score": 101
+      },
+      {
+        "chineseId": 9990153,
+        "chinese": "图书馆是我最喜欢去的地方之一。",
+        "englishId": 10278555,
+        "english": "The library is one of my favorite places.",
+        "score": 100
+      },
+      {
+        "chineseId": 9981203,
+        "chinese": "图书馆里总是有很多人。",
+        "englishId": 1165482,
+        "english": "There are always many people in the library.",
+        "score": 100
+      },
+      {
+        "chineseId": 344209,
+        "chinese": "美国的每个城市都有一个图书馆。",
+        "englishId": 853126,
+        "english": "There is a library in every city in America.",
+        "score": 98
+      }
+    ]
+  },
+  {
+    "target": "黑板",
+    "hskLevel": 2,
+    "candidateCount": 26,
+    "candidates": [
+      {
+        "chineseId": 13573494,
+        "chinese": "拿起這支粉筆，在黑板上寫字。",
+        "englishId": 60896,
+        "english": "Take this piece of chalk and write on the blackboard.",
+        "score": 104
+      },
+      {
+        "chineseId": 13573459,
+        "chinese": "老師開始拿萊拉的頭猛擊黑板。",
+        "englishId": 7039473,
+        "english": "The teacher started hitting Layla's head against the blackboard.",
+        "score": 101
+      },
+      {
+        "chineseId": 13573488,
+        "chinese": "湯姆在黑板上寫了些什麼。",
+        "englishId": 4016929,
+        "english": "Tom wrote something on the blackboard.",
+        "score": 101
+      },
+      {
+        "chineseId": 8637454,
+        "chinese": "每个人到黑板前写下自己的名字。",
+        "englishId": 8637455,
+        "english": "Everyone came to the blackboard to write down their name.",
+        "score": 98
+      },
+      {
+        "chineseId": 13573491,
+        "chinese": "湯姆在黑板上寫了什麼？",
+        "englishId": 7857826,
+        "english": "What did Tom write on the blackboard?",
+        "score": 98
+      },
+      {
+        "chineseId": 3660673,
+        "chinese": "黑板的句子被抹掉了。",
+        "englishId": 7830345,
+        "english": "The sentence on the blackboard was erased.",
+        "score": 97
+      },
+      {
+        "chineseId": 13573481,
+        "chinese": "她在黑板上寫了什麼？",
+        "englishId": 8763566,
+        "english": "What did she write on the blackboard?",
+        "score": 95
+      },
+      {
+        "chineseId": 458818,
+        "chinese": "比較一下你寫的句子和黑板上的句子。",
+        "englishId": 17659,
+        "english": "Compare your sentence with the one on the blackboard.",
+        "score": 92
+      },
+      {
+        "chineseId": 1706518,
+        "chinese": "我们的数学老师在黑板上画了一个圆。",
+        "englishId": 247580,
+        "english": "Our math teacher drew a circle on the blackboard.",
+        "score": 92
+      },
+      {
+        "chineseId": 13573484,
+        "chinese": "黑板需要擦擦了。",
+        "englishId": 12079089,
+        "english": "The blackboard needs erasing.",
+        "score": 91
+      },
+      {
+        "chineseId": 402290,
+        "chinese": "請大家看看黑板。",
+        "englishId": 22126,
+        "english": "Look at the blackboard, everyone.",
+        "score": 89
+      },
+      {
+        "chineseId": 3338935,
+        "chinese": "我为老师擦黑板。",
+        "englishId": 2325182,
+        "english": "I erased the blackboard for the teacher.",
+        "score": 89
+      }
+    ]
+  },
+  {
+    "target": "练习",
+    "hskLevel": 2,
+    "candidateCount": 7,
+    "candidates": [
+      {
+        "chineseId": 1020102,
+        "chinese": "你可以和我一起练习日语吗？",
+        "englishId": 476034,
+        "english": "Can you practice Japanese with me?",
+        "score": 104
+      },
+      {
+        "chineseId": 380887,
+        "chinese": "是的，你需要每天练习。",
+        "englishId": 51122,
+        "english": "Yes, you need to practice every day.",
+        "score": 95
+      },
+      {
+        "chineseId": 899112,
+        "chinese": "我平时每天可能练习一个小时汉字。",
+        "englishId": 899113,
+        "english": "Normally I might study Chinese characters for an hour a day.",
+        "score": 95
+      },
+      {
+        "chineseId": 8932437,
+        "chinese": "她在开始练习。",
+        "englishId": 7905798,
+        "english": "She's starting to practice.",
+        "score": 86
+      },
+      {
+        "chineseId": 2278873,
+        "chinese": "如果你把你抱怨的时间用在练习篮球上，你或许早已不必抱怨。",
+        "englishId": 2285881,
+        "english": "If you used the time you spent complaining practicing your basketball, then maybe you would have stopped complaining a long time ago.",
+        "score": 62
+      },
+      {
+        "chineseId": 899116,
+        "chinese": "可想而知我在学汉字上花太多时间，所以我应该更好地练习语言的其他方面。",
+        "englishId": 899117,
+        "english": "It's obvious that I spend too much time studying Chinese characters, so I ought to study other aspects of the language more.",
+        "score": 44
+      },
+      {
+        "chineseId": 1878389,
+        "chinese": "并不是我不喜欢你的英语，只是对我而言，利用每一个可能的机会来练习俄语很重要。",
+        "englishId": 1877698,
+        "english": "It's not that I don't like your English, but for me it's important to use every opportunity to practise Russian.",
+        "score": 35
+      }
+    ]
+  },
+  {
+    "target": "课程",
+    "hskLevel": 2,
+    "candidateCount": 7,
+    "candidates": [
+      {
+        "chineseId": 8741556,
+        "chinese": "你应该去上婴儿心肺复苏课程。",
+        "englishId": 6583382,
+        "english": "You should really take an infant CPR class.",
+        "score": 101
+      },
+      {
+        "chineseId": 13887461,
+        "chinese": "所以你也打算选这门课程啊！",
+        "englishId": 2584021,
+        "english": "So you're planning to follow this course as well!",
+        "score": 100
+      },
+      {
+        "chineseId": 335267,
+        "chinese": "她在夜校上自卫术课程。",
+        "englishId": 313549,
+        "english": "She took night classes in the art of self-defense.",
+        "score": 98
+      },
+      {
+        "chineseId": 863286,
+        "chinese": "烹饪课程应该作为学校的必修课。",
+        "englishId": 325772,
+        "english": "A cooking course should be mandatory in schools.",
+        "score": 98
+      },
+      {
+        "chineseId": 466017,
+        "chinese": "当我到学校的时候，课程已经结束了。",
+        "englishId": 7776819,
+        "english": "By the time I arrived at the school, the class had already finished.",
+        "score": 95
+      },
+      {
+        "chineseId": 6484853,
+        "chinese": "明天是运动会的排练，没有往常的课程。",
+        "englishId": 533370,
+        "english": "Tomorrow there will be no normal lessons, in view of the athletic meet rehearsal.",
+        "score": 92
+      },
+      {
+        "chineseId": 2694357,
+        "chinese": "课程下周开始。",
+        "englishId": 881014,
+        "english": "Classes begin next week.",
+        "score": 88
+      }
+    ]
+  },
+  {
+    "target": "成绩",
+    "hskLevel": 2,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 2152762,
+        "chinese": "这样辉煌的成绩，是如何取得的？",
+        "englishId": 2159275,
+        "english": "How can one achieve such brilliant results?",
+        "score": 101
+      },
+      {
+        "chineseId": 334577,
+        "chinese": "他以优异的成绩毕业于剑桥大学。",
+        "englishId": 289799,
+        "english": "He graduated from Cambridge with honors.",
+        "score": 98
+      },
+      {
+        "chineseId": 2367506,
+        "chinese": "不管缺点怎么多，成绩还是最主要的。",
+        "englishId": 2367507,
+        "english": "No matter how many faults there are, our achievements are the main thing.",
+        "score": 95
+      },
+      {
+        "chineseId": 1891638,
+        "chinese": "他的学习成绩很好。",
+        "englishId": 285787,
+        "english": "He has a good school record.",
+        "score": 92
+      },
+      {
+        "chineseId": 343433,
+        "chinese": "她英语成绩很好。",
+        "englishId": 7808085,
+        "english": "Her grade in English was very good.",
+        "score": 89
+      },
+      {
+        "chineseId": 9972927,
+        "chinese": "你成绩比我好。",
+        "englishId": 3831451,
+        "english": "Your grades are better than mine.",
+        "score": 86
+      },
+      {
+        "chineseId": 746471,
+        "chinese": "尽管他考试成绩不高，但他毕业后还是很成功。",
+        "englishId": 746472,
+        "english": "Although his exam scores weren't very high, he was still successful after graduation.",
+        "score": 83
+      },
+      {
+        "chineseId": 2333770,
+        "chinese": "汤姆的科学成绩比班上的任何一个人都要好。",
+        "englishId": 37333,
+        "english": "Tom is better at science than anyone else in his class.",
+        "score": 83
+      },
+      {
+        "chineseId": 334698,
+        "chinese": "我希望可以更紧张我的成绩，但是似乎在我生命的某一刻，我决定它将不再那么重要了。",
+        "englishId": 1502,
+        "english": "I wish I could care more about my grades but it seems that, at a certain point of my life, I decided they wouldn't be so important anymore.",
+        "score": 7
+      }
+    ]
+  },
+  {
+    "target": "讲课",
+    "hskLevel": 2,
+    "candidateCount": 1,
+    "candidates": [
+      {
+        "chineseId": 8765230,
+        "chinese": "假如你在老师讲课的时候再集中一点去听讲的话，你应该就能弄明白了。",
+        "englishId": 2464831,
+        "english": "If you'd listen a little more carefully to what the teacher says, you'd probably be able to understand.",
+        "score": 50
+      }
+    ]
+  },
+  {
+    "target": "作业",
+    "hskLevel": 2,
+    "candidateCount": 59,
+    "candidates": [
+      {
+        "chineseId": 5100272,
+        "chinese": "对不起，我忘了作业这回事了。",
+        "englishId": 509618,
+        "english": "I'm sorry, I forgot to do my homework.",
+        "score": 104
+      },
+      {
+        "chineseId": 13893682,
+        "chinese": "我眯了一会之后把作业写了。",
+        "englishId": 3606955,
+        "english": "I did my homework after I took a nap.",
+        "score": 104
+      },
+      {
+        "chineseId": 843497,
+        "chinese": "交作业的截止日期是下周一。",
+        "englishId": 266672,
+        "english": "The homework is due next Monday.",
+        "score": 104
+      },
+      {
+        "chineseId": 8902602,
+        "chinese": "我们的老师给作业给得很多。",
+        "englishId": 2609537,
+        "english": "Our teacher gives out a lot of homework.",
+        "score": 104
+      },
+      {
+        "chineseId": 332544,
+        "chinese": "老师给我们布置了家庭作业。",
+        "englishId": 272954,
+        "english": "The teacher gave us homework.",
+        "score": 104
+      },
+      {
+        "chineseId": 8649709,
+        "chinese": "汤姆拒绝帮玛丽做她的作业。",
+        "englishId": 1849049,
+        "english": "Tom refused to help Mary do her homework.",
+        "score": 104
+      },
+      {
+        "chineseId": 1973240,
+        "chinese": "我弟弟和我在做俄文作业。",
+        "englishId": 7799639,
+        "english": "My brother and I are doing Russian homework.",
+        "score": 101
+      },
+      {
+        "chineseId": 8934268,
+        "chinese": "晚饭后，她马上开始做作业。",
+        "englishId": 317315,
+        "english": "She started doing her homework right after dinner.",
+        "score": 101
+      },
+      {
+        "chineseId": 1695437,
+        "chinese": "看到这些作业，我毫无压力。",
+        "englishId": 1697718,
+        "english": "Seeing those tasks, I did not feel the burden.",
+        "score": 101
+      },
+      {
+        "chineseId": 3672951,
+        "chinese": "这个女孩正在做家庭作业。",
+        "englishId": 3672952,
+        "english": "The girl is doing homework.",
+        "score": 101
+      },
+      {
+        "chineseId": 8685550,
+        "chinese": "抱歉，我把作业落在家里了。",
+        "englishId": 3642454,
+        "english": "I'm sorry, I left my homework at home.",
+        "score": 101
+      },
+      {
+        "chineseId": 5965713,
+        "chinese": "汤姆因为有很多作业不能外出。",
+        "englishId": 1026773,
+        "english": "Tom can't go out because he has a lot of homework.",
+        "score": 101
+      }
+    ]
+  },
+  {
+    "target": "文具",
+    "hskLevel": 2,
+    "candidateCount": 2,
+    "candidates": [
+      {
+        "chineseId": 727804,
+        "chinese": "這些都是他的文具。",
+        "englishId": 727807,
+        "english": "All of this stationery is his.",
+        "score": 92
+      },
+      {
+        "chineseId": 9952512,
+        "chinese": "哪些文具不值得买？",
+        "englishId": 10508998,
+        "english": "What stationery isn't worth buying?",
+        "score": 92
+      }
+    ]
+  },
+  {
+    "target": "教室",
+    "hskLevel": 2,
+    "candidateCount": 38,
+    "candidates": [
+      {
+        "chineseId": 876367,
+        "chinese": "这间教室与那间隔着一堵墙。",
+        "englishId": 876368,
+        "english": "This classroom is separated from that one by a wall.",
+        "score": 104
+      },
+      {
+        "chineseId": 2032308,
+        "chinese": "进教室的时候请把帽子摘了。",
+        "englishId": 19033,
+        "english": "Take off your hat when you enter a classroom.",
+        "score": 104
+      },
+      {
+        "chineseId": 13573508,
+        "chinese": "教室裡只剩下幾個學生了。",
+        "englishId": 11097738,
+        "english": "There were only a few pupils left in the classroom.",
+        "score": 103
+      },
+      {
+        "chineseId": 1516104,
+        "chinese": "教室里没剩下几个学生了。",
+        "englishId": 13576003,
+        "english": "There aren't many students left in the classroom.",
+        "score": 103
+      },
+      {
+        "chineseId": 2277141,
+        "chinese": "張老師每天在教室教學生中文。",
+        "englishId": 2277160,
+        "english": "Teacher Zhang teaches Chinese to his students at school every day.",
+        "score": 101
+      },
+      {
+        "chineseId": 871180,
+        "chinese": "鐘聲一響起，老師就走進了教室。",
+        "englishId": 388846,
+        "english": "As soon as the bell rang, the teacher came into the classroom.",
+        "score": 101
+      },
+      {
+        "chineseId": 13573512,
+        "chinese": "老師要求我們每天都打掃教室。",
+        "englishId": 272957,
+        "english": "The teacher tells us to clean our classroom every day.",
+        "score": 101
+      },
+      {
+        "chineseId": 13573511,
+        "chinese": "我希望我們的教室有冷氣。",
+        "englishId": 19042,
+        "english": "I wish our classroom were air-conditioned.",
+        "score": 101
+      },
+      {
+        "chineseId": 471334,
+        "chinese": "您昨天为什么离开教室？",
+        "englishId": 13575992,
+        "english": "Why did you leave the classroom yesterday?",
+        "score": 98
+      },
+      {
+        "chineseId": 801563,
+        "chinese": "今天教室裡的學生比昨天還要多。",
+        "englishId": 242852,
+        "english": "There are many more students in the classroom today than yesterday.",
+        "score": 98
+      },
+      {
+        "chineseId": 3538033,
+        "chinese": "他仍然还在教室里学习。",
+        "englishId": 13575998,
+        "english": "He is still studying in the classroom.",
+        "score": 98
+      },
+      {
+        "chineseId": 5363945,
+        "chinese": "女孩在教室的角落啜泣。",
+        "englishId": 267859,
+        "english": "The girl was sobbing in the corner of the schoolroom.",
+        "score": 98
+      }
+    ]
+  },
+  {
+    "target": "上课",
+    "hskLevel": 2,
+    "candidateCount": 23,
+    "candidates": [
+      {
+        "chineseId": 835837,
+        "chinese": "我们上课时学了九的根是三。",
+        "englishId": 322003,
+        "english": "We learned at school that the square root of nine is three.",
+        "score": 104
+      },
+      {
+        "chineseId": 926743,
+        "chinese": "在上课时不要与他人讲话。",
+        "englishId": 930425,
+        "english": "Do not talk to others during class!",
+        "score": 101
+      },
+      {
+        "chineseId": 3537625,
+        "chinese": "他上课的时候一直坐在我的旁边。",
+        "englishId": 3537626,
+        "english": "When he's in class, he continuously sits next to me.",
+        "score": 98
+      },
+      {
+        "chineseId": 838505,
+        "chinese": "我们九点上课，可是他九点一刻才来。",
+        "englishId": 838506,
+        "english": "We start class at nine o'clock, but he didn’t come until quarter past.",
+        "score": 95
+      },
+      {
+        "chineseId": 2325065,
+        "chinese": "他因为生病没来上课。",
+        "englishId": 303117,
+        "english": "He was absent from school on account of illness.",
+        "score": 95
+      },
+      {
+        "chineseId": 8293438,
+        "chinese": "我们明天下午不上课。",
+        "englishId": 9164551,
+        "english": "We don't have class tomorrow afternoon.",
+        "score": 95
+      },
+      {
+        "chineseId": 332951,
+        "chinese": "学校8点半开始上课。",
+        "englishId": 21549,
+        "english": "School begins at eight-thirty.",
+        "score": 92
+      },
+      {
+        "chineseId": 838496,
+        "chinese": "我们早上九点上课，可是他八点就来了。",
+        "englishId": 838498,
+        "english": "We start class at 9am, but he came as early as 8 o’clock.",
+        "score": 92
+      },
+      {
+        "chineseId": 3378245,
+        "chinese": "你什么时候去上课？",
+        "englishId": 3378246,
+        "english": "When do you go to class?",
+        "score": 92
+      },
+      {
+        "chineseId": 9637799,
+        "chinese": "我今早上课迟到了。",
+        "englishId": 5915455,
+        "english": "I was late for class this morning.",
+        "score": 92
+      },
+      {
+        "chineseId": 2002979,
+        "chinese": "我真想不明白为什么约翰上课总是迟到。",
+        "englishId": 52674,
+        "english": "I wonder why John is always late for school.",
+        "score": 89
+      },
+      {
+        "chineseId": 2302765,
+        "chinese": "你明天几点上课？",
+        "englishId": 2304082,
+        "english": "What time does class start for you tomorrow?",
+        "score": 89
+      }
+    ]
+  },
+  {
+    "target": "复习",
+    "hskLevel": 2,
+    "candidateCount": 6,
+    "candidates": [
+      {
+        "chineseId": 2254420,
+        "chinese": "大多数学生都在为期末考试复习。",
+        "englishId": 1428489,
+        "english": "Most students are preparing for the final exams.",
+        "score": 98
+      },
+      {
+        "chineseId": 27,
+        "chinese": "我会尽量不打扰你复习。",
+        "englishId": 4753791,
+        "english": "I will try not to interrupt you while you are studying.",
+        "score": 98
+      },
+      {
+        "chineseId": 1416056,
+        "chinese": "我想复习英语。",
+        "englishId": 256208,
+        "english": "I would like to brush up my English.",
+        "score": 86
+      }
+    ]
+  },
+  {
+    "target": "成绩单",
+    "hskLevel": 2,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "放学",
+    "hskLevel": 2,
+    "candidateCount": 13,
+    "candidates": [
+      {
+        "chineseId": 8934148,
+        "chinese": "我小孩子时，我放学时打棒球了。",
+        "englishId": 245850,
+        "english": "When I was a little child, I used to play baseball after school.",
+        "score": 101
+      },
+      {
+        "chineseId": 2367577,
+        "chinese": "他一放学就回宿舍了。",
+        "englishId": 2367578,
+        "english": "He went back to the dorm as soon as he finished class.",
+        "score": 95
+      },
+      {
+        "chineseId": 1238175,
+        "chinese": "放学后我打了网球。",
+        "englishId": 261707,
+        "english": "I played tennis after school.",
+        "score": 94
+      },
+      {
+        "chineseId": 427648,
+        "chinese": "你放学以后干什么？",
+        "englishId": 320992,
+        "english": "What do you do after school?",
+        "score": 92
+      },
+      {
+        "chineseId": 344414,
+        "chinese": "她放学后打网球。",
+        "englishId": 310030,
+        "english": "She plays tennis after school.",
+        "score": 89
+      },
+      {
+        "chineseId": 828648,
+        "chinese": "他放学后打棒球。",
+        "englishId": 303647,
+        "english": "He played baseball after school.",
+        "score": 89
+      },
+      {
+        "chineseId": 1912307,
+        "chinese": "什么时候放学？",
+        "englishId": 21543,
+        "english": "When is school over?",
+        "score": 86
+      },
+      {
+        "chineseId": 375357,
+        "chinese": "学校3点半放学。",
+        "englishId": 2937733,
+        "english": "School is over at 3:30.",
+        "score": 86
+      },
+      {
+        "chineseId": 348580,
+        "chinese": "昨天我在放学回家的路上突然遇上了一阵大雨。",
+        "englishId": 244337,
+        "english": "As I returned from school yesterday, I was caught in a sudden shower.",
+        "score": 80
+      },
+      {
+        "chineseId": 1974788,
+        "chinese": "在放学回家的路上，我拜访了Nancy家。",
+        "englishId": 21571,
+        "english": "I called at Nancy's house on my way home from school.",
+        "score": 71
+      },
+      {
+        "chineseId": 4313886,
+        "chinese": "当汤姆开着他破旧的雷泽车来接女儿放学时，他的女儿假装不认识他。",
+        "englishId": 4313860,
+        "english": "Tom's daughter pretended not to know him when he came to pick her up from school in his battered old car.",
+        "score": 53
+      },
+      {
+        "chineseId": 9953255,
+        "chinese": "夜晚大雪纷飞。第二天早上，祖母和孙子一起坐着雪橇上街。在放学后的下午，公园里的雪仗开始了。",
+        "englishId": 9435568,
+        "english": "Plenty of snow had fallen overnight. The following morning, grandmothers and their grandchildren on sledges appeared in the streets, and in the afternoon, after school, snowball fights broke out in the park.",
+        "score": -5
+      }
+    ]
+  },
+  {
+    "target": "校车",
+    "hskLevel": 2,
+    "candidateCount": 1,
+    "candidates": [
+      {
+        "chineseId": 816555,
+        "chinese": "在美国，校车是黄色的。",
+        "englishId": 682511,
+        "english": "In the United States, school buses are yellow.",
+        "score": 95
+      }
+    ]
+  },
+  {
+    "target": "老师办公室",
+    "hskLevel": 2,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "练习本",
+    "hskLevel": 2,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "问题",
+    "hskLevel": 2,
+    "candidateCount": 353,
+    "candidates": [
+      {
+        "chineseId": 334381,
+        "chinese": "问题是那天我们的车不能用。",
+        "englishId": 1230756,
+        "english": "The problem is we can't use our car on that day.",
+        "score": 106
+      },
+      {
+        "chineseId": 481156,
+        "chinese": "问题是 我没什么要跟他说的。",
+        "englishId": 323891,
+        "english": "The problem was that I had nothing to say to him.",
+        "score": 106
+      },
+      {
+        "chineseId": 1888733,
+        "chinese": "我不在讨论这个问题的状态。",
+        "englishId": 5120897,
+        "english": "I am not in a situation to discuss this problem.",
+        "score": 104
+      },
+      {
+        "chineseId": 332536,
+        "chinese": "让我们来澄清一下这个问题。",
+        "englishId": 56664,
+        "english": "Let's clear up this problem.",
+        "score": 104
+      },
+      {
+        "chineseId": 335620,
+        "chinese": "让我们马上讨论这个问题吧。",
+        "englishId": 241640,
+        "english": "Let's discuss the matter right now.",
+        "score": 104
+      },
+      {
+        "chineseId": 13903365,
+        "chinese": "我喜欢把复杂的问题简单化。",
+        "englishId": 13903368,
+        "english": "I like simplifying complex problems.",
+        "score": 104
+      },
+      {
+        "chineseId": 344199,
+        "chinese": "如果有问题，请举起你的右手。",
+        "englishId": 265026,
+        "english": "If you have a question, please raise your right hand.",
+        "score": 104
+      },
+      {
+        "chineseId": 2367585,
+        "chinese": "我一有问题就用谷歌查一下。",
+        "englishId": 2367586,
+        "english": "Whenever I have a question, I just Google it.",
+        "score": 104
+      },
+      {
+        "chineseId": 528069,
+        "chinese": "这个问题对我来讲很难回答。",
+        "englishId": 46918,
+        "english": "It is difficult for me to answer the question.",
+        "score": 104
+      },
+      {
+        "chineseId": 805046,
+        "chinese": "你敢问他有关事故的问题吗？",
+        "englishId": 47161,
+        "english": "Dare you ask him about the accident?",
+        "score": 104
+      },
+      {
+        "chineseId": 1329989,
+        "chinese": "我们在第三章讨论这个问题。",
+        "englishId": 2700032,
+        "english": "We'll deal with this problem in Chapter 3.",
+        "score": 104
+      },
+      {
+        "chineseId": 1438513,
+        "chinese": "很抱歉那个问题我不赞成你。",
+        "englishId": 245214,
+        "english": "I'm sorry I don't agree with you on that matter.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "答案",
+    "hskLevel": 2,
+    "candidateCount": 74,
+    "candidates": [
+      {
+        "chineseId": 805027,
+        "chinese": "她給了我們一個模糊的答案。",
+        "englishId": 314067,
+        "english": "She gave us a vague answer.",
+        "score": 104
+      },
+      {
+        "chineseId": 334787,
+        "chinese": "成千上万的人想要知道答案。",
+        "englishId": 24493,
+        "english": "Thousands of people wanted to know the answer.",
+        "score": 104
+      },
+      {
+        "chineseId": 887645,
+        "chinese": "他的答案要看他的心情而定。",
+        "englishId": 287246,
+        "english": "His answer depends on his mood.",
+        "score": 104
+      },
+      {
+        "chineseId": 9961323,
+        "chinese": "他觉得我理所应当知道答案。",
+        "englishId": 297303,
+        "english": "He took it for granted that I knew the answer.",
+        "score": 104
+      },
+      {
+        "chineseId": 473013,
+        "chinese": "考试后，我们对了一下写的答案。",
+        "englishId": 39452,
+        "english": "After the exam we compared the answers we'd written.",
+        "score": 101
+      },
+      {
+        "chineseId": 346191,
+        "chinese": "嚴格地說，他的答案並不對。",
+        "englishId": 239501,
+        "english": "Strictly speaking, his answer is not correct.",
+        "score": 101
+      },
+      {
+        "chineseId": 346193,
+        "chinese": "看看我的答案是不是對的。",
+        "englishId": 251552,
+        "english": "See if my answer is correct.",
+        "score": 101
+      },
+      {
+        "chineseId": 805693,
+        "chinese": "他對這個問題給了正確的答案。",
+        "englishId": 298952,
+        "english": "He gave correct answers to the questions.",
+        "score": 101
+      },
+      {
+        "chineseId": 402905,
+        "chinese": "這條問題的答案全是錯的。",
+        "englishId": 56734,
+        "english": "All the answers to this question were wrong.",
+        "score": 101
+      },
+      {
+        "chineseId": 887644,
+        "chinese": "他的答案取決於他的心情。",
+        "englishId": 287246,
+        "english": "His answer depends on his mood.",
+        "score": 101
+      },
+      {
+        "chineseId": 1867425,
+        "chinese": "我只想要一个明确的答案。",
+        "englishId": 1869000,
+        "english": "I just want a clear answer.",
+        "score": 101
+      },
+      {
+        "chineseId": 1878271,
+        "chinese": "把你的答案和老师的比较一下。",
+        "englishId": 16944,
+        "english": "Compare your answers with the teacher's.",
+        "score": 101
+      }
+    ]
+  },
+  {
+    "target": "口语",
+    "hskLevel": 2,
+    "candidateCount": 5,
+    "candidates": [
+      {
+        "chineseId": 9987054,
+        "chinese": "口语比书面语更贴近生活。",
+        "englishId": 11290543,
+        "english": "Spoken language is closer to life than written language.",
+        "score": 103
+      },
+      {
+        "chineseId": 395888,
+        "chinese": "虽然他考得很好，他口语的汉语不见得比你的好。",
+        "englishId": 395887,
+        "english": "Although he did well in the exam, his spoken Chinese is not necessarily as good as yours.",
+        "score": 80
+      },
+      {
+        "chineseId": 604477,
+        "chinese": "这份职位要求应征者有一定的英语口语表达能力。",
+        "englishId": 26209,
+        "english": "The position requires applicants to be skilled in spoken English.",
+        "score": 77
+      },
+      {
+        "chineseId": 2444538,
+        "chinese": "我对汤姆要持之以恒地学习法语口语这件事很怀疑。",
+        "englishId": 1027559,
+        "english": "I doubt that Tom will ever learn how to speak French properly.",
+        "score": 74
+      },
+      {
+        "chineseId": 630601,
+        "chinese": "其实，书面语我搞得相当好，但是口语中，我经常会记不起来某个字的音调。",
+        "englishId": 1550198,
+        "english": "I'm actually relatively good at written language, but with spoken language I often can't remember the tone on some word.",
+        "score": 50
+      }
+    ]
+  },
+  {
+    "target": "西红柿",
+    "hskLevel": 3,
+    "candidateCount": 6,
+    "candidates": [
+      {
+        "chineseId": 923640,
+        "chinese": "一公斤的番茄酱等于两公斤的西红柿。",
+        "englishId": 934017,
+        "english": "A kilo of ketchup is equivalent to two kilos of tomatoes.",
+        "score": 101
+      },
+      {
+        "chineseId": 817300,
+        "chinese": "她在她花园里种西红柿。",
+        "englishId": 315891,
+        "english": "She grows tomatoes in her garden.",
+        "score": 89
+      },
+      {
+        "chineseId": 898922,
+        "chinese": "梅格买了一罐西红柿。",
+        "englishId": 31816,
+        "english": "Meg bought a can of tomatoes.",
+        "score": 86
+      },
+      {
+        "chineseId": 2200448,
+        "chinese": "茄子，胡萝卜，西红柿。",
+        "englishId": 2206706,
+        "english": "Eggplant, carrot, tomato.",
+        "score": 58
+      },
+      {
+        "chineseId": 735387,
+        "chinese": "Tom喜不喜欢吃西红柿？",
+        "englishId": 37226,
+        "english": "Does Tom like tomatoes?",
+        "score": 53
+      }
+    ]
+  },
+  {
+    "target": "黄瓜",
+    "hskLevel": 3,
+    "candidateCount": 2,
+    "candidates": [
+      {
+        "chineseId": 6956978,
+        "chinese": "你能再买点儿泡黄瓜吗？",
+        "englishId": 6953255,
+        "english": "Can you buy some more pickles?",
+        "score": 89
+      },
+      {
+        "chineseId": 489024,
+        "chinese": "那条黄瓜多长啊！",
+        "englishId": 489020,
+        "english": "What a long cucumber!",
+        "score": 76
+      }
+    ]
+  },
+  {
+    "target": "胡萝卜",
+    "hskLevel": 3,
+    "candidateCount": 8,
+    "candidates": [
+      {
+        "chineseId": 333939,
+        "chinese": "除了胡萝卜，他没有什么是不吃的。",
+        "englishId": 35862,
+        "english": "Except for carrots, there is nothing he won't eat.",
+        "score": 101
+      },
+      {
+        "chineseId": 9409425,
+        "chinese": "汤姆午餐只吃了三个胡萝卜。",
+        "englishId": 1027063,
+        "english": "Tom ate only three carrots for lunch.",
+        "score": 95
+      },
+      {
+        "chineseId": 441306,
+        "chinese": "把胡萝卜放在锅里。",
+        "englishId": 441305,
+        "english": "Put the carrots in the pot.",
+        "score": 83
+      },
+      {
+        "chineseId": 7780759,
+        "chinese": "汤姆不喜欢胡萝卜。",
+        "englishId": 2956662,
+        "english": "Tom doesn't like carrots.",
+        "score": 83
+      },
+      {
+        "chineseId": 422957,
+        "chinese": "胡萝卜我来切吧。",
+        "englishId": 422956,
+        "english": "Let me cut the carrots.",
+        "score": 82
+      },
+      {
+        "chineseId": 466170,
+        "chinese": "胡萝卜要三美元。",
+        "englishId": 1492902,
+        "english": "Carrots cost three dollars.",
+        "score": 82
+      },
+      {
+        "chineseId": 2200448,
+        "chinese": "茄子，胡萝卜，西红柿。",
+        "englishId": 2206706,
+        "english": "Eggplant, carrot, tomato.",
+        "score": 58
+      }
+    ]
+  },
+  {
+    "target": "土豆",
+    "hskLevel": 3,
+    "candidateCount": 29,
+    "candidates": [
+      {
+        "chineseId": 502782,
+        "chinese": "可惜我们不能像买土豆一样买奇迹。",
+        "englishId": 1840,
+        "english": "It's a pity that you can't buy miracles like you would buy potatoes.",
+        "score": 104
+      },
+      {
+        "chineseId": 1788074,
+        "chinese": "土豆在法国是蔬菜，在荷兰则不是。",
+        "englishId": 12080284,
+        "english": "In France, potatoes are vegetables, while in the Netherlands, they are not.",
+        "score": 103
+      },
+      {
+        "chineseId": 795737,
+        "chinese": "土豆太热，以至于烫到了我的嘴。",
+        "englishId": 792562,
+        "english": "The potato was so hot that it burned my mouth.",
+        "score": 100
+      },
+      {
+        "chineseId": 6940137,
+        "chinese": "這個湯裏有胡蘿蔔、洋蔥、歐芹、芹菜和土豆。",
+        "englishId": 7779321,
+        "english": "In this soup there are carrots, onions, parsley, celery and potatoes.",
+        "score": 98
+      },
+      {
+        "chineseId": 6940191,
+        "chinese": "在盤子裏有一塊雞肉、一個土豆和一些豌豆。",
+        "englishId": 7834030,
+        "english": "On the plate there is a piece of chicken, a potato and some peas.",
+        "score": 95
+      },
+      {
+        "chineseId": 811065,
+        "chinese": "把去皮切成小块的土豆放在滚水里煮20分钟。",
+        "englishId": 3665434,
+        "english": "Cook the peeled and chopped potatoes for 20 minutes in boiling water.",
+        "score": 95
+      },
+      {
+        "chineseId": 9794613,
+        "chinese": "土豆是最常见的食材之一。",
+        "englishId": 10663766,
+        "english": "Potatoes are one of the most common foodstuffs.",
+        "score": 94
+      },
+      {
+        "chineseId": 702765,
+        "chinese": "姐姐在市场买了一点茄子、土豆、丝瓜和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 92
+      },
+      {
+        "chineseId": 2415717,
+        "chinese": "姐姐在市场买了一点茄子、土豆、西葫芦和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 89
+      },
+      {
+        "chineseId": 6952645,
+        "chinese": "我想把這些土豆切成絲。",
+        "englishId": 6956699,
+        "english": "I want to slice these potatoes into strips.",
+        "score": 89
+      },
+      {
+        "chineseId": 1788118,
+        "chinese": "他的鼻子看起来像土豆。",
+        "englishId": 7779309,
+        "english": "His nose looks like a potato.",
+        "score": 89
+      },
+      {
+        "chineseId": 7780139,
+        "chinese": "洋蔥比土豆煮得更快些。",
+        "englishId": 40512,
+        "english": "Onions cook more quickly than potatoes.",
+        "score": 89
+      }
+    ]
+  },
+  {
+    "target": "菠菜",
+    "hskLevel": 3,
+    "candidateCount": 20,
+    "candidates": [
+      {
+        "chineseId": 3668672,
+        "chinese": "巧克力的鐵質含量比菠菜還要多。",
+        "englishId": 7767758,
+        "english": "Chocolate's iron content is higher than spinach's.",
+        "score": 101
+      },
+      {
+        "chineseId": 3668674,
+        "chinese": "巧克力含有比菠菜更多的鐵質。",
+        "englishId": 7767759,
+        "english": "Chocolate has more iron than spinach.",
+        "score": 98
+      },
+      {
+        "chineseId": 13540060,
+        "chinese": "法式吐司最適合搭配菠菜濃湯。",
+        "englishId": 10730799,
+        "english": "French toast is best with spinach pottage.",
+        "score": 98
+      },
+      {
+        "chineseId": 13540067,
+        "chinese": "我認為湯姆不太喜歡菠菜。",
+        "englishId": 7230848,
+        "english": "I don't think that Tom likes spinach very much.",
+        "score": 92
+      },
+      {
+        "chineseId": 8554435,
+        "chinese": "汤姆小时候不喜欢菠菜。",
+        "englishId": 8554382,
+        "english": "Tom didn't like spinach when he was a child.",
+        "score": 89
+      },
+      {
+        "chineseId": 13540068,
+        "chinese": "他告訴我他不喜歡菠菜。",
+        "englishId": 7394007,
+        "english": "He told me he didn't like spinach.",
+        "score": 89
+      },
+      {
+        "chineseId": 6937160,
+        "chinese": "小孩一般都討厭菠菜。",
+        "englishId": 245931,
+        "english": "Children often hate spinach.",
+        "score": 86
+      },
+      {
+        "chineseId": 6937161,
+        "chinese": "我兒子從來不吃菠菜。",
+        "englishId": 954195,
+        "english": "My son never eats his spinach.",
+        "score": 86
+      },
+      {
+        "chineseId": 6937159,
+        "chinese": "她強迫他吃菠菜。",
+        "englishId": 887119,
+        "english": "She forced him to eat spinach.",
+        "score": 80
+      },
+      {
+        "chineseId": 13540058,
+        "chinese": "我吃了一些菠菜。",
+        "englishId": 2184382,
+        "english": "I ate some spinach.",
+        "score": 80
+      },
+      {
+        "chineseId": 13540061,
+        "chinese": "湯姆正在煮菠菜。",
+        "englishId": 10768353,
+        "english": "Tom is cooking spinach.",
+        "score": 80
+      },
+      {
+        "chineseId": 13540066,
+        "chinese": "湯姆喜歡菠菜嗎？",
+        "englishId": 8828335,
+        "english": "Does Tom like spinach?",
+        "score": 80
+      }
+    ]
+  },
+  {
+    "target": "洋葱",
+    "hskLevel": 3,
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "chineseId": 472888,
+        "chinese": "除了洋葱我什么都可以吃。",
+        "englishId": 254987,
+        "english": "I can eat anything but onions.",
+        "score": 92
+      },
+      {
+        "chineseId": 8865174,
+        "chinese": "我在花园种了番茄和洋葱。",
+        "englishId": 8545228,
+        "english": "I grow tomatoes and onions in my garden.",
+        "score": 92
+      },
+      {
+        "chineseId": 11239947,
+        "chinese": "我不喜欢吃洋葱。",
+        "englishId": 6665911,
+        "english": "I don't like to eat onions.",
+        "score": 80
+      },
+      {
+        "chineseId": 5685964,
+        "chinese": "阿嗄拉咭是源自非洲的巴西食品，是豇豆面团、洋葱和盐，经棕榈油炸，与虾和辣酱一起食用的食品。",
+        "englishId": 3389242,
+        "english": "Acaraje, a Brazilian food from Africa, is a ball of caupi bean dough, onions, and salt, fried in palm oil and served with shrimp and a spicy sauce.",
+        "score": 4
+      }
+    ]
+  },
+  {
+    "target": "白菜",
+    "hskLevel": 3,
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "chineseId": 13539994,
+        "chinese": "這麼大的白菜煮熟了就變這麼小了。",
+        "englishId": 12623400,
+        "english": "The cabbage that was this big becomes this small after being cooked.",
+        "score": 104
+      },
+      {
+        "chineseId": 702765,
+        "chinese": "姐姐在市场买了一点茄子、土豆、丝瓜和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 92
+      },
+      {
+        "chineseId": 2415717,
+        "chinese": "姐姐在市场买了一点茄子、土豆、西葫芦和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 89
+      },
+      {
+        "chineseId": 13540003,
+        "chinese": "這次任務充滿了里程碑：這將是韓國女性首次進入太空軌道，也是代表韓國的蒜味辣白菜——「泡菜」，第一次出現在零重力餐桌上。",
+        "englishId": 11074564,
+        "english": "The mission is full of landmarks: it will be the first time a South Korean woman has headed into orbit, and it will also be the first time that \"kimchi\"—that spicy, garlicky cabbage dish that epitomizes South Korea—will be served at the zero-gravity dinner table.",
+        "score": -37
+      }
+    ]
+  },
+  {
+    "target": "茄子",
+    "hskLevel": 3,
+    "candidateCount": 7,
+    "candidates": [
+      {
+        "chineseId": 702765,
+        "chinese": "姐姐在市场买了一点茄子、土豆、丝瓜和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 92
+      },
+      {
+        "chineseId": 2415717,
+        "chinese": "姐姐在市场买了一点茄子、土豆、西葫芦和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 89
+      },
+      {
+        "chineseId": 2200448,
+        "chinese": "茄子，胡萝卜，西红柿。",
+        "englishId": 2206706,
+        "english": "Eggplant, carrot, tomato.",
+        "score": 60
+      },
+      {
+        "chineseId": 6940065,
+        "chinese": "我喜歡茄子。",
+        "englishId": 7156338,
+        "english": "I like eggplant.",
+        "score": 49
+      },
+      {
+        "chineseId": 6139124,
+        "chinese": "我爱茄子。",
+        "englishId": 1815928,
+        "english": "I love aubergine.",
+        "score": 6
+      }
+    ]
+  },
+  {
+    "target": "豆角",
+    "hskLevel": 3,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "蘑菇",
+    "hskLevel": 3,
+    "candidateCount": 5,
+    "candidates": [
+      {
+        "chineseId": 10301645,
+        "chinese": "湯姆和瑪麗亞到樹林裡採集蘑菇去了。",
+        "englishId": 5965887,
+        "english": "Tom and Mary went into the forest to collect mushrooms.",
+        "score": 101
+      },
+      {
+        "chineseId": 6940063,
+        "chinese": "我特別喜歡蘑菇的味道。",
+        "englishId": 7808590,
+        "english": "I especially like the flavour of the mushroom.",
+        "score": 89
+      },
+      {
+        "chineseId": 3537855,
+        "chinese": "他吃了毒蘑菇。",
+        "englishId": 4728630,
+        "english": "He ate poisonous mushrooms.",
+        "score": 77
+      },
+      {
+        "chineseId": 13839306,
+        "chinese": "我做了蘑菇汤。",
+        "englishId": 12581633,
+        "english": "I made mushroom soup.",
+        "score": 77
+      },
+      {
+        "chineseId": 823021,
+        "chinese": "在切爾諾貝利核電廠事故二十五年後，在烏克蘭的某些地區，牛奶，蘑菇和漿果仍然受到了污染。",
+        "englishId": 823020,
+        "english": "Twenty-five years after Chernobyl, milk, mushrooms and berries are still contaminated in some parts of Ukraine.",
+        "score": 32
+      }
+    ]
+  },
+  {
+    "target": "玉米",
+    "hskLevel": 3,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 1823632,
+        "chinese": "哪一個國家擁有生產玉米的絕對優勢？",
+        "englishId": 1823640,
+        "english": "What country has the absolute advantage in the production of corn?",
+        "score": 101
+      },
+      {
+        "chineseId": 348404,
+        "chinese": "波本威士忌是用玉米做的。",
+        "englishId": 35600,
+        "english": "Bourbon is made from corn.",
+        "score": 92
+      },
+      {
+        "chineseId": 6947203,
+        "chinese": "我們早餐有燕麥和玉米。",
+        "englishId": 7156317,
+        "english": "Our breakfast has oats and corn in it.",
+        "score": 89
+      },
+      {
+        "chineseId": 9779587,
+        "chinese": "我买了一包冰冻玉米。",
+        "englishId": 9776835,
+        "english": "I bought a bag of frozen corn.",
+        "score": 86
+      },
+      {
+        "chineseId": 13109401,
+        "chinese": "我用玉米搭配豇豆。",
+        "englishId": 12106305,
+        "english": "I combined black-eyed beans with corn.",
+        "score": 83
+      },
+      {
+        "chineseId": 6947204,
+        "chinese": "我不喜歡玉米。",
+        "englishId": 6588006,
+        "english": "I don't like corn.",
+        "score": 77
+      },
+      {
+        "chineseId": 13854222,
+        "chinese": "這玉米很新鮮。",
+        "englishId": 2548628,
+        "english": "This corn is fresh.",
+        "score": 77
+      },
+      {
+        "chineseId": 6947201,
+        "chinese": "我玉米過敏。",
+        "englishId": 4428228,
+        "english": "I'm allergic to corn.",
+        "score": 74
+      },
+      {
+        "chineseId": 13138805,
+        "chinese": "我喜歡玉米。",
+        "englishId": 12933922,
+        "english": "I like corn.",
+        "score": 49
+      },
+      {
+        "chineseId": 9401161,
+        "chinese": "玉米片广告的 “完整早餐” 总有玉米片、牛奶、烤面包和橙汁，但是连美国人的早餐没有那么丰富。",
+        "englishId": 753520,
+        "english": "The \"complete breakfasts\" in cereal commercials always include cereal, milk, toast, and orange juice, but even Americans don't usually eat that much in the morning.",
+        "score": 4
+      }
+    ]
+  },
+  {
+    "target": "南瓜",
+    "hskLevel": 3,
+    "candidateCount": 3,
+    "candidates": [
+      {
+        "chineseId": 13943490,
+        "chinese": "这个菜谱需要一些青南瓜。",
+        "englishId": 5754008,
+        "english": "This recipe requires acorn squash.",
+        "score": 92
+      },
+      {
+        "chineseId": 5401363,
+        "chinese": "我喜歡喝南瓜湯。",
+        "englishId": 5573356,
+        "english": "I like to drink pumpkin soup.",
+        "score": 80
+      },
+      {
+        "chineseId": 13544358,
+        "chinese": "美國人所吃的食物中約有三分之一來自蜜蜂授粉的農作物，包括蘋果、甜瓜、蔓越莓、南瓜、櫛瓜、綠花椰菜和杏仁等等。",
+        "englishId": 10244450,
+        "english": "About one-third of the food eaten by Americans comes from crops pollinated by honey bees, including apples, melons, cranberries, pumpkins, squash, broccoli, and almonds, to name just a few.",
+        "score": -17
+      }
+    ]
+  },
+  {
+    "target": "生菜",
+    "hskLevel": 3,
+    "candidateCount": 14,
+    "candidates": [
+      {
+        "chineseId": 13539362,
+        "chinese": "嘿，湯姆，我們可以買兩箱生菜嗎？",
+        "englishId": 6913089,
+        "english": "Hey, Tom, can we get two bins of lettuce?",
+        "score": 98
+      },
+      {
+        "chineseId": 13539984,
+        "chinese": "這裡種植有生菜、高麗菜和芹菜等高原蔬菜。",
+        "englishId": 11488015,
+        "english": "Tableland vegetables are grown here, such as lettuce, cabbage, and celery.",
+        "score": 95
+      },
+      {
+        "chineseId": 13539361,
+        "chinese": "湯姆可能不知道瑪莉想讓他把生菜種在哪裡。",
+        "englishId": 6252482,
+        "english": "Tom probably doesn't know where Mary wants him to plant the lettuce.",
+        "score": 92
+      },
+      {
+        "chineseId": 13539355,
+        "chinese": "蛞蝓正在吃我們的生菜。",
+        "englishId": 13148264,
+        "english": "Slugs are eating our lettuce.",
+        "score": 89
+      },
+      {
+        "chineseId": 13539363,
+        "chinese": "我可以餵狗狗吃生菜嗎？",
+        "englishId": 898538,
+        "english": "Is it OK to feed my dog lettuce?",
+        "score": 89
+      },
+      {
+        "chineseId": 6940180,
+        "chinese": "生菜葉子很容易枯掉。",
+        "englishId": 7819411,
+        "english": "Lettuce leaves wither easily.",
+        "score": 88
+      },
+      {
+        "chineseId": 6940182,
+        "chinese": "蝸牛在吃我們的生菜。",
+        "englishId": 10540251,
+        "english": "The snails are eating our lettuce.",
+        "score": 86
+      },
+      {
+        "chineseId": 13539357,
+        "chinese": "我只想要一些生菜。",
+        "englishId": 11873506,
+        "english": "I just want some lettuce.",
+        "score": 83
+      },
+      {
+        "chineseId": 13539364,
+        "chinese": "湯姆沒有洗生菜。",
+        "englishId": 9271695,
+        "english": "Tom didn't wash the lettuce.",
+        "score": 80
+      },
+      {
+        "chineseId": 13539356,
+        "chinese": "她把生菜切絲。",
+        "englishId": 12925158,
+        "english": "She shredded the lettuce.",
+        "score": 77
+      },
+      {
+        "chineseId": 6940172,
+        "chinese": "生菜要洗嗎？",
+        "englishId": 7156334,
+        "english": "Do you need to wash fresh vegetables?",
+        "score": 76
+      },
+      {
+        "chineseId": 9415308,
+        "chinese": "生菜变黄了。",
+        "englishId": 3170677,
+        "english": "The lettuce has turned brown.",
+        "score": 76
+      }
+    ]
+  },
+  {
+    "target": "大蒜",
+    "hskLevel": 3,
+    "candidateCount": 9,
+    "candidates": [
+      {
+        "chineseId": 848191,
+        "chinese": "這個食物嚐起來有一點大蒜味。",
+        "englishId": 46144,
+        "english": "The food tasted slightly of garlic.",
+        "score": 98
+      },
+      {
+        "chineseId": 13108726,
+        "chinese": "雖然我喜歡大蒜，但因為很臭，所以很少吃。",
+        "englishId": 11705618,
+        "english": "I like garlic but, because of the smell, I rarely eat it.",
+        "score": 98
+      },
+      {
+        "chineseId": 2806360,
+        "chinese": "這道菜裡有點大蒜的味道。",
+        "englishId": 5313716,
+        "english": "This dish has a bit of garlic flavor.",
+        "score": 92
+      },
+      {
+        "chineseId": 13906340,
+        "chinese": "这个西瓜吃起来有大蒜味。",
+        "englishId": 13906345,
+        "english": "This watermelon tastes like garlic.",
+        "score": 92
+      },
+      {
+        "chineseId": 6314508,
+        "chinese": "他在菜裏放了三瓣大蒜。",
+        "englishId": 9401965,
+        "english": "He put three slices of garlic in the vegetables.",
+        "score": 89
+      },
+      {
+        "chineseId": 6314496,
+        "chinese": "他給了我十二瓣大蒜。",
+        "englishId": 7767755,
+        "english": "He gave me 12 cloves of garlic.",
+        "score": 86
+      },
+      {
+        "chineseId": 7795216,
+        "chinese": "汤姆捣碎了大蒜。",
+        "englishId": 7446766,
+        "english": "Tom crushed the garlic.",
+        "score": 80
+      },
+      {
+        "chineseId": 13539371,
+        "chinese": "將羽衣甘藍切片，放入鍋中，加入橄欖油、大蒜、鹽和胡椒，煮至軟嫩可口。",
+        "englishId": 8288206,
+        "english": "Slice the kale, and add it to a pan, with olive oil, garlic, salt and pepper, and wait until it is soft and tasty.",
+        "score": 65
+      },
+      {
+        "chineseId": 6581622,
+        "chinese": "我愛大蒜！",
+        "englishId": 6581254,
+        "english": "I love garlic!",
+        "score": 2
+      }
+    ]
+  },
+  {
+    "target": "生姜",
+    "hskLevel": 3,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "芹菜",
+    "hskLevel": 3,
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "chineseId": 6940137,
+        "chinese": "這個湯裏有胡蘿蔔、洋蔥、歐芹、芹菜和土豆。",
+        "englishId": 7779321,
+        "english": "In this soup there are carrots, onions, parsley, celery and potatoes.",
+        "score": 98
+      },
+      {
+        "chineseId": 13539984,
+        "chinese": "這裡種植有生菜、高麗菜和芹菜等高原蔬菜。",
+        "englishId": 11488015,
+        "english": "Tableland vegetables are grown here, such as lettuce, cabbage, and celery.",
+        "score": 95
+      },
+      {
+        "chineseId": 6940068,
+        "chinese": "我在削芹菜和土豆。",
+        "englishId": 528547,
+        "english": "I am peeling the celery and the potatoes.",
+        "score": 83
+      }
+    ]
+  },
+  {
+    "target": "西兰花",
+    "hskLevel": 3,
+    "candidateCount": 1,
+    "candidates": [
+      {
+        "chineseId": 5613725,
+        "chinese": "汤姆往炖菜里加了西兰花。",
+        "englishId": 4529615,
+        "english": "Tom added broccoli to the stew.",
+        "score": 92
+      }
+    ]
+  },
+  {
+    "target": "茼蒿",
+    "hskLevel": 3,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "藕",
+    "hskLevel": 3,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "菌菇",
+    "hskLevel": 3,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "机场",
+    "hskLevel": 4,
+    "candidateCount": 31,
+    "candidates": [
+      {
+        "chineseId": 795210,
+        "chinese": "他跟我说了他明天从北京机场飞往英格兰。",
+        "englishId": 795198,
+        "english": "He told me that tomorrow he goes from Beijing to England by plane.",
+        "score": 104
+      },
+      {
+        "chineseId": 1397118,
+        "chinese": "我们将于几分钟内降落在新东京国际机场。",
+        "englishId": 32444,
+        "english": "In a few minutes we'll be landing at New Tokyo International Airport.",
+        "score": 104
+      },
+      {
+        "chineseId": 334850,
+        "chinese": "很幸运地，我在机场遇到了我的老朋友。",
+        "englishId": 32529,
+        "english": "Quite by chance, I met my old friend at the airport.",
+        "score": 98
+      },
+      {
+        "chineseId": 3363075,
+        "chinese": "你怎么不给我打电话呢？不然我就去机场接你了。",
+        "englishId": 9711734,
+        "english": "Why didn't you call me? I would have picked you up at the airport.",
+        "score": 98
+      },
+      {
+        "chineseId": 11243454,
+        "chinese": "玛丽想让汤姆带她去机场，但他拒绝了。",
+        "englishId": 8540768,
+        "english": "Mary wanted Tom to take her to the airport, but he refused.",
+        "score": 98
+      },
+      {
+        "chineseId": 12615415,
+        "chinese": "飞机将于十二点三十于希思罗机场起飞",
+        "englishId": 318032,
+        "english": "The plane departs from Heathrow at 12:30.",
+        "score": 97
+      },
+      {
+        "chineseId": 1316049,
+        "chinese": "穿梭班车到机场需要多长时间？",
+        "englishId": 1315823,
+        "english": "How long does it take for the airport shuttle to get to the airport?",
+        "score": 89
+      },
+      {
+        "chineseId": 336651,
+        "chinese": "我父母去机场送我叔叔了。",
+        "englishId": 325694,
+        "english": "My parents have gone to the airport to see my uncle off.",
+        "score": 83
+      },
+      {
+        "chineseId": 344191,
+        "chinese": "乘机场大巴去机场要多久？",
+        "englishId": 18201,
+        "english": "How long does the airport bus take to the airport?",
+        "score": 83
+      },
+      {
+        "chineseId": 403710,
+        "chinese": "我能在哪里乘上机场巴士？",
+        "englishId": 18200,
+        "english": "Where do I get an airport bus?",
+        "score": 83
+      },
+      {
+        "chineseId": 1409398,
+        "chinese": "我父亲可以送我去飞机场。",
+        "englishId": 7782272,
+        "english": "My father can take me to the airport.",
+        "score": 83
+      },
+      {
+        "chineseId": 2220815,
+        "chinese": "你去不去飞机场送你老师？",
+        "englishId": 7782981,
+        "english": "Are you going to the airport to see your teacher off?",
+        "score": 83
+      }
+    ]
+  },
+  {
+    "target": "护照",
+    "hskLevel": 4,
+    "candidateCount": 26,
+    "candidates": [
+      {
+        "chineseId": 420454,
+        "chinese": "先生，请出示护照或者身份证，让我登记一下。",
+        "englishId": 12090953,
+        "english": "Sir, please present your passport or identity card, so I can register it.",
+        "score": 104
+      },
+      {
+        "chineseId": 421170,
+        "chinese": "请你把护照出示给我看看，还有入境表格填好了吗？",
+        "englishId": 10458910,
+        "english": "Please let me see your passport, also did you complete the immigration form?",
+        "score": 95
+      },
+      {
+        "chineseId": 501426,
+        "chinese": "当我们开始像自己护照上的照片时，我们该去度假了。",
+        "englishId": 1551,
+        "english": "When you're beginning to look like the photo in your passport, you should go on a holiday.",
+        "score": 92
+      },
+      {
+        "chineseId": 692740,
+        "chinese": "跟其它的比，法国护照有多难看啊。",
+        "englishId": 12080461,
+        "english": "Compared to the others, doesn't the French passport look ugly?",
+        "score": 92
+      },
+      {
+        "chineseId": 462033,
+        "chinese": "能否请您给我看一下您的护照？",
+        "englishId": 35272,
+        "english": "Will you show me your passport, please?",
+        "score": 89
+      },
+      {
+        "chineseId": 2158918,
+        "chinese": "给你的护照号和你的出生日期。",
+        "englishId": 1655363,
+        "english": "Give your passport number and your date of birth.",
+        "score": 89
+      },
+      {
+        "chineseId": 334389,
+        "chinese": "我需要你的护照和三张照片。",
+        "englishId": 1230770,
+        "english": "I need your passport and three photographs.",
+        "score": 86
+      },
+      {
+        "chineseId": 349685,
+        "chinese": "请让我看一下您的护照好吗？",
+        "englishId": 35267,
+        "english": "May I see your passport, please?",
+        "score": 86
+      },
+      {
+        "chineseId": 8969806,
+        "chinese": "汤姆和玛丽的护照好像丢了。",
+        "englishId": 7470939,
+        "english": "Tom and Mary seem to have lost their passports.",
+        "score": 86
+      },
+      {
+        "chineseId": 395562,
+        "chinese": "请把您的护照给我看一下。",
+        "englishId": 35276,
+        "english": "Show me your passport, please.",
+        "score": 83
+      },
+      {
+        "chineseId": 13058806,
+        "chinese": "你的护照在你的夹克里吗。",
+        "englishId": 13058803,
+        "english": "Is your passport in your jacket?",
+        "score": 83
+      },
+      {
+        "chineseId": 462032,
+        "chinese": "请给我看看您的护照。",
+        "englishId": 35276,
+        "english": "Show me your passport, please.",
+        "score": 77
+      }
+    ]
+  },
+  {
+    "target": "行李",
+    "hskLevel": 4,
+    "candidateCount": 46,
+    "candidates": [
+      {
+        "chineseId": 350543,
+        "chinese": "我來登記之前你可以先幫我看管行李嗎？",
+        "englishId": 40240,
+        "english": "Can I leave my bags with you until I come to check in?",
+        "score": 101
+      },
+      {
+        "chineseId": 759674,
+        "chinese": "我們移走了行李騰出空間讓老太太可以坐下。",
+        "englishId": 248539,
+        "english": "We moved our bags to make room for the elderly lady to sit down.",
+        "score": 101
+      },
+      {
+        "chineseId": 5401617,
+        "chinese": "你可以保管這個行李直到下午三點嗎？",
+        "englishId": 60037,
+        "english": "Could you keep this luggage until 3 p.m.?",
+        "score": 98
+      },
+      {
+        "chineseId": 1205926,
+        "chinese": "先生，我們可以檢查一下您的行李嗎？",
+        "englishId": 1230605,
+        "english": "Sir, can we quickly inspect your luggage please?",
+        "score": 95
+      },
+      {
+        "chineseId": 13598238,
+        "chinese": "你不想看我的行李箱裡有什麼嗎？",
+        "englishId": 6066853,
+        "english": "Don't you want to see what I have in my suitcase?",
+        "score": 92
+      },
+      {
+        "chineseId": 6075267,
+        "chinese": "她在行李箱中放進了兩條褲襪。",
+        "englishId": 6075489,
+        "english": "She put two pairs of sheer tights in the suitcase.",
+        "score": 89
+      },
+      {
+        "chineseId": 895638,
+        "chinese": "你把我的行李放到哪裡去了？",
+        "englishId": 401802,
+        "english": "What did you do with my luggage?",
+        "score": 86
+      },
+      {
+        "chineseId": 1589686,
+        "chinese": "請將這些行李拿到郵局那邊。",
+        "englishId": 1589684,
+        "english": "Please take that baggage to the post office.",
+        "score": 86
+      },
+      {
+        "chineseId": 872382,
+        "chinese": "你可以把我的行李拿到樓上嗎?",
+        "englishId": 23672,
+        "english": "Would you carry my luggage upstairs?",
+        "score": 85
+      },
+      {
+        "chineseId": 6119325,
+        "chinese": "我甚麼時候能拿我的行李？",
+        "englishId": 12259790,
+        "english": "When can I collect my luggage?",
+        "score": 83
+      },
+      {
+        "chineseId": 335846,
+        "chinese": "我的其中一个行李不见了。",
+        "englishId": 52371,
+        "english": "One of my suitcases is missing.",
+        "score": 83
+      },
+      {
+        "chineseId": 340642,
+        "chinese": "请把你的行李放在这秤上。",
+        "englishId": 23678,
+        "english": "Please put your baggage on this scale.",
+        "score": 83
+      }
+    ]
+  },
+  {
+    "target": "预订",
+    "hskLevel": 4,
+    "candidateCount": 2,
+    "candidates": [
+      {
+        "chineseId": 332581,
+        "chinese": "我要预订一间6月3日的单人房。",
+        "englishId": 72451,
+        "english": "I'd like to reserve a single room on June 3.",
+        "score": 86
+      },
+      {
+        "chineseId": 794090,
+        "chinese": "预订好了。",
+        "englishId": 794086,
+        "english": "The reservation is already made.",
+        "score": 24
+      }
+    ]
+  },
+  {
+    "target": "导游",
+    "hskLevel": 4,
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "chineseId": 333819,
+        "chinese": "他们和一个导游一起出发，只是为了以防迷路。",
+        "englishId": 280386,
+        "english": "They set out with a guide just in case they lost their way.",
+        "score": 101
+      },
+      {
+        "chineseId": 1502350,
+        "chinese": "这本导游册子或许会对你的旅行有帮助。",
+        "englishId": 325532,
+        "english": "This guidebook might be of use to you on your trip.",
+        "score": 101
+      },
+      {
+        "chineseId": 1446898,
+        "chinese": "我为你充当导游。",
+        "englishId": 246418,
+        "english": "I'll act as a guide for you.",
+        "score": 71
+      },
+      {
+        "chineseId": 12422626,
+        "chinese": "我在东京做导游。",
+        "englishId": 9422575,
+        "english": "I'm a tour guide in Tokyo.",
+        "score": 71
+      }
+    ]
+  },
+  {
+    "target": "签证",
+    "hskLevel": 4,
+    "candidateCount": 6,
+    "candidates": [
+      {
+        "chineseId": 421166,
+        "chinese": "你要交几张照片，填好几张表格，办好签证。",
+        "englishId": 7773807,
+        "english": "You need to hand in a few photos, fill in a form, and get a visa.",
+        "score": 101
+      },
+      {
+        "chineseId": 7772585,
+        "chinese": "我们很遗憾地听说，汤姆没能拿到签证。",
+        "englishId": 1023813,
+        "english": "We were disappointed to hear that Tom couldn't get a visa.",
+        "score": 98
+      },
+      {
+        "chineseId": 1477285,
+        "chinese": "如果签证过期，你就必须离开中国。",
+        "englishId": 1477312,
+        "english": "If your visa expires, you must leave China.",
+        "score": 92
+      },
+      {
+        "chineseId": 1477291,
+        "chinese": "只有得了签证才可以来中国。",
+        "englishId": 1477307,
+        "english": "You can only come to China if you’ve got a visa.",
+        "score": 86
+      },
+      {
+        "chineseId": 392293,
+        "chinese": "拜托您，请给我一张签证。",
+        "englishId": 392292,
+        "english": "I beg you, give me a visa.",
+        "score": 80
+      },
+      {
+        "chineseId": 512510,
+        "chinese": "我申请了签证。",
+        "englishId": 34786,
+        "english": "I applied for a visa.",
+        "score": 68
+      }
+    ]
+  },
+  {
+    "target": "行程",
+    "hskLevel": 4,
+    "candidateCount": 6,
+    "candidates": [
+      {
+        "chineseId": 791577,
+        "chinese": "你知道伦敦交响乐团的演奏会行程吗？",
+        "englishId": 29284,
+        "english": "Do you know the concert schedule of London Symphony Orchestra?",
+        "score": 98
+      },
+      {
+        "chineseId": 3537593,
+        "chinese": "大家同意先在这里住一晚，行程的事情明天再从长计议。",
+        "englishId": 3537594,
+        "english": "Everyone agrees to stay here for the night and make long-term itinerary decisions tomorrow.",
+        "score": 89
+      },
+      {
+        "chineseId": 354507,
+        "chinese": "她推迟了去墨西哥的行程。",
+        "englishId": 312303,
+        "english": "She put off going to Mexico.",
+        "score": 83
+      },
+      {
+        "chineseId": 845449,
+        "chinese": "你明天的行程安排是什麼？",
+        "englishId": 323249,
+        "english": "What's your schedule for tomorrow?",
+        "score": 83
+      },
+      {
+        "chineseId": 363978,
+        "chinese": "我们本该考虑一下行程。",
+        "englishId": 22780,
+        "english": "We should have taken the schedule into consideration.",
+        "score": 80
+      }
+    ]
+  },
+  {
+    "target": "景点",
+    "hskLevel": 4,
+    "candidateCount": 5,
+    "candidates": [
+      {
+        "chineseId": 1397043,
+        "chinese": "珊瑚礁是这个地区的主要景点。",
+        "englishId": 954341,
+        "english": "The coral reef is the region's prime attraction.",
+        "score": 89
+      },
+      {
+        "chineseId": 784011,
+        "chinese": "在京都，有很多的景点值得一看。",
+        "englishId": 19322,
+        "english": "There are a lot of sights in Kyoto.",
+        "score": 89
+      },
+      {
+        "chineseId": 9012245,
+        "chinese": "瑞士有很多景点。",
+        "englishId": 52446,
+        "english": "Switzerland boasts many sights.",
+        "score": 71
+      }
+    ]
+  },
+  {
+    "target": "地图",
+    "hskLevel": 4,
+    "candidateCount": 27,
+    "candidates": [
+      {
+        "chineseId": 10648750,
+        "chinese": "汤姆每次要是不带地图的话就会迷路。",
+        "englishId": 1027177,
+        "english": "Tom always gets lost if he doesn't carry a map.",
+        "score": 98
+      },
+      {
+        "chineseId": 473029,
+        "chinese": "我想要一张1比250000的得克萨斯州的地图。",
+        "englishId": 39574,
+        "english": "I want a map of Texas on a scale of 1 to 250000.",
+        "score": 95
+      },
+      {
+        "chineseId": 346480,
+        "chinese": "地图帮助我们知道所在的位置。",
+        "englishId": 277231,
+        "english": "A map helps us to know where we are.",
+        "score": 91
+      },
+      {
+        "chineseId": 1567781,
+        "chinese": "学友的手里正拿着北京地图呢。",
+        "englishId": 1567782,
+        "english": "My schoolmate is holding a map of Beijing in his hand.",
+        "score": 89
+      },
+      {
+        "chineseId": 3783091,
+        "chinese": "去哪里可以买到欧洲的地图？",
+        "englishId": 1450196,
+        "english": "Where can I go to get a map of Europe?",
+        "score": 86
+      },
+      {
+        "chineseId": 2393878,
+        "chinese": "可以在地图上展示给我看吗？",
+        "englishId": 434430,
+        "english": "Can you show me on the map?",
+        "score": 86
+      },
+      {
+        "chineseId": 461684,
+        "chinese": "请给我一张街道地图好吗？",
+        "englishId": 7768162,
+        "english": "Can you give me a map of the street?",
+        "score": 83
+      },
+      {
+        "chineseId": 835557,
+        "chinese": "地图上的蓝线代表河流。",
+        "englishId": 277229,
+        "english": "The blue lines on the map represent rivers.",
+        "score": 82
+      },
+      {
+        "chineseId": 346454,
+        "chinese": "这儿有张德国的大地图。",
+        "englishId": 61810,
+        "english": "Here's a big map of Germany.",
+        "score": 80
+      },
+      {
+        "chineseId": 856817,
+        "chinese": "办公桌上面有一张地图。",
+        "englishId": 20555,
+        "english": "There is a map on the desk.",
+        "score": 80
+      },
+      {
+        "chineseId": 1786249,
+        "chinese": "这是一张仙台市的地图。",
+        "englishId": 55547,
+        "english": "This is a map of the city of Sendai.",
+        "score": 80
+      },
+      {
+        "chineseId": 9419143,
+        "chinese": "汤姆很仔细地参考地图。",
+        "englishId": 3442441,
+        "english": "Tom is looking closely at the map.",
+        "score": 80
+      }
+    ]
+  },
+  {
+    "target": "旅馆",
+    "hskLevel": 4,
+    "candidateCount": 15,
+    "candidates": [
+      {
+        "chineseId": 743553,
+        "chinese": "这个旅馆的房间不像那个旅馆的房间那么干净。",
+        "englishId": 1450061,
+        "english": "The rooms in this hotel are not as clean as the rooms in that hotel.",
+        "score": 98
+      },
+      {
+        "chineseId": 353619,
+        "chinese": "我不想和一个陌生人分享旅馆房间。",
+        "englishId": 255598,
+        "english": "I don't want to share the hotel room with a stranger.",
+        "score": 95
+      },
+      {
+        "chineseId": 799253,
+        "chinese": "汽车旅馆可以接待多达400名客人。",
+        "englishId": 49843,
+        "english": "The motel can accommodate as many as 400 guests.",
+        "score": 89
+      },
+      {
+        "chineseId": 1695592,
+        "chinese": "我到旅馆的时候，天已经黑了。",
+        "englishId": 33380,
+        "english": "It was dark when I reached the hotel.",
+        "score": 86
+      },
+      {
+        "chineseId": 2298472,
+        "chinese": "他住进了一家很便宜的旅馆。",
+        "englishId": 1773701,
+        "english": "He stayed at a cheap hotel.",
+        "score": 86
+      },
+      {
+        "chineseId": 6404946,
+        "chinese": "法国客人就住在那边的旅馆。",
+        "englishId": 6404948,
+        "english": "The French are staying in the hotel just over there.",
+        "score": 86
+      },
+      {
+        "chineseId": 1735517,
+        "chinese": "你有权使用旅馆的游泳池。",
+        "englishId": 2896453,
+        "english": "You are allowed to use the hotel's swimming pool.",
+        "score": 83
+      },
+      {
+        "chineseId": 1735516,
+        "chinese": "你可以使用旅馆的游泳池。",
+        "englishId": 33378,
+        "english": "You can use the hotel's swimming pool.",
+        "score": 83
+      },
+      {
+        "chineseId": 8750771,
+        "chinese": "萨米在一家旅馆的房间。",
+        "englishId": 6574821,
+        "english": "Sami was in a hotel room.",
+        "score": 80
+      },
+      {
+        "chineseId": 2363166,
+        "chinese": "我看见他从旅馆出来。",
+        "englishId": 1047644,
+        "english": "I saw him coming out of the hotel.",
+        "score": 77
+      },
+      {
+        "chineseId": 414614,
+        "chinese": "市中心有很多旅馆。",
+        "englishId": 41101,
+        "english": "There are many hotels downtown.",
+        "score": 74
+      },
+      {
+        "chineseId": 396310,
+        "chinese": "你知道这家旅馆吗？",
+        "englishId": 49873,
+        "english": "Do you know that hotel?",
+        "score": 74
+      }
+    ]
+  },
+  {
+    "target": "海关",
+    "hskLevel": 4,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "座位",
+    "hskLevel": 4,
+    "candidateCount": 32,
+    "candidates": [
+      {
+        "chineseId": 8550934,
+        "chinese": "汤姆把那个大野餐篮子放在他旁边的乘客座位上。",
+        "englishId": 2957787,
+        "english": "Tom put the large picnic basket on the passenger seat next to him.",
+        "score": 95
+      },
+      {
+        "chineseId": 510706,
+        "chinese": "男孩在巴士上把座位讓給了老人。",
+        "englishId": 46386,
+        "english": "The boy gave up his seat to the old man on the bus.",
+        "score": 92
+      },
+      {
+        "chineseId": 13532082,
+        "chinese": "我們都從座位上站起來，開始跳舞。",
+        "englishId": 6662493,
+        "english": "We all got up and started dancing.",
+        "score": 92
+      },
+      {
+        "chineseId": 847867,
+        "chinese": "她把她的座位让给了一个老人。",
+        "englishId": 4736933,
+        "english": "She gave her seat to an elderly person.",
+        "score": 89
+      },
+      {
+        "chineseId": 10019769,
+        "chinese": "“我想坐你的座位。”“如果你想，那我们就换位子吧！”",
+        "englishId": 10673880,
+        "english": "\"I want to sit in your seat.\" \"If you want that, then let's change seats!\"",
+        "score": 89
+      },
+      {
+        "chineseId": 642567,
+        "chinese": "他把座位讓給了一個老婆婆。",
+        "englishId": 304832,
+        "english": "He offered his seat to an old woman.",
+        "score": 86
+      },
+      {
+        "chineseId": 866146,
+        "chinese": "你可以幫我保留這個座位嗎?",
+        "englishId": 58208,
+        "english": "Can you save this seat for me?",
+        "score": 82
+      },
+      {
+        "chineseId": 372123,
+        "chinese": "請回到你們各自的座位。",
+        "englishId": 21752,
+        "english": "Go to your respective seats.",
+        "score": 80
+      },
+      {
+        "chineseId": 865581,
+        "chinese": "火車上有預訂的座位嗎？",
+        "englishId": 324754,
+        "english": "Are there reserved seats on the train?",
+        "score": 80
+      },
+      {
+        "chineseId": 876705,
+        "chinese": "我想你坐到我的座位了。",
+        "englishId": 50899,
+        "english": "I think you're sitting in my seat.",
+        "score": 80
+      },
+      {
+        "chineseId": 881077,
+        "chinese": "我不認為這是你的座位。",
+        "englishId": 70497,
+        "english": "I didn't think this was your seat.",
+        "score": 80
+      },
+      {
+        "chineseId": 6559058,
+        "chinese": "對不起，我找不到座位了。",
+        "englishId": 7768897,
+        "english": "Sorry, I couldn't find my seat.",
+        "score": 80
+      }
+    ]
+  },
+  {
+    "target": "登机牌",
+    "hskLevel": 4,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "航班",
+    "hskLevel": 4,
+    "candidateCount": 17,
+    "candidates": [
+      {
+        "chineseId": 8929167,
+        "chinese": "请问波士顿和悉尼之间有直飞航班吗？",
+        "englishId": 3753285,
+        "english": "Are there any direct flights between Boston and Sydney?",
+        "score": 98
+      },
+      {
+        "chineseId": 472875,
+        "chinese": "請問有沒有飛往紐約的不停站航班？",
+        "englishId": 35891,
+        "english": "Is there a nonstop flight to New York?",
+        "score": 95
+      },
+      {
+        "chineseId": 4455690,
+        "chinese": "你們一天提供幾班飛往紐約的航班？",
+        "englishId": 35882,
+        "english": "How many flights to New York do you offer a day?",
+        "score": 95
+      },
+      {
+        "chineseId": 750159,
+        "chinese": "由于台风原因，很多航班被取消了。",
+        "englishId": 275441,
+        "english": "Many flights were canceled, owing to the typhoon.",
+        "score": 92
+      },
+      {
+        "chineseId": 8751431,
+        "chinese": "汤姆的航班延误了，然后被取消了。",
+        "englishId": 3442609,
+        "english": "Tom's flight was delayed and then cancelled.",
+        "score": 92
+      },
+      {
+        "chineseId": 13890313,
+        "chinese": "从波士顿起飞的333号航班要几点到？",
+        "englishId": 3023200,
+        "english": "What time does Flight 333 from Boston arrive?",
+        "score": 92
+      },
+      {
+        "chineseId": 812246,
+        "chinese": "我想要一个直飞纽约的航班。",
+        "englishId": 35884,
+        "english": "I'd like a nonstop flight to New York.",
+        "score": 86
+      },
+      {
+        "chineseId": 830440,
+        "chinese": "一些航班由於地震被延誤了。",
+        "englishId": 277199,
+        "english": "A couple of flights were delayed on account of the earthquake.",
+        "score": 86
+      },
+      {
+        "chineseId": 3078793,
+        "chinese": "我想要再确认一下我的航班。",
+        "englishId": 5932930,
+        "english": "I want to quickly confirm my flight again.",
+        "score": 86
+      },
+      {
+        "chineseId": 591882,
+        "chinese": "在东京和莫斯科有一个航班。",
+        "englishId": 279708,
+        "english": "There is an air service between Tokyo and Moscow.",
+        "score": 86
+      },
+      {
+        "chineseId": 919667,
+        "chinese": "對不起，航班已經客滿了。",
+        "englishId": 269524,
+        "english": "Sorry, the flight is already full.",
+        "score": 80
+      },
+      {
+        "chineseId": 10199249,
+        "chinese": "我们的航班被取消了。",
+        "englishId": 23341,
+        "english": "Our flight was canceled.",
+        "score": 77
+      }
+    ]
+  },
+  {
+    "target": "酒店",
+    "hskLevel": 4,
+    "candidateCount": 44,
+    "candidates": [
+      {
+        "chineseId": 4104709,
+        "chinese": "那个建筑物是男女都可以住宿的胶囊酒店。",
+        "englishId": 109242,
+        "english": "This building is a capsule hotel lodging men and women.",
+        "score": 104
+      },
+      {
+        "chineseId": 342690,
+        "chinese": "真奇怪，他竟然被安排入住這種廉價酒店。",
+        "englishId": 282904,
+        "english": "It is strange that he should be put up at such a cheap hotel.",
+        "score": 101
+      },
+      {
+        "chineseId": 526605,
+        "chinese": "我們從酒店裏可以把整個公園看得清清楚楚。",
+        "englishId": 33395,
+        "english": "We could see the full extent of the park from the hotel.",
+        "score": 101
+      },
+      {
+        "chineseId": 617262,
+        "chinese": "在這間酒店房間裏，你可以聽見海的聲音。",
+        "englishId": 60489,
+        "english": "You can hear the sound of the sea in this hotel room.",
+        "score": 101
+      },
+      {
+        "chineseId": 13980301,
+        "chinese": "这家酒店怎么会是四星酒店，真是令人无法理解。",
+        "englishId": 12208782,
+        "english": "It's absolutely incomprehensible how this hotel has four stars.",
+        "score": 98
+      },
+      {
+        "chineseId": 342845,
+        "chinese": "下午六点半到帝国酒店的大堂找我。",
+        "englishId": 240055,
+        "english": "Meet me at the lobby of the Imperial Hotel at 6:30 p.m.",
+        "score": 95
+      },
+      {
+        "chineseId": 8792097,
+        "chinese": "我想在酒店的保险柜里存点东西。",
+        "englishId": 67143,
+        "english": "I'd like to put some things in the hotel safe.",
+        "score": 92
+      },
+      {
+        "chineseId": 8863173,
+        "chinese": "在这家酒店可以免费上无线网络。",
+        "englishId": 4859199,
+        "english": "This hotel has free Wi-Fi.",
+        "score": 92
+      },
+      {
+        "chineseId": 8709512,
+        "chinese": "汤姆和玛丽入住了一家高档酒店。",
+        "englishId": 5999506,
+        "english": "Tom and Mary stayed in a fancy hotel.",
+        "score": 92
+      },
+      {
+        "chineseId": 1577189,
+        "chinese": "著名的酒店几乎被大火烧毁了。",
+        "englishId": 1577221,
+        "english": "The famous hotel was practically destroyed by a large fire.",
+        "score": 89
+      },
+      {
+        "chineseId": 351825,
+        "chinese": "這間酒店的交通位置很方便。",
+        "englishId": 60476,
+        "english": "This hotel is conveniently located in terms of public transportation.",
+        "score": 86
+      },
+      {
+        "chineseId": 8863174,
+        "chinese": "这家酒店有免费的无线网络。",
+        "englishId": 4859199,
+        "english": "This hotel has free Wi-Fi.",
+        "score": 86
+      }
+    ]
+  },
+  {
+    "target": "交通",
+    "hskLevel": 4,
+    "candidateCount": 62,
+    "candidates": [
+      {
+        "chineseId": 1316907,
+        "chinese": "交通事故是美国青少年死亡的主要原因。",
+        "englishId": 680063,
+        "english": "Car accidents are the leading cause of death for teenagers in the United States.",
+        "score": 103
+      },
+      {
+        "chineseId": 13524076,
+        "chinese": "儘管交通很堵，我們還是設法及時趕到了。",
+        "englishId": 9678206,
+        "english": "Despite all of the traffic we managed to make it in time.",
+        "score": 101
+      },
+      {
+        "chineseId": 487963,
+        "chinese": "这次交通事故中只有一个小男孩幸存了下来。",
+        "englishId": 73117,
+        "english": "Only one little boy survived the traffic accident.",
+        "score": 101
+      },
+      {
+        "chineseId": 768245,
+        "chinese": "當你穿越交通繁忙的街道時要小心注意。",
+        "englishId": 10619134,
+        "english": "Take care when you cross a busy road.",
+        "score": 101
+      },
+      {
+        "chineseId": 1616601,
+        "chinese": "他未能遵守交通規則，結果發生了嚴重的事故。",
+        "englishId": 1616603,
+        "english": "His failure to observe traffic regulations resulted in a serious accident.",
+        "score": 101
+      },
+      {
+        "chineseId": 3695643,
+        "chinese": "今天早上高速公路上的交通状况正常。",
+        "englishId": 3695644,
+        "english": "Traffic conditions on the highway are normal this morning.",
+        "score": 98
+      },
+      {
+        "chineseId": 334046,
+        "chinese": "现代交通使我们能在几天内环绕地球。",
+        "englishId": 18644,
+        "english": "Modern travel enables us to go around the world in a few days.",
+        "score": 98
+      },
+      {
+        "chineseId": 1208525,
+        "chinese": "这个好像说一个人上瘾了“交通”，“艺术”或“政治”。",
+        "englishId": 1208529,
+        "english": "It’s like saying that someone is addicted to “transport”, “art” or “politics”.",
+        "score": 96
+      },
+      {
+        "chineseId": 510716,
+        "chinese": "司機不需要為這次的交通意外負責。",
+        "englishId": 48073,
+        "english": "The driver does not have responsibility for the traffic accident.",
+        "score": 95
+      },
+      {
+        "chineseId": 3742592,
+        "chinese": "很不幸地，我的鄰居被捲入交通事故，呈現昏迷狀態。",
+        "englishId": 3962686,
+        "english": "Unfortunately, my neighbor was involved in a traffic accident, and is currently in a coma.",
+        "score": 95
+      },
+      {
+        "chineseId": 334392,
+        "chinese": "交通事故没有一天是不在发生的。",
+        "englishId": 240338,
+        "english": "Not a day passes without traffic accidents.",
+        "score": 94
+      },
+      {
+        "chineseId": 3080271,
+        "chinese": "说起交通事故，我去年目睹了一场。",
+        "englishId": 240332,
+        "english": "Speaking of traffic accidents, I saw one last year.",
+        "score": 92
+      }
+    ]
+  },
+  {
+    "target": "出发",
+    "hskLevel": 4,
+    "candidateCount": 47,
+    "candidates": [
+      {
+        "chineseId": 345948,
+        "chinese": "所有村民出发去山里寻找一只失踪的猫。",
+        "englishId": 388013,
+        "english": "All the villagers went into the mountains to look for a missing cat.",
+        "score": 101
+      },
+      {
+        "chineseId": 775619,
+        "chinese": "在中国，人人必须去出发的火车站买车票。",
+        "englishId": 775622,
+        "english": "In China, you have to go to the departure station and buy train tickets there.",
+        "score": 101
+      },
+      {
+        "chineseId": 333819,
+        "chinese": "他们和一个导游一起出发，只是为了以防迷路。",
+        "englishId": 280386,
+        "english": "They set out with a guide just in case they lost their way.",
+        "score": 101
+      },
+      {
+        "chineseId": 2026093,
+        "chinese": "汤姆本想早上早点出发，结果却睡过头了。",
+        "englishId": 37073,
+        "english": "Tom expected to leave early in the morning, but he overslept.",
+        "score": 101
+      },
+      {
+        "chineseId": 8936285,
+        "chinese": "警察告诉我巴士的末班车在十点出发。",
+        "englishId": 238390,
+        "english": "The policeman told me that the last bus leaves at ten.",
+        "score": 98
+      },
+      {
+        "chineseId": 333848,
+        "chinese": "如果天气允许的话，我们1小时后出发。",
+        "englishId": 278807,
+        "english": "Weather permitting, we will leave in an hour.",
+        "score": 95
+      },
+      {
+        "chineseId": 1394979,
+        "chinese": "你朋友是什么时候出发去美国的？",
+        "englishId": 70344,
+        "english": "When did your friend leave for America?",
+        "score": 92
+      },
+      {
+        "chineseId": 816479,
+        "chinese": "马上出发，不然你就要错过公车了。",
+        "englishId": 52157,
+        "english": "Start at once, or you will miss the bus.",
+        "score": 92
+      },
+      {
+        "chineseId": 787616,
+        "chinese": "去伯明翰的火车从3号站台出发。",
+        "englishId": 35165,
+        "english": "The train for Birmingham leaves from platform 3.",
+        "score": 89
+      },
+      {
+        "chineseId": 444668,
+        "chinese": "我乘的火车7点出发，10点到了纽约。",
+        "englishId": 453005,
+        "english": "My train left at 7 and arrived in New York at 10.",
+        "score": 89
+      },
+      {
+        "chineseId": 455313,
+        "chinese": "你什么时候才会准备好出发？",
+        "englishId": 66003,
+        "english": "When will you get ready to leave?",
+        "score": 86
+      },
+      {
+        "chineseId": 905090,
+        "chinese": "这艘船会在傍晚出发去英国。",
+        "englishId": 46700,
+        "english": "The boat is to leave for England this evening.",
+        "score": 86
+      }
+    ]
+  },
+  {
+    "target": "抵达",
+    "hskLevel": 4,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 9419167,
+        "chinese": "为什么要准时抵达，毕竟大家都迟到。",
+        "englishId": 1051797,
+        "english": "What's the point of showing up on time if everyone else shows up late?",
+        "score": 95
+      },
+      {
+        "chineseId": 9419141,
+        "chinese": "我们走了十分钟就抵达了博物馆。",
+        "englishId": 73368,
+        "english": "After ten minutes' walk we came to the museum.",
+        "score": 92
+      },
+      {
+        "chineseId": 602898,
+        "chinese": "狂风暴雨造成她无法准时抵达。",
+        "englishId": 325281,
+        "english": "The storm prevented her from arriving on time.",
+        "score": 89
+      },
+      {
+        "chineseId": 333313,
+        "chinese": "他们就快从香港抵达了。",
+        "englishId": 306542,
+        "english": "They are arriving here soon from Hong Kong.",
+        "score": 80
+      },
+      {
+        "chineseId": 7841376,
+        "chinese": "汤姆现在应该抵达了。",
+        "englishId": 6868228,
+        "english": "Tom should have arrived by now.",
+        "score": 77
+      },
+      {
+        "chineseId": 9419116,
+        "chinese": "汤姆三点左右抵达。",
+        "englishId": 8355645,
+        "english": "Tom arrived at about three.",
+        "score": 74
+      },
+      {
+        "chineseId": 7858035,
+        "chinese": "他们抵达了酒店。",
+        "englishId": 306019,
+        "english": "They arrived at the hotel.",
+        "score": 71
+      },
+      {
+        "chineseId": 1785971,
+        "chinese": "中午，我抵达东京。",
+        "englishId": 258973,
+        "english": "I arrived in Tokyo at noon.",
+        "score": 71
+      }
+    ]
+  },
+  {
+    "target": "海滩",
+    "hskLevel": 4,
+    "candidateCount": 16,
+    "candidates": [
+      {
+        "chineseId": 1873022,
+        "chinese": "海滩是一个供孩子们玩乐的理想场所。",
+        "englishId": 1396376,
+        "english": "The beach is an ideal place for children to play.",
+        "score": 100
+      },
+      {
+        "chineseId": 502840,
+        "chinese": "我本来预备今天去海滩的，但接着天就开始下雨了。",
+        "englishId": 1863,
+        "english": "I was planning on going to the beach today, but then it started to rain.",
+        "score": 95
+      },
+      {
+        "chineseId": 1358441,
+        "chinese": "我在海滩上发现了一个漂亮的贝壳。",
+        "englishId": 256744,
+        "english": "I found a beautiful shell on the shore.",
+        "score": 95
+      },
+      {
+        "chineseId": 816502,
+        "chinese": "一条受伤的鲸鱼在海滩边搁浅了。",
+        "englishId": 682496,
+        "english": "A wounded whale washed up on the beach.",
+        "score": 92
+      },
+      {
+        "chineseId": 2054072,
+        "chinese": "孩子们正在海滩上用沙子堆沙堡。",
+        "englishId": 7999770,
+        "english": "Kids are building sand castles on the beach.",
+        "score": 92
+      },
+      {
+        "chineseId": 844153,
+        "chinese": "孩子们非常喜欢在海滩上玩耍。",
+        "englishId": 1164967,
+        "english": "Children really like playing on the beach.",
+        "score": 89
+      },
+      {
+        "chineseId": 3042328,
+        "chinese": "一些海滩没能遵守环保规定。",
+        "englishId": 3042310,
+        "english": "Some beaches had failed to comply with environmental regulations.",
+        "score": 86
+      },
+      {
+        "chineseId": 3636657,
+        "chinese": "我住在海边所以经常去海滩。",
+        "englishId": 3567588,
+        "english": "I live near the sea, so I often go to the beach.",
+        "score": 86
+      },
+      {
+        "chineseId": 335513,
+        "chinese": "这个海滩是冲浪者的天堂。",
+        "englishId": 60622,
+        "english": "This beach is a paradise for surfers.",
+        "score": 83
+      },
+      {
+        "chineseId": 9415219,
+        "chinese": "没有汤姆，我不应该去海滩。",
+        "englishId": 6338955,
+        "english": "I shouldn't have gone to the beach without Tom.",
+        "score": 83
+      },
+      {
+        "chineseId": 419932,
+        "chinese": "海滩上你到底愿意去吗？",
+        "englishId": 1319985,
+        "english": "Are you willing to go to the beach?",
+        "score": 82
+      },
+      {
+        "chineseId": 11264798,
+        "chinese": "从这里到海滩该怎么走？",
+        "englishId": 8877635,
+        "english": "How do I get to the beach from here?",
+        "score": 80
+      }
+    ]
+  },
+  {
+    "target": "行驶",
+    "hskLevel": 4,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 863175,
+        "chinese": "我们必得缴通行税才能在这条道路上行驶。",
+        "englishId": 57571,
+        "english": "We must pay a toll to drive on this road.",
+        "score": 104
+      },
+      {
+        "chineseId": 8603787,
+        "chinese": "自行车在汽车的右侧行驶是不合法的。",
+        "englishId": 12137199,
+        "english": "Bicycles traveling to the right of automobiles is illegal.",
+        "score": 98
+      },
+      {
+        "chineseId": 333367,
+        "chinese": "在城市里行驶的车辆数量增加了。",
+        "englishId": 246183,
+        "english": "The number of cars driven in the city has increased.",
+        "score": 92
+      },
+      {
+        "chineseId": 787558,
+        "chinese": "小心不要在单行道逆向行驶。",
+        "englishId": 682503,
+        "english": "Be careful not to drive the wrong way on a one-way street.",
+        "score": 86
+      },
+      {
+        "chineseId": 1878115,
+        "chinese": "路标上写的什么？- 单向行驶。",
+        "englishId": 695367,
+        "english": "What is written on the road sign? - ONE WAY.",
+        "score": 83
+      },
+      {
+        "chineseId": 707694,
+        "chinese": "在美国，汽车靠右行驶。",
+        "englishId": 3633620,
+        "english": "In the United States, cars drive on the right‐hand side of the road.",
+        "score": 77
+      }
+    ]
+  },
+  {
+    "target": "体检",
+    "hskLevel": 5,
+    "candidateCount": 1,
+    "candidates": [
+      {
+        "chineseId": 717373,
+        "chinese": "老王身体检查的结果别的方面都挺正常，就是血压有点高。",
+        "englishId": 717374,
+        "english": "In other aspects, the results of Laowang's health examination were all quite normal; it was just that his blood pressure was a bit high.",
+        "score": 95
+      }
+    ]
+  },
+  {
+    "target": "药房",
+    "hskLevel": 5,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "症状",
+    "hskLevel": 5,
+    "candidateCount": 3,
+    "candidates": [
+      {
+        "chineseId": 8743606,
+        "chinese": "如果这些药突然被停了，那可能会出现一些戒断症状。",
+        "englishId": 2846769,
+        "english": "If these drugs are stopped abruptly, then some withdrawal symptoms may occur.",
+        "score": 101
+      },
+      {
+        "chineseId": 8904342,
+        "chinese": "你有新冠病毒的症状吗？",
+        "englishId": 8610374,
+        "english": "Do you have coronavirus symptoms?",
+        "score": 71
+      },
+      {
+        "chineseId": 885823,
+        "chinese": "这孩子有水痘的症状。",
+        "englishId": 47466,
+        "english": "The child has a case of chicken pox.",
+        "score": 68
+      }
+    ]
+  },
+  {
+    "target": "康复",
+    "hskLevel": 5,
+    "candidateCount": 14,
+    "candidates": [
+      {
+        "chineseId": 812322,
+        "chinese": "我妹妹出事之后，我爸爸和我照顾她直到康复。",
+        "englishId": 643297,
+        "english": "My father and I nursed my sister back to health after her accident.",
+        "score": 98
+      },
+      {
+        "chineseId": 1315960,
+        "chinese": "对于他的康复没有任何希望。",
+        "englishId": 1315900,
+        "english": "There's no chance that he'll recover.",
+        "score": 77
+      },
+      {
+        "chineseId": 602920,
+        "chinese": "我的父亲很快就会康复。",
+        "englishId": 602935,
+        "english": "My father will recover soon.",
+        "score": 71
+      },
+      {
+        "chineseId": 844530,
+        "chinese": "该病人正逐步康复。",
+        "englishId": 21055,
+        "english": "The patient is steadily recovering.",
+        "score": 65
+      },
+      {
+        "chineseId": 2777027,
+        "chinese": "祝你早日康复。",
+        "englishId": 52223,
+        "english": "I hope you'll be well soon.",
+        "score": 59
+      },
+      {
+        "chineseId": 9432358,
+        "chinese": "早日康复。",
+        "englishId": 274026,
+        "english": "I hope you'll recover quickly.",
+        "score": 13
+      }
+    ]
+  },
+  {
+    "target": "疫苗",
+    "hskLevel": 5,
+    "candidateCount": 7,
+    "candidates": [
+      {
+        "chineseId": 803470,
+        "chinese": "看完研究以后，我们其中大部分人论定疫苗是件好事。",
+        "englishId": 803471,
+        "english": "After looking at the research, most of us conclude that vaccines are a good thing.",
+        "score": 101
+      },
+      {
+        "chineseId": 9857591,
+        "chinese": "中国向哥伦比亚提供的第三批疫苗运抵哥伦比亚首都波哥大。",
+        "englishId": 11548469,
+        "english": "The third batch of vaccines provided by China to Colombia has arrived in Bogota, the capital of Colombia.",
+        "score": 89
+      },
+      {
+        "chineseId": 13922068,
+        "chinese": "我没有接种过冠状病毒疫苗。",
+        "englishId": 10768147,
+        "english": "I haven't had the vaccine for Coronavirus.",
+        "score": 77
+      },
+      {
+        "chineseId": 10335143,
+        "chinese": "我不需要接種流感疫苗。",
+        "englishId": 2361357,
+        "english": "I don't need a flu shot.",
+        "score": 71
+      },
+      {
+        "chineseId": 12333067,
+        "chinese": "疫苗不会导致自闭症。",
+        "englishId": 5918815,
+        "english": "Vaccines don't cause autism.",
+        "score": 70
+      },
+      {
+        "chineseId": 785831,
+        "chinese": "我接种了流感疫苗。",
+        "englishId": 325461,
+        "english": "I was vaccinated against the flu.",
+        "score": 65
+      }
+    ]
+  },
+  {
+    "target": "手术",
+    "hskLevel": 5,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 334234,
+        "chinese": "自从手术后，我父亲一直处于良好的状态。",
+        "englishId": 319266,
+        "english": "My father has been in good shape since his operation.",
+        "score": 92
+      },
+      {
+        "chineseId": 1467060,
+        "chinese": "医生们拒绝做第二次手术。",
+        "englishId": 28090,
+        "english": "Doctors refused to perform a second operation.",
+        "score": 74
+      },
+      {
+        "chineseId": 8654617,
+        "chinese": "这个诊所正在做激光手术。",
+        "englishId": 8780250,
+        "english": "This clinic is doing laser surgery.",
+        "score": 74
+      },
+      {
+        "chineseId": 6822734,
+        "chinese": "医生决定立刻动手术。",
+        "englishId": 28013,
+        "english": "The doctor decided to operate at once.",
+        "score": 68
+      },
+      {
+        "chineseId": 334235,
+        "chinese": "父亲将会接受手术。",
+        "englishId": 319267,
+        "english": "Father is going to undergo an operation.",
+        "score": 65
+      },
+      {
+        "chineseId": 367904,
+        "chinese": "我需要做手术吗？",
+        "englishId": 434516,
+        "english": "Do I need surgery?",
+        "score": 62
+      },
+      {
+        "chineseId": 8655329,
+        "chinese": "你是否同意手术？",
+        "englishId": 5073894,
+        "english": "Do you give your consent to the operation?",
+        "score": 62
+      },
+      {
+        "chineseId": 2188454,
+        "chinese": "该手术无痛。",
+        "englishId": 5739548,
+        "english": "The procedure is painless.",
+        "score": 56
+      },
+      {
+        "chineseId": 4913659,
+        "chinese": "在你面前有一百万美金。你可以自己留下或帮一个你不认识的快全身瘫痪的人做手术。他不认识你，你也不认识他。当然，无论你慷慨地把所有的钱都捐给了一个素不相识的人去做手术，还是卑鄙地拿走这笔钱，让那个人今生都只能卧床不起，都不会有人知道。你会怎么做呢？这笔钱不可割分。",
+        "englishId": 4274446,
+        "english": "You've got a million dollars in front of you. You can either spend it for yourself or spend it on a surgery for someone you don't know who is in danger of quadriplegia. You don't know each other. And no one will ever know what a noble deed you've done sacrificing all the money for the surgery for a person you don't know, or how mean you were to take the money confining that person to a wheelchair for the rest of their life. So what would you do? You can't share the money.",
+        "score": -215
+      }
+    ]
+  },
+  {
+    "target": "营养",
+    "hskLevel": 5,
+    "candidateCount": 3,
+    "candidates": [
+      {
+        "chineseId": 501707,
+        "chinese": "尼日尔仍然有50万孩子面临着营养不良。",
+        "englishId": 1732,
+        "english": "Half a million children still face malnutrition in Niger.",
+        "score": 89
+      },
+      {
+        "chineseId": 1397099,
+        "chinese": "这些东西构成了一顿营养均衡的饭。",
+        "englishId": 55277,
+        "english": "These things constitute a balanced meal.",
+        "score": 86
+      },
+      {
+        "chineseId": 345694,
+        "chinese": "她很关心孩子的营养问题。",
+        "englishId": 313982,
+        "english": "She is careful about her child's nutrition.",
+        "score": 74
+      }
+    ]
+  },
+  {
+    "target": "复诊",
+    "hskLevel": 5,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "急诊",
+    "hskLevel": 5,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "身体",
+    "hskLevel": 5,
+    "candidateCount": 55,
+    "candidates": [
+      {
+        "chineseId": 604479,
+        "chinese": "它长着女人的头、狮子的身体、一双羽翅以及蛇尾巴。",
+        "englishId": 42321,
+        "english": "It had the head of a woman, the body of a lion, the wings of a bird, and the tail of a serpent.",
+        "score": 104
+      },
+      {
+        "chineseId": 1597391,
+        "chinese": "他们观察到她随著病情变化身体也渐渐衰弱下去。",
+        "englishId": 1597392,
+        "english": "They watched her gradually weaken as the disease progressed.",
+        "score": 104
+      },
+      {
+        "chineseId": 3537575,
+        "chinese": "这种药可以暂时缓解身体的疼痛，你需要的话就拿去吧。",
+        "englishId": 3537576,
+        "english": "This kind of medicine can temporarily alleviate pain. If you need it, just take it.",
+        "score": 98
+      },
+      {
+        "chineseId": 717373,
+        "chinese": "老王身体检查的结果别的方面都挺正常，就是血压有点高。",
+        "englishId": 717374,
+        "english": "In other aspects, the results of Laowang's health examination were all quite normal; it was just that his blood pressure was a bit high.",
+        "score": 95
+      },
+      {
+        "chineseId": 3537587,
+        "chinese": "不能过度运动，要量力而行，否则反而对身体造成负面影响。",
+        "englishId": 13571403,
+        "english": "Don't exercise excessively; do it within your limits, otherwise it may have negative effects on your body.",
+        "score": 95
+      },
+      {
+        "chineseId": 835655,
+        "chinese": "他们中的一些人身体健康，但是其他人不是。",
+        "englishId": 305263,
+        "english": "Some of them are healthy, but others are not.",
+        "score": 95
+      },
+      {
+        "chineseId": 420824,
+        "chinese": "这次一进医院，才知道身体健康最最重要。",
+        "englishId": 1492929,
+        "english": "This time, when he went into the hospital, he finally understood that one's health is really the most important thing of all.",
+        "score": 92
+      },
+      {
+        "chineseId": 746461,
+        "chinese": "尽管喝酒对身体不好，很多人还是喜欢喝。",
+        "englishId": 7837702,
+        "english": "In spite of the fact that drinking alcohol damages their bodies, many people still like to drink it.",
+        "score": 92
+      },
+      {
+        "chineseId": 420816,
+        "chinese": "你身体一直非常好，怎么突然间住医院了？",
+        "englishId": 7834188,
+        "english": "Your body was always very healthy; why are you suddenly in the hospital?",
+        "score": 92
+      },
+      {
+        "chineseId": 2050788,
+        "chinese": "在人类的交流活动中，身体语言非常重要。",
+        "englishId": 1436367,
+        "english": "Gestures are very important in human communication.",
+        "score": 92
+      },
+      {
+        "chineseId": 899138,
+        "chinese": "快要考试的时候，举重真的消愁解闷，再说对身体和精神都很好。",
+        "englishId": 899139,
+        "english": "When you're about to have exams, lifting weights really does relieve stress, and it's also good for your mind and body.",
+        "score": 89
+      },
+      {
+        "chineseId": 1394895,
+        "chinese": "我们的身体会对我们的感情做出反应。",
+        "englishId": 23476,
+        "english": "Our bodies respond to our feelings.",
+        "score": 89
+      }
+    ]
+  },
+  {
+    "target": "疼痛",
+    "hskLevel": 5,
+    "candidateCount": 11,
+    "candidates": [
+      {
+        "chineseId": 3537575,
+        "chinese": "这种药可以暂时缓解身体的疼痛，你需要的话就拿去吧。",
+        "englishId": 3537576,
+        "english": "This kind of medicine can temporarily alleviate pain. If you need it, just take it.",
+        "score": 98
+      },
+      {
+        "chineseId": 891051,
+        "chinese": "當天氣變冷的時候，我的關節疼痛。",
+        "englishId": 20353,
+        "english": "My joints ache when it gets cold.",
+        "score": 83
+      },
+      {
+        "chineseId": 785249,
+        "chinese": "如果持續疼痛, 你必須去看醫生。",
+        "englishId": 455967,
+        "english": "If the pain continues you have to go to the doctor.",
+        "score": 80
+      },
+      {
+        "chineseId": 2255121,
+        "chinese": "牙疼。我无法忍受这种疼痛。",
+        "englishId": 2255954,
+        "english": "I've got a toothache. I just can't bear this pain anymore.",
+        "score": 74
+      },
+      {
+        "chineseId": 781087,
+        "chinese": "他一生為急性疼痛所苦。",
+        "englishId": 619125,
+        "english": "He's suffering from acute pain in his life.",
+        "score": 71
+      },
+      {
+        "chineseId": 8709410,
+        "chinese": "这种药会减轻你的疼痛。",
+        "englishId": 56562,
+        "english": "This medicine will decrease your pain.",
+        "score": 71
+      },
+      {
+        "chineseId": 8860184,
+        "chinese": "药片止住了我的疼痛。",
+        "englishId": 268562,
+        "english": "The tablets took away my pain.",
+        "score": 68
+      },
+      {
+        "chineseId": 336004,
+        "chinese": "疼痛令人难以忍受。",
+        "englishId": 1789071,
+        "english": "The pain is unbearable.",
+        "score": 67
+      },
+      {
+        "chineseId": 1411730,
+        "chinese": "疼痛消失了。",
+        "englishId": 278308,
+        "english": "The pain has gone.",
+        "score": 58
+      },
+      {
+        "chineseId": 11199834,
+        "chinese": "我全身疼痛。",
+        "englishId": 562053,
+        "english": "My body aches all over.",
+        "score": 56
+      }
+    ]
+  },
+  {
+    "target": "过敏",
+    "hskLevel": 5,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 1597382,
+        "chinese": "在过敏的季节不断地擤他的鼻子.",
+        "englishId": 1597383,
+        "english": "Constantly blowing his nose in allergy season.",
+        "score": 79
+      },
+      {
+        "chineseId": 426897,
+        "chinese": "我因为化妆品皮肤过敏了。",
+        "englishId": 427030,
+        "english": "I got a makeup-induced rash.",
+        "score": 74
+      },
+      {
+        "chineseId": 5967315,
+        "chinese": "你可能对花粉或灰尘过敏。",
+        "englishId": 456645,
+        "english": "Probably you are allergic to pollen or dust.",
+        "score": 74
+      },
+      {
+        "chineseId": 8739642,
+        "chinese": "不要忘记汤姆对花生过敏。",
+        "englishId": 7515506,
+        "english": "Don't forget Tom is allergic to peanuts.",
+        "score": 74
+      },
+      {
+        "chineseId": 10695949,
+        "chinese": "我知道汤姆对蜜蜂过敏。",
+        "englishId": 7517722,
+        "english": "I know that Tom is allergic to bees.",
+        "score": 71
+      },
+      {
+        "chineseId": 7774423,
+        "chinese": "这只松鼠对坚果过敏。",
+        "englishId": 3531541,
+        "english": "This squirrel has a nut allergy.",
+        "score": 68
+      },
+      {
+        "chineseId": 1895539,
+        "chinese": "我对花粉过敏。",
+        "englishId": 256550,
+        "english": "I am allergic to pollen.",
+        "score": 59
+      }
+    ]
+  },
+  {
+    "target": "检查",
+    "hskLevel": 5,
+    "candidateCount": 33,
+    "candidates": [
+      {
+        "chineseId": 2455632,
+        "chinese": "提交工作内容之前请仔细检查，这里有疏忽的地方。",
+        "englishId": 868260,
+        "english": "Edit your work better before you submit it, it's sloppy.",
+        "score": 104
+      },
+      {
+        "chineseId": 1781979,
+        "chinese": "进一步的检查发现头骨受到剧烈的撞击而碎裂。",
+        "englishId": 6010784,
+        "english": "Another step forward revealed that the skull had received violent impact and disintegrated.",
+        "score": 101
+      },
+      {
+        "chineseId": 717373,
+        "chinese": "老王身体检查的结果别的方面都挺正常，就是血压有点高。",
+        "englishId": 717374,
+        "english": "In other aspects, the results of Laowang's health examination were all quite normal; it was just that his blood pressure was a bit high.",
+        "score": 95
+      },
+      {
+        "chineseId": 795941,
+        "chinese": "喂！这里有个会说维语的美国人！快来把他的电脑检查一下！",
+        "englishId": 795944,
+        "english": "Hey! There's an American who speaks Uyghur here! Hurry up and get over here to inspect his computer!",
+        "score": 91
+      },
+      {
+        "chineseId": 5145104,
+        "chinese": "出门前记得检查一下煤气是否关好了。",
+        "englishId": 5145540,
+        "english": "Before you go out remember to check the gas is turned off.",
+        "score": 89
+      },
+      {
+        "chineseId": 5624951,
+        "chinese": "汤姆检查电视时间表，看看在上映什么。",
+        "englishId": 1095298,
+        "english": "Tom checked the TV schedule to see what was on.",
+        "score": 89
+      },
+      {
+        "chineseId": 420930,
+        "chinese": "昨天我去看医生做检查，看看有没有病。",
+        "englishId": 7781070,
+        "english": "Yesterday, I went to the doctor to see if I was ill.",
+        "score": 89
+      },
+      {
+        "chineseId": 2348891,
+        "chinese": "请大家认真检查一次，再把考卷交上来。",
+        "englishId": 7790157,
+        "english": "Please give it a check, then hand in the examination paper.",
+        "score": 89
+      },
+      {
+        "chineseId": 1415828,
+        "chinese": "两个男人在检查汽车出了什么故障。",
+        "englishId": 877959,
+        "english": "Two men are checking on what's wrong with the car.",
+        "score": 86
+      },
+      {
+        "chineseId": 4302150,
+        "chinese": "我在检查这里有没有激光警报装置。",
+        "englishId": 4302152,
+        "english": "I'm checking for laser beam alarm triggers.",
+        "score": 86
+      },
+      {
+        "chineseId": 756862,
+        "chinese": "我想去医院做一个全面的检查。",
+        "englishId": 10266517,
+        "english": "I want to go to the hospital to get a complete check-up.",
+        "score": 80
+      },
+      {
+        "chineseId": 2437266,
+        "chinese": "您应该让医生给您检查身体。",
+        "englishId": 2438444,
+        "english": "You should go get a physical examination from a doctor.",
+        "score": 77
+      }
+    ]
+  },
+  {
+    "target": "处方",
+    "hskLevel": 5,
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "chineseId": 8554443,
+        "chinese": "如果汤姆不服用处方药，他的健康状况可能会恶化。",
+        "englishId": 8554342,
+        "english": "If Tom doesn't take the prescribed medicine, his state of health might deteriorate.",
+        "score": 104
+      },
+      {
+        "chineseId": 8554446,
+        "chinese": "如果汤姆不吃处方药，他的健康状况可能会恶化。",
+        "englishId": 8554342,
+        "english": "If Tom doesn't take the prescribed medicine, his state of health might deteriorate.",
+        "score": 101
+      },
+      {
+        "chineseId": 8700794,
+        "chinese": "那个药的话没有处方是买不到的。",
+        "englishId": 1008018,
+        "english": "You can't buy this medicine without a prescription.",
+        "score": 83
+      }
+    ]
+  },
+  {
+    "target": "体温",
+    "hskLevel": 5,
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "chineseId": 3890949,
+        "chinese": "这个男人的体温高于正常体温。",
+        "englishId": 3890950,
+        "english": "The man's body temperature is higher than normal.",
+        "score": 80
+      },
+      {
+        "chineseId": 8955190,
+        "chinese": "小孩的体温一般比大人的要高。",
+        "englishId": 3331682,
+        "english": "Children generally have a higher body temperature than adults.",
+        "score": 80
+      },
+      {
+        "chineseId": 1214431,
+        "chinese": "医生治疗了他们的降低体温。",
+        "englishId": 1214432,
+        "english": "They were treated for hypothermia.",
+        "score": 77
+      },
+      {
+        "chineseId": 399889,
+        "chinese": "我每六小时量一次体温。",
+        "englishId": 326483,
+        "english": "I took my temperature every six hours.",
+        "score": 71
+      }
+    ]
+  },
+  {
+    "target": "药物",
+    "hskLevel": 5,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 609909,
+        "chinese": "一个成长中的孩子如果没有充足的能量，可能需要药物治疗。",
+        "englishId": 402438,
+        "english": "A growing child who doesn't seem to have much energy perhaps needs medical attention.",
+        "score": 92
+      },
+      {
+        "chineseId": 7704615,
+        "chinese": "让你的食物成为药物，药物成为食物。",
+        "englishId": 6032043,
+        "english": "Let food be thy medicine and medicine be thy food.",
+        "score": 86
+      },
+      {
+        "chineseId": 10699373,
+        "chinese": "将你需要的药物写在这张纸上。",
+        "englishId": 10695727,
+        "english": "Write down the medications you need on this piece of paper.",
+        "score": 80
+      },
+      {
+        "chineseId": 335541,
+        "chinese": "没有药物能够治疗这种疾病。",
+        "englishId": 36571,
+        "english": "No medicine can cure this disease.",
+        "score": 77
+      },
+      {
+        "chineseId": 12615497,
+        "chinese": "汤姆把药物运到了营地。",
+        "englishId": 12614945,
+        "english": "Tom drove the medicine to the campsite.",
+        "score": 71
+      },
+      {
+        "chineseId": 2312182,
+        "chinese": "药物缓解了他的痛苦。",
+        "englishId": 43545,
+        "english": "The medicine decreased his pain.",
+        "score": 70
+      },
+      {
+        "chineseId": 10064219,
+        "chinese": "药物的作用还不确定。",
+        "englishId": 1334530,
+        "english": "Whether the medicine will work or not is uncertain.",
+        "score": 70
+      },
+      {
+        "chineseId": 10059332,
+        "chinese": "这种药物只能外用。",
+        "englishId": 11272921,
+        "english": "This kind of medicine can only be applied externally.",
+        "score": 65
+      }
+    ]
+  },
+  {
+    "target": "头痛",
+    "hskLevel": 5,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 847758,
+        "chinese": "我头痛。可能我该吃阿司匹林。",
+        "englishId": 7796497,
+        "english": "My head hurts. Maybe I should take an aspirin.",
+        "score": 77
+      },
+      {
+        "chineseId": 862694,
+        "chinese": "他正遭受严重头痛的困扰。",
+        "englishId": 292528,
+        "english": "He was suffering from a bad headache.",
+        "score": 74
+      },
+      {
+        "chineseId": 333997,
+        "chinese": "现在我有些许头痛。",
+        "englishId": 257502,
+        "english": "I have a slight headache now.",
+        "score": 65
+      },
+      {
+        "chineseId": 332993,
+        "chinese": "今天我头痛欲裂。",
+        "englishId": 257586,
+        "english": "I have a bad headache today.",
+        "score": 62
+      },
+      {
+        "chineseId": 4881572,
+        "chinese": "你的头痛治好了？",
+        "englishId": 2727084,
+        "english": "Is your headache gone?",
+        "score": 62
+      },
+      {
+        "chineseId": 688812,
+        "chinese": "他的头痛了。",
+        "englishId": 435066,
+        "english": "He's got a headache.",
+        "score": 56
+      },
+      {
+        "chineseId": 332568,
+        "chinese": "我头痛。",
+        "englishId": 1712,
+        "english": "I have a headache.",
+        "score": 10
+      }
+    ]
+  },
+  {
+    "target": "饮食",
+    "hskLevel": 5,
+    "candidateCount": 7,
+    "candidates": [
+      {
+        "chineseId": 334453,
+        "chinese": "50年代，芬兰人被认为是世界上饮食最不健康的例子。",
+        "englishId": 1534,
+        "english": "In the 1950's, the Finns were cited as having one of the least healthy diets in the world.",
+        "score": 104
+      },
+      {
+        "chineseId": 1616560,
+        "chinese": "现代的健康饮食专家强调要吃全麦面包，多吃蔬菜。",
+        "englishId": 1616635,
+        "english": "Modern healthy eating experts put emphasis on eating wholemeal bread and eating more vegetables.",
+        "score": 104
+      },
+      {
+        "chineseId": 1616558,
+        "chinese": "十年来，人们越来越强烈地意识到需要改变自己的饮食习惯。",
+        "englishId": 1616637,
+        "english": "Over the past ten years, people have become increasingly aware that they need to change their eating habits.",
+        "score": 92
+      },
+      {
+        "chineseId": 438476,
+        "chinese": "那个胖女孩吃了太多含高糖份的饮食。",
+        "englishId": 45540,
+        "english": "That fat girl consumes too much sugary food.",
+        "score": 89
+      },
+      {
+        "chineseId": 389929,
+        "chinese": "蔬果对平衡饮食必不可少。",
+        "englishId": 2187,
+        "english": "Fruits and vegetables are essential to a balanced diet.",
+        "score": 74
+      },
+      {
+        "chineseId": 636193,
+        "chinese": "我不喜欢油腻的饮食。",
+        "englishId": 324260,
+        "english": "I don't like a fat diet.",
+        "score": 68
+      },
+      {
+        "chineseId": 4759987,
+        "chinese": "我们在天上的父，愿人都尊你的命为圣。愿你的国降临。愿你的旨意行在地上如同行在天上。我们日用的饮食，今日赐给我们，免我们的债，如同我们免了人的债，不叫我们遇见试探，救我们脱离凶恶。",
+        "englishId": 539686,
+        "english": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil.",
+        "score": -95
+      }
+    ]
+  },
+  {
+    "target": "运动",
+    "hskLevel": 5,
+    "candidateCount": 58,
+    "candidates": [
+      {
+        "chineseId": 10908874,
+        "chinese": "运动内衣最好只在运动时穿着，在其他非运动场合不穿。",
+        "englishId": 12977881,
+        "english": "A sports bra should only be worn for working out, and not in any non-sports situations.",
+        "score": 100
+      },
+      {
+        "chineseId": 503023,
+        "chinese": "有时候冰球运动员相互挑衅得太厉害以至于会引发斗殴。",
+        "englishId": 2010,
+        "english": "Sometimes hockey players get so competitive that fights break out.",
+        "score": 95
+      },
+      {
+        "chineseId": 3537587,
+        "chinese": "不能过度运动，要量力而行，否则反而对身体造成负面影响。",
+        "englishId": 13571403,
+        "english": "Don't exercise excessively; do it within your limits, otherwise it may have negative effects on your body.",
+        "score": 95
+      },
+      {
+        "chineseId": 1408104,
+        "chinese": "人们普遍认为悬挂式滑翔运动是危险的。",
+        "englishId": 270429,
+        "english": "There is a tendency for people to think that hang gliding is dangerous.",
+        "score": 92
+      },
+      {
+        "chineseId": 2194350,
+        "chinese": "他看起来像个运动员，但是其实是个作家。",
+        "englishId": 290368,
+        "english": "He looks like a sportsman, but he is a writer.",
+        "score": 92
+      },
+      {
+        "chineseId": 1790105,
+        "chinese": "那个男孩穿上了他的运动鞋，跑向外面。",
+        "englishId": 46373,
+        "english": "The boy put on his athletic shoes and ran outside.",
+        "score": 89
+      },
+      {
+        "chineseId": 6484853,
+        "chinese": "明天是运动会的排练，没有往常的课程。",
+        "englishId": 533370,
+        "english": "Tomorrow there will be no normal lessons, in view of the athletic meet rehearsal.",
+        "score": 89
+      },
+      {
+        "chineseId": 2050885,
+        "chinese": "打棒球是一种运动，登山也是一种运动。",
+        "englishId": 324091,
+        "english": "Playing baseball is a sport, and climbing mountains is a sport, too.",
+        "score": 89
+      },
+      {
+        "chineseId": 804931,
+        "chinese": "许多人爱好的一个冬季运动是溜冰。",
+        "englishId": 274905,
+        "english": "A winter sport that many people enjoy is ice skating.",
+        "score": 86
+      },
+      {
+        "chineseId": 1708615,
+        "chinese": "足球是所有体育运动中最受欢迎的。",
+        "englishId": 54117,
+        "english": "Soccer is the most popular of all sports.",
+        "score": 86
+      },
+      {
+        "chineseId": 8739383,
+        "chinese": "那个赛跑运动员跃过了地面上的洞。",
+        "englishId": 13571409,
+        "english": "That runner leaped over the hole in the ground.",
+        "score": 86
+      },
+      {
+        "chineseId": 8463537,
+        "chinese": "我一直想成为一名职业篮球运动员。",
+        "englishId": 953871,
+        "english": "I've always wanted to be a professional basketball player.",
+        "score": 86
+      }
+    ]
+  },
+  {
+    "target": "康复中心",
+    "hskLevel": 5,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "合同",
+    "hskLevel": 6,
+    "candidateCount": 10,
+    "candidates": [
+      {
+        "chineseId": 332490,
+        "chinese": "合同已经到手了，那就出去庆祝一下吧。",
+        "englishId": 237911,
+        "english": "The contract is in the bag, so let's go out and celebrate.",
+        "score": 82
+      },
+      {
+        "chineseId": 757511,
+        "chinese": "工會和企業一致同意了一份新的合同。",
+        "englishId": 4736911,
+        "english": "The union and the company have agreed upon a new contract.",
+        "score": 80
+      },
+      {
+        "chineseId": 10546668,
+        "chinese": "為了避免誤解，他們又過了一遍合同。",
+        "englishId": 240264,
+        "english": "In order to avoid misunderstandings, they went through the contract again.",
+        "score": 77
+      },
+      {
+        "chineseId": 4731437,
+        "chinese": "我跟公司签了一份三年的合同。",
+        "englishId": 4731170,
+        "english": "This company and I have signed a three-year contract.",
+        "score": 71
+      },
+      {
+        "chineseId": 332799,
+        "chinese": "他们的合同在这个月底到期。",
+        "englishId": 305174,
+        "english": "Their contract is to run out at the end of this month.",
+        "score": 68
+      },
+      {
+        "chineseId": 805235,
+        "chinese": "我和这家公司签了三年合同。",
+        "englishId": 1183505,
+        "english": "This company and I have signed a contract of three years.",
+        "score": 68
+      },
+      {
+        "chineseId": 5903476,
+        "chinese": "你在簽字前必須仔細看合同。",
+        "englishId": 54154,
+        "english": "You must look over the contract before you sign it.",
+        "score": 68
+      },
+      {
+        "chineseId": 9958559,
+        "chinese": "这份合同没有法律效力。",
+        "englishId": 7861634,
+        "english": "This contract is null and void.",
+        "score": 62
+      },
+      {
+        "chineseId": 1927760,
+        "chinese": "他们对合同很满意。",
+        "englishId": 46043,
+        "english": "They are satisfied with the contract.",
+        "score": 56
+      },
+      {
+        "chineseId": 5663461,
+        "chinese": "别用铅笔签合同。",
+        "englishId": 3821554,
+        "english": "Don't sign the contract in pencil.",
+        "score": 53
+      }
+    ]
+  },
+  {
+    "target": "会议",
+    "hskLevel": 6,
+    "candidateCount": 72,
+    "candidates": [
+      {
+        "chineseId": 775684,
+        "chinese": "那天晚上，大學给留学生和中国的学习外语学生举行一个会议。",
+        "englishId": 775685,
+        "english": "That evening, the university held a meeting for foreign students and Chinese students studying foreign languages.",
+        "score": 98
+      },
+      {
+        "chineseId": 2004552,
+        "chinese": "因为日程安排的问题，我们必须取消明天的会议。",
+        "englishId": 1398000,
+        "english": "We had to nix tomorrow's meeting because of a scheduling problem.",
+        "score": 92
+      },
+      {
+        "chineseId": 2410220,
+        "chinese": "会议很快就开始了，我们进去看看有谁来了。",
+        "englishId": 10276069,
+        "english": "The meeting's about to start. Let's go inside and see who's there.",
+        "score": 88
+      },
+      {
+        "chineseId": 431630,
+        "chinese": "会议我迟到了，结果错过了最重要的部分。",
+        "englishId": 256568,
+        "english": "I was late for the meeting with the result that I missed the most important part.",
+        "score": 85
+      },
+      {
+        "chineseId": 12569605,
+        "chinese": "汤姆和玛丽参加了一个模拟联合国会议。",
+        "englishId": 8123264,
+        "english": "Tom and Mary participated in a model U.N. conference.",
+        "score": 83
+      },
+      {
+        "chineseId": 9953251,
+        "chinese": "直到会议结束之前都没人注意到她不在。",
+        "englishId": 903362,
+        "english": "No one noticed her absence until the meeting ended.",
+        "score": 83
+      },
+      {
+        "chineseId": 8792110,
+        "chinese": "请在两点半参加在二楼会议室的会议。",
+        "englishId": 1021181,
+        "english": "Please attend the meeting in the second floor conference room at 2:30 p.m.",
+        "score": 80
+      },
+      {
+        "chineseId": 2307213,
+        "chinese": "那么首先我们应该召开一次家庭会议。",
+        "englishId": 2308516,
+        "english": "In that case we should start by having a family meeting.",
+        "score": 80
+      },
+      {
+        "chineseId": 797300,
+        "chinese": "会议将会在特意安排的礼堂里举行。",
+        "englishId": 2845995,
+        "english": "The conference will be held in a specially selected church.",
+        "score": 79
+      },
+      {
+        "chineseId": 727531,
+        "chinese": "“中国人民政治协商会议”的简称是“人民政协”。",
+        "englishId": 727597,
+        "english": "The abbreviation of \"Chinese People's Political Consultative Conference\" is \"CPPCC\".",
+        "score": 78
+      },
+      {
+        "chineseId": 11837309,
+        "chinese": "她告诉我明天有一个重要的会议。",
+        "englishId": 11837311,
+        "english": "She told me that there is an important meeting tomorrow.",
+        "score": 74
+      },
+      {
+        "chineseId": 2921279,
+        "chinese": "他们今天下午2点会举行一个会议。",
+        "englishId": 2921282,
+        "english": "They will hold a meeting at 2 o'clock this afternoon.",
+        "score": 74
+      }
+    ]
+  },
+  {
+    "target": "预算",
+    "hskLevel": 6,
+    "candidateCount": 3,
+    "candidates": [
+      {
+        "chineseId": 13942534,
+        "chinese": "我们确实有一些更符合您预算价位的产品。",
+        "englishId": 3147892,
+        "english": "We do have something which is more in your price range.",
+        "score": 86
+      },
+      {
+        "chineseId": 2915529,
+        "chinese": "明年预算的计算是基于今年的成本的。",
+        "englishId": 2915530,
+        "english": "The calculation of the budget for next year is based on the costs this year.",
+        "score": 80
+      },
+      {
+        "chineseId": 9972881,
+        "chinese": "如我们所见，我们这边地区的学校失学率很高。 另一方面，我想补充说一点，今年学校预算减少了。",
+        "englishId": 12259808,
+        "english": "As we can see, the number of those dropping out of school in our area is very high. That said, I'd like to add that the school budget was cut this year.",
+        "score": 34
+      }
+    ]
+  },
+  {
+    "target": "客户",
+    "hskLevel": 6,
+    "candidateCount": 5,
+    "candidates": [
+      {
+        "chineseId": 2432825,
+        "chinese": "不能按时交付货款的话会给客户带来很大损失。",
+        "englishId": 2435880,
+        "english": "Not being able to carry out payments on time can cause very large losses for the consumer.",
+        "score": 92
+      },
+      {
+        "chineseId": 2431766,
+        "chinese": "催促客户去完成一件任务是很让人头疼的事。",
+        "englishId": 11544192,
+        "english": "Pushing customers to complete a task can be a headache.",
+        "score": 89
+      },
+      {
+        "chineseId": 332651,
+        "chinese": "银行对风险客户收取较高的贷款利息。",
+        "englishId": 18430,
+        "english": "Banks charge higher interest on loans to risky customers.",
+        "score": 80
+      },
+      {
+        "chineseId": 1830203,
+        "chinese": "投资者把他客户的资金窃取了.",
+        "englishId": 1830205,
+        "english": "The investor stole the capital of his client.",
+        "score": 67
+      },
+      {
+        "chineseId": 13911352,
+        "chinese": "我是个客户。",
+        "englishId": 2247886,
+        "english": "I'm a client.",
+        "score": 22
+      }
+    ]
+  },
+  {
+    "target": "市场",
+    "hskLevel": 6,
+    "candidateCount": 19,
+    "candidates": [
+      {
+        "chineseId": 1832748,
+        "chinese": "反垄断法律的目的是停止滥用市场影响力的大公司.",
+        "englishId": 1832760,
+        "english": "The purpose of antitrust law is to stop the abusive influence of the market by big companies.",
+        "score": 94
+      },
+      {
+        "chineseId": 2415717,
+        "chinese": "姐姐在市场买了一点茄子、土豆、西葫芦和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 92
+      },
+      {
+        "chineseId": 702765,
+        "chinese": "姐姐在市场买了一点茄子、土豆、丝瓜和大白菜。",
+        "englishId": 706653,
+        "english": "Our sister bought some eggplants, potatoes, zucchinis and Chinese cabbage at the market.",
+        "score": 89
+      },
+      {
+        "chineseId": 8650528,
+        "chinese": "总统预测，一旦冠状病毒消失，股票市场“会像从未有人见过般回弹。”",
+        "englishId": 8618401,
+        "english": "The president predicted that once the coronavirus is gone, the stock markets “will pop back up like nobody has seen.”",
+        "score": 83
+      },
+      {
+        "chineseId": 814172,
+        "chinese": "这个新的市场可能改良全部的工业。",
+        "englishId": 814173,
+        "english": "This new market may improve the entire industry.",
+        "score": 77
+      },
+      {
+        "chineseId": 13953449,
+        "chinese": "有什么办法呢？这些都是市场决定的。",
+        "englishId": 2885716,
+        "english": "What can be done? These are market forces.",
+        "score": 77
+      },
+      {
+        "chineseId": 609957,
+        "chinese": "我们在市场上买了些蔬菜和鱼。",
+        "englishId": 248774,
+        "english": "We bought some vegetables and fish at the market.",
+        "score": 71
+      },
+      {
+        "chineseId": 842710,
+        "chinese": "他们试图把日本产品赶出市场。",
+        "englishId": 307286,
+        "english": "They are trying to drive Japanese goods out of the market.",
+        "score": 71
+      },
+      {
+        "chineseId": 9400943,
+        "chinese": "汤姆和玛丽在超级市场。",
+        "englishId": 7541950,
+        "english": "Tom is at the shopping center with Mary.",
+        "score": 62
+      },
+      {
+        "chineseId": 2141833,
+        "chinese": "市场上到处都很热闹。",
+        "englishId": 2162671,
+        "english": "There isn't a place in this market that isn't lively.",
+        "score": 61
+      },
+      {
+        "chineseId": 333837,
+        "chinese": "我们的市场占有率为20%。",
+        "englishId": 262591,
+        "english": "We have a 20% share of the market.",
+        "score": 59
+      },
+      {
+        "chineseId": 813639,
+        "chinese": "中国是一个新兴市场。",
+        "englishId": 813829,
+        "english": "China is an emerging market.",
+        "score": 59
+      }
+    ]
+  },
+  {
+    "target": "谈判",
+    "hskLevel": 6,
+    "candidateCount": 5,
+    "candidates": [
+      {
+        "chineseId": 13751769,
+        "chinese": "这不过是他在谈判最后时刻尽可能最大化利润的尝试。",
+        "englishId": 2781187,
+        "english": "It's just an attempt on his part to maximize profits, as much as possible, in the last moments of negotiations.",
+        "score": 101
+      },
+      {
+        "chineseId": 420990,
+        "chinese": "我可以做中英双向翻译，参加跟外国人交际谈判。",
+        "englishId": 7791052,
+        "english": "I can translate between Chinese and English, and can participate in negotiations with foreigners.",
+        "score": 92
+      },
+      {
+        "chineseId": 332524,
+        "chinese": "外交谈判帮助结束了冲突。",
+        "englishId": 21962,
+        "english": "Diplomatic dialogue helped put an end to the conflict.",
+        "score": 65
+      },
+      {
+        "chineseId": 4764645,
+        "chinese": "谈判没有成功。",
+        "englishId": 4764628,
+        "english": "The treaty was not a success.",
+        "score": 52
+      },
+      {
+        "chineseId": 336100,
+        "chinese": "谈判中止了。",
+        "englishId": 240296,
+        "english": "The negotiation is off.",
+        "score": 49
+      }
+    ]
+  },
+  {
+    "target": "股市",
+    "hskLevel": 6,
+    "candidateCount": 5,
+    "candidates": [
+      {
+        "chineseId": 8650531,
+        "chinese": "在十九世纪三十年代的大萧条时期，许多富人在股市崩盘中失去了一切。",
+        "englishId": 73292,
+        "english": "During the Depression in the 1930's, many wealthy people lost everything in the stock market crash.",
+        "score": 86
+      },
+      {
+        "chineseId": 8792033,
+        "chinese": "汤姆觉得他有机会在股市赚一大笔钱。",
+        "englishId": 1092795,
+        "english": "Tom thought he had a chance to make a lot of money on the stock market.",
+        "score": 80
+      },
+      {
+        "chineseId": 333572,
+        "chinese": "我爸爸现在非常专注于股市。",
+        "englishId": 251678,
+        "english": "My father is very much involved in the stock market now.",
+        "score": 68
+      },
+      {
+        "chineseId": 8581118,
+        "chinese": "由于害怕中国冠状病毒爆发会对全球经济命脉的供给链造成长期损害，全球股市在周一暴跌。",
+        "englishId": 8577826,
+        "english": "Stock markets around the world tumbled Monday over fears that China’s coronavirus outbreak is causing long-term damage to the supply chains that are the lifeblood of the global economy.",
+        "score": 34
+      }
+    ]
+  },
+  {
+    "target": "投资",
+    "hskLevel": 6,
+    "candidateCount": 11,
+    "candidates": [
+      {
+        "chineseId": 5722742,
+        "chinese": "在我们看来，太阳能电池是一项很好的投资。",
+        "englishId": 5722391,
+        "english": "In our opinion, solar panels are a good investment.",
+        "score": 86
+      },
+      {
+        "chineseId": 463761,
+        "chinese": "用大智慧做股票，说明您对投资是认真的！",
+        "englishId": 463766,
+        "english": "Managing your stocks with Big Wisdom shows that you are serious about investing!",
+        "score": 79
+      },
+      {
+        "chineseId": 805136,
+        "chinese": "外国投资者从美国收回他们的钱。",
+        "englishId": 804365,
+        "english": "Foreign investors withdrew their money from America.",
+        "score": 74
+      },
+      {
+        "chineseId": 5091314,
+        "chinese": "汤姆一年内增加了一倍的投资。",
+        "englishId": 1094237,
+        "english": "Tom doubled his investment in a year.",
+        "score": 71
+      },
+      {
+        "chineseId": 1830203,
+        "chinese": "投资者把他客户的资金窃取了.",
+        "englishId": 1830205,
+        "english": "The investor stole the capital of his client.",
+        "score": 69
+      },
+      {
+        "chineseId": 2515316,
+        "chinese": "政府应该加大对农业的投资。",
+        "englishId": 1210696,
+        "english": "The government should invest more money in agriculture.",
+        "score": 68
+      },
+      {
+        "chineseId": 332673,
+        "chinese": "谁来为风险投资提供资金？",
+        "englishId": 47257,
+        "english": "Who will provide capital for the venture?",
+        "score": 65
+      },
+      {
+        "chineseId": 802914,
+        "chinese": "她能很准确地评估投资。",
+        "englishId": 802915,
+        "english": "She can assess investments very accurately.",
+        "score": 62
+      },
+      {
+        "chineseId": 9974936,
+        "chinese": "你投资多少？",
+        "englishId": 3730341,
+        "english": "How much do you have invested?",
+        "score": 47
+      },
+      {
+        "chineseId": 8581076,
+        "chinese": "在美国，由于投资者纷纷涌向包括黄金和美国国债在内的安全港，因此主要的股票价格指数在星期一一度下跌了3个百分点。",
+        "englishId": 8577834,
+        "english": "In the United States, the major stock market indices at one point were down three percentage points on Monday, as investors rushed to safe havens, including gold and U.S. Treasury bonds.",
+        "score": -2
+      },
+      {
+        "chineseId": 8581085,
+        "chinese": "在美国，由于投资者纷纷涌向包括黄金和美国国债在内的安全港，因此主要的股票市场指数在星期一一度下跌了3个百分点。",
+        "englishId": 8577834,
+        "english": "In the United States, the major stock market indices at one point were down three percentage points on Monday, as investors rushed to safe havens, including gold and U.S. Treasury bonds.",
+        "score": -2
+      }
+    ]
+  },
+  {
+    "target": "利润",
+    "hskLevel": 6,
+    "candidateCount": 2,
+    "candidates": [
+      {
+        "chineseId": 13751769,
+        "chinese": "这不过是他在谈判最后时刻尽可能最大化利润的尝试。",
+        "englishId": 2781187,
+        "english": "It's just an attempt on his part to maximize profits, as much as possible, in the last moments of negotiations.",
+        "score": 101
+      },
+      {
+        "chineseId": 334732,
+        "chinese": "旅行社的利润猛涨。",
+        "englishId": 325572,
+        "english": "Travel agencies' profits soared.",
+        "score": 56
+      }
+    ]
+  },
+  {
+    "target": "合资",
+    "hskLevel": 6,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "股东",
+    "hskLevel": 6,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "市场份额",
+    "hskLevel": 6,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "战略",
+    "hskLevel": 6,
+    "candidateCount": 1,
+    "candidates": [
+      {
+        "chineseId": 2915515,
+        "chinese": "由于两个竞争对手的一项新协议，我们需要重新调整战略。",
+        "englishId": 2915516,
+        "english": "In consequence of a new agreement between two competitors, we need to readjust our strategies.",
+        "score": 104
+      }
+    ]
+  },
+  {
+    "target": "风险",
+    "hskLevel": 6,
+    "candidateCount": 7,
+    "candidates": [
+      {
+        "chineseId": 332651,
+        "chinese": "银行对风险客户收取较高的贷款利息。",
+        "englishId": 18430,
+        "english": "Banks charge higher interest on loans to risky customers.",
+        "score": 80
+      },
+      {
+        "chineseId": 332673,
+        "chinese": "谁来为风险投资提供资金？",
+        "englishId": 47257,
+        "english": "Who will provide capital for the venture?",
+        "score": 65
+      },
+      {
+        "chineseId": 4799111,
+        "chinese": "我不想承担这样一个风险。",
+        "englishId": 3492690,
+        "english": "I don't want to take such a risk.",
+        "score": 65
+      },
+      {
+        "chineseId": 13285174,
+        "chinese": "他们确认了风险因素。",
+        "englishId": 12774901,
+        "english": "They identified the risk factors.",
+        "score": 59
+      },
+      {
+        "chineseId": 5863291,
+        "chinese": "我不担心风险。",
+        "englishId": 5240989,
+        "english": "I don't worry about the risk.",
+        "score": 50
+      },
+      {
+        "chineseId": 5691298,
+        "chinese": "风险太大。",
+        "englishId": 497959,
+        "english": "The risk is too great.",
+        "score": 6
+      },
+      {
+        "chineseId": 10750393,
+        "chinese": "有风险。",
+        "englishId": 2252610,
+        "english": "There are risks.",
+        "score": -24
+      }
+    ]
+  },
+  {
+    "target": "财务报表",
+    "hskLevel": 6,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "并购",
+    "hskLevel": 6,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "收入",
+    "hskLevel": 6,
+    "candidateCount": 27,
+    "candidates": [
+      {
+        "chineseId": 437437,
+        "chinese": "据说美国人把一个人的收入视为评判他能力的重要尺度。",
+        "englishId": 320225,
+        "english": "Americans are said to regard the amount of money a man makes as a criterion of his ability.",
+        "score": 104
+      },
+      {
+        "chineseId": 743077,
+        "chinese": "专家说只有百分之十五左右的快乐来自收入、资产等财政的因素。",
+        "englishId": 743063,
+        "english": "Experts say only about 15 percent of happiness comes from income, assets and other financial factors.",
+        "score": 95
+      },
+      {
+        "chineseId": 2409695,
+        "chinese": "英特尔公司由那个发明取得着巨大的专利权收入",
+        "englishId": 65734,
+        "english": "Intel gets a huge royalty from the invention.",
+        "score": 91
+      },
+      {
+        "chineseId": 13524067,
+        "chinese": "他的收入很高，所以每年都能出國旅行。",
+        "englishId": 287072,
+        "english": "His large income enables him to travel abroad every year.",
+        "score": 80
+      },
+      {
+        "chineseId": 765296,
+        "chinese": "百分之十五的房屋将是经济适用，所以低收入家庭会在这个地区买或者租房子。",
+        "englishId": 765297,
+        "english": "Fifteen per cent of the housing will be affordable, so that low-income families will be able to buy or rent homes in the area.",
+        "score": 77
+      },
+      {
+        "chineseId": 13526166,
+        "chinese": "許多網站都是靠廣告收入來維持的。",
+        "englishId": 5277798,
+        "english": "Many websites are supported by revenue from advertising.",
+        "score": 77
+      },
+      {
+        "chineseId": 362629,
+        "chinese": "我現在的收入比兩年前多了一倍。",
+        "englishId": 242570,
+        "english": "Now my income is twice what it was two years ago.",
+        "score": 74
+      },
+      {
+        "chineseId": 2045080,
+        "chinese": "我不知到我爸的年收入是多少。",
+        "englishId": 261552,
+        "english": "I don't know my father's annual income.",
+        "score": 71
+      },
+      {
+        "chineseId": 332994,
+        "chinese": "退休后他的收入少了一半。",
+        "englishId": 286661,
+        "english": "His income was diminished by half after retirement.",
+        "score": 65
+      },
+      {
+        "chineseId": 502620,
+        "chinese": "他一周的收入不超过50美元。",
+        "englishId": 288424,
+        "english": "He earns not more than 50 dollars a week.",
+        "score": 65
+      },
+      {
+        "chineseId": 742940,
+        "chinese": "專職作家沒有固定的收入。",
+        "englishId": 742941,
+        "english": "Professional writers do not have a regular income.",
+        "score": 65
+      },
+      {
+        "chineseId": 4743930,
+        "chinese": "我的收入減少了百分之十。",
+        "englishId": 4753755,
+        "english": "My income has decreased ten percent.",
+        "score": 65
+      }
+    ]
+  },
+  {
+    "target": "支出",
+    "hskLevel": 6,
+    "candidateCount": 2,
+    "candidates": [
+      {
+        "chineseId": 5691262,
+        "chinese": "老龄化的人口需要更多医疗保健支出。",
+        "englishId": 326476,
+        "english": "An aging population will require more spending on health care.",
+        "score": 80
+      },
+      {
+        "chineseId": 4547222,
+        "chinese": "生活支出急剧上涨。",
+        "englishId": 4757647,
+        "english": "Living costs have increased rapidly.",
+        "score": 56
+      }
+    ]
+  },
+  {
+    "target": "融资",
+    "hskLevel": 6,
+    "candidateCount": 0,
+    "candidates": []
+  },
+  {
+    "target": "商业计划",
+    "hskLevel": 6,
+    "candidateCount": 1,
+    "candidates": [
+      {
+        "chineseId": 733596,
+        "chinese": "他提出了一个勇敢而孤独的斗争，但这些沉重的打击，他的赔率不能得到他的商业计划接受。",
+        "englishId": 239900,
+        "english": "He put up a brave and lone struggle, but up against such heavy odds he couldn't get his business plan accepted.",
+        "score": 62
+      }
+    ]
+  }
+]
