@@ -16,7 +16,7 @@ class AppSidebar extends StatelessWidget {
     (Icons.style_outlined, 'Lessons'),
     (Icons.sports_martial_arts_rounded, 'Vocab Rush'),
     (Icons.language_rounded, 'Vocabulary'),
-    (Icons.bar_chart_rounded, 'Progress'),
+    (Icons.bar_chart_rounded, 'Daily Review'),
     (Icons.chat_bubble_outline_rounded, 'AI Tutor'),
   ];
 

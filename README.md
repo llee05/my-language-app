@@ -68,7 +68,7 @@ the dashboard or Lessons page.
 
 ### Daily review
 
-Open **Progress** or use the dashboard prompt to review today's queue. Due and
+Open **Daily Review** or use the dashboard prompt to review today's queue. Due and
 weak vocabulary is shown first, followed by new words up to the configured
 daily target. Session position and answers are persisted, so a review can be
 continued later the same day.
@@ -113,8 +113,7 @@ If Ollama is missing or unavailable, the rest of the app remains usable.
 
 - Dashboard XP, streak, mastery, recommended lessons, recent activity, and the
   seven-day chart are not yet calculated from stored learning history.
-- The **Progress** navigation item currently opens daily review; a dedicated
-  analytics view is planned.
+- A dedicated progress analytics view is planned.
 - The daily reminder preference is saved locally but does not yet schedule a
   system notification.
 - There are no accounts, cloud sync, or cross-device backup. Resetting all

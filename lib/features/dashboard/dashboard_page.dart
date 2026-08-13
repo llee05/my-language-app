@@ -38,11 +38,34 @@ class _DashboardPageState extends State<DashboardPage> {
   int _pendingReviewCount = 0;
   bool _dailyReviewComplete = false;
   bool _resumeDailyReview = false;
+  Lesson? _activeLesson;
+  LessonSession? _activeLessonSession;
 
   @override
   void initState() {
     super.initState();
     _loadDailyReviewPrompt();
+    _loadActiveLesson();
+  }
+
+  Future<void> _loadActiveLesson() async {
+    try {
+      final session = await widget.progressRepository.latestActiveSession();
+      final lesson = session == null
+          ? null
+          : await widget.lessonRepository.findById(session.lessonId);
+      if (!mounted) return;
+      setState(() {
+        _activeLessonSession = lesson == null ? null : session;
+        _activeLesson = lesson;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _activeLessonSession = null;
+        _activeLesson = null;
+      });
+    }
   }
 
   Future<void> _loadDailyReviewPrompt() async {
@@ -76,7 +99,10 @@ class _DashboardPageState extends State<DashboardPage> {
       _resumeLatestLesson = false;
       _startDailyReview = false;
     });
-    if (value == 0) unawaited(_loadDailyReviewPrompt());
+    if (value == 0) {
+      unawaited(_loadDailyReviewPrompt());
+      unawaited(_loadActiveLesson());
+    }
   }
 
   void _resumeLesson() {
@@ -139,6 +165,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         pendingReviewCount: _pendingReviewCount,
                         dailyReviewComplete: _dailyReviewComplete,
                         resumeDailyReview: _resumeDailyReview,
+                        activeLesson: _activeLesson,
+                        activeLessonSession: _activeLessonSession,
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -175,6 +203,8 @@ class _DashboardBody extends StatelessWidget {
     required this.pendingReviewCount,
     required this.dailyReviewComplete,
     required this.resumeDailyReview,
+    required this.activeLesson,
+    required this.activeLessonSession,
     required this.profile,
     required this.onProfileChanged,
     required this.onResetOnboarding,
@@ -196,6 +226,8 @@ class _DashboardBody extends StatelessWidget {
   final int pendingReviewCount;
   final bool dailyReviewComplete;
   final bool resumeDailyReview;
+  final Lesson? activeLesson;
+  final LessonSession? activeLessonSession;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
@@ -268,6 +300,8 @@ class _DashboardBody extends StatelessWidget {
                         pendingReviewCount: pendingReviewCount,
                         reviewComplete: dailyReviewComplete,
                         resumeReview: resumeDailyReview,
+                        activeLesson: activeLesson,
+                        activeLessonSession: activeLessonSession,
                       ),
                     ),
                   ),
@@ -284,6 +318,8 @@ class _DashboardBody extends StatelessWidget {
                       pendingReviewCount: pendingReviewCount,
                       reviewComplete: dailyReviewComplete,
                       resumeReview: resumeDailyReview,
+                      activeLesson: activeLesson,
+                      activeLessonSession: activeLessonSession,
                     ),
                     const RightRail(compact: true),
                   ],

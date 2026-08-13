@@ -82,6 +82,12 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
+
+    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Saved · 2 cards · 60 XP reward'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+
     await tester.tap(find.text('Resume'));
     await tester.pumpAndSettle();
 
@@ -310,7 +316,7 @@ void main() {
     expect(find.text('180s'), findsOneWidget);
   });
 
-  testWidgets('progress tab shows the prioritized daily review queue', (
+  testWidgets('daily review tab shows the prioritized review queue', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
@@ -353,7 +359,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Progress'));
+    await tester.tap(find.text('Daily Review'));
     await tester.pumpAndSettle();
 
     expect(find.text('Today’s review queue'), findsOneWidget);
@@ -952,7 +958,8 @@ class _MemoryProgressRepository implements ProgressRepository {
       hasActiveSession ? _active : null;
 
   @override
-  Future<LessonSession?> latestActiveSession() async => _active;
+  Future<LessonSession?> latestActiveSession() async =>
+      hasActiveSession ? _active : null;
 
   @override
   Future<List<CardProgress>> dueCards(DateTime through) async => const [];

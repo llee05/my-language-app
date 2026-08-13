@@ -9,6 +9,8 @@ class MainDashboard extends StatelessWidget {
     required this.pendingReviewCount,
     required this.reviewComplete,
     required this.resumeReview,
+    required this.activeLesson,
+    required this.activeLessonSession,
   });
 
   final VoidCallback onResume;
@@ -17,11 +19,20 @@ class MainDashboard extends StatelessWidget {
   final int pendingReviewCount;
   final bool reviewComplete;
   final bool resumeReview;
+  final Lesson? activeLesson;
+  final LessonSession? activeLessonSession;
 
   @override
   Widget build(BuildContext context) {
     final lessons = flashcardLessons;
-    final continueLesson = lessons.first;
+    final lesson = activeLesson;
+    final session = activeLessonSession;
+    final lessonProgress =
+        lesson == null || session == null || lesson.cards.isEmpty
+        ? 0.0
+        : (session.cardsReviewed / lesson.cards.length)
+              .clamp(0.0, 1.0)
+              .toDouble();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 28, 32, 40),
@@ -37,18 +48,20 @@ class MainDashboard extends StatelessWidget {
             resume: resumeReview,
             onPressed: onStartReview,
           ),
-          const SizedBox(height: 26),
-          const SectionLabel('CONTINUE LEARNING'),
-          const SizedBox(height: 12),
-          ContinueCard(
-            lessonTitle: continueLesson['lesson_title'] as String,
-            theme: continueLesson['theme'] as String,
-            level: continueLesson['hsk_level'] as int,
-            duration: '20 cards',
-            xpReward: 60,
-            progress: 0.35,
-            onResume: onResume,
-          ),
+          if (lesson != null && session != null) ...[
+            const SizedBox(height: 26),
+            const SectionLabel('CONTINUE LEARNING'),
+            const SizedBox(height: 12),
+            ContinueCard(
+              lessonTitle: lesson.summary.title,
+              theme: lesson.summary.theme,
+              level: lesson.summary.hskLevel,
+              duration: '${lesson.cards.length} cards',
+              xpReward: 60,
+              progress: lessonProgress,
+              onResume: onResume,
+            ),
+          ],
           const SizedBox(height: 26),
           const SectionLabel('SUGGESTED LESSONS'),
           const SizedBox(height: 8),
