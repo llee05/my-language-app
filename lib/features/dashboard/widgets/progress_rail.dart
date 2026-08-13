@@ -1,8 +1,9 @@
 part of '../../../main.dart';
 
 class RightRail extends StatelessWidget {
-  const RightRail({super.key, this.compact = false});
+  const RightRail({super.key, this.compact = false, required this.stats});
   final bool compact;
+  final DashboardLearningStats stats;
 
   @override
   Widget build(BuildContext context) {
@@ -21,18 +22,25 @@ class RightRail extends StatelessWidget {
         32,
       ),
       child: compact
-          ? const Wrap(
+          ? Wrap(
               spacing: 22,
               runSpacing: 24,
               children: [
-                SizedBox(width: 270, child: WeeklyXp()),
-                SizedBox(width: 270, child: VocabularyPanel()),
+                SizedBox(width: 270, child: WeeklyXp(xpByDay: stats.weeklyXp)),
+                SizedBox(
+                  width: 270,
+                  child: VocabularyPanel(words: stats.vocabulary),
+                ),
               ],
             )
-          : const SingleChildScrollView(
+          : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [WeeklyXp(), SizedBox(height: 26), VocabularyPanel()],
+                children: [
+                  WeeklyXp(xpByDay: stats.weeklyXp),
+                  const SizedBox(height: 26),
+                  VocabularyPanel(words: stats.vocabulary),
+                ],
               ),
             ),
     );
@@ -40,11 +48,16 @@ class RightRail extends StatelessWidget {
 }
 
 class WeeklyXp extends StatelessWidget {
-  const WeeklyXp({super.key});
+  const WeeklyXp({super.key, required this.xpByDay});
+  final List<int> xpByDay;
 
   @override
   Widget build(BuildContext context) {
-    const heights = [30.0, 47.0, 23.0, 58.0, 38.0, 43.0, 20.0];
+    final maxXp = xpByDay.fold<int>(0, max);
+    final heights = xpByDay
+        .map((xp) => maxXp == 0 ? 0.0 : 58 * xp / maxXp)
+        .toList(growable: false);
+    final totalXp = xpByDay.fold<int>(0, (total, xp) => total + xp);
     const days = ['一', '二', '三', '四', '五', '六', '日'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -95,16 +108,16 @@ class WeeklyXp extends StatelessWidget {
                 ),
               ),
               const Divider(height: 20),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'This week',
                     style: TextStyle(fontSize: 10, color: AppColors.muted),
                   ),
                   Text(
-                    '660 XP',
-                    style: TextStyle(
+                    '$totalXp XP',
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: AppColors.text,
@@ -121,18 +134,11 @@ class WeeklyXp extends StatelessWidget {
 }
 
 class VocabularyPanel extends StatelessWidget {
-  const VocabularyPanel({super.key});
+  const VocabularyPanel({super.key, required this.words});
+  final List<VocabularyCardProgress> words;
 
   @override
   Widget build(BuildContext context) {
-    const words = [
-      ('猫', 'māo', .85, AppColors.teal),
-      ('家', 'jiā', .72, AppColors.gold),
-      ('朋友', 'péngyǒu', .60, AppColors.gold),
-      ('水', 'shuǐ', .91, AppColors.teal),
-      ('山', 'shān', .33, AppColors.red),
-      ('龙', 'lóng', .48, AppColors.red),
-    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -150,14 +156,26 @@ class VocabularyPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 5),
+        if (words.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              'Review vocabulary to see mastery here.',
+              style: TextStyle(fontSize: 10, color: AppColors.muted),
+            ),
+          ),
         for (final word in words)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: VocabularyCard(
-              hanzi: word.$1,
-              pinyin: word.$2,
-              mastery: word.$3,
-              color: word.$4,
+              hanzi: word.chinese,
+              pinyin: word.pinyin,
+              mastery: word.progress.mastery,
+              color: word.progress.mastery >= .8
+                  ? AppColors.teal
+                  : word.progress.mastery >= .5
+                  ? AppColors.gold
+                  : AppColors.red,
             ),
           ),
       ],

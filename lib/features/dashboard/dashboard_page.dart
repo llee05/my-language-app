@@ -40,12 +40,37 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _resumeDailyReview = false;
   Lesson? _activeLesson;
   LessonSession? _activeLessonSession;
+  DashboardLearningStats _learningStats = const DashboardLearningStats();
 
   @override
   void initState() {
     super.initState();
     _loadDailyReviewPrompt();
     _loadActiveLesson();
+    _loadLearningStats();
+  }
+
+  Future<void> _loadLearningStats() async {
+    try {
+      final results = await Future.wait([
+        widget.progressRepository.reviewHistory(),
+        widget.progressRepository.vocabularyProgress(),
+      ]);
+      final now = widget.clock?.call() ?? DateTime.now();
+      final reviews = results[0] as List<ReviewRecord>;
+      final vocabulary = results[1] as List<VocabularyCardProgress>;
+      if (!mounted) return;
+      setState(() {
+        _learningStats = DashboardLearningStats.fromSavedData(
+          reviews: reviews,
+          vocabulary: vocabulary,
+          now: now,
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _learningStats = const DashboardLearningStats());
+    }
   }
 
   Future<void> _loadActiveLesson() async {
@@ -102,6 +127,7 @@ class _DashboardPageState extends State<DashboardPage> {
     if (value == 0) {
       unawaited(_loadDailyReviewPrompt());
       unawaited(_loadActiveLesson());
+      unawaited(_loadLearningStats());
     }
   }
 
@@ -132,6 +158,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: AppSidebar(
                     selectedIndex: selectedNav,
                     hskLevel: widget.profile.hskLevel,
+                    streakDays: _learningStats.streakDays,
                     onSelected: _selectNavigation,
                   ),
                 ),
@@ -143,6 +170,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: AppSidebar(
                     selectedIndex: selectedNav,
                     hskLevel: widget.profile.hskLevel,
+                    streakDays: _learningStats.streakDays,
                     onSelected: _selectNavigation,
                   ),
                 ),
@@ -152,6 +180,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     DashboardHeader(
                       showMenu: !showSidebar,
                       profile: widget.profile,
+                      totalXp: _learningStats.totalXp,
                     ),
                     Expanded(
                       child: _DashboardBody(
@@ -167,6 +196,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         resumeDailyReview: _resumeDailyReview,
                         activeLesson: _activeLesson,
                         activeLessonSession: _activeLessonSession,
+                        learningStats: _learningStats,
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -205,6 +235,7 @@ class _DashboardBody extends StatelessWidget {
     required this.resumeDailyReview,
     required this.activeLesson,
     required this.activeLessonSession,
+    required this.learningStats,
     required this.profile,
     required this.onProfileChanged,
     required this.onResetOnboarding,
@@ -228,6 +259,7 @@ class _DashboardBody extends StatelessWidget {
   final bool resumeDailyReview;
   final Lesson? activeLesson;
   final LessonSession? activeLessonSession;
+  final DashboardLearningStats learningStats;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
@@ -305,7 +337,7 @@ class _DashboardBody extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 300, child: RightRail()),
+                  SizedBox(width: 300, child: RightRail(stats: learningStats)),
                 ],
               )
             : SingleChildScrollView(
@@ -321,7 +353,7 @@ class _DashboardBody extends StatelessWidget {
                       activeLesson: activeLesson,
                       activeLessonSession: activeLessonSession,
                     ),
-                    const RightRail(compact: true),
+                    RightRail(compact: true, stats: learningStats),
                   ],
                 ),
               );
@@ -335,9 +367,11 @@ class DashboardHeader extends StatelessWidget {
     super.key,
     required this.showMenu,
     required this.profile,
+    this.totalXp = 0,
   });
   final bool showMenu;
   final LearnerProfile profile;
+  final int totalXp;
 
   @override
   Widget build(BuildContext context) {
@@ -387,13 +421,13 @@ class DashboardHeader extends StatelessWidget {
               border: Border.all(color: const Color(0xFF5D4514)),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.bolt_rounded, size: 15, color: AppColors.gold),
-                SizedBox(width: 5),
+                const Icon(Icons.bolt_rounded, size: 15, color: AppColors.gold),
+                const SizedBox(width: 5),
                 Text(
-                  '455 XP',
-                  style: TextStyle(fontSize: 12, color: AppColors.gold),
+                  '$totalXp XP',
+                  style: const TextStyle(fontSize: 12, color: AppColors.gold),
                 ),
               ],
             ),
@@ -415,6 +449,59 @@ class DashboardHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class DashboardLearningStats {
+  const DashboardLearningStats({
+    this.totalXp = 0,
+    this.weeklyXp = const [0, 0, 0, 0, 0, 0, 0],
+    this.streakDays = 0,
+    this.vocabulary = const [],
+  });
+
+  final int totalXp;
+  final List<int> weeklyXp;
+  final int streakDays;
+  final List<VocabularyCardProgress> vocabulary;
+
+  factory DashboardLearningStats.fromSavedData({
+    required List<ReviewRecord> reviews,
+    required List<VocabularyCardProgress> vocabulary,
+    required DateTime now,
+  }) {
+    final localNow = now.toLocal();
+    final today = DateTime(localNow.year, localNow.month, localNow.day);
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final weeklyXp = List<int>.filled(7, 0);
+    final activeDays = <DateTime>{};
+    var totalXp = 0;
+
+    for (final review in reviews) {
+      final xp = review.wasCorrect ? 10 : 5;
+      totalXp += xp;
+      final reviewed = review.reviewedAt.toLocal();
+      final day = DateTime(reviewed.year, reviewed.month, reviewed.day);
+      activeDays.add(day);
+      final offset = day.difference(weekStart).inDays;
+      if (offset >= 0 && offset < 7) weeklyXp[offset] += xp;
+    }
+
+    var streakDays = 0;
+    var cursor = activeDays.contains(today)
+        ? today
+        : today.subtract(const Duration(days: 1));
+    while (activeDays.contains(cursor)) {
+      streakDays++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+
+    return DashboardLearningStats(
+      totalXp: totalXp,
+      weeklyXp: weeklyXp,
+      streakDays: streakDays,
+      vocabulary: vocabulary.take(6).toList(growable: false),
     );
   }
 }

@@ -5,10 +5,12 @@ class AppSidebar extends StatelessWidget {
     super.key,
     this.selectedIndex = 0,
     this.hskLevel = 1,
+    this.streakDays = 0,
     this.onSelected,
   });
   final int selectedIndex;
   final int hskLevel;
+  final int streakDays;
   final ValueChanged<int>? onSelected;
 
   static const items = [
@@ -81,22 +83,22 @@ class AppSidebar extends StatelessWidget {
                   border: Border.all(color: const Color(0xFF5A1E16)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.local_fire_department_rounded,
                           size: 16,
                           color: AppColors.red,
                         ),
-                        SizedBox(width: 5),
+                        const SizedBox(width: 5),
                         Flexible(
                           child: Text(
-                            '7-day streak',
+                            '$streakDays-day streak',
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.text,
                             ),
@@ -104,8 +106,8 @@ class AppSidebar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 5),
-                    Text(
+                    const SizedBox(height: 5),
+                    const Text(
                       '加油！ Keep going today.',
                       style: TextStyle(fontSize: 10, color: AppColors.muted),
                     ),

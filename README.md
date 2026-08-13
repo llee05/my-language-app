@@ -111,8 +111,8 @@ If Ollama is missing or unavailable, the rest of the app remains usable.
 
 ## Beta Limitations
 
-- Dashboard XP, streak, mastery, recommended lessons, recent activity, and the
-  seven-day chart are not yet calculated from stored learning history.
+- Dashboard recommended lessons and recent activity are not yet personalized
+  from stored learning history.
 - A dedicated progress analytics view is planned.
 - The daily reminder preference is saved locally but does not yet schedule a
   system notification.

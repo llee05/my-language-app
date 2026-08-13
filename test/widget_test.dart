@@ -37,6 +37,65 @@ void main() {
     expect(find.text('WEEKLY XP'), findsOneWidget);
   });
 
+  testWidgets('dashboard statistics come from saved learning data', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final now = DateTime(2026, 8, 13, 12);
+    final progress = _MemoryProgressRepository(
+      reviews: [
+        ReviewRecord(
+          id: 1,
+          cardId: 11,
+          reviewedAt: DateTime(2026, 8, 13, 9),
+          rating: ReviewRating.good,
+          wasCorrect: true,
+        ),
+        ReviewRecord(
+          id: 2,
+          cardId: 11,
+          reviewedAt: DateTime(2026, 8, 12, 9),
+          rating: ReviewRating.again,
+          wasCorrect: false,
+        ),
+      ],
+      vocabulary: [
+        VocabularyCardProgress(
+          chinese: '学',
+          pinyin: 'xué',
+          progress: CardProgress(
+            cardId: 11,
+            dueAt: DateTime(2026, 8, 14),
+            mastery: .75,
+          ),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+          clock: () => now,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('15 XP'), findsNWidgets(2));
+    expect(find.text('2-day streak'), findsOneWidget);
+    expect(find.text('学'), findsWidgets);
+    expect(find.text('75%'), findsOneWidget);
+  });
+
   testWidgets('continue card invokes resume when tapped', (tester) async {
     var resumed = false;
     await tester.pumpWidget(
@@ -933,10 +992,14 @@ class _MemoryProgressRepository implements ProgressRepository {
   _MemoryProgressRepository({
     this.hasActiveSession = true,
     this.queue = const [],
+    this.reviews = const [],
+    this.vocabulary = const [],
   });
 
   final bool hasActiveSession;
   final List<DailyQueueCard> queue;
+  final List<ReviewRecord> reviews;
+  final List<VocabularyCardProgress> vocabulary;
   int dailyQueueCalls = 0;
   final List<DateTime> requestedDays = [];
   LessonSession? savedSession;
@@ -980,7 +1043,7 @@ class _MemoryProgressRepository implements ProgressRepository {
   Future<CardProgress?> progressForCard(int cardId) async => null;
 
   @override
-  Future<List<VocabularyCardProgress>> vocabularyProgress() async => const [];
+  Future<List<VocabularyCardProgress>> vocabularyProgress() async => vocabulary;
 
   @override
   Future<void> recordReview({
@@ -993,7 +1056,10 @@ class _MemoryProgressRepository implements ProgressRepository {
 
   @override
   Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async =>
-      const [];
+      reviews
+          .where((review) => cardId == null || review.cardId == cardId)
+          .take(limit ?? reviews.length)
+          .toList(growable: false);
 
   @override
   Future<LessonSession> startSession(int lessonId) async {
