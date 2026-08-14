@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 5;
+const int databaseSchemaVersion = 6;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -213,6 +213,23 @@ final Map<int, MigrationStep> databaseMigrations = {
     await db.execute(
       'CREATE INDEX idx_daily_review_sessions_date '
       'ON daily_review_sessions(learner_id, session_date DESC)',
+    );
+  },
+  6: (db) async {
+    await db.execute('''
+      CREATE TABLE content_migrations (
+        key TEXT PRIMARY KEY,
+        applied_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+      "ALTER TABLE cards ADD COLUMN example_source TEXT NOT NULL DEFAULT ''",
+    );
+    await db.execute(
+      "ALTER TABLE cards ADD COLUMN example_source_id TEXT NOT NULL DEFAULT ''",
+    );
+    await db.execute(
+      "ALTER TABLE cards ADD COLUMN example_translation_id TEXT NOT NULL DEFAULT ''",
     );
   },
 };

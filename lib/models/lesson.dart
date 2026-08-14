@@ -22,6 +22,9 @@ class Flashcard {
     this.exampleChinese = '',
     this.examplePinyin = '',
     this.exampleEnglish = '',
+    this.exampleSource = '',
+    this.exampleSourceId = '',
+    this.exampleTranslationId = '',
     this.quizOptions = const [],
   });
 
@@ -33,6 +36,9 @@ class Flashcard {
   final String exampleChinese;
   final String examplePinyin;
   final String exampleEnglish;
+  final String exampleSource;
+  final String exampleSourceId;
+  final String exampleTranslationId;
   final List<String> quizOptions;
 
   Flashcard copyWith({
@@ -49,6 +55,9 @@ class Flashcard {
       exampleChinese: exampleChinese ?? this.exampleChinese,
       examplePinyin: examplePinyin ?? this.examplePinyin,
       exampleEnglish: exampleEnglish ?? this.exampleEnglish,
+      exampleSource: exampleSource,
+      exampleSourceId: exampleSourceId,
+      exampleTranslationId: exampleTranslationId,
       quizOptions: quizOptions,
     );
   }

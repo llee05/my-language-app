@@ -262,6 +262,9 @@ class SqliteLessonRepository implements LessonRepository {
     exampleChinese: row['example_sentence_chinese'] as String,
     examplePinyin: row['example_sentence_pinyin'] as String,
     exampleEnglish: row['example_sentence_english'] as String,
+    exampleSource: row['example_source'] as String? ?? '',
+    exampleSourceId: row['example_source_id'] as String? ?? '',
+    exampleTranslationId: row['example_translation_id'] as String? ?? '',
     quizOptions: (jsonDecode(row['quiz_options'] as String) as List)
         .cast<String>(),
   );
@@ -654,6 +657,9 @@ class SqliteProgressRepository implements ProgressRepository {
     exampleChinese: row['example_sentence_chinese'] as String,
     examplePinyin: row['example_sentence_pinyin'] as String,
     exampleEnglish: row['example_sentence_english'] as String,
+    exampleSource: row['example_source'] as String? ?? '',
+    exampleSourceId: row['example_source_id'] as String? ?? '',
+    exampleTranslationId: row['example_translation_id'] as String? ?? '',
     quizOptions: (jsonDecode(row['quiz_options'] as String) as List)
         .cast<String>(),
   );

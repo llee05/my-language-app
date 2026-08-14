@@ -120,7 +120,7 @@ void main() {
         "SELECT name FROM sqlite_master WHERE type = 'index'",
       );
 
-      expect(version, 5);
+      expect(version, 6);
       expect(marker.single['value'], 'preserve me');
       expect(
         indexes.map((row) => row['name']),
@@ -512,6 +512,16 @@ void main() {
     final progressColumns = await db.rawQuery(
       'PRAGMA table_info(card_progress)',
     );
+
+    final cardColumns = await db.rawQuery('PRAGMA table_info(cards)');
+    expect(
+      cardColumns.map((row) => row['name']),
+      containsAll([
+        'example_source',
+        'example_source_id',
+        'example_translation_id',
+      ]),
+    );
     expect(
       progressColumns.map((row) => row['name']),
       containsAll([
@@ -536,6 +546,32 @@ void main() {
         'idx_progress_due',
       ]),
     );
+  });
+
+  test('bundled cards use packaged Tatoeba examples', () async {
+    await LocalDatabase.resetForTesting();
+    final db = await LocalDatabase.ensureInitialized();
+    final rows = await db.rawQuery(
+      '''
+      SELECT cards.*
+      FROM cards
+      INNER JOIN lessons ON lessons.id = cards.lesson_id
+      WHERE cards.chinese = ? AND lessons.lesson_title = ?
+      LIMIT 1
+    ''',
+      ['胡萝卜', 'Vegetables HSK3 Flashcards'],
+    );
+
+    expect(rows, hasLength(1));
+    expect(rows.single['example_sentence_chinese'], '除了胡萝卜，他没有什么是不吃的。');
+    expect(
+      rows.single['example_sentence_english'],
+      "Except for carrots, there is nothing he won't eat.",
+    );
+    expect(rows.single['example_sentence_pinyin'], isEmpty);
+    expect(rows.single['example_source'], 'Tatoeba');
+    expect(rows.single['example_source_id'], '333939');
+    expect(rows.single['example_translation_id'], '35862');
   });
 
   test(
@@ -805,7 +841,7 @@ void main() {
       await versionThree.close();
 
       final upgraded = await LocalDatabase.ensureInitialized();
-      expect(await upgraded.getVersion(), 5);
+      expect(await upgraded.getVersion(), 6);
       final restored = await progress.progressForCard(cardId);
       expect(restored?.timesSeen, 3);
       expect(restored?.correctAnswers, 2);

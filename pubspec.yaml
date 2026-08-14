@@ -64,6 +64,7 @@ flutter:
 
   assets:
     - assets/data/hsk_vocabulary.json
+    - assets/data/tatoeba/flashcard_candidates.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -1018,16 +1018,23 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
       if (widget.card.exampleChinese.isNotEmpty) ...[
         const SizedBox(height: 28),
         Text(widget.card.exampleChinese, textAlign: TextAlign.center),
-        Text(
-          widget.card.examplePinyin,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.muted),
-        ),
+        if (widget.card.examplePinyin.isNotEmpty)
+          Text(
+            widget.card.examplePinyin,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.muted),
+          ),
         Text(
           widget.card.exampleEnglish,
           textAlign: TextAlign.center,
           style: const TextStyle(color: AppColors.muted),
         ),
+        if (widget.card.exampleSource.isNotEmpty)
+          Text(
+            '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 10, color: AppColors.faint),
+          ),
       ],
       const Spacer(),
       OutlinedButton(

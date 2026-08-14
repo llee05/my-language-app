@@ -14,10 +14,9 @@ The upstream dataset is MIT licensed. Copyright (c) 2026 Yanis Zafirópulos.
 
 ## Tatoeba sentence pairs
 
-`tatoeba/` contains the Mandarin–English sentence-pairs export used as a
-curation source for bundled flashcard examples. It is intentionally not listed
-in `pubspec.yaml`, so the source corpus and generated candidate list are not
-packaged in the application.
+`tatoeba/` contains the Mandarin–English sentence-pairs export used for bundled
+flashcard examples. The compact generated candidate list is packaged with the
+application; the full source corpus is not.
 
 Generate a ranked, reviewable shortlist for every bundled flashcard with:
 

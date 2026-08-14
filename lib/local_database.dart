@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'database/flashcard_seed.dart';
 import 'database/migrations.dart';
@@ -59,6 +60,7 @@ class LocalDatabase {
     );
 
     await _maybeSeedDefaultLessons(_database!);
+    await _applyTatoebaExamples(_database!);
     return _database!;
   }
 
@@ -134,6 +136,65 @@ class LocalDatabase {
           });
         }
       }
+    });
+  }
+
+  static Future<void> _applyTatoebaExamples(Database db) async {
+    const marker = 'tatoeba_examples_v1';
+    final applied = await db.query(
+      'content_migrations',
+      columns: ['key'],
+      where: 'key = ?',
+      whereArgs: [marker],
+      limit: 1,
+    );
+    if (applied.isNotEmpty) return;
+
+    final raw = await rootBundle.loadString(
+      'assets/data/tatoeba/flashcard_candidates.json',
+    );
+    final candidates = jsonDecode(raw) as List<dynamic>;
+    final bundledTitles = flashcardLessons
+        .map((lesson) => lesson['lesson_title'] as String)
+        .toList(growable: false);
+    final placeholders = List.filled(bundledTitles.length, '?').join(',');
+
+    await db.transaction((txn) async {
+      final lessonRows = await txn.query(
+        _lessonTable,
+        columns: ['id'],
+        where: 'lesson_title IN ($placeholders)',
+        whereArgs: bundledTitles,
+      );
+      final lessonIds = lessonRows
+          .map((row) => row['id'] as int)
+          .toList(growable: false);
+      if (lessonIds.isNotEmpty) {
+        final lessonPlaceholders = List.filled(lessonIds.length, '?').join(',');
+        for (final rawEntry in candidates) {
+          final entry = rawEntry as Map<String, dynamic>;
+          final matches = entry['candidates'] as List<dynamic>;
+          if (matches.isEmpty) continue;
+          final best = matches.first as Map<String, dynamic>;
+          await txn.update(
+            _cardTable,
+            {
+              'example_sentence_chinese': best['chinese'] as String,
+              'example_sentence_pinyin': '',
+              'example_sentence_english': best['english'] as String,
+              'example_source': 'Tatoeba',
+              'example_source_id': '${best['chineseId']}',
+              'example_translation_id': '${best['englishId']}',
+            },
+            where: 'chinese = ? AND lesson_id IN ($lessonPlaceholders)',
+            whereArgs: [entry['target'], ...lessonIds],
+          );
+        }
+      }
+      await txn.insert('content_migrations', {
+        'key': marker,
+        'applied_at': DateTime.now().toUtc().toIso8601String(),
+      });
     });
   }
 
