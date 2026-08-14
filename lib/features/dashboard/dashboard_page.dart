@@ -481,7 +481,6 @@ class DashboardLearningStats {
     final today = DateTime(localNow.year, localNow.month, localNow.day);
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final weeklyXp = List<int>.filled(7, 0);
-    final activeDays = <DateTime>{};
     var totalXp = 0;
 
     for (final review in reviews) {
@@ -489,18 +488,8 @@ class DashboardLearningStats {
       totalXp += xp;
       final reviewed = review.reviewedAt.toLocal();
       final day = DateTime(reviewed.year, reviewed.month, reviewed.day);
-      activeDays.add(day);
       final offset = day.difference(weekStart).inDays;
       if (offset >= 0 && offset < 7) weeklyXp[offset] += xp;
-    }
-
-    var streakDays = 0;
-    var cursor = activeDays.contains(today)
-        ? today
-        : today.subtract(const Duration(days: 1));
-    while (activeDays.contains(cursor)) {
-      streakDays++;
-      cursor = cursor.subtract(const Duration(days: 1));
     }
 
     final seenVocabulary = vocabulary
@@ -513,7 +502,10 @@ class DashboardLearningStats {
     return DashboardLearningStats(
       totalXp: totalXp,
       weeklyXp: weeklyXp,
-      streakDays: streakDays,
+      streakDays: calculateCurrentStudyStreak(
+        studiedAt: reviews.map((review) => review.reviewedAt),
+        now: now,
+      ),
       wordsSeen: seenVocabulary.length,
       wordsLearning: seenVocabulary.length - wordsLearned,
       wordsLearned: wordsLearned,

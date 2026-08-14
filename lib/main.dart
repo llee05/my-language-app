@@ -21,6 +21,7 @@ import 'repositories/progress_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'repositories/sqlite_repositories.dart';
 import 'services/review_scheduler.dart';
+import 'services/study_streak_calculator.dart';
 
 export 'models/learner_profile.dart';
 export 'models/lesson.dart';
