@@ -121,6 +121,41 @@ void main() {
     );
   });
 
+  testWidgets('new learner dashboard offers a useful first step', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: _MemoryProgressRepository(
+            hasActiveSession: false,
+          ),
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Start your first lesson'), findsOneWidget);
+    expect(find.text('Browse lessons'), findsOneWidget);
+    expect(find.text('Resume'), findsNothing);
+
+    await tester.tap(find.text('Browse lessons'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Lesson Library'), findsOneWidget);
+    expect(find.text('Saved lesson'), findsOneWidget);
+  });
+
   testWidgets('continue card invokes resume when tapped', (tester) async {
     var resumed = false;
     await tester.pumpWidget(

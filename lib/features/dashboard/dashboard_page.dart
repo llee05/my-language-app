@@ -41,6 +41,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Lesson? _activeLesson;
   LessonSession? _activeLessonSession;
   DashboardLearningStats _learningStats = const DashboardLearningStats();
+  bool _loadingLearningStats = true;
 
   @override
   void initState() {
@@ -66,10 +67,14 @@ class _DashboardPageState extends State<DashboardPage> {
           vocabulary: vocabulary,
           now: now,
         );
+        _loadingLearningStats = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _learningStats = const DashboardLearningStats());
+      setState(() {
+        _learningStats = const DashboardLearningStats();
+        _loadingLearningStats = false;
+      });
     }
   }
 
@@ -138,6 +143,13 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
+  void _openLessons() {
+    setState(() {
+      selectedNav = 1;
+      _resumeLatestLesson = false;
+    });
+  }
+
   void _openDailyReview() {
     setState(() {
       selectedNav = 4;
@@ -188,6 +200,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         resumeLatestLesson: _resumeLatestLesson,
                         startDailyReview: _startDailyReview,
                         onResumeLesson: _resumeLesson,
+                        onOpenLessons: _openLessons,
                         onStartDailyReview: _openDailyReview,
                         onDailyReviewCompleted: _loadDailyReviewPrompt,
                         loadingDailyReview: _loadingDailyReview,
@@ -197,6 +210,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         activeLesson: _activeLesson,
                         activeLessonSession: _activeLessonSession,
                         learningStats: _learningStats,
+                        loadingLearningStats: _loadingLearningStats,
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -227,6 +241,7 @@ class _DashboardBody extends StatelessWidget {
     required this.resumeLatestLesson,
     required this.startDailyReview,
     required this.onResumeLesson,
+    required this.onOpenLessons,
     required this.onStartDailyReview,
     required this.onDailyReviewCompleted,
     required this.loadingDailyReview,
@@ -236,6 +251,7 @@ class _DashboardBody extends StatelessWidget {
     required this.activeLesson,
     required this.activeLessonSession,
     required this.learningStats,
+    required this.loadingLearningStats,
     required this.profile,
     required this.onProfileChanged,
     required this.onResetOnboarding,
@@ -251,6 +267,7 @@ class _DashboardBody extends StatelessWidget {
   final bool resumeLatestLesson;
   final bool startDailyReview;
   final VoidCallback onResumeLesson;
+  final VoidCallback onOpenLessons;
   final VoidCallback onStartDailyReview;
   final VoidCallback onDailyReviewCompleted;
   final bool loadingDailyReview;
@@ -260,6 +277,7 @@ class _DashboardBody extends StatelessWidget {
   final Lesson? activeLesson;
   final LessonSession? activeLessonSession;
   final DashboardLearningStats learningStats;
+  final bool loadingLearningStats;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
@@ -327,6 +345,7 @@ class _DashboardBody extends StatelessWidget {
                     child: SingleChildScrollView(
                       child: MainDashboard(
                         onResume: onResumeLesson,
+                        onStartLearning: onOpenLessons,
                         onStartReview: onStartDailyReview,
                         loadingReview: loadingDailyReview,
                         pendingReviewCount: pendingReviewCount,
@@ -334,6 +353,11 @@ class _DashboardBody extends StatelessWidget {
                         resumeReview: resumeDailyReview,
                         activeLesson: activeLesson,
                         activeLessonSession: activeLessonSession,
+                        isNewLearner:
+                            !loadingLearningStats &&
+                            activeLesson == null &&
+                            learningStats.totalXp == 0 &&
+                            learningStats.wordsSeen == 0,
                       ),
                     ),
                   ),
@@ -345,6 +369,7 @@ class _DashboardBody extends StatelessWidget {
                   children: [
                     MainDashboard(
                       onResume: onResumeLesson,
+                      onStartLearning: onOpenLessons,
                       onStartReview: onStartDailyReview,
                       loadingReview: loadingDailyReview,
                       pendingReviewCount: pendingReviewCount,
@@ -352,6 +377,11 @@ class _DashboardBody extends StatelessWidget {
                       resumeReview: resumeDailyReview,
                       activeLesson: activeLesson,
                       activeLessonSession: activeLessonSession,
+                      isNewLearner:
+                          !loadingLearningStats &&
+                          activeLesson == null &&
+                          learningStats.totalXp == 0 &&
+                          learningStats.wordsSeen == 0,
                     ),
                     RightRail(compact: true, stats: learningStats),
                   ],

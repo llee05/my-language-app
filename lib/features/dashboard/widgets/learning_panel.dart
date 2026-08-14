@@ -4,6 +4,7 @@ class MainDashboard extends StatelessWidget {
   const MainDashboard({
     super.key,
     required this.onResume,
+    required this.onStartLearning,
     required this.onStartReview,
     required this.loadingReview,
     required this.pendingReviewCount,
@@ -11,9 +12,11 @@ class MainDashboard extends StatelessWidget {
     required this.resumeReview,
     required this.activeLesson,
     required this.activeLessonSession,
+    required this.isNewLearner,
   });
 
   final VoidCallback onResume;
+  final VoidCallback onStartLearning;
   final VoidCallback onStartReview;
   final bool loadingReview;
   final int pendingReviewCount;
@@ -21,6 +24,7 @@ class MainDashboard extends StatelessWidget {
   final bool resumeReview;
   final Lesson? activeLesson;
   final LessonSession? activeLessonSession;
+  final bool isNewLearner;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +52,10 @@ class MainDashboard extends StatelessWidget {
             resume: resumeReview,
             onPressed: onStartReview,
           ),
+          if (isNewLearner) ...[
+            const SizedBox(height: 26),
+            _NewLearnerPrompt(onPressed: onStartLearning),
+          ],
           if (lesson != null && session != null) ...[
             const SizedBox(height: 26),
             const SectionLabel('CONTINUE LEARNING'),
@@ -75,7 +83,7 @@ class MainDashboard extends StatelessWidget {
               xp: '+${50 + i * 10} XP',
               state: i == 0
                   ? LessonState.active
-                  : i <= 2
+                  : !isNewLearner && i <= 2
                   ? LessonState.done
                   : LessonState.locked,
             ),
@@ -83,6 +91,52 @@ class MainDashboard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NewLearnerPrompt extends StatelessWidget {
+  const _NewLearnerPrompt({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFF1A1310), Color(0xFF25120F)],
+      ),
+      border: Border.all(color: const Color(0xFF5D4514)),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.waving_hand_rounded, color: AppColors.gold, size: 34),
+        const SizedBox(width: 16),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Start your first lesson',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                'Learn a few words to begin building your streak, XP, and vocabulary mastery.',
+                style: TextStyle(fontSize: 11, color: AppColors.muted),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        FilledButton(onPressed: onPressed, child: const Text('Browse lessons')),
+      ],
+    ),
+  );
 }
 
 class _DailyReviewPrompt extends StatelessWidget {
