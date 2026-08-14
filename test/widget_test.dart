@@ -67,7 +67,18 @@ void main() {
           progress: CardProgress(
             cardId: 11,
             dueAt: DateTime(2026, 8, 14),
+            timesSeen: 2,
             mastery: .75,
+          ),
+        ),
+        VocabularyCardProgress(
+          chinese: '会',
+          pinyin: 'huì',
+          progress: CardProgress(
+            cardId: 12,
+            dueAt: DateTime(2026, 8, 15),
+            timesSeen: 4,
+            mastery: 1,
           ),
         ),
       ],
@@ -94,6 +105,18 @@ void main() {
     expect(find.text('2-day streak'), findsOneWidget);
     expect(find.text('学'), findsWidgets);
     expect(find.text('75%'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('words-seen-total'))).data,
+      '2',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const Key('words-learning-total'))).data,
+      '1',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const Key('words-learned-total'))).data,
+      '1',
+    );
   });
 
   testWidgets('continue card invokes resume when tapped', (tester) async {

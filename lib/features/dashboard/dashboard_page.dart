@@ -458,12 +458,18 @@ class DashboardLearningStats {
     this.totalXp = 0,
     this.weeklyXp = const [0, 0, 0, 0, 0, 0, 0],
     this.streakDays = 0,
+    this.wordsSeen = 0,
+    this.wordsLearning = 0,
+    this.wordsLearned = 0,
     this.vocabulary = const [],
   });
 
   final int totalXp;
   final List<int> weeklyXp;
   final int streakDays;
+  final int wordsSeen;
+  final int wordsLearning;
+  final int wordsLearned;
   final List<VocabularyCardProgress> vocabulary;
 
   factory DashboardLearningStats.fromSavedData({
@@ -497,11 +503,21 @@ class DashboardLearningStats {
       cursor = cursor.subtract(const Duration(days: 1));
     }
 
+    final seenVocabulary = vocabulary
+        .where((word) => word.progress.timesSeen > 0)
+        .toList(growable: false);
+    final wordsLearned = seenVocabulary
+        .where((word) => word.progress.mastery >= .8)
+        .length;
+
     return DashboardLearningStats(
       totalXp: totalXp,
       weeklyXp: weeklyXp,
       streakDays: streakDays,
-      vocabulary: vocabulary.take(6).toList(growable: false),
+      wordsSeen: seenVocabulary.length,
+      wordsLearning: seenVocabulary.length - wordsLearned,
+      wordsLearned: wordsLearned,
+      vocabulary: seenVocabulary.take(6).toList(growable: false),
     );
   }
 }

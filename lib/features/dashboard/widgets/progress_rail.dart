@@ -29,7 +29,12 @@ class RightRail extends StatelessWidget {
                 SizedBox(width: 270, child: WeeklyXp(xpByDay: stats.weeklyXp)),
                 SizedBox(
                   width: 270,
-                  child: VocabularyPanel(words: stats.vocabulary),
+                  child: VocabularyPanel(
+                    words: stats.vocabulary,
+                    wordsSeen: stats.wordsSeen,
+                    wordsLearning: stats.wordsLearning,
+                    wordsLearned: stats.wordsLearned,
+                  ),
                 ),
               ],
             )
@@ -39,7 +44,12 @@ class RightRail extends StatelessWidget {
                 children: [
                   WeeklyXp(xpByDay: stats.weeklyXp),
                   const SizedBox(height: 26),
-                  VocabularyPanel(words: stats.vocabulary),
+                  VocabularyPanel(
+                    words: stats.vocabulary,
+                    wordsSeen: stats.wordsSeen,
+                    wordsLearning: stats.wordsLearning,
+                    wordsLearned: stats.wordsLearned,
+                  ),
                 ],
               ),
             ),
@@ -134,8 +144,17 @@ class WeeklyXp extends StatelessWidget {
 }
 
 class VocabularyPanel extends StatelessWidget {
-  const VocabularyPanel({super.key, required this.words});
+  const VocabularyPanel({
+    super.key,
+    required this.words,
+    required this.wordsSeen,
+    required this.wordsLearning,
+    required this.wordsLearned,
+  });
   final List<VocabularyCardProgress> words;
+  final int wordsSeen;
+  final int wordsLearning;
+  final int wordsLearned;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +175,34 @@ class VocabularyPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 5),
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Row(
+            children: [
+              _VocabularyTotal(
+                valueKey: const Key('words-seen-total'),
+                label: 'Seen',
+                value: wordsSeen,
+              ),
+              _VocabularyTotal(
+                valueKey: const Key('words-learning-total'),
+                label: 'Learning',
+                value: wordsLearning,
+              ),
+              _VocabularyTotal(
+                valueKey: const Key('words-learned-total'),
+                label: 'Learned',
+                value: wordsLearned,
+              ),
+            ],
+          ),
+        ),
         if (words.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
@@ -181,6 +228,40 @@ class VocabularyPanel extends StatelessWidget {
       ],
     );
   }
+}
+
+class _VocabularyTotal extends StatelessWidget {
+  const _VocabularyTotal({
+    required this.valueKey,
+    required this.label,
+    required this.value,
+  });
+
+  final Key valueKey;
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Column(
+      children: [
+        Text(
+          '$value',
+          key: valueKey,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.text,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 9, color: AppColors.muted),
+        ),
+      ],
+    ),
+  );
 }
 
 class VocabularyCard extends StatefulWidget {
