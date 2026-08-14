@@ -193,6 +193,30 @@ void main() {
     expect(resumed, isTrue);
   });
 
+  testWidgets('dashboard review all action opens the review flow', (
+    tester,
+  ) async {
+    var reviewAllPressed = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VocabularyPanel(
+            words: const [],
+            wordsSeen: 0,
+            wordsLearning: 0,
+            wordsLearned: 0,
+            onReviewAll: () => reviewAllPressed = true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Review all'));
+    await tester.pump();
+
+    expect(reviewAllPressed, isTrue);
+  });
+
   testWidgets('dashboard resumes the latest unfinished lesson', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

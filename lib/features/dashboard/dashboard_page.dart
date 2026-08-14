@@ -361,7 +361,13 @@ class _DashboardBody extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: 300, child: RightRail(stats: learningStats)),
+                  SizedBox(
+                    width: 300,
+                    child: RightRail(
+                      stats: learningStats,
+                      onReviewAll: onStartDailyReview,
+                    ),
+                  ),
                 ],
               )
             : SingleChildScrollView(
@@ -383,7 +389,11 @@ class _DashboardBody extends StatelessWidget {
                           learningStats.totalXp == 0 &&
                           learningStats.wordsSeen == 0,
                     ),
-                    RightRail(compact: true, stats: learningStats),
+                    RightRail(
+                      compact: true,
+                      stats: learningStats,
+                      onReviewAll: onStartDailyReview,
+                    ),
                   ],
                 ),
               );

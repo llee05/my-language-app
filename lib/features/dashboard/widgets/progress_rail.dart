@@ -1,9 +1,15 @@
 part of '../../../main.dart';
 
 class RightRail extends StatelessWidget {
-  const RightRail({super.key, this.compact = false, required this.stats});
+  const RightRail({
+    super.key,
+    this.compact = false,
+    required this.stats,
+    required this.onReviewAll,
+  });
   final bool compact;
   final DashboardLearningStats stats;
+  final VoidCallback onReviewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +40,7 @@ class RightRail extends StatelessWidget {
                     wordsSeen: stats.wordsSeen,
                     wordsLearning: stats.wordsLearning,
                     wordsLearned: stats.wordsLearned,
+                    onReviewAll: onReviewAll,
                   ),
                 ),
               ],
@@ -49,6 +56,7 @@ class RightRail extends StatelessWidget {
                     wordsSeen: stats.wordsSeen,
                     wordsLearning: stats.wordsLearning,
                     wordsLearned: stats.wordsLearned,
+                    onReviewAll: onReviewAll,
                   ),
                 ],
               ),
@@ -150,11 +158,13 @@ class VocabularyPanel extends StatelessWidget {
     required this.wordsSeen,
     required this.wordsLearning,
     required this.wordsLearned,
+    required this.onReviewAll,
   });
   final List<VocabularyCardProgress> words;
   final int wordsSeen;
   final int wordsLearning;
   final int wordsLearned;
+  final VoidCallback onReviewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -166,9 +176,9 @@ class VocabularyPanel extends StatelessWidget {
           children: [
             const SectionLabel('VOCABULARY'),
             TextButton(
-              onPressed: () {},
+              onPressed: onReviewAll,
               child: const Text(
-                'Practice all',
+                'Review all',
                 style: TextStyle(fontSize: 10, color: AppColors.red),
               ),
             ),
