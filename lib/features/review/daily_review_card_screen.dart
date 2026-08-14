@@ -401,8 +401,8 @@ class _ReviewAnswerButton extends StatelessWidget {
 }
 
 String _ratingLabel(ReviewRating rating) => switch (rating) {
-  ReviewRating.again => 'Again',
-  ReviewRating.hard => 'Hard',
-  ReviewRating.good => 'Good',
-  ReviewRating.easy => 'Easy',
+  ReviewRating.again => 'No idea',
+  ReviewRating.hard => 'Unsure',
+  ReviewRating.good => 'Confident',
+  ReviewRating.easy => 'Instant',
 };

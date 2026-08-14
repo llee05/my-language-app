@@ -373,8 +373,8 @@ void main() {
       expect(find.text('一'), findsOneWidget);
       await tester.tap(find.text('Reveal meaning'));
       await tester.pump();
-      await tester.ensureVisible(find.text('Good'));
-      await tester.tap(find.text('Good'));
+      await tester.ensureVisible(find.text('Confident'));
+      await tester.tap(find.text('Confident'));
       await tester.pumpAndSettle();
       expect(reviews.sessions['2026-08-06']?.currentPosition, 1);
 
@@ -391,8 +391,8 @@ void main() {
       expect(find.text('二'), findsOneWidget);
       await tester.tap(find.text('Reveal meaning'));
       await tester.pump();
-      await tester.ensureVisible(find.text('Again'));
-      await tester.tap(find.text('Again'));
+      await tester.ensureVisible(find.text('No idea'));
+      await tester.tap(find.text('No idea'));
       await tester.pumpAndSettle();
       expect(reviews.sessions['2026-08-06']?.isComplete, isTrue);
       expect(reviews.reviewCount, 2);
@@ -607,8 +607,8 @@ void main() {
 
     await tester.tap(find.text('Reveal meaning'));
     await tester.pump();
-    await tester.ensureVisible(find.text('Good'));
-    await tester.tap(find.text('Good'));
+    await tester.ensureVisible(find.text('Confident'));
+    await tester.tap(find.text('Confident'));
     await tester.pumpAndSettle();
 
     expect(progress.recordedReview?.cardId, 2);
@@ -618,7 +618,7 @@ void main() {
     expect(sessions.session?.currentPosition, 2);
     expect(sessions.session?.isComplete, isTrue);
 
-    expect(find.text('Good selected'), findsOneWidget);
+    expect(find.text('Confident selected'), findsOneWidget);
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
     expect(find.text('Daily review complete!'), findsOneWidget);
@@ -665,10 +665,10 @@ void main() {
     await tester.tap(find.text('Reveal meaning'));
     await tester.pump();
     expect(find.text('one'), findsOneWidget);
-    expect(find.text('Again'), findsOneWidget);
-    expect(find.text('Hard'), findsOneWidget);
-    expect(find.text('Good'), findsOneWidget);
-    expect(find.text('Easy'), findsOneWidget);
+    expect(find.text('No idea'), findsOneWidget);
+    expect(find.text('Unsure'), findsOneWidget);
+    expect(find.text('Confident'), findsOneWidget);
+    expect(find.text('Instant'), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(find.widgetWithText(FilledButton, 'Next'))
@@ -676,10 +676,10 @@ void main() {
       isNull,
     );
 
-    await tester.ensureVisible(find.text('Good'));
-    await tester.tap(find.text('Good'));
+    await tester.ensureVisible(find.text('Confident'));
+    await tester.tap(find.text('Confident'));
     await tester.pumpAndSettle();
-    expect(find.text('Good selected'), findsOneWidget);
+    expect(find.text('Confident selected'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const Key('review-answer-good')),
@@ -708,8 +708,8 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Reveal meaning'));
     await tester.pump();
-    await tester.ensureVisible(find.text('Again'));
-    await tester.tap(find.text('Again'));
+    await tester.ensureVisible(find.text('No idea'));
+    await tester.tap(find.text('No idea'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
