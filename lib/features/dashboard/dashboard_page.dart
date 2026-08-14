@@ -130,10 +130,14 @@ class _DashboardPageState extends State<DashboardPage> {
       _startDailyReview = false;
     });
     if (value == 0) {
-      unawaited(_loadDailyReviewPrompt());
-      unawaited(_loadActiveLesson());
-      unawaited(_loadLearningStats());
+      _refreshDashboardData();
     }
+  }
+
+  void _refreshDashboardData() {
+    unawaited(_loadDailyReviewPrompt());
+    unawaited(_loadActiveLesson());
+    unawaited(_loadLearningStats());
   }
 
   void _resumeLesson() {
@@ -203,6 +207,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         onOpenLessons: _openLessons,
                         onStartDailyReview: _openDailyReview,
                         onDailyReviewCompleted: _loadDailyReviewPrompt,
+                        onLearningProgressChanged: _loadLearningStats,
+                        onLessonProgressChanged: _refreshDashboardData,
                         loadingDailyReview: _loadingDailyReview,
                         pendingReviewCount: _pendingReviewCount,
                         dailyReviewComplete: _dailyReviewComplete,
@@ -244,6 +250,8 @@ class _DashboardBody extends StatelessWidget {
     required this.onOpenLessons,
     required this.onStartDailyReview,
     required this.onDailyReviewCompleted,
+    required this.onLearningProgressChanged,
+    required this.onLessonProgressChanged,
     required this.loadingDailyReview,
     required this.pendingReviewCount,
     required this.dailyReviewComplete,
@@ -270,6 +278,8 @@ class _DashboardBody extends StatelessWidget {
   final VoidCallback onOpenLessons;
   final VoidCallback onStartDailyReview;
   final VoidCallback onDailyReviewCompleted;
+  final VoidCallback onLearningProgressChanged;
+  final VoidCallback onLessonProgressChanged;
   final bool loadingDailyReview;
   final int pendingReviewCount;
   final bool dailyReviewComplete;
@@ -297,6 +307,7 @@ class _DashboardBody extends StatelessWidget {
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         resumeLatest: resumeLatestLesson,
+        onProgressChanged: onLessonProgressChanged,
       );
     }
     if (selectedNav == 2) {
@@ -317,6 +328,7 @@ class _DashboardBody extends StatelessWidget {
         settingsRepository: settingsRepository,
         startImmediately: startDailyReview,
         onSessionCompleted: onDailyReviewCompleted,
+        onProgressChanged: onLearningProgressChanged,
         clock: clock,
       );
     }

@@ -40,12 +40,14 @@ class LessonsPage extends StatefulWidget {
     required this.progressRepository,
     required this.settingsRepository,
     this.resumeLatest = false,
+    this.onProgressChanged,
   });
 
   final LessonRepository repository;
   final ProgressRepository progressRepository;
   final SettingsRepository settingsRepository;
   final bool resumeLatest;
+  final VoidCallback? onProgressChanged;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -445,6 +447,7 @@ class _LessonsPageState extends State<LessonsPage> {
     );
     _session = updated;
     await widget.progressRepository.updateSession(updated);
+    widget.onProgressChanged?.call();
     if (!mounted) return;
     setState(() {
       (previous == null ? _learnedCardIds : _reviewCardIds).add(card.id);

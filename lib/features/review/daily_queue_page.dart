@@ -13,6 +13,7 @@ class DailyQueuePage extends StatefulWidget {
     this.onStartReview,
     this.startImmediately = false,
     this.onSessionCompleted,
+    this.onProgressChanged,
     this.today,
     this.clock,
   });
@@ -24,6 +25,7 @@ class DailyQueuePage extends StatefulWidget {
   final FutureOr<void> Function(DailyReviewSession session)? onStartReview;
   final bool startImmediately;
   final VoidCallback? onSessionCompleted;
+  final VoidCallback? onProgressChanged;
   final DateTime? today;
   final DateTime Function()? clock;
 
@@ -257,6 +259,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         ),
       );
     }
+    widget.onProgressChanged?.call();
     if (!mounted) return;
     setState(() {
       _session = DailyReviewSession(

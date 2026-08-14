@@ -583,6 +583,7 @@ void main() {
       ),
     );
     DailyReviewSession? started;
+    var reviewProgressChanges = 0;
     final progress = _MemoryProgressRepository(queue: [queue[1]]);
 
     await tester.pumpWidget(
@@ -593,6 +594,7 @@ void main() {
           sessionRepository: sessions,
           today: DateTime(2026, 8, 6),
           onStartReview: (session) => started = session,
+          onProgressChanged: () => reviewProgressChanges++,
         ),
       ),
     );
@@ -617,6 +619,7 @@ void main() {
     expect(progress.savedProgress?.mastery, 0);
     expect(sessions.session?.currentPosition, 2);
     expect(sessions.session?.isComplete, isTrue);
+    expect(reviewProgressChanges, 1);
 
     expect(find.text('Confident selected'), findsOneWidget);
     await tester.tap(find.text('Finish'));
@@ -789,6 +792,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final lessons = _MemoryLessonRepository();
     final progress = _MemoryProgressRepository();
+    var lessonProgressChanges = 0;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -797,6 +801,7 @@ void main() {
             repository: lessons,
             progressRepository: progress,
             settingsRepository: _MemorySettingsRepository(),
+            onProgressChanged: () => lessonProgressChanges++,
           ),
         ),
       ),
@@ -826,6 +831,7 @@ void main() {
     expect(progress.recordedReview?.wasCorrect, isTrue);
     expect(progress.savedSession?.currentCardIndex, 2);
     expect(progress.savedSession?.isComplete, isTrue);
+    expect(lessonProgressChanges, 1);
     expect(find.text('Lesson complete!'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
     expect(find.text('Learned words'), findsOneWidget);
