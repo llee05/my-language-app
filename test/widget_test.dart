@@ -104,6 +104,8 @@ void main() {
     expect(find.text('15 XP'), findsNWidgets(2));
     expect(find.text('2-day streak'), findsOneWidget);
     expect(find.text('学'), findsWidgets);
+    expect(find.text('会'), findsOneWidget);
+    expect(find.text('猫'), findsNothing);
     expect(find.text('75%'), findsOneWidget);
     expect(
       tester.widget<Text>(find.byKey(const Key('words-seen-total'))).data,
