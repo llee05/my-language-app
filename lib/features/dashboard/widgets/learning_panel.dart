@@ -13,6 +13,8 @@ class MainDashboard extends StatelessWidget {
     required this.activeLesson,
     required this.activeLessonSession,
     required this.isNewLearner,
+    required this.availableLessons,
+    required this.loadingAvailableLessons,
   });
 
   final VoidCallback onResume;
@@ -25,10 +27,11 @@ class MainDashboard extends StatelessWidget {
   final Lesson? activeLesson;
   final LessonSession? activeLessonSession;
   final bool isNewLearner;
+  final List<Lesson> availableLessons;
+  final bool loadingAvailableLessons;
 
   @override
   Widget build(BuildContext context) {
-    final lessons = flashcardLessons;
     final lesson = activeLesson;
     final session = activeLessonSession;
     final lessonProgress =
@@ -72,21 +75,30 @@ class MainDashboard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 26),
-          const SectionLabel('SUGGESTED LESSONS'),
+          const SectionLabel('AVAILABLE HSK LESSONS'),
           const SizedBox(height: 8),
           const SizedBox(height: 4),
-          for (var i = 0; i < lessons.length; i++)
+          if (loadingAvailableLessons)
+            const LinearProgressIndicator(color: AppColors.red)
+          else if (availableLessons.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'No lessons are available yet.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+            ),
+          for (final availableLesson in availableLessons.take(6))
             LessonTile(
-              title: lessons[i]['lesson_title'] as String,
-              chinese: lessons[i]['theme'] as String,
-              unit: 'HSK ${lessons[i]['hsk_level']}',
-              duration: '20 cards',
-              xp: '+${50 + i * 10} XP',
-              state: i == 0
+              title: availableLesson.summary.title,
+              chinese: availableLesson.summary.theme,
+              unit: 'HSK ${availableLesson.summary.hskLevel}',
+              duration:
+                  '${availableLesson.cards.length} card${availableLesson.cards.length == 1 ? '' : 's'}',
+              xp: 'Up to ${availableLesson.cards.length * 10} XP',
+              state: availableLesson.summary.id == activeLesson?.summary.id
                   ? LessonState.active
-                  : !isNewLearner && i <= 2
-                  ? LessonState.done
-                  : LessonState.locked,
+                  : LessonState.available,
             ),
         ],
       ),
@@ -378,7 +390,7 @@ class ContinueCard extends StatelessWidget {
   }
 }
 
-enum LessonState { done, active, locked }
+enum LessonState { available, done, active, locked }
 
 class LessonTile extends StatelessWidget {
   const LessonTile({

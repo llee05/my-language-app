@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
@@ -30,11 +29,9 @@ void main() {
     );
     await tester.pump();
 
-    final firstLesson = flashcardLessons.first;
-
     expect(find.text('你好，Mei'), findsOneWidget);
-    expect(find.text(firstLesson['lesson_title'] as String), findsWidgets);
     expect(find.text('WEEKLY XP'), findsOneWidget);
+    expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
   });
 
   testWidgets('dashboard statistics come from saved learning data', (
@@ -240,9 +237,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Saved lesson'), findsNWidgets(2));
     expect(find.text('Saved · 2 cards · 60 XP reward'), findsOneWidget);
     expect(find.text('50%'), findsOneWidget);
+    expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
+    expect(find.text('Saved · HSK 1 · 2 cards'), findsOneWidget);
+    expect(find.text('Up to 20 XP'), findsOneWidget);
 
     await tester.tap(find.text('Resume'));
     await tester.pumpAndSettle();

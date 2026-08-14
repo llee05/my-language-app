@@ -42,6 +42,8 @@ class _DashboardPageState extends State<DashboardPage> {
   LessonSession? _activeLessonSession;
   DashboardLearningStats _learningStats = const DashboardLearningStats();
   bool _loadingLearningStats = true;
+  List<Lesson> _availableLessons = const [];
+  bool _loadingAvailableLessons = true;
 
   @override
   void initState() {
@@ -49,6 +51,29 @@ class _DashboardPageState extends State<DashboardPage> {
     _loadDailyReviewPrompt();
     _loadActiveLesson();
     _loadLearningStats();
+    _loadAvailableLessons();
+  }
+
+  Future<void> _loadAvailableLessons() async {
+    try {
+      final summaries = await widget.lessonRepository.topics();
+      final lessons = await Future.wait(
+        summaries.map(
+          (summary) => widget.lessonRepository.findById(summary.id),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _availableLessons = lessons.whereType<Lesson>().toList(growable: false);
+        _loadingAvailableLessons = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableLessons = const [];
+        _loadingAvailableLessons = false;
+      });
+    }
   }
 
   Future<void> _loadLearningStats() async {
@@ -138,6 +163,7 @@ class _DashboardPageState extends State<DashboardPage> {
     unawaited(_loadDailyReviewPrompt());
     unawaited(_loadActiveLesson());
     unawaited(_loadLearningStats());
+    unawaited(_loadAvailableLessons());
   }
 
   void _resumeLesson() {
@@ -217,6 +243,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         activeLessonSession: _activeLessonSession,
                         learningStats: _learningStats,
                         loadingLearningStats: _loadingLearningStats,
+                        availableLessons: _availableLessons,
+                        loadingAvailableLessons: _loadingAvailableLessons,
                         profile: widget.profile,
                         onProfileChanged: widget.onProfileChanged,
                         onResetOnboarding: widget.onResetOnboarding,
@@ -260,6 +288,8 @@ class _DashboardBody extends StatelessWidget {
     required this.activeLessonSession,
     required this.learningStats,
     required this.loadingLearningStats,
+    required this.availableLessons,
+    required this.loadingAvailableLessons,
     required this.profile,
     required this.onProfileChanged,
     required this.onResetOnboarding,
@@ -288,6 +318,8 @@ class _DashboardBody extends StatelessWidget {
   final LessonSession? activeLessonSession;
   final DashboardLearningStats learningStats;
   final bool loadingLearningStats;
+  final List<Lesson> availableLessons;
+  final bool loadingAvailableLessons;
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
@@ -370,6 +402,8 @@ class _DashboardBody extends StatelessWidget {
                             activeLesson == null &&
                             learningStats.totalXp == 0 &&
                             learningStats.wordsSeen == 0,
+                        availableLessons: availableLessons,
+                        loadingAvailableLessons: loadingAvailableLessons,
                       ),
                     ),
                   ),
@@ -400,6 +434,8 @@ class _DashboardBody extends StatelessWidget {
                           activeLesson == null &&
                           learningStats.totalXp == 0 &&
                           learningStats.wordsSeen == 0,
+                      availableLessons: availableLessons,
+                      loadingAvailableLessons: loadingAvailableLessons,
                     ),
                     RightRail(
                       compact: true,
