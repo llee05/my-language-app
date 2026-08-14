@@ -137,6 +137,17 @@ void main() {
           lessonRepository: _MemoryLessonRepository(),
           progressRepository: _MemoryProgressRepository(
             hasActiveSession: false,
+            queue: const [
+              DailyQueueCard(
+                card: Flashcard(
+                  id: 21,
+                  chinese: '你好',
+                  pinyin: 'nǐ hǎo',
+                  englishMeaning: 'hello',
+                ),
+                reason: DailyQueueReason.newWord,
+              ),
+            ],
           ),
           settingsRepository: _MemorySettingsRepository(),
           developmentRepository: _MemoryDevelopmentRepository(),
@@ -147,6 +158,8 @@ void main() {
 
     expect(find.text('Start your first lesson'), findsOneWidget);
     expect(find.text('Browse lessons'), findsOneWidget);
+    expect(find.text('Begin first review'), findsOneWidget);
+    expect(find.text('Learn your first 1 word'), findsOneWidget);
     expect(find.text('Resume'), findsNothing);
 
     await tester.tap(find.text('Browse lessons'));
@@ -328,10 +341,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(reviews.createdSessionCount, 1);
-      expect(find.text('2 cards pending today'), findsOneWidget);
-      expect(find.text('Start review'), findsOneWidget);
+      expect(find.text('Learn your first 2 words'), findsOneWidget);
+      expect(find.text('Begin first review'), findsOneWidget);
 
-      await tester.tap(find.text('Start review'));
+      await tester.tap(find.text('Begin first review'));
       await tester.pumpAndSettle();
       expect(find.text('一'), findsOneWidget);
       await tester.tap(find.text('Reveal meaning'));
@@ -1190,6 +1203,7 @@ class _JourneyReviewRepository
 
   final Map<String, DailyReviewSession> sessions = {};
   final Map<int, CardProgress> progress = {};
+  final List<ReviewRecord> savedReviews = [];
   int createdSessionCount = 0;
   int reviewCount = 0;
 
@@ -1277,6 +1291,7 @@ class _JourneyReviewRepository
     required CardProgress progress,
   }) async {
     reviewCount++;
+    savedReviews.add(review);
     this.progress[progress.cardId] = progress;
   }
 
@@ -1291,7 +1306,10 @@ class _JourneyReviewRepository
 
   @override
   Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async =>
-      const [];
+      savedReviews
+          .where((review) => cardId == null || review.cardId == cardId)
+          .take(limit ?? savedReviews.length)
+          .toList(growable: false);
 
   @override
   Future<LessonSession> startSession(int lessonId) =>

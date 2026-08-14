@@ -50,6 +50,7 @@ class MainDashboard extends StatelessWidget {
             pendingCount: pendingReviewCount,
             complete: reviewComplete,
             resume: resumeReview,
+            newLearner: isNewLearner,
             onPressed: onStartReview,
           ),
           if (isNewLearner) ...[
@@ -145,6 +146,7 @@ class _DailyReviewPrompt extends StatelessWidget {
     required this.pendingCount,
     required this.complete,
     required this.resume,
+    required this.newLearner,
     required this.onPressed,
   });
 
@@ -152,6 +154,7 @@ class _DailyReviewPrompt extends StatelessWidget {
   final int pendingCount;
   final bool complete;
   final bool resume;
+  final bool newLearner;
   final VoidCallback onPressed;
 
   @override
@@ -182,14 +185,42 @@ class _DailyReviewPrompt extends StatelessWidget {
               const Icon(Icons.style_outlined, color: AppColors.gold),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
-                  style: const TextStyle(color: AppColors.text),
-                ),
+                child: newLearner
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Learn your first $pendingCount word${pendingCount == 1 ? '' : 's'}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Reveal each meaning and rate how well you knew it. We’ll schedule the next review for you.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
+                        style: const TextStyle(color: AppColors.text),
+                      ),
               ),
+              const SizedBox(width: 12),
               FilledButton(
                 onPressed: pendingCount == 0 ? null : onPressed,
-                child: Text(resume ? 'Resume review' : 'Start review'),
+                child: Text(
+                  resume
+                      ? 'Resume review'
+                      : newLearner
+                      ? 'Begin first review'
+                      : 'Start review',
+                ),
               ),
             ],
           ),
