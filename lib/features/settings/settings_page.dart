@@ -243,35 +243,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             setState(() => _soundEnabled = value),
                       ),
                     ),
-                    Material(
-                      color: Colors.transparent,
-                      child: SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Daily reminder'),
-                        value: _reminderEnabled,
-                        onChanged: (value) =>
-                            setState(() => _reminderEnabled = value),
-                      ),
-                    ),
-                    if (_reminderEnabled)
-                      DropdownButtonFormField<int>(
-                        initialValue: _reminderHour,
-                        decoration: const InputDecoration(
-                          labelText: 'Reminder time',
-                        ),
-                        items: [
-                          for (var hour = 0; hour < 24; hour++)
-                            DropdownMenuItem(
-                              value: hour,
-                              child: Text(
-                                '${hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)}:00 '
-                                '${hour < 12 ? 'AM' : 'PM'}',
-                              ),
-                            ),
-                        ],
-                        onChanged: (value) =>
-                            setState(() => _reminderHour = value ?? 18),
-                      ),
                     const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.centerLeft,

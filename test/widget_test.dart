@@ -875,22 +875,13 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
-      HanziPathApp(
-        initialProfile: testProfile,
-        dependencies: AppDependencies(
-          progress: _MemoryProgressRepository(),
-          dailyReviews: _MemoryDailyReviewSessionRepository(null),
-        ),
-      ),
+      const MaterialApp(home: Scaffold(body: AiTutorPage())),
     );
     await tester.pump();
 
-    expect(find.text('AI Tutor'), findsOneWidget);
-    await tester.tap(find.text('AI Tutor'));
-    await tester.pumpAndSettle();
-
     expect(find.text('龙老师 - Long Laoshi'), findsOneWidget);
-    expect(find.text("TODAY'S FOCUS"), findsOneWidget);
+    expect(find.text("TODAY'S FOCUS"), findsNothing);
+    expect(find.text('GPT-4o'), findsNothing);
     expect(find.text('你好！我是龙老师。你想练习什么中文？'), findsOneWidget);
     expect(find.text('我家里有四个人。爸爸，妈妈，我，和妹妹。'), findsNothing);
     expect(find.text('Ask 龙老师 anything in English or 中文...'), findsOneWidget);

@@ -521,12 +521,6 @@ class DashboardHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          const Icon(
-            Icons.notifications_none_rounded,
-            size: 20,
-            color: AppColors.muted,
-          ),
-          const SizedBox(width: 14),
           const CircleAvatar(
             radius: 15,
             backgroundColor: AppColors.darkRed,
