@@ -105,6 +105,11 @@ void main() {
             'theme': 'Legacy',
             'hsk_level': 1,
           });
+          await db.insert('lessons', {
+            'lesson_title': 'Vocab Rush · HSK 1',
+            'theme': 'Vocab Rush',
+            'hsk_level': 1,
+          });
         },
       );
       await legacyDb.close();
@@ -120,7 +125,7 @@ void main() {
         "SELECT name FROM sqlite_master WHERE type = 'index'",
       );
 
-      expect(version, 6);
+      expect(version, 7);
       expect(marker.single['value'], 'preserve me');
       expect(
         indexes.map((row) => row['name']),
@@ -128,7 +133,19 @@ void main() {
           'idx_lessons_theme_hsk',
           'idx_cards_lesson_id',
           'idx_daily_review_sessions_date',
+          'idx_lessons_listed',
         ]),
+      );
+      final migratedRushRows = await upgraded.query(
+        'lessons',
+        where: 'lesson_title = ?',
+        whereArgs: ['Vocab Rush · HSK 1'],
+      );
+      expect(migratedRushRows, hasLength(1));
+      expect(migratedRushRows.single['is_listed'], 0);
+      expect(
+        (await lessons.topics()).map((lesson) => lesson.title),
+        isNot(contains('Vocab Rush · HSK 1')),
       );
       final migratedProfile = await learners.load();
       expect(migratedProfile?.name, 'Legacy learner');
@@ -153,7 +170,7 @@ void main() {
 
   test('generated lessons are saved and offered as previous topics', () async {
     await LocalDatabase.resetForTesting();
-    await LocalDatabase.ensureInitialized();
+    final db = await LocalDatabase.ensureInitialized();
 
     await lessons.saveGenerated(
       const Lesson(
@@ -181,7 +198,6 @@ void main() {
     expect(topics.first.title, 'Ordering breakfast · HSK 1');
     expect(topics.first.theme, 'Ordering breakfast');
 
-    final db = await LocalDatabase.ensureInitialized();
     final cards = await db.query(
       'cards',
       where: 'lesson_id = ?',
@@ -441,7 +457,7 @@ void main() {
 
   test('incorrect Vocab Rush words persist into the daily queue', () async {
     await LocalDatabase.resetForTesting();
-    await LocalDatabase.ensureInitialized();
+    final db = await LocalDatabase.ensureInitialized();
     await learners.save(
       const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 200),
     );
@@ -451,6 +467,7 @@ void main() {
       englishMeaning: 'incorrect question',
       partOfSpeech: 'noun',
     );
+    final topicsBefore = await lessons.topics();
     final stored = await lessons.findOrCreateVocabularyCard(
       card: rushCard,
       hskLevel: 1,
@@ -459,6 +476,13 @@ void main() {
       card: rushCard,
       hskLevel: 1,
     );
+    final visibleTopics = await lessons.topics();
+    final hiddenCollections = await db.query(
+      'lessons',
+      where: 'is_listed = ?',
+      whereArgs: [0],
+    );
+    final hiddenId = hiddenCollections.single['id'] as int;
     final now = DateTime.utc(2026, 8, 6, 10);
     await progress.recordReview(
       review: ReviewRecord(
@@ -486,9 +510,78 @@ void main() {
     final queued = queue.singleWhere((item) => item.card.id == stored.id);
 
     expect(duplicate.id, stored.id);
+    expect(
+      visibleTopics.map((lesson) => lesson.id),
+      topicsBefore.map((lesson) => lesson.id),
+    );
+    expect(
+      visibleTopics.map((lesson) => lesson.title),
+      isNot(contains('Vocab Rush · HSK 1')),
+    );
+    expect(await lessons.findById(hiddenId), isNull);
+    expect(
+      await lessons.findGenerated(theme: 'Vocab Rush', hskLevel: 1),
+      isNull,
+    );
+    await expectLater(progress.startSession(hiddenId), throwsStateError);
+
+    final realSession = await progress.startSession(topicsBefore.first.id);
+    await db.insert('lesson_sessions', {
+      'learner_id': 1,
+      'lesson_id': hiddenId,
+      'started_at': DateTime.utc(2100).toIso8601String(),
+    });
+    expect(await progress.activeSessionForLesson(hiddenId), isNull);
+    expect((await progress.latestActiveSession())?.id, realSession.id);
     expect(queued.card.chinese, '错题');
     expect(queued.reason, DailyQueueReason.weak);
     expect(queued.progress?.incorrectAnswers, 1);
+  });
+
+  test('Vocab Rush storage cannot alter a listed lesson', () async {
+    await LocalDatabase.resetForTesting();
+    final db = await LocalDatabase.ensureInitialized();
+    await lessons.saveGenerated(
+      const Lesson(
+        summary: LessonSummary(
+          id: 0,
+          title: 'Vocab Rush strategies · HSK 1',
+          theme: 'Vocab Rush',
+          hskLevel: 1,
+        ),
+        cards: [
+          Flashcard(chinese: '快', pinyin: 'kuài', englishMeaning: 'fast'),
+        ],
+      ),
+    );
+    final topicsBefore = await lessons.topics();
+
+    await lessons.findOrCreateVocabularyCard(
+      card: const Flashcard(
+        chinese: '快',
+        pinyin: 'kuài',
+        englishMeaning: 'soon',
+      ),
+      hskLevel: 1,
+    );
+
+    final topicsAfter = await lessons.topics();
+    final listedLesson = await lessons.findGenerated(
+      theme: 'Vocab Rush',
+      hskLevel: 1,
+    );
+    final hiddenCollections = await db.query(
+      'lessons',
+      where: 'is_listed = ?',
+      whereArgs: [0],
+    );
+    expect(
+      topicsAfter.map((lesson) => lesson.id),
+      topicsBefore.map((lesson) => lesson.id),
+    );
+    expect(listedLesson?.summary.title, 'Vocab Rush strategies · HSK 1');
+    expect(listedLesson?.cards.map((card) => card.chinese), ['快']);
+    expect(hiddenCollections, hasLength(1));
   });
 
   test('all milestone tables, progress columns, and indexes exist', () async {
@@ -514,6 +607,8 @@ void main() {
     );
 
     final cardColumns = await db.rawQuery('PRAGMA table_info(cards)');
+    final lessonColumns = await db.rawQuery('PRAGMA table_info(lessons)');
+    expect(lessonColumns.map((row) => row['name']), contains('is_listed'));
     expect(
       cardColumns.map((row) => row['name']),
       containsAll([
@@ -544,6 +639,7 @@ void main() {
         'idx_sessions_learner_started',
         'idx_reviews_card_date',
         'idx_progress_due',
+        'idx_lessons_listed',
       ]),
     );
   });
@@ -841,7 +937,7 @@ void main() {
       await versionThree.close();
 
       final upgraded = await LocalDatabase.ensureInitialized();
-      expect(await upgraded.getVersion(), 6);
+      expect(await upgraded.getVersion(), 7);
       final restored = await progress.progressForCard(cardId);
       expect(restored?.timesSeen, 3);
       expect(restored?.correctAnswers, 2);

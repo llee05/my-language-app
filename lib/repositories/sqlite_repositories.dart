@@ -110,6 +110,8 @@ class SqliteLessonRepository implements LessonRepository {
     final rows = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
+      where: 'is_listed = ?',
+      whereArgs: [1],
       orderBy: 'id DESC',
     );
     return rows.map(_summaryFromRow).toList(growable: false);
@@ -121,8 +123,8 @@ class SqliteLessonRepository implements LessonRepository {
     final lessons = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'id = ? AND is_listed = ?',
+      whereArgs: [id, 1],
       limit: 1,
     );
     if (lessons.isEmpty) return null;
@@ -138,8 +140,8 @@ class SqliteLessonRepository implements LessonRepository {
     final lessons = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
-      where: 'theme = ? COLLATE NOCASE AND hsk_level = ?',
-      whereArgs: [theme.trim(), hskLevel],
+      where: 'theme = ? COLLATE NOCASE AND hsk_level = ? AND is_listed = ?',
+      whereArgs: [theme.trim(), hskLevel, 1],
       orderBy: 'id DESC',
       limit: 1,
     );
@@ -157,8 +159,10 @@ class SqliteLessonRepository implements LessonRepository {
     return db.transaction((txn) async {
       final existing = await txn.query(
         'cards',
-        where: 'chinese = ? AND pinyin = ? COLLATE NOCASE',
-        whereArgs: [card.chinese, card.pinyin],
+        where:
+            'chinese = ? AND pinyin = ? COLLATE NOCASE '
+            'AND english_meaning = ? COLLATE NOCASE',
+        whereArgs: [card.chinese, card.pinyin, card.englishMeaning],
         orderBy: 'id ASC',
         limit: 1,
       );
@@ -167,8 +171,8 @@ class SqliteLessonRepository implements LessonRepository {
       final lessons = await txn.query(
         'lessons',
         columns: ['id'],
-        where: 'theme = ? AND hsk_level = ?',
-        whereArgs: ['Vocab Rush', hskLevel],
+        where: 'theme = ? AND hsk_level = ? AND is_listed = ?',
+        whereArgs: ['Vocab Rush', hskLevel, 0],
         limit: 1,
       );
       final lessonId = lessons.isEmpty
@@ -176,6 +180,7 @@ class SqliteLessonRepository implements LessonRepository {
               'lesson_title': 'Vocab Rush · HSK $hskLevel',
               'theme': 'Vocab Rush',
               'hsk_level': hskLevel,
+              'is_listed': 0,
             })
           : lessons.single['id'] as int;
       final cardId = await txn.insert('cards', {
@@ -227,6 +232,7 @@ class SqliteLessonRepository implements LessonRepository {
         'lesson_title': lesson.summary.title,
         'theme': lesson.summary.theme,
         'hsk_level': lesson.summary.hskLevel,
+        'is_listed': 1,
       });
       for (final card in lesson.cards) {
         await txn.insert('cards', {
@@ -276,6 +282,16 @@ class SqliteProgressRepository implements ProgressRepository {
   @override
   Future<LessonSession> startSession(int lessonId) async {
     final db = await LocalDatabase.ensureInitialized();
+    final lesson = await db.query(
+      'lessons',
+      columns: ['id'],
+      where: 'id = ? AND is_listed = ?',
+      whereArgs: [lessonId, 1],
+      limit: 1,
+    );
+    if (lesson.isEmpty) {
+      throw StateError('Cannot start a session for a non-lesson collection.');
+    }
     final startedAt = DateTime.now().toUtc();
     final id = await db.insert('lesson_sessions', {
       'learner_id': 1,
@@ -304,12 +320,19 @@ class SqliteProgressRepository implements ProgressRepository {
   @override
   Future<LessonSession?> activeSessionForLesson(int lessonId) async {
     final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'lesson_sessions',
-      where: 'learner_id = ? AND lesson_id = ? AND completed_at IS NULL',
-      whereArgs: [1, lessonId],
-      orderBy: 'started_at DESC',
-      limit: 1,
+    final rows = await db.rawQuery(
+      '''
+      SELECT lesson_sessions.*
+      FROM lesson_sessions
+      INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
+      WHERE lesson_sessions.learner_id = ?
+        AND lesson_sessions.lesson_id = ?
+        AND lesson_sessions.completed_at IS NULL
+        AND lessons.is_listed = ?
+      ORDER BY lesson_sessions.started_at DESC
+      LIMIT 1
+      ''',
+      [1, lessonId, 1],
     );
     return rows.isEmpty ? null : _sessionFromRow(rows.single);
   }
@@ -317,12 +340,18 @@ class SqliteProgressRepository implements ProgressRepository {
   @override
   Future<LessonSession?> latestActiveSession() async {
     final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'lesson_sessions',
-      where: 'learner_id = ? AND completed_at IS NULL',
-      whereArgs: [1],
-      orderBy: 'started_at DESC, id DESC',
-      limit: 1,
+    final rows = await db.rawQuery(
+      '''
+      SELECT lesson_sessions.*
+      FROM lesson_sessions
+      INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
+      WHERE lesson_sessions.learner_id = ?
+        AND lesson_sessions.completed_at IS NULL
+        AND lessons.is_listed = ?
+      ORDER BY lesson_sessions.started_at DESC, lesson_sessions.id DESC
+      LIMIT 1
+      ''',
+      [1, 1],
     );
     return rows.isEmpty ? null : _sessionFromRow(rows.single);
   }

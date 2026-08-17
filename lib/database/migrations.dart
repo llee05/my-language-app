@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 6;
+const int databaseSchemaVersion = 7;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -230,6 +230,22 @@ final Map<int, MigrationStep> databaseMigrations = {
     );
     await db.execute(
       "ALTER TABLE cards ADD COLUMN example_translation_id TEXT NOT NULL DEFAULT ''",
+    );
+  },
+  7: (db) async {
+    await db.execute(
+      'ALTER TABLE lessons '
+      'ADD COLUMN is_listed INTEGER NOT NULL DEFAULT 1 '
+      'CHECK (is_listed IN (0, 1))',
+    );
+    await db.update(
+      'lessons',
+      {'is_listed': 0},
+      where: 'theme = ? AND lesson_title LIKE ?',
+      whereArgs: ['Vocab Rush', 'Vocab Rush · HSK %'],
+    );
+    await db.execute(
+      'CREATE INDEX idx_lessons_listed ON lessons(is_listed, id DESC)',
     );
   },
 };

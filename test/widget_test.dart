@@ -22,6 +22,8 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(),
           dailyReviews: _MemoryDailyReviewSessionRepository(null),
         ),
@@ -756,6 +758,8 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(),
           dailyReviews: _MemoryDailyReviewSessionRepository(null),
         ),

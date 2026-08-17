@@ -102,20 +102,28 @@ class LocalDatabase {
   }
 
   static Future<void> _maybeSeedDefaultLessons(Database db) async {
-    final countRows = await db.rawQuery('SELECT COUNT(*) FROM $_lessonTable');
-    final count = countRows.first.values.first as int? ?? 0;
-    if (count == 0) {
-      await _seedDefaultLessons(db);
-    }
+    await _seedDefaultLessons(db);
   }
 
   static Future<void> _seedDefaultLessons(Database db) async {
     await db.transaction((txn) async {
+      final existingRows = await txn.query(
+        _lessonTable,
+        columns: ['lesson_title'],
+        where: 'is_listed = ?',
+        whereArgs: [1],
+      );
+      final existingTitles = existingRows
+          .map((row) => row['lesson_title'] as String)
+          .toSet();
       for (final lesson in flashcardLessons) {
+        final title = lesson['lesson_title'] as String;
+        if (existingTitles.contains(title)) continue;
         final lessonId = await txn.insert(_lessonTable, {
-          'lesson_title': lesson['lesson_title'],
+          'lesson_title': title,
           'theme': lesson['theme'],
           'hsk_level': lesson['hsk_level'],
+          'is_listed': 1,
         });
 
         final cards = lesson['cards'] as List<dynamic>;
