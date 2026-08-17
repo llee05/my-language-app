@@ -42,6 +42,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   }
 
   void _move(int offset) {
+    if (_savingAnswer) return;
     final next = _position + offset;
     if (next < 0 || next >= widget.queue.length) return;
     setState(() {
@@ -52,18 +53,16 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
 
   Future<void> _selectAnswer(ReviewRating rating) async {
     if (_savingAnswer || _answers.containsKey(_position)) return;
+    final submittedPosition = _position;
+    final submittedCard = widget.queue[submittedPosition].card;
     setState(() {
       _savingAnswer = true;
       _answerError = null;
     });
     try {
-      await widget.onAnswer?.call(
-        _position,
-        widget.queue[_position].card,
-        rating,
-      );
+      await widget.onAnswer?.call(submittedPosition, submittedCard, rating);
       if (!mounted) return;
-      setState(() => _answers[_position] = rating);
+      setState(() => _answers[submittedPosition] = rating);
     } catch (error) {
       if (!mounted) return;
       setState(() => _answerError = 'Could not save this answer. Try again.');
@@ -91,7 +90,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
               children: [
                 IconButton(
                   tooltip: 'Back to review queue',
-                  onPressed: widget.onClose,
+                  onPressed: _savingAnswer ? null : widget.onClose,
                   icon: const Icon(Icons.close),
                 ),
                 const SizedBox(width: 8),
@@ -218,7 +217,9 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _position == 0 ? null : () => _move(-1),
+                    onPressed: _savingAnswer || _position == 0
+                        ? null
+                        : () => _move(-1),
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Previous'),
                   ),

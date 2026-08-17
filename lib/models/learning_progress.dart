@@ -66,12 +66,19 @@ class ReviewRecord {
     required this.rating,
     required this.wasCorrect,
     this.sessionId,
+    this.submissionKey,
     this.responseTimeMs,
   });
 
   final int id;
   final int cardId;
   final int? sessionId;
+
+  /// Stable identity for a single UI submission.
+  ///
+  /// Retries reuse this value so persistence can ignore an already-recorded
+  /// answer without suppressing legitimate later reviews of the same card.
+  final String? submissionKey;
   final DateTime reviewedAt;
   final ReviewRating rating;
   final bool wasCorrect;

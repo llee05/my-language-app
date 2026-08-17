@@ -254,7 +254,19 @@ class _RushProgressRepository implements ProgressRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> updateSession(LessonSession session) async {}
+  Future<void> updateSessionPosition({
+    required int sessionId,
+    required int currentCardIndex,
+    required int expectedCardsReviewed,
+  }) async {}
+
+  @override
+  Future<void> updateSession(
+    LessonSession session, {
+    bool reconcileFromHistory = false,
+    int? expectedCardsReviewed,
+    int? expectedCorrectAnswers,
+  }) async {}
 }
 
 class _RushDailyReviewSessionRepository
@@ -282,8 +294,9 @@ class _RushDailyReviewSessionRepository
   Future<void> update(DailyReviewSession session) async {}
 
   @override
-  Future<void> complete({
+  Future<bool> complete({
     required int sessionId,
     required DateTime completedAt,
-  }) async {}
+    required int expectedCardCount,
+  }) async => true;
 }

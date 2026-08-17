@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 7;
+const int databaseSchemaVersion = 8;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -246,6 +246,33 @@ final Map<int, MigrationStep> databaseMigrations = {
     );
     await db.execute(
       'CREATE INDEX idx_lessons_listed ON lessons(is_listed, id DESC)',
+    );
+  },
+  8: (db) async {
+    await db.execute(
+      'ALTER TABLE review_history ADD COLUMN submission_key TEXT',
+    );
+
+    // Give one existing lesson review for each card/session pair the same key
+    // future retries will use. Any historical duplicates remain intact, but no
+    // additional duplicate can be appended after this migration.
+    await db.execute('''
+      UPDATE review_history
+      SET submission_key =
+        'lesson:' || session_id || ':card:' || card_id
+      WHERE session_id IS NOT NULL
+        AND id = (
+          SELECT MIN(existing.id)
+          FROM review_history AS existing
+          WHERE existing.learner_id = review_history.learner_id
+            AND existing.session_id = review_history.session_id
+            AND existing.card_id = review_history.card_id
+        )
+    ''');
+    await db.execute(
+      'CREATE UNIQUE INDEX idx_reviews_submission_key '
+      'ON review_history(learner_id, submission_key) '
+      'WHERE submission_key IS NOT NULL',
     );
   },
 };

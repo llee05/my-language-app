@@ -45,6 +45,8 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   int _reviewStartPosition = 0;
   bool _showPinyin = true;
   bool _consumedImmediateStart = false;
+  final Set<String> _pendingAnswerKeys = {};
+  final Set<String> _completedAnswerKeys = {};
 
   DateTime _systemTime() => widget.clock?.call() ?? DateTime.now();
 
@@ -134,6 +136,10 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   Widget build(BuildContext context) {
     if (_reviewing && _session != null && _queue.isNotEmpty) {
       return DailyReviewCardScreen(
+        key: ValueKey(
+          'daily-review-${_session!.id}-$_reviewStartPosition-'
+          '${_session!.queuedCardIds.length}',
+        ),
         queue: _queue,
         initialPosition: 0,
         showPinyin: _showPinyin,
@@ -224,52 +230,97 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     final session = _session;
     final sessions = widget.sessionRepository;
     if (session == null || sessions == null || card.id == 0) return;
+    final absolutePosition = _reviewStartPosition + position;
+    if (session.isComplete ||
+        absolutePosition < session.currentPosition ||
+        absolutePosition >= session.queuedCardIds.length) {
+      return;
+    }
+    if (absolutePosition != session.currentPosition ||
+        session.queuedCardIds[absolutePosition] != card.id) {
+      throw StateError('This review answer no longer matches the active card.');
+    }
+    final submissionKey =
+        'daily:${session.id}:position:$absolutePosition:card:${card.id}';
+    if (_completedAnswerKeys.contains(submissionKey) ||
+        !_pendingAnswerKeys.add(submissionKey)) {
+      return;
+    }
 
-    final now = _systemTime().toUtc();
-    final previous = await widget.progressRepository.progressForCard(card.id);
-    final scheduled = scheduleCardReview(
-      cardId: card.id,
-      rating: rating,
-      reviewedAt: now,
-      previous: previous,
-    );
-    await widget.progressRepository.recordReview(
-      review: ReviewRecord(
-        id: 0,
+    try {
+      final now = _systemTime().toUtc();
+      final previous = await widget.progressRepository.progressForCard(card.id);
+      final scheduled = scheduleCardReview(
         cardId: card.id,
-        reviewedAt: now,
         rating: rating,
-        wasCorrect: rating != ReviewRating.again,
-      ),
-      progress: scheduled,
-    );
+        reviewedAt: now,
+        previous: previous,
+      );
+      await widget.progressRepository.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: card.id,
+          submissionKey: submissionKey,
+          reviewedAt: now,
+          rating: rating,
+          wasCorrect: rating != ReviewRating.again,
+        ),
+        progress: scheduled,
+      );
 
-    final nextPosition = _reviewStartPosition + position + 1;
-    final completed = nextPosition >= session.queuedCardIds.length;
-    if (completed) {
-      await sessions.complete(sessionId: session.id, completedAt: now);
-      widget.onSessionCompleted?.call();
-    } else {
-      await sessions.update(
-        DailyReviewSession(
+      final nextPosition = absolutePosition + 1;
+      final completed = nextPosition >= session.queuedCardIds.length;
+      if (completed) {
+        final didComplete = await sessions.complete(
+          sessionId: session.id,
+          completedAt: now,
+          expectedCardCount: session.queuedCardIds.length,
+        );
+        if (!didComplete) {
+          widget.onProgressChanged?.call();
+          _completedAnswerKeys.add(submissionKey);
+          if (!mounted) return;
+          setState(() {
+            _reviewing = false;
+            _loading = true;
+          });
+          await _loadQueue();
+          if (!mounted) return;
+          final refreshed = _session;
+          if (refreshed != null && !refreshed.isComplete && _queue.isNotEmpty) {
+            setState(() {
+              _reviewStartPosition = refreshed.currentPosition;
+              _reviewing = true;
+            });
+          }
+          return;
+        }
+        widget.onSessionCompleted?.call();
+      } else {
+        await sessions.update(
+          DailyReviewSession(
+            id: session.id,
+            date: session.date,
+            queuedCardIds: session.queuedCardIds,
+            currentPosition: nextPosition,
+          ),
+        );
+      }
+      widget.onProgressChanged?.call();
+      _completedAnswerKeys.add(submissionKey);
+      if (!mounted) return;
+      setState(() {
+        _session = DailyReviewSession(
           id: session.id,
           date: session.date,
           queuedCardIds: session.queuedCardIds,
           currentPosition: nextPosition,
-        ),
-      );
+          completedAt: completed ? now : null,
+        );
+      });
+    } finally {
+      _pendingAnswerKeys.remove(submissionKey);
     }
-    widget.onProgressChanged?.call();
-    if (!mounted) return;
-    setState(() {
-      _session = DailyReviewSession(
-        id: session.id,
-        date: session.date,
-        queuedCardIds: session.queuedCardIds,
-        currentPosition: nextPosition,
-        completedAt: completed ? now : null,
-      );
-    });
   }
 
   Widget _buildContent() {

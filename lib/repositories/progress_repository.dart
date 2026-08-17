@@ -2,7 +2,17 @@ import '../models/learning_progress.dart';
 
 abstract interface class ProgressRepository {
   Future<LessonSession> startSession(int lessonId);
-  Future<void> updateSession(LessonSession session);
+  Future<void> updateSessionPosition({
+    required int sessionId,
+    required int currentCardIndex,
+    required int expectedCardsReviewed,
+  });
+  Future<void> updateSession(
+    LessonSession session, {
+    bool reconcileFromHistory = false,
+    int? expectedCardsReviewed,
+    int? expectedCorrectAnswers,
+  });
   Future<LessonSession?> activeSessionForLesson(int lessonId);
   Future<LessonSession?> latestActiveSession();
 

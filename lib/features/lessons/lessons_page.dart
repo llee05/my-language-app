@@ -69,6 +69,8 @@ class _LessonsPageState extends State<LessonsPage> {
   String? _notice;
   final Set<int> _learnedCardIds = {};
   final Set<int> _reviewCardIds = {};
+  final Set<String> _pendingAnswerKeys = {};
+  bool _savingAnswer = false;
   final FlutterTts _tts = FlutterTts();
   bool _soundEnabled = true;
 
@@ -172,17 +174,62 @@ class _LessonsPageState extends State<LessonsPage> {
     LessonSession? session,
     bool resumed = false,
   }) async {
-    final active =
+    var active =
         session ??
         await widget.progressRepository.activeSessionForLesson(
           lesson.summary.id,
         ) ??
         await widget.progressRepository.startSession(lesson.summary.id);
     if (!mounted) return;
-    final index = active.currentCardIndex.clamp(0, lesson.cards.length - 1);
-    await _loadSessionWordCounts(active, lesson.cards);
+    final savedReviews = await _loadSessionWordCounts(active, lesson.cards);
+    if (!active.isComplete &&
+        (savedReviews.reviewed != active.cardsReviewed ||
+            savedReviews.correct != active.correctAnswers ||
+            savedReviews.reviewed >= lesson.cards.length)) {
+      final expectedCardsReviewed = active.cardsReviewed;
+      final expectedCorrectAnswers = active.correctAnswers;
+      final reviewedCardIds = {..._learnedCardIds, ..._reviewCardIds};
+      final isComplete = savedReviews.reviewed >= lesson.cards.length;
+      var nextIndex = lesson.cards.length;
+      if (!isComplete) {
+        final startingIndex = active.currentCardIndex.clamp(
+          0,
+          lesson.cards.length - 1,
+        );
+        for (var offset = 0; offset < lesson.cards.length; offset++) {
+          final candidate = (startingIndex + offset) % lesson.cards.length;
+          if (!reviewedCardIds.contains(lesson.cards[candidate].id)) {
+            nextIndex = candidate;
+            break;
+          }
+        }
+      }
+      active = LessonSession(
+        id: active.id,
+        lessonId: active.lessonId,
+        startedAt: active.startedAt,
+        completedAt: isComplete ? savedReviews.lastReviewedAt : null,
+        currentCardIndex: nextIndex,
+        cardsReviewed: savedReviews.reviewed,
+        correctAnswers: savedReviews.correct,
+      );
+      await widget.progressRepository.updateSession(
+        active,
+        reconcileFromHistory: true,
+        expectedCardsReviewed: expectedCardsReviewed,
+        expectedCorrectAnswers: expectedCorrectAnswers,
+      );
+    }
     if (!mounted) return;
+    final index = active.currentCardIndex.clamp(0, lesson.cards.length - 1);
     setState(() {
+      final sessions = {..._activeSessions};
+      if (active.isComplete) {
+        sessions.remove(lesson.summary.id);
+      } else {
+        sessions[lesson.summary.id] = active;
+      }
+      _activeSessions = sessions;
       _lessonTitle = lesson.summary.title;
       _cards = lesson.cards;
       _currentCard = index;
@@ -197,20 +244,29 @@ class _LessonsPageState extends State<LessonsPage> {
     });
   }
 
-  Future<void> _loadSessionWordCounts(
-    LessonSession session,
-    List<Flashcard> cards,
-  ) async {
+  Future<({int reviewed, int correct, DateTime? lastReviewedAt})>
+  _loadSessionWordCounts(LessonSession session, List<Flashcard> cards) async {
     final learned = <int>{};
     final review = <int>{};
+    var correct = 0;
+    DateTime? lastReviewedAt;
     for (final card in cards.where((card) => card.id != 0)) {
       final history = await widget.progressRepository.reviewHistory(
         cardId: card.id,
       );
-      final reviewedInSession = history.any(
-        (record) => record.sessionId == session.id,
-      );
-      if (!reviewedInSession) continue;
+      ReviewRecord? sessionReview;
+      for (final record in history) {
+        if (record.sessionId == session.id) {
+          sessionReview = record;
+          break;
+        }
+      }
+      if (sessionReview == null) continue;
+      if (sessionReview.wasCorrect) correct++;
+      if (lastReviewedAt == null ||
+          sessionReview.reviewedAt.isAfter(lastReviewedAt)) {
+        lastReviewedAt = sessionReview.reviewedAt;
+      }
       final hadEarlierReview = history.any(
         (record) => record.sessionId != session.id,
       );
@@ -222,6 +278,11 @@ class _LessonsPageState extends State<LessonsPage> {
     _reviewCardIds
       ..clear()
       ..addAll(review);
+    return (
+      reviewed: learned.length + review.length,
+      correct: correct,
+      lastReviewedAt: lastReviewedAt,
+    );
   }
 
   String get _topic {
@@ -241,6 +302,7 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _generateLesson() async {
+    if (_generating) return;
     FocusScope.of(context).unfocus();
     setState(() {
       _generating = true;
@@ -395,76 +457,132 @@ class _LessonsPageState extends State<LessonsPage> {
   Future<void> _savePosition(int index) async {
     final session = _session;
     if (session == null || session.isComplete) return;
-    final updated = LessonSession(
-      id: session.id,
-      lessonId: session.lessonId,
-      startedAt: session.startedAt,
+    await widget.progressRepository.updateSessionPosition(
+      sessionId: session.id,
       currentCardIndex: index,
-      cardsReviewed: session.cardsReviewed,
-      correctAnswers: session.correctAnswers,
+      expectedCardsReviewed: session.cardsReviewed,
     );
-    _session = updated;
-    await widget.progressRepository.updateSession(updated);
   }
 
   Future<void> _recordAnswer(Flashcard card, ReviewRating rating) async {
     final session = _session;
-    if (session == null || card.id == 0) return;
-    final previous = await widget.progressRepository.progressForCard(card.id);
-    final now = DateTime.now().toUtc();
-    final correct = rating != ReviewRating.again;
-    final scheduled = scheduleCardReview(
-      cardId: card.id,
-      rating: rating,
-      reviewedAt: now,
-      previous: previous,
-    );
-    await widget.progressRepository.recordReview(
-      review: ReviewRecord(
-        id: 0,
-        cardId: card.id,
-        sessionId: session.id,
-        reviewedAt: now,
-        rating: rating,
-        wasCorrect: correct,
-      ),
-      progress: scheduled,
-    );
-
-    final isComplete = session.cardsReviewed + 1 >= _cards.length;
-    final reviewedCardIds = {..._learnedCardIds, ..._reviewCardIds, card.id};
-    final nextIndex = isComplete
-        ? _cards.length
-        : _nextUnreviewedCardIndex(reviewedCardIds);
-    final updated = LessonSession(
-      id: session.id,
-      lessonId: session.lessonId,
-      startedAt: session.startedAt,
-      completedAt: isComplete ? now : null,
-      currentCardIndex: nextIndex,
-      cardsReviewed: session.cardsReviewed + 1,
-      correctAnswers: session.correctAnswers + (correct ? 1 : 0),
-    );
-    _session = updated;
-    await widget.progressRepository.updateSession(updated);
-    widget.onProgressChanged?.call();
-    if (!mounted) return;
+    if (session == null ||
+        session.isComplete ||
+        card.id == 0 ||
+        _savingAnswer ||
+        _learnedCardIds.contains(card.id) ||
+        _reviewCardIds.contains(card.id)) {
+      return;
+    }
+    final submittedIndex = _cards.indexWhere((item) => item.id == card.id);
+    if (submittedIndex < 0) return;
+    final submissionKey = 'lesson:${session.id}:card:${card.id}';
+    if (!_pendingAnswerKeys.add(submissionKey)) return;
     setState(() {
-      (previous == null ? _learnedCardIds : _reviewCardIds).add(card.id);
+      _savingAnswer = true;
+      _notice = null;
     });
-    if (isComplete) {
-      setState(() => _notice = 'Lesson complete — your reviews were saved.');
-    } else {
-      _goToCard(nextIndex);
+
+    try {
+      final history = await widget.progressRepository.reviewHistory(
+        cardId: card.id,
+      );
+      ReviewRecord? existing;
+      for (final record in history) {
+        if (record.sessionId == session.id) {
+          existing = record;
+          break;
+        }
+      }
+      final previous = await widget.progressRepository.progressForCard(card.id);
+      final now = DateTime.now().toUtc();
+      final correct = existing?.wasCorrect ?? rating != ReviewRating.again;
+      final scheduled = scheduleCardReview(
+        cardId: card.id,
+        rating: rating,
+        reviewedAt: now,
+        previous: previous,
+      );
+      await widget.progressRepository.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: card.id,
+          sessionId: session.id,
+          submissionKey: submissionKey,
+          reviewedAt: now,
+          rating: rating,
+          wasCorrect: correct,
+        ),
+        progress: scheduled,
+      );
+
+      final savedHistory = await widget.progressRepository.reviewHistory(
+        cardId: card.id,
+      );
+      ReviewRecord? savedReview;
+      for (final record in savedHistory) {
+        if (record.sessionId == session.id) {
+          savedReview = record;
+          break;
+        }
+      }
+      final savedCorrect = savedReview?.wasCorrect ?? correct;
+      final savedAt = savedReview?.reviewedAt ?? now;
+
+      final isComplete = session.cardsReviewed + 1 >= _cards.length;
+      final reviewedCardIds = {..._learnedCardIds, ..._reviewCardIds, card.id};
+      final nextIndex = isComplete
+          ? _cards.length
+          : _nextUnreviewedCardIndex(
+              reviewedCardIds,
+              fromIndex: submittedIndex,
+            );
+      final updated = LessonSession(
+        id: session.id,
+        lessonId: session.lessonId,
+        startedAt: session.startedAt,
+        completedAt: isComplete ? savedAt : null,
+        currentCardIndex: nextIndex,
+        cardsReviewed: session.cardsReviewed + 1,
+        correctAnswers: session.correctAnswers + (savedCorrect ? 1 : 0),
+      );
+      await widget.progressRepository.updateSession(updated);
+      _session = updated;
+      widget.onProgressChanged?.call();
+      if (!mounted) return;
+      final hadEarlierReview = history.any(
+        (record) => record.sessionId != session.id,
+      );
+      setState(() {
+        (hadEarlierReview ? _reviewCardIds : _learnedCardIds).add(card.id);
+        if (isComplete) {
+          _activeSessions = {..._activeSessions}..remove(session.lessonId);
+          _notice = 'Lesson complete — your reviews were saved.';
+        } else {
+          _activeSessions = {..._activeSessions, session.lessonId: updated};
+        }
+      });
+      if (!isComplete) _goToCard(nextIndex);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _notice = 'Could not save this answer. Try again.');
+      }
+      rethrow;
+    } finally {
+      _pendingAnswerKeys.remove(submissionKey);
+      if (mounted) setState(() => _savingAnswer = false);
     }
   }
 
-  int _nextUnreviewedCardIndex(Set<int> reviewedCardIds) {
+  int _nextUnreviewedCardIndex(
+    Set<int> reviewedCardIds, {
+    required int fromIndex,
+  }) {
     for (var offset = 1; offset <= _cards.length; offset++) {
-      final index = (_currentCard + offset) % _cards.length;
+      final index = (fromIndex + offset) % _cards.length;
       if (!reviewedCardIds.contains(_cards[index].id)) return index;
     }
-    return (_currentCard + 1) % _cards.length;
+    return (fromIndex + 1) % _cards.length;
   }
 
   @override
@@ -610,12 +728,14 @@ class _LessonsPageState extends State<LessonsPage> {
         child: Row(
           children: [
             IconButton(
-              onPressed: () => setState(() {
-                _cards = const [];
-                _session = null;
-                _learnedCardIds.clear();
-                _reviewCardIds.clear();
-              }),
+              onPressed: _savingAnswer
+                  ? null
+                  : () => setState(() {
+                      _cards = const [];
+                      _session = null;
+                      _learnedCardIds.clear();
+                      _reviewCardIds.clear();
+                    }),
               icon: const Icon(Icons.arrow_back),
             ),
             Expanded(
@@ -653,14 +773,21 @@ class _LessonsPageState extends State<LessonsPage> {
             : PageView.builder(
                 itemCount: _cards.length,
                 controller: _pageController,
+                physics: _savingAnswer
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
                 onPageChanged: (index) {
                   setState(() => _currentCard = index);
                   _savePosition(index);
                 },
                 itemBuilder: (context, index) => _LessonFlashcard(
+                  key: ValueKey('lesson-card-${_cards[index].id}'),
                   card: _cards[index],
                   index: index,
                   total: _cards.length,
+                  alreadyRated:
+                      _learnedCardIds.contains(_cards[index].id) ||
+                      _reviewCardIds.contains(_cards[index].id),
                   onRated: (rating) => _recordAnswer(_cards[index], rating),
                   onSpeak: _soundEnabled ? () => _speak(_cards[index]) : null,
                 ),
@@ -673,7 +800,7 @@ class _LessonsPageState extends State<LessonsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               OutlinedButton.icon(
-                onPressed: _currentCard == 0
+                onPressed: _savingAnswer || _currentCard == 0
                     ? null
                     : () => _goToCard(_currentCard - 1),
                 icon: const Icon(Icons.arrow_back),
@@ -681,7 +808,7 @@ class _LessonsPageState extends State<LessonsPage> {
               ),
               const SizedBox(width: 16),
               FilledButton.icon(
-                onPressed: _currentCard >= _cards.length - 1
+                onPressed: _savingAnswer || _currentCard >= _cards.length - 1
                     ? null
                     : () => _goToCard(_currentCard + 1),
                 icon: const Icon(Icons.arrow_forward),
@@ -899,15 +1026,18 @@ class _LessonLibraryCard extends StatelessWidget {
 
 class _LessonFlashcard extends StatefulWidget {
   const _LessonFlashcard({
+    super.key,
     required this.card,
     required this.index,
     required this.total,
+    required this.alreadyRated,
     required this.onRated,
     required this.onSpeak,
   });
   final Flashcard card;
   final int index;
   final int total;
+  final bool alreadyRated;
   final Future<void> Function(ReviewRating rating) onRated;
   final Future<void> Function()? onSpeak;
 
@@ -918,19 +1048,45 @@ class _LessonFlashcard extends StatefulWidget {
 class _LessonFlashcardState extends State<_LessonFlashcard> {
   bool _showAnswer = false;
   bool _submitting = false;
-  bool _rated = false;
+  late bool _rated;
+  String? _ratingError;
+
+  @override
+  void initState() {
+    super.initState();
+    _rated = widget.alreadyRated;
+  }
+
+  @override
+  void didUpdateWidget(covariant _LessonFlashcard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.card.id != widget.card.id) {
+      _showAnswer = false;
+      _rated = widget.alreadyRated;
+      _ratingError = null;
+    } else if (widget.alreadyRated) {
+      _rated = true;
+    }
+  }
 
   void _flip() => setState(() => _showAnswer = !_showAnswer);
 
   Future<void> _rate(ReviewRating rating) async {
     if (_submitting || _rated) return;
-    setState(() => _submitting = true);
-    await widget.onRated(rating);
-    if (!mounted) return;
     setState(() {
-      _submitting = false;
-      _rated = true;
+      _submitting = true;
+      _ratingError = null;
     });
+    try {
+      await widget.onRated(rating);
+      if (mounted) setState(() => _rated = true);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _ratingError = 'Could not save. Tap to try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -1043,6 +1199,10 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
             : () => _rate(ReviewRating.easy),
         child: const Text('Click if you are already familiar with this word'),
       ),
+      if (_ratingError != null) ...[
+        const SizedBox(height: 8),
+        Text(_ratingError!, style: const TextStyle(color: AppColors.red)),
+      ],
       const SizedBox(height: 12),
     ],
   );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
@@ -617,6 +619,7 @@ void main() {
 
     expect(progress.recordedReview?.cardId, 2);
     expect(progress.recordedReview?.rating, ReviewRating.good);
+    expect(progress.recordedReview?.submissionKey, 'daily:8:position:1:card:2');
     expect(progress.savedProgress?.reviewInterval, 1);
     expect(progress.savedProgress?.mastery, 0);
     expect(sessions.session?.currentPosition, 2);
@@ -726,6 +729,136 @@ void main() {
     expect(find.text('+15 XP'), findsOneWidget);
   });
 
+  testWidgets('daily review keeps a pending answer on its submitted card', (
+    tester,
+  ) async {
+    final save = Completer<void>();
+    final submittedPositions = <int>[];
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 1,
+          chinese: '一',
+          pinyin: 'yī',
+          englishMeaning: 'one',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+      DailyQueueCard(
+        card: Flashcard(
+          id: 2,
+          chinese: '二',
+          pinyin: 'èr',
+          englishMeaning: 'two',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyReviewCardScreen(
+          queue: queue,
+          initialPosition: 1,
+          onAnswer: (position, _, _) async {
+            submittedPositions.add(position);
+            if (position == 1) await save.future;
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.tap(find.text('Confident'));
+    await tester.pump();
+
+    expect(submittedPositions, [1]);
+    expect(
+      tester
+          .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'Previous'),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    save.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 2'), findsOneWidget);
+    expect(find.text('Confident selected'), findsOneWidget);
+
+    await tester.tap(find.text('Previous'));
+    await tester.pump();
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.tap(find.text('No idea'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    expect(find.text('Confident selected'), findsOneWidget);
+    expect(submittedPositions, [1, 0]);
+  });
+
+  testWidgets('daily review reloads a card enqueued during completion', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final day = DateTime(2026, 8, 6);
+    final reviews = _JourneyReviewRepository();
+    await reviews.create(date: day, queuedCardIds: const [1]);
+    reviews.cardToAppendOnNextCompletion = 2;
+    var completionCalls = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: reviews,
+          sessionRepository: reviews,
+          today: day,
+          onSessionCompleted: () => completionCalls++,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start review'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.tap(find.text('Confident'));
+    await tester.pumpAndSettle();
+
+    expect(reviews.savedReviews, hasLength(1));
+    expect(reviews.sessions['2026-08-06']?.currentPosition, 1);
+    expect(reviews.sessions['2026-08-06']?.isComplete, isFalse);
+    expect(completionCalls, 0);
+    expect(find.text('二'), findsOneWidget);
+    expect(find.text('Confident selected'), findsNothing);
+
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.tap(find.text('No idea'));
+    await tester.pumpAndSettle();
+
+    expect(reviews.savedReviews, hasLength(2));
+    expect(reviews.savedReviews.map((review) => review.submissionKey), [
+      'daily:1:position:0:card:1',
+      'daily:1:position:1:card:2',
+    ]);
+    expect(reviews.sessions['2026-08-06']?.isComplete, isTrue);
+    expect(completionCalls, 1);
+  });
+
   testWidgets('start review is disabled for an empty queue', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -833,6 +966,7 @@ void main() {
 
     expect(progress.recordedReview?.cardId, 12);
     expect(progress.recordedReview?.wasCorrect, isTrue);
+    expect(progress.recordedReview?.submissionKey, 'lesson:3:card:12');
     expect(progress.savedSession?.currentCardIndex, 2);
     expect(progress.savedSession?.isComplete, isTrue);
     expect(lessonProgressChanges, 1);
@@ -840,7 +974,124 @@ void main() {
     expect(find.text('100%'), findsOneWidget);
     expect(find.text('Learned words'), findsOneWidget);
     expect(find.text('Review words'), findsOneWidget);
-    expect(find.text('+10 XP'), findsOneWidget);
+    expect(find.text('+20 XP'), findsOneWidget);
+
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('Resume'), findsNothing);
+  });
+
+  testWidgets('lesson answer is submitted only once while saving', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final save = Completer<void>();
+    final progress = _MemoryProgressRepository(recordReviewGate: save);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _MemoryLessonRepository(),
+            progressRepository: progress,
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('学'));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final answerButton = find.widgetWithText(
+      OutlinedButton,
+      'Click if you are already familiar with this word',
+    );
+    final submit = tester.widget<OutlinedButton>(answerButton).onPressed!;
+    submit();
+    submit();
+    await tester.pump();
+    await tester.pump();
+
+    expect(progress.recordReviewCalls, 1);
+    expect(tester.widget<OutlinedButton>(answerButton).onPressed, isNull);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.widgetWithIcon(IconButton, Icons.arrow_back).first,
+          )
+          .onPressed,
+      isNull,
+    );
+
+    save.complete();
+    await tester.pumpAndSettle();
+    expect(progress.recordReviewCalls, 1);
+    expect(find.text('Lesson complete!'), findsOneWidget);
+  });
+
+  testWidgets('lesson resume repairs an answer saved before session progress', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final reviewedAt = DateTime.utc(2026, 8, 8, 9);
+    final progress = _MemoryProgressRepository(
+      activeSession: LessonSession(
+        id: 3,
+        lessonId: 7,
+        startedAt: DateTime.utc(2026, 8, 8, 8),
+        currentCardIndex: 1,
+      ),
+      reviews: [
+        ReviewRecord(
+          id: 1,
+          cardId: 12,
+          sessionId: 3,
+          submissionKey: 'lesson:3:card:12',
+          reviewedAt: reviewedAt,
+          rating: ReviewRating.easy,
+          wasCorrect: true,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _MemoryLessonRepository(),
+            progressRepository: progress,
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
+    expect(progress.savedSession?.cardsReviewed, 1);
+    expect(progress.savedSession?.correctAnswers, 1);
+    expect(progress.savedSession?.currentCardIndex, 0);
+    expect(find.text('你'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('学'));
+    await tester.pump(const Duration(milliseconds: 400));
+    final recordedButton = tester.widget<OutlinedButton>(
+      find.widgetWithText(
+        OutlinedButton,
+        'Click if you are already familiar with this word',
+      ),
+    );
+    expect(recordedButton.onPressed, isNull);
+    expect(progress.recordReviewCalls, 0);
   });
 
   testWidgets('saved lesson can be started directly from the lesson library', (
@@ -1090,29 +1341,50 @@ class _MemoryProgressRepository implements ProgressRepository {
   _MemoryProgressRepository({
     this.hasActiveSession = true,
     this.queue = const [],
-    this.reviews = const [],
+    List<ReviewRecord>? reviews,
     this.vocabulary = const [],
-  });
+    this.recordReviewGate,
+    LessonSession? activeSession,
+  }) : reviews =
+           reviews ??
+           (hasActiveSession
+               ? [
+                   ReviewRecord(
+                     id: 1,
+                     cardId: 11,
+                     sessionId: 3,
+                     submissionKey: 'lesson:3:card:11',
+                     reviewedAt: DateTime.utc(2026, 7, 28, 9),
+                     rating: ReviewRating.easy,
+                     wasCorrect: true,
+                   ),
+                 ]
+               : const []),
+       _active =
+           activeSession ??
+           LessonSession(
+             id: 3,
+             lessonId: 7,
+             startedAt: DateTime.utc(2026, 7, 28),
+             currentCardIndex: 1,
+             cardsReviewed: 1,
+             correctAnswers: 1,
+           );
 
   final bool hasActiveSession;
   final List<DailyQueueCard> queue;
   final List<ReviewRecord> reviews;
   final List<VocabularyCardProgress> vocabulary;
+  final Completer<void>? recordReviewGate;
   int dailyQueueCalls = 0;
+  int recordReviewCalls = 0;
   final List<DateTime> requestedDays = [];
   LessonSession? savedSession;
   ReviewRecord? recordedReview;
   CardProgress? savedProgress;
   int? startedLessonId;
 
-  final _active = LessonSession(
-    id: 3,
-    lessonId: 7,
-    startedAt: DateTime.utc(2026, 7, 28),
-    currentCardIndex: 1,
-    cardsReviewed: 1,
-    correctAnswers: 1,
-  );
+  final LessonSession _active;
 
   @override
   Future<LessonSession?> activeSessionForLesson(int lessonId) async =>
@@ -1148,8 +1420,10 @@ class _MemoryProgressRepository implements ProgressRepository {
     required ReviewRecord review,
     required CardProgress progress,
   }) async {
+    recordReviewCalls++;
     recordedReview = review;
     savedProgress = progress;
+    await recordReviewGate?.future;
   }
 
   @override
@@ -1166,7 +1440,19 @@ class _MemoryProgressRepository implements ProgressRepository {
   }
 
   @override
-  Future<void> updateSession(LessonSession session) async {
+  Future<void> updateSessionPosition({
+    required int sessionId,
+    required int currentCardIndex,
+    required int expectedCardsReviewed,
+  }) async {}
+
+  @override
+  Future<void> updateSession(
+    LessonSession session, {
+    bool reconcileFromHistory = false,
+    int? expectedCardsReviewed,
+    int? expectedCorrectAnswers,
+  }) async {
     savedSession = session;
   }
 }
@@ -1192,9 +1478,10 @@ class _MemoryDailyReviewSessionRepository
   }
 
   @override
-  Future<void> complete({
+  Future<bool> complete({
     required int sessionId,
     required DateTime completedAt,
+    required int expectedCardCount,
   }) async {
     final current = session!;
     session = DailyReviewSession(
@@ -1204,6 +1491,7 @@ class _MemoryDailyReviewSessionRepository
       currentPosition: current.queuedCardIds.length,
       completedAt: completedAt,
     );
+    return true;
   }
 
   @override
@@ -1231,6 +1519,7 @@ class _JourneyReviewRepository
   final List<ReviewRecord> savedReviews = [];
   int createdSessionCount = 0;
   int reviewCount = 0;
+  int? cardToAppendOnNextCompletion;
 
   String _key(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-'
@@ -1251,8 +1540,10 @@ class _JourneyReviewRepository
           date: forDay,
           queuedCardIds: _cards.map((item) => item.card.id).toList(),
         );
-    return _cards
+    final cardsById = {for (final item in _cards) item.card.id: item};
+    return session.queuedCardIds
         .skip(session.currentPosition)
+        .map((id) => cardsById[id]!)
         .take(limit)
         .toList(growable: false);
   }
@@ -1284,14 +1575,26 @@ class _JourneyReviewRepository
   }
 
   @override
-  Future<void> complete({
+  Future<bool> complete({
     required int sessionId,
     required DateTime completedAt,
+    required int expectedCardCount,
   }) async {
     final entry = sessions.entries.singleWhere(
       (entry) => entry.value.id == sessionId,
     );
     final current = entry.value;
+    final cardToAppend = cardToAppendOnNextCompletion;
+    if (cardToAppend != null) {
+      cardToAppendOnNextCompletion = null;
+      sessions[entry.key] = DailyReviewSession(
+        id: current.id,
+        date: current.date,
+        queuedCardIds: [...current.queuedCardIds, cardToAppend],
+        currentPosition: expectedCardCount,
+      );
+      return false;
+    }
     sessions[entry.key] = DailyReviewSession(
       id: current.id,
       date: current.date,
@@ -1299,6 +1602,7 @@ class _JourneyReviewRepository
       currentPosition: current.queuedCardIds.length,
       completedAt: completedAt,
     );
+    return true;
   }
 
   @override
@@ -1341,7 +1645,19 @@ class _JourneyReviewRepository
       throw UnimplementedError();
 
   @override
-  Future<void> updateSession(LessonSession session) async {}
+  Future<void> updateSessionPosition({
+    required int sessionId,
+    required int currentCardIndex,
+    required int expectedCardsReviewed,
+  }) async {}
+
+  @override
+  Future<void> updateSession(
+    LessonSession session, {
+    bool reconcileFromHistory = false,
+    int? expectedCardsReviewed,
+    int? expectedCorrectAnswers,
+  }) async {}
 
   @override
   Future<List<VocabularyCardProgress>> vocabularyProgress() async => const [];

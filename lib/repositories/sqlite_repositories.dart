@@ -228,9 +228,18 @@ class SqliteLessonRepository implements LessonRepository {
   Future<void> saveGenerated(Lesson lesson) async {
     final db = await LocalDatabase.ensureInitialized();
     await db.transaction((txn) async {
+      final existing = await txn.query(
+        'lessons',
+        columns: ['id'],
+        where: 'theme = ? COLLATE NOCASE AND hsk_level = ? AND is_listed = ?',
+        whereArgs: [lesson.summary.theme.trim(), lesson.summary.hskLevel, 1],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) return;
+
       final lessonId = await txn.insert('lessons', {
         'lesson_title': lesson.summary.title,
-        'theme': lesson.summary.theme,
+        'theme': lesson.summary.theme.trim(),
         'hsk_level': lesson.summary.hskLevel,
         'is_listed': 1,
       });
@@ -282,28 +291,88 @@ class SqliteProgressRepository implements ProgressRepository {
   @override
   Future<LessonSession> startSession(int lessonId) async {
     final db = await LocalDatabase.ensureInitialized();
-    final lesson = await db.query(
-      'lessons',
-      columns: ['id'],
-      where: 'id = ? AND is_listed = ?',
-      whereArgs: [lessonId, 1],
-      limit: 1,
-    );
-    if (lesson.isEmpty) {
-      throw StateError('Cannot start a session for a non-lesson collection.');
-    }
-    final startedAt = DateTime.now().toUtc();
-    final id = await db.insert('lesson_sessions', {
-      'learner_id': 1,
-      'lesson_id': lessonId,
-      'started_at': startedAt.toIso8601String(),
+    return db.transaction((txn) async {
+      final lesson = await txn.query(
+        'lessons',
+        columns: ['id'],
+        where: 'id = ? AND is_listed = ?',
+        whereArgs: [lessonId, 1],
+        limit: 1,
+      );
+      if (lesson.isEmpty) {
+        throw StateError('Cannot start a session for a non-lesson collection.');
+      }
+      final existing = await txn.query(
+        'lesson_sessions',
+        where: 'learner_id = ? AND lesson_id = ? AND completed_at IS NULL',
+        whereArgs: [1, lessonId],
+        orderBy: 'started_at DESC, id DESC',
+        limit: 1,
+      );
+      if (existing.isNotEmpty) return _sessionFromRow(existing.single);
+
+      final startedAt = DateTime.now().toUtc();
+      final id = await txn.insert('lesson_sessions', {
+        'learner_id': 1,
+        'lesson_id': lessonId,
+        'started_at': startedAt.toIso8601String(),
+      });
+      return LessonSession(id: id, lessonId: lessonId, startedAt: startedAt);
     });
-    return LessonSession(id: id, lessonId: lessonId, startedAt: startedAt);
   }
 
   @override
-  Future<void> updateSession(LessonSession session) async {
+  Future<void> updateSessionPosition({
+    required int sessionId,
+    required int currentCardIndex,
+    required int expectedCardsReviewed,
+  }) async {
     final db = await LocalDatabase.ensureInitialized();
+    await db.update(
+      'lesson_sessions',
+      {'current_card_index': currentCardIndex},
+      where:
+          'id = ? AND learner_id = ? AND completed_at IS NULL '
+          'AND cards_reviewed = ?',
+      whereArgs: [sessionId, 1, expectedCardsReviewed],
+    );
+  }
+
+  @override
+  Future<void> updateSession(
+    LessonSession session, {
+    bool reconcileFromHistory = false,
+    int? expectedCardsReviewed,
+    int? expectedCorrectAnswers,
+  }) async {
+    final db = await LocalDatabase.ensureInitialized();
+    if (reconcileFromHistory) {
+      if (expectedCardsReviewed == null || expectedCorrectAnswers == null) {
+        throw ArgumentError(
+          'History reconciliation requires the session counters that were '
+          'originally loaded.',
+        );
+      }
+      await db.update(
+        'lesson_sessions',
+        {
+          'completed_at': session.completedAt?.toUtc().toIso8601String(),
+          'current_card_index': session.currentCardIndex,
+          'cards_reviewed': session.cardsReviewed,
+          'correct_answers': session.correctAnswers,
+        },
+        where:
+            'id = ? AND learner_id = ? AND completed_at IS NULL '
+            'AND cards_reviewed = ? AND correct_answers = ?',
+        whereArgs: [
+          session.id,
+          1,
+          expectedCardsReviewed,
+          expectedCorrectAnswers,
+        ],
+      );
+      return;
+    }
     await db.update(
       'lesson_sessions',
       {
@@ -312,8 +381,19 @@ class SqliteProgressRepository implements ProgressRepository {
         'cards_reviewed': session.cardsReviewed,
         'correct_answers': session.correctAnswers,
       },
-      where: 'id = ? AND learner_id = ?',
-      whereArgs: [session.id, 1],
+      where:
+          'id = ? AND learner_id = ? AND completed_at IS NULL AND ('
+          'cards_reviewed < ? OR '
+          '(cards_reviewed = ? AND correct_answers = ? AND ? = 1)'
+          ')',
+      whereArgs: [
+        session.id,
+        1,
+        session.cardsReviewed,
+        session.cardsReviewed,
+        session.correctAnswers,
+        session.completedAt == null ? 0 : 1,
+      ],
     );
   }
 
@@ -383,11 +463,27 @@ class SqliteProgressRepository implements ProgressRepository {
         'current_position': session.currentPosition,
         'completed_at': session.completedAt?.toUtc().toIso8601String(),
       },
-      where: 'id = ? AND learner_id = ? AND session_date = ?',
-      whereArgs: [session.id, 1, _localDateKey(session.date)],
+      where:
+          'id = ? AND learner_id = ? AND session_date = ? '
+          'AND completed_at IS NULL AND current_position <= ?',
+      whereArgs: [
+        session.id,
+        1,
+        _localDateKey(session.date),
+        session.currentPosition,
+      ],
     );
     if (updated == 0) {
-      throw StateError('Daily review session ${session.id} does not exist.');
+      final existing = await db.query(
+        'daily_review_sessions',
+        columns: ['id'],
+        where: 'id = ? AND learner_id = ? AND session_date = ?',
+        whereArgs: [session.id, 1, _localDateKey(session.date)],
+        limit: 1,
+      );
+      if (existing.isEmpty) {
+        throw StateError('Daily review session ${session.id} does not exist.');
+      }
     }
   }
 
@@ -399,17 +495,46 @@ class SqliteProgressRepository implements ProgressRepository {
     if (review.cardId != progress.cardId) {
       throw ArgumentError('Review and progress must refer to the same card.');
     }
+    final lessonSubmissionKey = review.sessionId == null
+        ? null
+        : 'lesson:${review.sessionId}:card:${review.cardId}';
+    if (lessonSubmissionKey != null &&
+        review.submissionKey != null &&
+        review.submissionKey != lessonSubmissionKey) {
+      throw ArgumentError(
+        'Lesson review submission keys must match their session and card.',
+      );
+    }
+    final submissionKey = lessonSubmissionKey ?? review.submissionKey;
     final db = await LocalDatabase.ensureInitialized();
     await db.transaction((txn) async {
-      await txn.insert('review_history', {
-        'learner_id': 1,
-        'card_id': review.cardId,
-        'session_id': review.sessionId,
-        'reviewed_at': review.reviewedAt.toUtc().toIso8601String(),
-        'rating': review.rating.index,
-        'was_correct': review.wasCorrect ? 1 : 0,
-        'response_time_ms': review.responseTimeMs,
-      });
+      if (submissionKey != null) {
+        final existing = await txn.query(
+          'review_history',
+          columns: ['id'],
+          where: 'learner_id = ? AND submission_key = ?',
+          whereArgs: [1, submissionKey],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) return;
+      }
+      final reviewId = await txn.insert(
+        'review_history',
+        {
+          'learner_id': 1,
+          'card_id': review.cardId,
+          'session_id': review.sessionId,
+          'submission_key': submissionKey,
+          'reviewed_at': review.reviewedAt.toUtc().toIso8601String(),
+          'rating': review.rating.index,
+          'was_correct': review.wasCorrect ? 1 : 0,
+          'response_time_ms': review.responseTimeMs,
+        },
+        conflictAlgorithm: submissionKey == null
+            ? ConflictAlgorithm.abort
+            : ConflictAlgorithm.ignore,
+      );
+      if (reviewId == 0) return;
       final totals = (await txn.rawQuery(
         '''
         SELECT
@@ -731,6 +856,7 @@ class SqliteProgressRepository implements ProgressRepository {
     id: row['id'] as int,
     cardId: row['card_id'] as int,
     sessionId: row['session_id'] as int?,
+    submissionKey: row['submission_key'] as String?,
     reviewedAt: DateTime.parse(row['reviewed_at'] as String),
     rating: ReviewRating.values[row['rating'] as int],
     wasCorrect: row['was_correct'] == 1,
@@ -797,32 +923,60 @@ class SqliteDailyReviewSessionRepository
       _progress.updateDailyReviewSession(session);
 
   @override
-  Future<void> complete({
+  Future<bool> complete({
     required int sessionId,
     required DateTime completedAt,
+    required int expectedCardCount,
   }) async {
     final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'daily_review_sessions',
-      columns: ['queued_card_ids'],
-      where: 'id = ? AND learner_id = ?',
-      whereArgs: [sessionId, 1],
-      limit: 1,
-    );
-    if (rows.isEmpty) {
-      throw StateError('Daily review session $sessionId does not exist.');
-    }
-    final cardCount =
-        (jsonDecode(rows.single['queued_card_ids'] as String) as List).length;
-    await db.update(
-      'daily_review_sessions',
-      {
-        'current_position': cardCount,
-        'completed_at': completedAt.toUtc().toIso8601String(),
-      },
-      where: 'id = ? AND learner_id = ?',
-      whereArgs: [sessionId, 1],
-    );
+    return db.transaction((txn) async {
+      final rows = await txn.query(
+        'daily_review_sessions',
+        columns: ['queued_card_ids', 'current_position', 'completed_at'],
+        where: 'id = ? AND learner_id = ?',
+        whereArgs: [sessionId, 1],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        throw StateError('Daily review session $sessionId does not exist.');
+      }
+      final row = rows.single;
+      final savedQueue = row['queued_card_ids'] as String;
+      final cardCount = (jsonDecode(savedQueue) as List).length;
+      final currentPosition = row['current_position'] as int;
+      if (row['completed_at'] != null) {
+        return cardCount == expectedCardCount && currentPosition == cardCount;
+      }
+      if (cardCount != expectedCardCount) {
+        if (cardCount > expectedCardCount &&
+            currentPosition == expectedCardCount - 1) {
+          await txn.update(
+            'daily_review_sessions',
+            {'current_position': expectedCardCount},
+            where:
+                'id = ? AND learner_id = ? AND completed_at IS NULL '
+                'AND current_position = ? AND queued_card_ids = ?',
+            whereArgs: [sessionId, 1, expectedCardCount - 1, savedQueue],
+          );
+        }
+        return false;
+      }
+      if (currentPosition != cardCount - 1) {
+        return false;
+      }
+      final updated = await txn.update(
+        'daily_review_sessions',
+        {
+          'current_position': cardCount,
+          'completed_at': completedAt.toUtc().toIso8601String(),
+        },
+        where:
+            'id = ? AND learner_id = ? AND completed_at IS NULL '
+            'AND current_position = ? AND queued_card_ids = ?',
+        whereArgs: [sessionId, 1, cardCount - 1, savedQueue],
+      );
+      return updated == 1;
+    });
   }
 
   @override
@@ -842,13 +996,8 @@ class SqliteDailyReviewSessionRepository
       final row = rows.single;
       final ids = (jsonDecode(row['queued_card_ids'] as String) as List)
           .cast<int>();
-      var position = row['current_position'] as int;
-      final existingIndex = ids.indexOf(cardId);
-      if (existingIndex >= position) return;
-      if (existingIndex >= 0) {
-        ids.removeAt(existingIndex);
-        position--;
-      }
+      final position = row['current_position'] as int;
+      if (ids.skip(position).contains(cardId)) return;
       ids.add(cardId);
       await txn.update(
         'daily_review_sessions',

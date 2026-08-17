@@ -8,9 +8,10 @@ abstract interface class DailyReviewSessionRepository {
 
   Future<DailyReviewSession?> load(DateTime date);
   Future<void> update(DailyReviewSession session);
-  Future<void> complete({
+  Future<bool> complete({
     required int sessionId,
     required DateTime completedAt,
+    required int expectedCardCount,
   });
   Future<void> enqueueCard({required DateTime date, required int cardId});
 }

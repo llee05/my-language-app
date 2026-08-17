@@ -125,7 +125,7 @@ void main() {
         "SELECT name FROM sqlite_master WHERE type = 'index'",
       );
 
-      expect(version, 7);
+      expect(version, 8);
       expect(marker.single['value'], 'preserve me');
       expect(
         indexes.map((row) => row['name']),
@@ -134,6 +134,7 @@ void main() {
           'idx_cards_lesson_id',
           'idx_daily_review_sessions_date',
           'idx_lessons_listed',
+          'idx_reviews_submission_key',
         ]),
       );
       final migratedRushRows = await upgraded.query(
@@ -172,29 +173,39 @@ void main() {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();
 
-    await lessons.saveGenerated(
-      const Lesson(
-        summary: LessonSummary(
-          id: 0,
-          title: 'Ordering breakfast · HSK 1',
-          theme: 'Ordering breakfast',
-          hskLevel: 1,
-        ),
-        cards: [
-          Flashcard(
-            chinese: '吃',
-            pinyin: 'chī',
-            englishMeaning: 'to eat',
-            partOfSpeech: 'verb',
-            exampleChinese: '我吃早饭。',
-            examplePinyin: 'Wǒ chī zǎofàn.',
-            exampleEnglish: 'I eat breakfast.',
-          ),
-        ],
+    const generated = Lesson(
+      summary: LessonSummary(
+        id: 0,
+        title: 'Ordering breakfast · HSK 1',
+        theme: 'Ordering breakfast',
+        hskLevel: 1,
       ),
+      cards: [
+        Flashcard(
+          chinese: '吃',
+          pinyin: 'chī',
+          englishMeaning: 'to eat',
+          partOfSpeech: 'verb',
+          exampleChinese: '我吃早饭。',
+          examplePinyin: 'Wǒ chī zǎofàn.',
+          exampleEnglish: 'I eat breakfast.',
+        ),
+      ],
     );
+    await Future.wait([
+      lessons.saveGenerated(generated),
+      lessons.saveGenerated(generated),
+    ]);
 
     final topics = await lessons.topics();
+    expect(
+      topics.where(
+        (topic) =>
+            topic.theme.toLowerCase() == 'ordering breakfast' &&
+            topic.hskLevel == 1,
+      ),
+      hasLength(1),
+    );
     expect(topics.first.title, 'Ordering breakfast · HSK 1');
     expect(topics.first.theme, 'Ordering breakfast');
 
@@ -306,6 +317,153 @@ void main() {
     expect(vocabularyCard.progress.mastery, 1);
   });
 
+  test(
+    'starting the same lesson concurrently reuses its active session',
+    () async {
+      await LocalDatabase.resetForTesting();
+      await LocalDatabase.ensureInitialized();
+      await learners.save(
+        const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 10),
+      );
+      final lessonId = (await lessons.topics()).first.id;
+
+      final sessions = await Future.wait([
+        progress.startSession(lessonId),
+        progress.startSession(lessonId),
+      ]);
+
+      expect(sessions[0].id, sessions[1].id);
+      final db = await LocalDatabase.ensureInitialized();
+      final activeRows = await db.query(
+        'lesson_sessions',
+        where: 'learner_id = ? AND lesson_id = ? AND completed_at IS NULL',
+        whereArgs: [1, lessonId],
+      );
+      expect(activeRows, hasLength(1));
+    },
+  );
+
+  test('lesson position saves cannot roll back answer progress', () async {
+    await LocalDatabase.resetForTesting();
+    await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 10),
+    );
+    final lessonId = (await lessons.topics()).first.id;
+    final session = await progress.startSession(lessonId);
+    await progress.updateSession(
+      LessonSession(
+        id: session.id,
+        lessonId: lessonId,
+        startedAt: session.startedAt,
+        currentCardIndex: 1,
+        cardsReviewed: 1,
+        correctAnswers: 1,
+      ),
+    );
+
+    await progress.updateSessionPosition(
+      sessionId: session.id,
+      currentCardIndex: 0,
+      expectedCardsReviewed: 0,
+    );
+    final beforeValidNavigation = await progress.activeSessionForLesson(
+      lessonId,
+    );
+    expect(beforeValidNavigation?.currentCardIndex, 1);
+    await progress.updateSessionPosition(
+      sessionId: session.id,
+      currentCardIndex: 0,
+      expectedCardsReviewed: 1,
+    );
+    await progress.updateSession(session);
+    final active = await progress.activeSessionForLesson(lessonId);
+    expect(active?.currentCardIndex, 0);
+    expect(active?.cardsReviewed, 1);
+    expect(active?.correctAnswers, 1);
+
+    final completedAt = DateTime.utc(2026, 8, 8, 10);
+    await progress.updateSession(
+      LessonSession(
+        id: session.id,
+        lessonId: lessonId,
+        startedAt: session.startedAt,
+        completedAt: completedAt,
+        currentCardIndex: 2,
+        cardsReviewed: 2,
+        correctAnswers: 2,
+      ),
+    );
+    await progress.updateSessionPosition(
+      sessionId: session.id,
+      currentCardIndex: 0,
+      expectedCardsReviewed: 2,
+    );
+    final db = await LocalDatabase.ensureInitialized();
+    final stored = (await db.query(
+      'lesson_sessions',
+      where: 'id = ?',
+      whereArgs: [session.id],
+    )).single;
+    expect(stored['completed_at'], completedAt.toIso8601String());
+    expect(stored['current_card_index'], 2);
+    expect(stored['cards_reviewed'], 2);
+  });
+
+  test('stale lesson reconciliation cannot overwrite newer progress', () async {
+    await LocalDatabase.resetForTesting();
+    await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 10),
+    );
+    final lessonId = (await lessons.topics()).first.id;
+    final session = await progress.startSession(lessonId);
+    final advanced = LessonSession(
+      id: session.id,
+      lessonId: lessonId,
+      startedAt: session.startedAt,
+      currentCardIndex: 1,
+      cardsReviewed: 1,
+      correctAnswers: 1,
+    );
+    await progress.updateSession(advanced);
+
+    await progress.updateSession(
+      session,
+      reconcileFromHistory: true,
+      expectedCardsReviewed: 0,
+      expectedCorrectAnswers: 0,
+    );
+    await progress.updateSession(
+      LessonSession(
+        id: session.id,
+        lessonId: lessonId,
+        startedAt: session.startedAt,
+        currentCardIndex: 0,
+        cardsReviewed: 1,
+      ),
+    );
+    var stored = await progress.activeSessionForLesson(lessonId);
+    expect(stored?.cardsReviewed, 1);
+    expect(stored?.correctAnswers, 1);
+
+    await progress.updateSession(
+      LessonSession(
+        id: session.id,
+        lessonId: lessonId,
+        startedAt: session.startedAt,
+        currentCardIndex: 1,
+        cardsReviewed: 1,
+      ),
+      reconcileFromHistory: true,
+      expectedCardsReviewed: 1,
+      expectedCorrectAnswers: 1,
+    );
+    stored = await progress.activeSessionForLesson(lessonId);
+    expect(stored?.cardsReviewed, 1);
+    expect(stored?.correctAnswers, 0);
+  });
+
   test('daily queue prioritizes due, weak, then new cards', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();
@@ -386,6 +544,14 @@ void main() {
           currentPosition: 2,
         ),
       );
+      await dailyReviews.update(
+        DailyReviewSession(
+          id: original.id,
+          date: original.date,
+          queuedCardIds: original.queuedCardIds,
+          currentPosition: 1,
+        ),
+      );
 
       await LocalDatabase.close();
       final restoredQueue = await progress.dailyQueue(
@@ -405,14 +571,31 @@ void main() {
       await dailyReviews.complete(
         sessionId: restored!.id,
         completedAt: completedAt,
+        expectedCardCount: original.queuedCardIds.length,
       );
       final completed = await dailyReviews.load(day);
       expect(completed?.currentPosition, original.queuedCardIds.length);
       expect(completed?.completedAt, completedAt);
+      await dailyReviews.update(
+        DailyReviewSession(
+          id: original.id,
+          date: original.date,
+          queuedCardIds: original.queuedCardIds,
+          currentPosition: 0,
+        ),
+      );
+      final stillCompleted = await dailyReviews.load(day);
+      expect(stillCompleted?.currentPosition, original.queuedCardIds.length);
+      expect(stillCompleted?.completedAt, completedAt);
 
       await dailyReviews.enqueueCard(
         date: day,
         cardId: original.queuedCardIds.first,
+      );
+      await dailyReviews.complete(
+        sessionId: original.id,
+        completedAt: completedAt.add(const Duration(minutes: 1)),
+        expectedCardCount: original.queuedCardIds.length,
       );
       final restoredWeakCard = await progress.dailyQueue(forDay: day, limit: 3);
       final reopened = await dailyReviews.load(day);
@@ -420,6 +603,24 @@ void main() {
         original.queuedCardIds.first,
       ]);
       expect(reopened?.isComplete, isFalse);
+      expect(reopened?.currentPosition, original.queuedCardIds.length);
+      expect(reopened?.queuedCardIds.length, original.queuedCardIds.length + 1);
+
+      await dailyReviews.complete(
+        sessionId: original.id,
+        completedAt: completedAt.add(const Duration(minutes: 2)),
+        expectedCardCount: reopened!.queuedCardIds.length,
+      );
+      await dailyReviews.enqueueCard(
+        date: day,
+        cardId: original.queuedCardIds.first,
+      );
+      final reopenedAgain = await dailyReviews.load(day);
+      expect(reopenedAgain?.currentPosition, original.queuedCardIds.length + 1);
+      expect(
+        reopenedAgain?.queuedCardIds.length,
+        original.queuedCardIds.length + 2,
+      );
     },
   );
 
@@ -608,7 +809,11 @@ void main() {
 
     final cardColumns = await db.rawQuery('PRAGMA table_info(cards)');
     final lessonColumns = await db.rawQuery('PRAGMA table_info(lessons)');
+    final reviewColumns = await db.rawQuery(
+      'PRAGMA table_info(review_history)',
+    );
     expect(lessonColumns.map((row) => row['name']), contains('is_listed'));
+    expect(reviewColumns.map((row) => row['name']), contains('submission_key'));
     expect(
       cardColumns.map((row) => row['name']),
       containsAll([
@@ -640,6 +845,7 @@ void main() {
         'idx_reviews_card_date',
         'idx_progress_due',
         'idx_lessons_listed',
+        'idx_reviews_submission_key',
       ]),
     );
   });
@@ -836,6 +1042,74 @@ void main() {
     },
   );
 
+  test('a review submission key is persisted exactly once', () async {
+    await LocalDatabase.resetForTesting();
+    await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 10),
+    );
+    final summary = (await lessons.topics()).first;
+    final lesson = await lessons.findGenerated(
+      theme: summary.theme,
+      hskLevel: summary.hskLevel,
+    );
+    final cardId = lesson!.cards.first.id;
+    final session = await progress.startSession(summary.id);
+    final reviewedAt = DateTime.utc(2026, 8, 8, 9);
+    final firstDue = DateTime.utc(2026, 8, 9, 9);
+    final submissionKey = 'lesson:${session.id}:card:$cardId';
+
+    Future<void> submit(DateTime dueAt) => progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: cardId,
+        sessionId: session.id,
+        submissionKey: submissionKey,
+        reviewedAt: reviewedAt,
+        rating: ReviewRating.good,
+        wasCorrect: true,
+      ),
+      progress: CardProgress(
+        cardId: cardId,
+        repetitions: 1,
+        reviewInterval: 1,
+        nextReview: dueAt,
+        lastReview: reviewedAt,
+      ),
+    );
+
+    await Future.wait([submit(firstDue), submit(firstDue)]);
+    await submit(DateTime.utc(2030));
+
+    final history = await progress.reviewHistory(cardId: cardId);
+    final stored = await progress.progressForCard(cardId);
+    expect(history, hasLength(1));
+    expect(history.single.submissionKey, submissionKey);
+    expect(stored?.timesSeen, 1);
+    expect(stored?.correctAnswers, 1);
+    expect(stored?.nextReview, firstDue);
+
+    await progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: cardId,
+        submissionKey: 'daily:submission:two',
+        reviewedAt: reviewedAt.add(const Duration(days: 1)),
+        rating: ReviewRating.again,
+        wasCorrect: false,
+      ),
+      progress: CardProgress(
+        cardId: cardId,
+        lapses: 1,
+        reviewInterval: 1,
+        nextReview: firstDue.add(const Duration(days: 1)),
+        lastReview: reviewedAt.add(const Duration(days: 1)),
+      ),
+    );
+    expect(await progress.reviewHistory(cardId: cardId), hasLength(2));
+    expect((await progress.progressForCard(cardId))?.timesSeen, 2);
+  });
+
   test(
     'a mismatched review and progress pair is rejected atomically',
     () async {
@@ -913,10 +1187,18 @@ void main() {
         'quiz_options': '[]',
         'correct_answer': 'study',
       });
-      for (final wasCorrect in [1, 1, 0]) {
+      final sessionId = await versionThree.insert('lesson_sessions', {
+        'learner_id': 1,
+        'lesson_id': lessonId,
+        'started_at': now.toIso8601String(),
+      });
+      final answers = [1, 1, 0];
+      for (var index = 0; index < answers.length; index++) {
+        final wasCorrect = answers[index];
         await versionThree.insert('review_history', {
           'learner_id': 1,
           'card_id': cardId,
+          'session_id': index < 2 ? sessionId : null,
           'reviewed_at': now.toIso8601String(),
           'rating': wasCorrect == 1
               ? ReviewRating.good.index
@@ -937,12 +1219,43 @@ void main() {
       await versionThree.close();
 
       final upgraded = await LocalDatabase.ensureInitialized();
-      expect(await upgraded.getVersion(), 7);
+      expect(await upgraded.getVersion(), 8);
       final restored = await progress.progressForCard(cardId);
       expect(restored?.timesSeen, 3);
       expect(restored?.correctAnswers, 2);
       expect(restored?.incorrectAnswers, 1);
       expect(restored?.mastery, closeTo(2 / 3, .000001));
+      final migratedReviews = await upgraded.query(
+        'review_history',
+        where: 'session_id = ?',
+        whereArgs: [sessionId],
+      );
+      expect(migratedReviews, hasLength(2));
+      expect(
+        migratedReviews.where((row) => row['submission_key'] != null),
+        hasLength(1),
+      );
+      expect(
+        migratedReviews.singleWhere(
+          (row) => row['submission_key'] != null,
+        )['submission_key'],
+        'lesson:$sessionId:card:$cardId',
+      );
+      await progress.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: cardId,
+          sessionId: sessionId,
+          reviewedAt: now.add(const Duration(minutes: 1)),
+          rating: ReviewRating.easy,
+          wasCorrect: true,
+        ),
+        progress: CardProgress(
+          cardId: cardId,
+          nextReview: now.add(const Duration(days: 2)),
+        ),
+      );
+      expect(await progress.reviewHistory(cardId: cardId), hasLength(3));
     },
   );
 }
