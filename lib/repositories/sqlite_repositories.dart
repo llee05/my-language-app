@@ -16,13 +16,18 @@ import 'settings_repository.dart';
 class SqliteLearnerRepository implements LearnerRepository {
   const SqliteLearnerRepository();
 
+  static const _onboardingRequiredKey = 'onboarding_required';
+
   @override
   Future<LearnerProfile?> load() async {
     final db = await LocalDatabase.ensureInitialized();
     final rows = await db.query(
       'learner_profiles',
-      where: 'id = ?',
-      whereArgs: [1],
+      where:
+          'id = ? AND NOT EXISTS ('
+          'SELECT 1 FROM app_data WHERE key = ?'
+          ')',
+      whereArgs: [1, _onboardingRequiredKey],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -44,25 +49,35 @@ class SqliteLearnerRepository implements LearnerRepository {
       'daily_word_target': profile.dailyWordTarget,
       'updated_at': now,
     };
-    final updated = await db.update(
-      'learner_profiles',
-      values,
-      where: 'id = ?',
-      whereArgs: [1],
-    );
-    if (updated == 0) {
-      await db.insert('learner_profiles', {
-        'id': 1,
-        ...values,
-        'created_at': now,
-      });
-    }
+    await db.transaction((txn) async {
+      final updated = await txn.update(
+        'learner_profiles',
+        values,
+        where: 'id = ?',
+        whereArgs: [1],
+      );
+      if (updated == 0) {
+        await txn.insert('learner_profiles', {
+          'id': 1,
+          ...values,
+          'created_at': now,
+        });
+      }
+      await txn.delete(
+        'app_data',
+        where: 'key = ?',
+        whereArgs: [_onboardingRequiredKey],
+      );
+    });
   }
 
   @override
   Future<void> resetOnboarding() async {
     final db = await LocalDatabase.ensureInitialized();
-    await db.delete('learner_profiles', where: 'id = ?', whereArgs: [1]);
+    await db.insert('app_data', {
+      'key': _onboardingRequiredKey,
+      'value': '1',
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 }
 
