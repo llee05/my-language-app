@@ -434,23 +434,12 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       );
     }
     if (_hasLoadError) {
-      return _DailyQueueStateCard(
+      return _AppErrorState(
         key: const Key('daily-review-error-state'),
-        accent: AppColors.red,
-        icon: const Icon(
-          Icons.error_outline_rounded,
-          size: 30,
-          color: AppColors.red,
-        ),
-        title: 'We couldn’t load your queue',
-        message:
-            'Something went wrong while preparing today’s cards. Try again.',
-        action: FilledButton.icon(
-          key: const Key('daily-review-retry'),
-          onPressed: _beginQueueLoad,
-          icon: const Icon(Icons.refresh_rounded, size: 18),
-          label: const Text('Try again'),
-        ),
+        title: _AppErrorCopy.dailyReviewTitle,
+        message: _AppErrorCopy.dailyReviewMessage,
+        onRetry: _beginQueueLoad,
+        retryKey: const Key('daily-review-retry'),
       );
     }
     if (_queue.isEmpty) {

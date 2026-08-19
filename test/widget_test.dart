@@ -657,7 +657,7 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
     await tester.pump();
     expect(find.byKey(const Key('daily-review-error-state')), findsOneWidget);
-    expect(find.text('We couldn’t load your queue'), findsOneWidget);
+    expect(find.text('We couldn’t load today’s review'), findsOneWidget);
     expect(find.textContaining('sensitive database path'), findsNothing);
     expect(
       tester
@@ -824,10 +824,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Daily review is unavailable'), findsOneWidget);
+    expect(find.text('We couldn’t load today’s review'), findsOneWidget);
     expect(find.textContaining('sensitive database path'), findsNothing);
 
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.byKey(const Key('daily-review-prompt-retry')));
     await tester.pumpAndSettle();
 
     expect(progress.dailyQueueCalls, 2);
@@ -1217,6 +1217,55 @@ void main() {
     expect(submittedPositions, [1, 0]);
   });
 
+  testWidgets('daily review retries the exact failed answer', (tester) async {
+    var calls = 0;
+    final ratings = <ReviewRating>[];
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 41,
+          chinese: '四',
+          pinyin: 'sì',
+          englishMeaning: 'four',
+        ),
+        reason: DailyQueueReason.weak,
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyReviewCardScreen(
+          queue: queue,
+          onAnswer: (_, _, rating) async {
+            calls++;
+            ratings.add(rating);
+            if (calls == 1) {
+              throw StateError('sensitive database path /private/reviews.db');
+            }
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Reveal meaning'));
+    await tester.pump();
+    await tester.tap(find.text('Confident'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-review-answer-error')), findsOneWidget);
+    expect(find.text('We couldn’t save your answer.'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+    expect(calls, 1);
+
+    await tester.tap(find.byKey(const Key('daily-review-answer-retry')));
+    await tester.pumpAndSettle();
+
+    expect(calls, 2);
+    expect(ratings, [ReviewRating.good, ReviewRating.good]);
+    expect(find.byKey(const Key('daily-review-answer-error')), findsNothing);
+    expect(find.text('Confident selected'), findsOneWidget);
+  });
+
   testWidgets('daily review reloads a card enqueued during completion', (
     tester,
   ) async {
@@ -1396,7 +1445,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('lesson-library-error-state')), findsOneWidget);
-    expect(find.text('Lessons are unavailable'), findsOneWidget);
+    expect(find.text('We couldn’t load your lessons'), findsOneWidget);
     expect(find.textContaining('sensitive database path'), findsNothing);
 
     await tester.tap(find.byKey(const Key('lesson-library-retry')));
@@ -1488,6 +1537,47 @@ void main() {
       find.byKey(const Key('available-lessons-error-state')),
       findsNothing,
     );
+  });
+
+  testWidgets('lesson generation error is friendly and retryable', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _FailOnceGeneratedLookupRepository();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: lessons,
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final generate = find.text('Generate lesson');
+    await tester.ensureVisible(generate);
+    await tester.tap(generate);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('lesson-generation-error')), findsOneWidget);
+    expect(find.text('We couldn’t generate your lesson.'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+    expect(lessons.findGeneratedCalls, 1);
+
+    await tester.tap(find.byKey(const Key('lesson-generation-retry')));
+    await tester.pumpAndSettle();
+
+    expect(lessons.findGeneratedCalls, 2);
+    expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
+    expect(find.text('Recovered generated lesson'), findsOneWidget);
+    expect(find.text('好'), findsOneWidget);
   });
 
   testWidgets('lesson resumes its position and records a familiar word', (
@@ -1602,6 +1692,48 @@ void main() {
     expect(find.text('Lesson complete!'), findsOneWidget);
   });
 
+  testWidgets('lesson retries the exact failed answer', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final progress = _FailOnceRecordReviewRepository();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _MemoryLessonRepository(),
+            progressRepository: progress,
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('学'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(
+      find.widgetWithText(
+        OutlinedButton,
+        'Click if you are already familiar with this word',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('lesson-answer-error')), findsOneWidget);
+    expect(find.text('We couldn’t save your answer.'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+    expect(progress.recordReviewAttempts, 1);
+
+    await tester.tap(find.byKey(const Key('lesson-answer-retry')));
+    await tester.pumpAndSettle();
+
+    expect(progress.recordReviewAttempts, 2);
+    expect(find.byKey(const Key('lesson-answer-error')), findsNothing);
+    expect(find.text('Lesson complete!'), findsOneWidget);
+  });
+
   testWidgets('lesson resume repairs an answer saved before session progress', (
     tester,
   ) async {
@@ -1710,6 +1842,62 @@ void main() {
     expect(find.text('Ask 龙老师 anything in English or 中文...'), findsOneWidget);
   });
 
+  testWidgets('ai tutor retry reuses the failed prompt without exposing it', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var calls = 0;
+    final requests = <List<Map<String, String>>>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AiTutorPage(
+            request: (messages) async {
+              calls++;
+              requests.add([for (final message in messages) Map.of(message)]);
+              if (calls == 1) {
+                throw StateError(
+                  'sensitive model path /private/models/teacher.gguf',
+                );
+              }
+              return '{"chinese":"你好，梅！","pinyin":"nǐ hǎo, Méi!",'
+                  '"english":"Hello, Mei!","tip":""}';
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Practise this sentence');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('ai-tutor-error')), findsOneWidget);
+    expect(
+      find.text('We couldn’t reach Long Laoshi right now.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('sensitive model path'), findsNothing);
+    expect(find.text('Practise this sentence'), findsOneWidget);
+    expect(calls, 1);
+
+    await tester.tap(find.byKey(const Key('ai-tutor-retry')));
+    await tester.pumpAndSettle();
+
+    expect(calls, 2);
+    expect(
+      requests.last
+          .where((message) => message['role'] == 'user')
+          .map((message) => message['content']),
+      ['Practise this sentence'],
+    );
+    expect(find.text('Practise this sentence'), findsOneWidget);
+    expect(find.text('你好，梅！'), findsOneWidget);
+    expect(find.byKey(const Key('ai-tutor-error')), findsNothing);
+  });
+
   testWidgets(
     'dashboard header menu button opens the drawer on narrow layouts',
     (tester) async {
@@ -1813,6 +2001,116 @@ void main() {
     expect(repository.settings.soundEnabled, isFalse);
   });
 
+  testWidgets('settings preference load error is friendly and retryable', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final repository = _FailOnceSettingsLoadRepository(
+      const LearnerSettings(showPinyin: false, soundEnabled: false),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: _MemoryDevelopmentRepository(),
+            settingsRepository: repository,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('settings-preferences-error')), findsOneWidget);
+    expect(find.text('We couldn’t load your preferences'), findsOneWidget);
+    expect(find.textContaining('sensitive settings path'), findsNothing);
+    expect(repository.loadCalls, 1);
+
+    final retry = find.byKey(const Key('settings-preferences-retry'));
+    await tester.ensureVisible(retry);
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+
+    expect(repository.loadCalls, 2);
+    expect(find.byKey(const Key('settings-preferences-error')), findsNothing);
+    expect(find.widgetWithText(SwitchListTile, 'Show pinyin'), findsOneWidget);
+    expect(
+      tester
+          .widget<SwitchListTile>(
+            find.widgetWithText(SwitchListTile, 'Show pinyin'),
+          )
+          .value,
+      isFalse,
+    );
+    expect(find.text('Save preferences'), findsOneWidget);
+  });
+
+  testWidgets('settings preference save can retry the exact changes', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final repository = _FailOnceSettingsSaveRepository(
+      const LearnerSettings(
+        showPinyin: false,
+        soundEnabled: false,
+        reminderEnabled: true,
+        reminderHour: 7,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: _MemoryDevelopmentRepository(),
+            settingsRepository: repository,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pinyinToggle = find.text('Show pinyin');
+    await tester.ensureVisible(pinyinToggle);
+    await tester.tap(pinyinToggle);
+    await tester.tap(find.text('Save preferences'));
+    await tester.pumpAndSettle();
+
+    expect(repository.saveAttempts, hasLength(1));
+    expect(
+      find.byKey(const Key('settings-preferences-save-error')),
+      findsOneWidget,
+    );
+
+    final retry = find.byKey(const Key('settings-preferences-save-retry'));
+    await tester.ensureVisible(retry);
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+
+    expect(repository.saveAttempts, hasLength(2));
+    final firstAttempt = repository.saveAttempts.first;
+    final retryAttempt = repository.saveAttempts.last;
+    expect(firstAttempt.showPinyin, isTrue);
+    expect(retryAttempt.showPinyin, firstAttempt.showPinyin);
+    expect(retryAttempt.soundEnabled, firstAttempt.soundEnabled);
+    expect(retryAttempt.reminderEnabled, firstAttempt.reminderEnabled);
+    expect(retryAttempt.reminderHour, firstAttempt.reminderHour);
+    expect(
+      find.byKey(const Key('settings-preferences-save-error')),
+      findsNothing,
+    );
+  });
+
   testWidgets('locked lesson tile renders with reduced opacity', (
     tester,
   ) async {
@@ -1857,6 +2155,40 @@ class _MemorySettingsRepository implements SettingsRepository {
   @override
   Future<void> save(LearnerSettings settings) async {
     this.settings = settings;
+  }
+}
+
+class _FailOnceSettingsLoadRepository implements SettingsRepository {
+  _FailOnceSettingsLoadRepository(this.settings);
+
+  final LearnerSettings settings;
+  int loadCalls = 0;
+
+  @override
+  Future<LearnerSettings> load() async {
+    loadCalls++;
+    if (loadCalls == 1) {
+      throw StateError('sensitive settings path /private/preferences.db');
+    }
+    return settings;
+  }
+
+  @override
+  Future<void> save(LearnerSettings settings) async {}
+}
+
+class _FailOnceSettingsSaveRepository extends _MemorySettingsRepository {
+  _FailOnceSettingsSaveRepository(super.settings);
+
+  final List<LearnerSettings> saveAttempts = [];
+
+  @override
+  Future<void> save(LearnerSettings settings) async {
+    saveAttempts.add(settings);
+    if (saveAttempts.length == 1) {
+      throw StateError('sensitive settings path /private/preferences.db');
+    }
+    await super.save(settings);
   }
 }
 
@@ -1989,6 +2321,50 @@ class _LessonStateRepository implements LessonRepository {
   Future<void> saveGenerated(Lesson lesson) async {}
 }
 
+class _FailOnceGeneratedLookupRepository implements LessonRepository {
+  int findGeneratedCalls = 0;
+
+  static const lesson = Lesson(
+    summary: LessonSummary(
+      id: 91,
+      title: 'Recovered generated lesson',
+      theme: 'Daily Life',
+      hskLevel: 1,
+    ),
+    cards: [
+      Flashcard(id: 911, chinese: '好', pinyin: 'hǎo', englishMeaning: 'good'),
+    ],
+  );
+
+  @override
+  Future<Lesson?> findGenerated({
+    required String theme,
+    required int hskLevel,
+  }) async {
+    findGeneratedCalls++;
+    if (findGeneratedCalls == 1) {
+      throw StateError('sensitive database path /private/generated.db');
+    }
+    return lesson;
+  }
+
+  @override
+  Future<Lesson?> findById(int id) async =>
+      id == lesson.summary.id ? lesson : null;
+
+  @override
+  Future<Flashcard> findOrCreateVocabularyCard({
+    required Flashcard card,
+    required int hskLevel,
+  }) async => card;
+
+  @override
+  Future<void> saveGenerated(Lesson lesson) async {}
+
+  @override
+  Future<List<LessonSummary>> topics() async => const [];
+}
+
 class _MemoryProgressRepository implements ProgressRepository {
   _MemoryProgressRepository({
     this.hasActiveSession = true,
@@ -2106,6 +2482,22 @@ class _MemoryProgressRepository implements ProgressRepository {
     int? expectedCorrectAnswers,
   }) async {
     savedSession = session;
+  }
+}
+
+class _FailOnceRecordReviewRepository extends _MemoryProgressRepository {
+  int recordReviewAttempts = 0;
+
+  @override
+  Future<void> recordReview({
+    required ReviewRecord review,
+    required CardProgress progress,
+  }) async {
+    recordReviewAttempts++;
+    if (recordReviewAttempts == 1) {
+      throw StateError('sensitive database path /private/reviews.db');
+    }
+    await super.recordReview(review: review, progress: progress);
   }
 }
 

@@ -31,6 +31,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   final Map<int, ReviewRating> _answers = {};
   bool _savingAnswer = false;
   String? _answerError;
+  ReviewRating? _failedRating;
   bool _showSummary = false;
 
   @override
@@ -48,6 +49,8 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
     setState(() {
       _position = next;
       _meaningRevealed = false;
+      _answerError = null;
+      _failedRating = null;
     });
   }
 
@@ -58,14 +61,19 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
     setState(() {
       _savingAnswer = true;
       _answerError = null;
+      _failedRating = null;
     });
     try {
       await widget.onAnswer?.call(submittedPosition, submittedCard, rating);
       if (!mounted) return;
       setState(() => _answers[submittedPosition] = rating);
     } catch (error) {
+      debugPrint('Daily review answer save failed: $error');
       if (!mounted) return;
-      setState(() => _answerError = 'Could not save this answer. Try again.');
+      setState(() {
+        _answerError = _AppErrorCopy.saveAnswer;
+        _failedRating = rating;
+      });
     } finally {
       if (mounted) setState(() => _savingAnswer = false);
     }
@@ -202,7 +210,9 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                                   rating: rating,
                                   selected: selectedAnswer == rating,
                                   onPressed:
-                                      _savingAnswer || selectedAnswer != null
+                                      _savingAnswer ||
+                                          selectedAnswer != null ||
+                                          _answerError != null
                                       ? null
                                       : () => _selectAnswer(rating),
                                 ),
@@ -211,9 +221,13 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                         ),
                         if (_answerError != null) ...[
                           const SizedBox(height: 8),
-                          Text(
-                            _answerError!,
-                            style: const TextStyle(color: AppColors.red),
+                          _AppInlineError(
+                            key: const Key('daily-review-answer-error'),
+                            message: _answerError!,
+                            onRetry: _failedRating == null
+                                ? null
+                                : () => _selectAnswer(_failedRating!),
+                            retryKey: const Key('daily-review-answer-retry'),
                           ),
                         ],
                         const SizedBox(height: 14),

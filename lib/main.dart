@@ -82,7 +82,18 @@ class _HanziPathAppState extends State<HanziPathApp> {
   }
 
   Future<LearnerProfile?> _loadProfile() async {
-    return widget.dependencies.learners.load();
+    try {
+      return await widget.dependencies.learners.load();
+    } catch (error) {
+      debugPrint('Learner profile load failed: $error');
+      rethrow;
+    }
+  }
+
+  void _retryProfileLoad() {
+    setState(() {
+      _profile = _loadProfile();
+    });
   }
 
   Future<void> _completeSetup(LearnerProfile profile) async {
@@ -152,6 +163,9 @@ class _HanziPathAppState extends State<HanziPathApp> {
           if (snapshot.connectionState != ConnectionState.done) {
             return const _AppLoadingScreen();
           }
+          if (snapshot.hasError) {
+            return _AppStartupErrorScreen(onRetry: _retryProfileLoad);
+          }
           final profile = snapshot.data;
           if (profile == null) {
             return LearnerSetupPage(onComplete: _completeSetup);
@@ -184,4 +198,26 @@ class _AppLoadingScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AppStartupErrorScreen extends StatelessWidget {
+  const _AppStartupErrorScreen({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: _AppErrorState(
+          key: const Key('app-startup-error'),
+          title: _AppErrorCopy.profileTitle,
+          message: _AppErrorCopy.profileMessage,
+          onRetry: onRetry,
+          retryKey: const Key('app-startup-retry'),
+        ),
+      ),
+    ),
+  );
 }

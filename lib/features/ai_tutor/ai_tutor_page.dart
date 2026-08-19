@@ -1,16 +1,23 @@
 part of '../../main.dart';
 
+typedef AiTutorRequest =
+    Future<String> Function(List<Map<String, String>> messages);
+
 class AiTutorPage extends StatelessWidget {
-  const AiTutorPage({super.key});
+  const AiTutorPage({super.key, this.request});
+
+  final AiTutorRequest? request;
 
   @override
   Widget build(BuildContext context) {
-    return const _TutorChat();
+    return _TutorChat(request: request);
   }
 }
 
 class _TutorChat extends StatefulWidget {
-  const _TutorChat();
+  const _TutorChat({this.request});
+
+  final AiTutorRequest? request;
 
   @override
   State<_TutorChat> createState() => _TutorChatState();
@@ -30,6 +37,8 @@ Use an empty string for any field that is not needed.
   final _scrollController = ScrollController();
   var _messages = _initialMessages;
   var _sending = false;
+  String? _sendError;
+  String? _failedPrompt;
 
   static const _initialMessages = [
     _ChatMessage.assistant(
@@ -56,22 +65,38 @@ Use an empty string for any field that is not needed.
       return;
     }
 
+    await _submit(text, appendUserMessage: true);
+  }
+
+  Future<void> _retrySend() async {
+    final prompt = _failedPrompt;
+    if (prompt == null || _sending) return;
+    await _submit(prompt, appendUserMessage: false);
+  }
+
+  Future<void> _submit(String text, {required bool appendUserMessage}) async {
     setState(() {
       _sending = true;
-      _messages = [..._messages, _ChatMessage.user(text)];
+      if (appendUserMessage) {
+        _messages = [..._messages, _ChatMessage.user(text)];
+      }
       _controller.clear();
+      _sendError = null;
     });
     _scrollToEnd();
 
     try {
-      final response = await OllamaService.instance.chatText(
-        messages: [
-          {'role': 'system', 'content': _systemPrompt},
-          for (final message in _messages) message.toAiMessage(),
-        ],
-        maxTokens: 420,
-        temperature: 0.45,
-      );
+      final messages = <Map<String, String>>[
+        {'role': 'system', 'content': _systemPrompt},
+        for (final message in _messages) message.toAiMessage(),
+      ];
+      final response = widget.request == null
+          ? await OllamaService.instance.chatText(
+              messages: messages,
+              maxTokens: 420,
+              temperature: 0.45,
+            )
+          : await widget.request!(messages);
       if (!mounted) {
         return;
       }
@@ -81,22 +106,17 @@ Use an empty string for any field that is not needed.
           _ChatMessage.fromAssistantResponse(response),
         ];
         _sending = false;
+        _failedPrompt = null;
       });
       _scrollToEnd();
     } catch (error) {
+      debugPrint('AI tutor request failed: $error');
       if (!mounted) {
         return;
       }
       setState(() {
-        _messages = [
-          ..._messages,
-          _ChatMessage.assistant(
-            chinese: '我现在连接不上本地模型。',
-            pinyin: 'Wo xianzai lianjie bu shang bendi moxing.',
-            english: _friendlyError(error),
-            tip: 'Make sure Ollama is running and a model is installed.',
-          ),
-        ];
+        _sendError = _friendlyError(error);
+        _failedPrompt = text;
         _sending = false;
       });
       _scrollToEnd();
@@ -107,6 +127,8 @@ Use an empty string for any field that is not needed.
     setState(() {
       _messages = _initialMessages;
       _sending = false;
+      _sendError = null;
+      _failedPrompt = null;
       _controller.clear();
     });
     _scrollToEnd();
@@ -127,12 +149,15 @@ Use an empty string for any field that is not needed.
 
   String _friendlyError(Object error) {
     final text = error.toString();
+    if (text.contains('no models are installed')) {
+      return 'Ollama is running, but no model is installed. Add a model before retrying.';
+    }
     if (text.contains('Connection refused') ||
         text.contains('Failed host lookup') ||
         text.contains('Connection failed')) {
-      return 'Start Ollama with `ollama serve`, then try again.';
+      return 'We couldn’t connect to Ollama. Start Ollama before retrying.';
     }
-    return 'Please try again in a moment. $text';
+    return _AppErrorCopy.tutor;
   }
 
   @override
@@ -201,7 +226,9 @@ Use an empty string for any field that is not needed.
         _TutorComposer(
           controller: _controller,
           sending: _sending,
+          error: _sendError,
           onSend: _send,
+          onRetry: _retrySend,
           onPromptSelected: _send,
         ),
       ],
@@ -382,13 +409,17 @@ class _TutorComposer extends StatelessWidget {
   const _TutorComposer({
     required this.controller,
     required this.sending,
+    required this.error,
     required this.onSend,
+    required this.onRetry,
     required this.onPromptSelected,
   });
 
   final TextEditingController controller;
   final bool sending;
+  final String? error;
   final VoidCallback onSend;
+  final VoidCallback onRetry;
   final ValueChanged<String> onPromptSelected;
 
   @override
@@ -427,6 +458,15 @@ class _TutorComposer extends StatelessWidget {
               ],
             ),
           ),
+          if (error != null) ...[
+            const SizedBox(height: 12),
+            _AppInlineError(
+              key: const Key('ai-tutor-error'),
+              message: error!,
+              onRetry: onRetry,
+              retryKey: const Key('ai-tutor-retry'),
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: controller,

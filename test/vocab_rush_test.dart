@@ -173,16 +173,125 @@ void main() {
     expect(dailyReviews.enqueuedCardId, 42);
     await tester.pump(const Duration(milliseconds: 500));
   });
+
+  testWidgets(
+    'failed mistake persistence retries the original word with one logical submission',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final lessons = _RushLessonRepository();
+      final progress = _RushProgressRepository();
+      final dailyReviews = _FailOnceRushDailyReviewSessionRepository();
+      const vocabulary = [
+        {
+          'simplified': '错',
+          'pinyin': 'cuò',
+          'meanings': ['wrong'],
+          'partOfSpeech': ['adjective'],
+          'hskLevel': 1,
+        },
+        {
+          'simplified': '对',
+          'pinyin': 'duì',
+          'meanings': ['correct'],
+          'partOfSpeech': ['adjective'],
+          'hskLevel': 1,
+        },
+        {
+          'simplified': '人',
+          'pinyin': 'rén',
+          'meanings': ['person'],
+          'partOfSpeech': ['noun'],
+          'hskLevel': 1,
+        },
+        {
+          'simplified': '书',
+          'pinyin': 'shū',
+          'meanings': ['book'],
+          'partOfSpeech': ['noun'],
+          'hskLevel': 1,
+        },
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: VocabRushPage(
+              lessonRepository: lessons,
+              progressRepository: progress,
+              dailyReviewSessionRepository: dailyReviews,
+              initialVocabulary: vocabulary,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Survival'));
+      await startGame(tester);
+
+      final originalHanzi = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((text) => text.data)
+          .whereType<String>()
+          .firstWhere((text) => const {'错', '对', '人', '书'}.contains(text));
+      final originalCard = vocabulary.firstWhere(
+        (card) => card['simplified'] == originalHanzi,
+      );
+      final correctMeaning =
+          (originalCard['meanings'] as List<dynamic>).first as String;
+      final wrongButton = tester
+          .widgetList<OutlinedButton>(find.byType(OutlinedButton))
+          .firstWhere(
+            (button) => (button.child as Text).data != correctMeaning,
+          );
+
+      await tester.tap(find.byWidget(wrongButton));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('We couldn’t add this word to your review queue.'),
+        findsOneWidget,
+      );
+      expect(find.text('Try again'), findsOneWidget);
+      expect(dailyReviews.enqueueAttempts, 1);
+
+      await tester.pump(const Duration(milliseconds: 500));
+      final laterHanzi = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((text) => text.data)
+          .whereType<String>()
+          .firstWhere((text) => const {'错', '对', '人', '书'}.contains(text));
+      expect(laterHanzi, isNot(originalHanzi));
+
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+
+      expect(lessons.attemptedCards.map((card) => card.chinese), [
+        originalHanzi,
+        originalHanzi,
+      ]);
+      expect(dailyReviews.enqueueAttempts, 2);
+      expect(dailyReviews.enqueuedCardId, 42);
+      expect(progress.reviewAttempts, hasLength(2));
+      expect(progress.reviewAttempts.first.submissionKey, isNotNull);
+      expect(
+        progress.reviewAttempts.map((review) => review.submissionKey).toSet(),
+        hasLength(1),
+      );
+    },
+  );
 }
 
 class _RushLessonRepository implements LessonRepository {
   Flashcard? savedCard;
+  final List<Flashcard> attemptedCards = [];
 
   @override
   Future<Flashcard> findOrCreateVocabularyCard({
     required Flashcard card,
     required int hskLevel,
   }) async {
+    attemptedCards.add(card);
     savedCard = card;
     return Flashcard(
       id: 42,
@@ -212,12 +321,14 @@ class _RushLessonRepository implements LessonRepository {
 class _RushProgressRepository implements ProgressRepository {
   ReviewRecord? review;
   CardProgress? savedProgress;
+  final List<ReviewRecord> reviewAttempts = [];
 
   @override
   Future<void> recordReview({
     required ReviewRecord review,
     required CardProgress progress,
   }) async {
+    reviewAttempts.add(review);
     this.review = review;
     savedProgress = progress;
   }
@@ -299,4 +410,21 @@ class _RushDailyReviewSessionRepository
     required DateTime completedAt,
     required int expectedCardCount,
   }) async => true;
+}
+
+class _FailOnceRushDailyReviewSessionRepository
+    extends _RushDailyReviewSessionRepository {
+  int enqueueAttempts = 0;
+
+  @override
+  Future<void> enqueueCard({
+    required DateTime date,
+    required int cardId,
+  }) async {
+    enqueueAttempts++;
+    if (enqueueAttempts == 1) {
+      throw StateError('sensitive database path');
+    }
+    await super.enqueueCard(date: date, cardId: cardId);
+  }
 }

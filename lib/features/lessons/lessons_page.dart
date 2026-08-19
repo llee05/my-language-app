@@ -65,6 +65,7 @@ class _LessonsPageState extends State<LessonsPage> {
   List<Flashcard> _cards = const [];
   String _lessonTitle = '';
   bool _generating = false;
+  bool _generationFailed = false;
   int _currentCard = 0;
   LessonSession? _session;
   String? _notice;
@@ -180,14 +181,27 @@ class _LessonsPageState extends State<LessonsPage> {
 
   Future<void> _startLesson(LessonSummary summary) async {
     setState(() => _notice = null);
-    final lesson = await widget.repository.findById(summary.id);
-    if (!mounted) return;
-    if (lesson == null) {
-      setState(() => _notice = 'This lesson could not be loaded.');
-      return;
+    try {
+      final lesson = await widget.repository.findById(summary.id);
+      if (lesson == null) {
+        throw StateError('Lesson ${summary.id} was not found.');
+      }
+      if (!mounted) return;
+      final session = _activeSessions[summary.id];
+      await _openLesson(lesson, session: session, resumed: session != null);
+    } catch (error) {
+      debugPrint('Lesson open failed: $error');
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: const Text(_AppErrorCopy.openLesson),
+          action: SnackBarAction(
+            label: 'Try again',
+            onPressed: () => unawaited(_startLesson(summary)),
+          ),
+        ),
+      );
     }
-    final session = _activeSessions[summary.id];
-    await _openLesson(lesson, session: session, resumed: session != null);
   }
 
   Future<void> _openLesson(
@@ -256,6 +270,7 @@ class _LessonsPageState extends State<LessonsPage> {
       _currentCard = index;
       _session = active;
       _generating = false;
+      _generationFailed = false;
       if (resumed || index > 0) {
         _notice = 'Resumed at card ${index + 1}.';
       }
@@ -327,6 +342,7 @@ class _LessonsPageState extends State<LessonsPage> {
     FocusScope.of(context).unfocus();
     setState(() {
       _generating = true;
+      _generationFailed = false;
       _notice = null;
     });
     try {
@@ -389,10 +405,12 @@ class _LessonsPageState extends State<LessonsPage> {
       if (saved == null) throw StateError('The lesson could not be reloaded.');
       await _openLesson(saved);
     } catch (error) {
+      debugPrint('Lesson generation failed: $error');
       if (!mounted) return;
       setState(() {
         _generating = false;
-        _notice = 'Could not generate the lesson: $error';
+        _generationFailed = true;
+        _notice = null;
       });
     }
   }
@@ -585,9 +603,7 @@ class _LessonsPageState extends State<LessonsPage> {
       });
       if (!isComplete) _goToCard(nextIndex);
     } catch (error) {
-      if (mounted) {
-        setState(() => _notice = 'Could not save this answer. Try again.');
-      }
+      debugPrint('Lesson answer save failed: $error');
       rethrow;
     } finally {
       _pendingAnswerKeys.remove(submissionKey);
@@ -708,19 +724,32 @@ class _LessonsPageState extends State<LessonsPage> {
               const SizedBox(height: 14),
               Text(_notice!, style: const TextStyle(color: AppColors.gold)),
             ],
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _generating ? null : _generateLesson,
-              icon: _generating
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.auto_awesome),
-              label: Text(
-                _generating ? 'Generating lesson…' : 'Generate lesson',
+            if (_generationFailed) ...[
+              const SizedBox(height: 14),
+              _AppInlineError(
+                key: const Key('lesson-generation-error'),
+                message: _AppErrorCopy.generateLesson,
               ),
-            ),
+            ],
+            const SizedBox(height: 24),
+            if (_generationFailed)
+              _AppRetryButton(
+                key: const Key('lesson-generation-retry'),
+                onPressed: _generateLesson,
+              )
+            else
+              FilledButton.icon(
+                onPressed: _generating ? null : _generateLesson,
+                icon: _generating
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.auto_awesome),
+                label: Text(
+                  _generating ? 'Generating lesson…' : 'Generate lesson',
+                ),
+              ),
           ],
         ),
       ),
@@ -745,22 +774,12 @@ class _LessonsPageState extends State<LessonsPage> {
       );
     }
     if (_libraryLoadFailed) {
-      return _LessonLibraryStateCard(
+      return _AppErrorState(
         key: const Key('lesson-library-error-state'),
-        accent: AppColors.red,
-        icon: const Icon(
-          Icons.error_outline_rounded,
-          size: 30,
-          color: AppColors.red,
-        ),
-        title: 'Lessons are unavailable',
-        message: 'We couldn’t load your saved lessons. Please try again.',
-        action: FilledButton.icon(
-          key: const Key('lesson-library-retry'),
-          onPressed: _beginTopicsLoad,
-          icon: const Icon(Icons.refresh_rounded, size: 18),
-          label: const Text('Try again'),
-        ),
+        title: _AppErrorCopy.lessonsTitle,
+        message: _AppErrorCopy.lessonsMessage,
+        onRetry: _beginTopicsLoad,
+        retryKey: const Key('lesson-library-retry'),
       );
     }
     if (_topics.isEmpty) {
@@ -1035,14 +1054,12 @@ class _LessonLibraryStateCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.message,
-    this.action,
   });
 
   final Color accent;
   final Widget icon;
   final String title;
   final String message;
-  final Widget? action;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -1089,10 +1106,6 @@ class _LessonLibraryStateCard extends StatelessWidget {
               height: 1.45,
             ),
           ),
-          if (action case final action?) ...[
-            const SizedBox(height: 18),
-            action,
-          ],
         ],
       ),
     ),
@@ -1190,6 +1203,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
   bool _submitting = false;
   late bool _rated;
   String? _ratingError;
+  ReviewRating? _failedRating;
 
   @override
   void initState() {
@@ -1204,6 +1218,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
       _showAnswer = false;
       _rated = widget.alreadyRated;
       _ratingError = null;
+      _failedRating = null;
     } else if (widget.alreadyRated) {
       _rated = true;
     }
@@ -1216,13 +1231,17 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     setState(() {
       _submitting = true;
       _ratingError = null;
+      _failedRating = null;
     });
     try {
       await widget.onRated(rating);
       if (mounted) setState(() => _rated = true);
     } catch (_) {
       if (mounted) {
-        setState(() => _ratingError = 'Could not save. Tap to try again.');
+        setState(() {
+          _ratingError = _AppErrorCopy.saveAnswer;
+          _failedRating = rating;
+        });
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -1334,14 +1353,19 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
       ],
       const Spacer(),
       OutlinedButton(
-        onPressed: _submitting || _rated
+        onPressed: _submitting || _rated || _ratingError != null
             ? null
             : () => _rate(ReviewRating.easy),
         child: const Text('Click if you are already familiar with this word'),
       ),
       if (_ratingError != null) ...[
         const SizedBox(height: 8),
-        Text(_ratingError!, style: const TextStyle(color: AppColors.red)),
+        _AppInlineError(
+          key: const Key('lesson-answer-error'),
+          message: _ratingError!,
+          onRetry: _failedRating == null ? null : () => _rate(_failedRating!),
+          retryKey: const Key('lesson-answer-retry'),
+        ),
       ],
       const SizedBox(height: 12),
     ],

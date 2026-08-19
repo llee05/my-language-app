@@ -164,6 +164,34 @@ void main() {
     expect(find.text('你好'), findsNothing);
   });
 
+  testWidgets('load error is friendly and retryable', (tester) async {
+    final entries = <Map<String, dynamic>>[
+      {'simplified': '损坏的词汇数据'},
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VocabularyPage(initialEntries: entries, clock: () => _now),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('vocabulary-error-state')), findsOneWidget);
+    expect(find.text('We couldn’t load vocabulary'), findsOneWidget);
+    expect(find.textContaining("type 'Null'"), findsNothing);
+
+    entries
+      ..clear()
+      ..addAll(_entries);
+    await tester.tap(find.byKey(const Key('vocabulary-retry')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('vocabulary-error-state')), findsNothing);
+    expect(find.text('你好'), findsOneWidget);
+  });
+
   testWidgets('opens word details with every meaning and example sentence', (
     tester,
   ) async {

@@ -186,21 +186,13 @@ class _AvailableLessonsError extends StatelessWidget {
   final VoidCallback? onRetry;
 
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => _AppErrorState(
     key: const Key('available-lessons-error-state'),
-    container: true,
-    liveRegion: true,
-    child: _AvailableLessonsStateCard(
-      icon: const Icon(Icons.error_outline_rounded, color: AppColors.red),
-      title: 'Lessons are unavailable',
-      message: 'We couldn’t check available lessons. Please try again.',
-      action: OutlinedButton.icon(
-        key: const Key('available-lessons-retry'),
-        onPressed: onRetry,
-        icon: const Icon(Icons.refresh_rounded, size: 17),
-        label: const Text('Try again'),
-      ),
-    ),
+    title: _AppErrorCopy.lessonsTitle,
+    message: _AppErrorCopy.lessonsMessage,
+    onRetry: onRetry,
+    retryKey: const Key('available-lessons-retry'),
+    compact: true,
   );
 }
 
@@ -458,57 +450,13 @@ class _DailyReviewPromptError extends StatelessWidget {
   final VoidCallback? onRetry;
 
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => _AppErrorState(
     key: const ValueKey('daily-review-prompt-error'),
-    container: true,
-    liveRegion: true,
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final details = const Row(
-          children: [
-            Icon(Icons.error_outline_rounded, color: AppColors.red),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Daily review is unavailable',
-                    style: TextStyle(
-                      color: AppColors.text,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 3),
-                  Text(
-                    'We couldn’t check today’s cards. Try loading them again.',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-        final retry = OutlinedButton.icon(
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh_rounded, size: 17),
-          label: const Text('Try again'),
-        );
-        if (constraints.maxWidth < 430) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [details, const SizedBox(height: 14), retry],
-          );
-        }
-        return Row(
-          children: [
-            Expanded(child: details),
-            const SizedBox(width: 12),
-            retry,
-          ],
-        );
-      },
-    ),
+    title: _AppErrorCopy.dailyReviewTitle,
+    message: _AppErrorCopy.dailyReviewMessage,
+    onRetry: onRetry,
+    retryKey: const Key('daily-review-prompt-retry'),
+    compact: true,
   );
 }
 

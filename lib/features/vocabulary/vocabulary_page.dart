@@ -25,7 +25,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
   final _searchController = TextEditingController();
   List<_VocabularyEntry> _entries = const [];
   bool _loading = true;
-  String? _error;
+  bool _loadFailed = false;
   int? _hskLevel;
   VocabularyLearningState? _learningState;
 
@@ -44,6 +44,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
   }
 
   Future<void> _loadVocabulary() async {
+    if (!_loading && mounted) {
+      setState(() {
+        _loading = true;
+        _loadFailed = false;
+      });
+    }
     try {
       final source =
           widget.initialEntries ??
@@ -80,13 +86,15 @@ class _VocabularyPageState extends State<VocabularyPage> {
       setState(() {
         _entries = entries;
         _loading = false;
-        _error = null;
+        _loadFailed = false;
       });
     } catch (error) {
+      debugPrint('Vocabulary load failed: $error');
       if (!mounted) return;
       setState(() {
+        _entries = const [];
         _loading = false;
-        _error = 'Could not load vocabulary: $error';
+        _loadFailed = true;
       });
     }
   }
@@ -230,9 +238,14 @@ class _VocabularyPageState extends State<VocabularyPage> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(
-        child: Text(_error!, style: const TextStyle(color: AppColors.gold)),
+    if (_loadFailed) {
+      return _AppErrorState(
+        key: const Key('vocabulary-error-state'),
+        title: _AppErrorCopy.vocabularyTitle,
+        message: _AppErrorCopy.vocabularyMessage,
+        onRetry: _loadVocabulary,
+        retryKey: const Key('vocabulary-retry'),
+        compact: true,
       );
     }
     final results = _results;

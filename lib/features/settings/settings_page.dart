@@ -1,5 +1,7 @@
 part of '../../main.dart';
 
+enum _SettingsSaveTarget { profile, preferences }
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
     super.key,
@@ -28,6 +30,8 @@ class _SettingsPageState extends State<SettingsPage> {
   late int _dailyTarget;
   bool _saving = false;
   bool _loadingPreferences = true;
+  bool _preferencesLoadFailed = false;
+  _SettingsSaveTarget? _saveFailureTarget;
   bool _showPinyin = true;
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
@@ -47,15 +51,31 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadPreferences() async {
-    final settings = await widget.settingsRepository.load();
-    if (!mounted) return;
-    setState(() {
-      _showPinyin = settings.showPinyin;
-      _soundEnabled = settings.soundEnabled;
-      _reminderEnabled = settings.reminderEnabled;
-      _reminderHour = settings.reminderHour;
-      _loadingPreferences = false;
-    });
+    if (!_loadingPreferences && mounted) {
+      setState(() {
+        _loadingPreferences = true;
+        _preferencesLoadFailed = false;
+      });
+    }
+    try {
+      final settings = await widget.settingsRepository.load();
+      if (!mounted) return;
+      setState(() {
+        _showPinyin = settings.showPinyin;
+        _soundEnabled = settings.soundEnabled;
+        _reminderEnabled = settings.reminderEnabled;
+        _reminderHour = settings.reminderHour;
+        _loadingPreferences = false;
+        _preferencesLoadFailed = false;
+      });
+    } catch (error) {
+      debugPrint('Settings preferences load failed: $error');
+      if (!mounted) return;
+      setState(() {
+        _loadingPreferences = false;
+        _preferencesLoadFailed = true;
+      });
+    }
   }
 
   @override
@@ -64,10 +84,13 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  Future<void> _save(_SettingsSaveTarget target) async {
     final name = _nameController.text.trim();
     if (name.isEmpty || _saving) return;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      if (_saveFailureTarget == target) _saveFailureTarget = null;
+    });
     try {
       await widget.onProfileChanged(
         LearnerProfile(
@@ -84,6 +107,9 @@ class _SettingsPageState extends State<SettingsPage> {
           reminderHour: _reminderHour,
         ),
       );
+    } catch (error) {
+      debugPrint('Settings save failed: $error');
+      if (mounted) setState(() => _saveFailureTarget = target);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -121,7 +147,18 @@ class _SettingsPageState extends State<SettingsPage> {
           'Your learner profile will be removed. Lessons and other local data will be kept.',
       action: 'Reset setup',
     );
-    if (confirmed) await widget.onResetOnboarding();
+    if (!confirmed) return;
+    try {
+      await widget.onResetOnboarding();
+    } catch (error) {
+      debugPrint('Learner setup reset failed: $error');
+      if (mounted) {
+        _showRetrySnackBar(
+          message: _AppErrorCopy.resetSetup,
+          onRetry: _resetOnboarding,
+        );
+      }
+    }
   }
 
   Future<void> _resetAllData() async {
@@ -131,7 +168,33 @@ class _SettingsPageState extends State<SettingsPage> {
           'This permanently removes the learner profile, generated lessons, and all other local app data.',
       action: 'Reset everything',
     );
-    if (confirmed) await widget.onResetAllData();
+    if (!confirmed) return;
+    try {
+      await widget.onResetAllData();
+    } catch (error) {
+      debugPrint('Local data reset failed: $error');
+      if (mounted) {
+        _showRetrySnackBar(
+          message: _AppErrorCopy.resetData,
+          onRetry: _resetAllData,
+        );
+      }
+    }
+  }
+
+  void _showRetrySnackBar({
+    required String message,
+    required Future<void> Function() onRetry,
+  }) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        action: SnackBarAction(
+          label: 'Try again',
+          onPressed: () => unawaited(onRetry()),
+        ),
+      ),
+    );
   }
 
   @override
@@ -202,16 +265,26 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               const SizedBox(height: 22),
-              FilledButton.icon(
-                onPressed: _saving ? null : _save,
-                icon: _saving
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save_outlined),
-                label: Text(_saving ? 'Saving…' : 'Save changes'),
-              ),
+              if (_saveFailureTarget == _SettingsSaveTarget.profile)
+                _AppInlineError(
+                  key: const Key('settings-profile-save-error'),
+                  message: _AppErrorCopy.saveChanges,
+                  onRetry: () => _save(_SettingsSaveTarget.profile),
+                  retryKey: const Key('settings-profile-save-retry'),
+                )
+              else
+                FilledButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () => _save(_SettingsSaveTarget.profile),
+                  icon: _saving
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_outlined),
+                  label: Text(_saving ? 'Saving…' : 'Save changes'),
+                ),
             ],
           ),
         ),
@@ -221,6 +294,15 @@ class _SettingsPageState extends State<SettingsPage> {
           subtitle: 'These preferences are restored on your next launch.',
           child: _loadingPreferences
               ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              : _preferencesLoadFailed
+              ? _AppErrorState(
+                  key: const Key('settings-preferences-error'),
+                  title: _AppErrorCopy.preferencesTitle,
+                  message: _AppErrorCopy.preferencesMessage,
+                  onRetry: _loadPreferences,
+                  retryKey: const Key('settings-preferences-retry'),
+                  compact: true,
+                )
               : Column(
                   children: [
                     Material(
@@ -244,14 +326,31 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: FilledButton.icon(
-                        onPressed: _saving ? null : _save,
-                        icon: const Icon(Icons.save_outlined),
-                        label: const Text('Save preferences'),
+                    if (_saveFailureTarget == _SettingsSaveTarget.preferences)
+                      _AppInlineError(
+                        key: const Key('settings-preferences-save-error'),
+                        message: _AppErrorCopy.saveChanges,
+                        onRetry: () => _save(_SettingsSaveTarget.preferences),
+                        retryKey: const Key('settings-preferences-save-retry'),
+                      )
+                    else
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FilledButton.icon(
+                          onPressed: _saving
+                              ? null
+                              : () => _save(_SettingsSaveTarget.preferences),
+                          icon: _saving
+                              ? const SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save_outlined),
+                          label: Text(_saving ? 'Saving…' : 'Save preferences'),
+                        ),
                       ),
-                    ),
                   ],
                 ),
         ),

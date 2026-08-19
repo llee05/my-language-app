@@ -46,13 +46,13 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
       setState(() {
         _saving = false;
         _saveError =
-            'Saving took too long. Close any other copy of TingShuo and try again.';
+            'Saving took too long. Close any other copy of TingShuo before retrying.';
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _saveError = 'Could not save your profile. Please try again.';
+        _saveError = _AppErrorCopy.saveProfile;
       });
       debugPrint('Failed to save learner profile: $error');
     }
@@ -165,32 +165,15 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                       ),
                       if (_saveError case final error?) ...[
                         const SizedBox(height: 18),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.error_outline_rounded,
-                              size: 18,
-                              color: AppColors.red,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                error,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.red,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        _AppInlineError(message: error),
                       ],
                       const SizedBox(height: 32),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton.icon(
+                          key: _saveError == null
+                              ? null
+                              : const Key('learner-setup-retry'),
                           onPressed: _saving ? null : _continue,
                           icon: _saving
                               ? const SizedBox.square(
@@ -199,9 +182,15 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                                     strokeWidth: 2,
                                   ),
                                 )
+                              : _saveError != null
+                              ? const Icon(Icons.refresh_rounded)
                               : const Icon(Icons.arrow_forward_rounded),
                           label: Text(
-                            _saving ? 'Saving your path…' : 'Start learning',
+                            _saving
+                                ? 'Saving your path…'
+                                : _saveError != null
+                                ? 'Try again'
+                                : 'Start learning',
                           ),
                         ),
                       ),

@@ -37,10 +37,16 @@ void main() {
   testWidgets('learner setup recovers when saving fails', (tester) async {
     await tester.binding.setSurfaceSize(const Size(800, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    var saveCalls = 0;
+    LearnerProfile? savedProfile;
     await tester.pumpWidget(
       MaterialApp(
         home: LearnerSetupPage(
-          onComplete: (_) => Future<void>.error(Exception('database locked')),
+          onComplete: (profile) async {
+            saveCalls++;
+            if (saveCalls == 1) throw Exception('database locked');
+            savedProfile = profile;
+          },
         ),
       ),
     );
@@ -49,11 +55,38 @@ void main() {
     await tester.tap(find.text('Start learning'));
     await tester.pump();
 
-    expect(
-      find.text('Could not save your profile. Please try again.'),
-      findsOneWidget,
+    expect(find.text('We couldn’t save your profile.'), findsOneWidget);
+    expect(find.byKey(const Key('learner-setup-retry')), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('learner-setup-retry')));
+    await tester.pump();
+
+    expect(saveCalls, 2);
+    expect(savedProfile?.name, 'Mei');
+    expect(find.text('We couldn’t save your profile.'), findsNothing);
+  });
+
+  testWidgets('initial profile load error is friendly and retryable', (
+    tester,
+  ) async {
+    final learners = _FailOnceLearnerRepository();
+
+    await tester.pumpWidget(
+      HanziPathApp(dependencies: AppDependencies(learners: learners)),
     );
-    expect(find.text('Start learning'), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('app-startup-error')), findsOneWidget);
+    expect(find.text('We couldn’t load your profile'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('app-startup-retry')));
+    await tester.pumpAndSettle();
+
+    expect(learners.loadCalls, 2);
+    expect(find.byKey(const Key('app-startup-error')), findsNothing);
+    expect(find.text('Build your learning path'), findsOneWidget);
   });
 
   testWidgets('completed onboarding survives a full app reconstruction', (
@@ -103,4 +136,23 @@ class _MemoryLearnerRepository implements LearnerRepository {
   Future<void> save(LearnerProfile profile) async {
     this.profile = profile;
   }
+}
+
+class _FailOnceLearnerRepository implements LearnerRepository {
+  int loadCalls = 0;
+
+  @override
+  Future<void> clear() async {}
+
+  @override
+  Future<LearnerProfile?> load() async {
+    loadCalls += 1;
+    if (loadCalls == 1) {
+      throw StateError('sensitive database path /private/learners.db');
+    }
+    return null;
+  }
+
+  @override
+  Future<void> save(LearnerProfile profile) async {}
 }

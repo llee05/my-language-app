@@ -57,6 +57,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
   int _bestStreak = 0;
   int _attempts = 0;
   int _mistakes = 0;
+  String _gameRunId = '';
   bool _playing = false;
   bool _finished = false;
 
@@ -93,6 +94,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
         )
         .toList();
     _cards.shuffle(_random);
+    final gameRunId = DateTime.now().toUtc().microsecondsSinceEpoch.toString();
 
     setState(() {
       _playing = true;
@@ -103,6 +105,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
       _bestStreak = 0;
       _attempts = 0;
       _mistakes = 0;
+      _gameRunId = gameRunId;
       _selectedAnswer = null;
       _nextCard();
     });
@@ -136,7 +139,8 @@ class _VocabRushPageState extends State<VocabRushPage> {
 
   void _answer(String answer) {
     if (_selectedAnswer != null || !_playing) return;
-    final correct = answer == _card!['english_meaning'];
+    final source = Map<String, dynamic>.of(_card!);
+    final correct = answer == source['english_meaning'];
     setState(() {
       _selectedAnswer = answer;
       _attempts++;
@@ -150,7 +154,10 @@ class _VocabRushPageState extends State<VocabRushPage> {
       }
     });
 
-    if (!correct) unawaited(_addMistakeToReviewQueue());
+    if (!correct) {
+      final submissionKey = 'vocab-rush:$_gameRunId:attempt:$_attempts';
+      unawaited(_addMistakeToReviewQueue(source, submissionKey));
+    }
 
     Future<void>.delayed(const Duration(milliseconds: 450), () {
       if (!mounted || !_playing) return;
@@ -162,9 +169,10 @@ class _VocabRushPageState extends State<VocabRushPage> {
     });
   }
 
-  Future<void> _addMistakeToReviewQueue() async {
-    final source = _card;
-    if (source == null) return;
+  Future<void> _addMistakeToReviewQueue(
+    Map<String, dynamic> source,
+    String submissionKey,
+  ) async {
     try {
       final card = await widget.lessonRepository.findOrCreateVocabularyCard(
         card: Flashcard(
@@ -181,6 +189,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
         review: ReviewRecord(
           id: 0,
           cardId: card.id,
+          submissionKey: submissionKey,
           reviewedAt: now,
           rating: ReviewRating.again,
           wasCorrect: false,
@@ -199,11 +208,17 @@ class _VocabRushPageState extends State<VocabRushPage> {
         date: DateTime.now(),
         cardId: card.id,
       );
-    } catch (_) {
+    } catch (error) {
+      debugPrint('Vocab Rush review queue update failed: $error');
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Could not add that word to your review queue.'),
+        SnackBar(
+          content: const Text(_AppErrorCopy.addToReview),
+          action: SnackBarAction(
+            label: 'Try again',
+            onPressed: () =>
+                unawaited(_addMistakeToReviewQueue(source, submissionKey)),
+          ),
         ),
       );
     }
