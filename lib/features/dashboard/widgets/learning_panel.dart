@@ -7,6 +7,7 @@ class MainDashboard extends StatelessWidget {
     required this.onStartLearning,
     required this.onStartReview,
     this.onRetryReview,
+    this.onRetryLessons,
     required this.loadingReview,
     this.reviewLoadError = false,
     required this.pendingReviewCount,
@@ -17,12 +18,14 @@ class MainDashboard extends StatelessWidget {
     required this.isNewLearner,
     required this.availableLessons,
     required this.loadingAvailableLessons,
+    this.availableLessonsLoadError = false,
   });
 
   final VoidCallback onResume;
   final VoidCallback onStartLearning;
   final VoidCallback onStartReview;
   final VoidCallback? onRetryReview;
+  final VoidCallback? onRetryLessons;
   final bool loadingReview;
   final bool reviewLoadError;
   final int pendingReviewCount;
@@ -33,6 +36,7 @@ class MainDashboard extends StatelessWidget {
   final bool isNewLearner;
   final List<Lesson> availableLessons;
   final bool loadingAvailableLessons;
+  final bool availableLessonsLoadError;
 
   @override
   Widget build(BuildContext context) {
@@ -83,17 +87,12 @@ class MainDashboard extends StatelessWidget {
           const SizedBox(height: 26),
           const SectionLabel('AVAILABLE HSK LESSONS'),
           const SizedBox(height: 8),
-          const SizedBox(height: 4),
           if (loadingAvailableLessons)
-            const LinearProgressIndicator(color: AppColors.red)
+            const _AvailableLessonsLoading()
+          else if (availableLessonsLoadError)
+            _AvailableLessonsError(onRetry: onRetryLessons)
           else if (availableLessons.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                'No lessons are available yet.',
-                style: TextStyle(color: AppColors.muted),
-              ),
-            ),
+            _AvailableLessonsEmpty(onBrowse: onStartLearning),
           for (final availableLesson in availableLessons.take(6))
             LessonTile(
               title: availableLesson.summary.title,
@@ -154,6 +153,148 @@ class _NewLearnerPrompt extends StatelessWidget {
         const SizedBox(width: 12),
         FilledButton(onPressed: onPressed, child: const Text('Browse lessons')),
       ],
+    ),
+  );
+}
+
+class _AvailableLessonsLoading extends StatelessWidget {
+  const _AvailableLessonsLoading();
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const Key('available-lessons-loading-state'),
+    container: true,
+    liveRegion: true,
+    child: const _AvailableLessonsStateCard(
+      icon: SizedBox.square(
+        dimension: 22,
+        child: CircularProgressIndicator(
+          color: AppColors.red,
+          strokeWidth: 2.5,
+          semanticsLabel: 'Loading available lessons',
+        ),
+      ),
+      title: 'Loading available lessons',
+      message: 'Finding lessons that match your current HSK level.',
+    ),
+  );
+}
+
+class _AvailableLessonsError extends StatelessWidget {
+  const _AvailableLessonsError({required this.onRetry});
+
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const Key('available-lessons-error-state'),
+    container: true,
+    liveRegion: true,
+    child: _AvailableLessonsStateCard(
+      icon: const Icon(Icons.error_outline_rounded, color: AppColors.red),
+      title: 'Lessons are unavailable',
+      message: 'We couldn’t check available lessons. Please try again.',
+      action: OutlinedButton.icon(
+        key: const Key('available-lessons-retry'),
+        onPressed: onRetry,
+        icon: const Icon(Icons.refresh_rounded, size: 17),
+        label: const Text('Try again'),
+      ),
+    ),
+  );
+}
+
+class _AvailableLessonsEmpty extends StatelessWidget {
+  const _AvailableLessonsEmpty({required this.onBrowse});
+
+  final VoidCallback onBrowse;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const Key('available-lessons-empty-state'),
+    container: true,
+    liveRegion: true,
+    child: _AvailableLessonsStateCard(
+      icon: const Icon(Icons.menu_book_outlined, color: AppColors.teal),
+      title: 'No saved lessons yet',
+      message: 'Create a lesson to start building your library.',
+      action: OutlinedButton.icon(
+        onPressed: onBrowse,
+        icon: const Icon(Icons.arrow_forward_rounded, size: 17),
+        label: const Text('Browse lessons'),
+      ),
+    ),
+  );
+}
+
+class _AvailableLessonsStateCard extends StatelessWidget {
+  const _AvailableLessonsStateCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.action,
+  });
+
+  final Widget icon;
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      border: Border.all(color: AppColors.border.withValues(alpha: .6)),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final details = Row(
+          children: [
+            SizedBox.square(dimension: 26, child: Center(child: icon)),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+        final action = this.action;
+        if (action == null) return details;
+        if (constraints.maxWidth < 430) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [details, const SizedBox(height: 14), action],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: details),
+            const SizedBox(width: 12),
+            action,
+          ],
+        );
+      },
     ),
   );
 }
