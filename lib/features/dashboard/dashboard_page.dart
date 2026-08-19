@@ -35,6 +35,8 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _resumeLatestLesson = false;
   bool _startDailyReview = false;
   bool _loadingDailyReview = true;
+  bool _dailyReviewLoadError = false;
+  int _dailyReviewRequestId = 0;
   int _pendingReviewCount = 0;
   bool _dailyReviewComplete = false;
   bool _resumeDailyReview = false;
@@ -124,6 +126,13 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadDailyReviewPrompt() async {
+    final requestId = ++_dailyReviewRequestId;
+    if (!_loadingDailyReview && mounted) {
+      setState(() {
+        _loadingDailyReview = true;
+        _dailyReviewLoadError = false;
+      });
+    }
     try {
       final now = widget.clock?.call() ?? DateTime.now();
       final queue = await widget.progressRepository.dailyQueue(
@@ -132,19 +141,28 @@ class _DashboardPageState extends State<DashboardPage> {
         maxHskLevel: widget.profile.hskLevel,
       );
       final session = await widget.dailyReviewSessionRepository?.load(now);
-      if (!mounted) return;
+      if (!mounted || requestId != _dailyReviewRequestId) return;
       setState(() {
         _pendingReviewCount = queue.length;
-        _dailyReviewComplete = session?.isComplete ?? queue.isEmpty;
+        _dailyReviewComplete = session?.isComplete == true || queue.isEmpty;
         _resumeDailyReview =
+            queue.isNotEmpty &&
             session != null &&
             !session.isComplete &&
             session.currentPosition > 0;
         _loadingDailyReview = false;
+        _dailyReviewLoadError = false;
       });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loadingDailyReview = false);
+    } catch (error) {
+      debugPrint('Daily review prompt load failed: $error');
+      if (!mounted || requestId != _dailyReviewRequestId) return;
+      setState(() {
+        _pendingReviewCount = 0;
+        _dailyReviewComplete = false;
+        _resumeDailyReview = false;
+        _loadingDailyReview = false;
+        _dailyReviewLoadError = true;
+      });
     }
   }
 
@@ -232,10 +250,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         onResumeLesson: _resumeLesson,
                         onOpenLessons: _openLessons,
                         onStartDailyReview: _openDailyReview,
+                        onRetryDailyReview: _loadDailyReviewPrompt,
                         onDailyReviewCompleted: _loadDailyReviewPrompt,
                         onLearningProgressChanged: _loadLearningStats,
                         onLessonProgressChanged: _refreshDashboardData,
                         loadingDailyReview: _loadingDailyReview,
+                        dailyReviewLoadError: _dailyReviewLoadError,
                         pendingReviewCount: _pendingReviewCount,
                         dailyReviewComplete: _dailyReviewComplete,
                         resumeDailyReview: _resumeDailyReview,
@@ -277,10 +297,12 @@ class _DashboardBody extends StatelessWidget {
     required this.onResumeLesson,
     required this.onOpenLessons,
     required this.onStartDailyReview,
+    required this.onRetryDailyReview,
     required this.onDailyReviewCompleted,
     required this.onLearningProgressChanged,
     required this.onLessonProgressChanged,
     required this.loadingDailyReview,
+    required this.dailyReviewLoadError,
     required this.pendingReviewCount,
     required this.dailyReviewComplete,
     required this.resumeDailyReview,
@@ -307,10 +329,12 @@ class _DashboardBody extends StatelessWidget {
   final VoidCallback onResumeLesson;
   final VoidCallback onOpenLessons;
   final VoidCallback onStartDailyReview;
+  final VoidCallback onRetryDailyReview;
   final VoidCallback onDailyReviewCompleted;
   final VoidCallback onLearningProgressChanged;
   final VoidCallback onLessonProgressChanged;
   final bool loadingDailyReview;
+  final bool dailyReviewLoadError;
   final int pendingReviewCount;
   final bool dailyReviewComplete;
   final bool resumeDailyReview;
@@ -391,7 +415,9 @@ class _DashboardBody extends StatelessWidget {
                         onResume: onResumeLesson,
                         onStartLearning: onOpenLessons,
                         onStartReview: onStartDailyReview,
+                        onRetryReview: onRetryDailyReview,
                         loadingReview: loadingDailyReview,
+                        reviewLoadError: dailyReviewLoadError,
                         pendingReviewCount: pendingReviewCount,
                         reviewComplete: dailyReviewComplete,
                         resumeReview: resumeDailyReview,
@@ -423,7 +449,9 @@ class _DashboardBody extends StatelessWidget {
                       onResume: onResumeLesson,
                       onStartLearning: onOpenLessons,
                       onStartReview: onStartDailyReview,
+                      onRetryReview: onRetryDailyReview,
                       loadingReview: loadingDailyReview,
+                      reviewLoadError: dailyReviewLoadError,
                       pendingReviewCount: pendingReviewCount,
                       reviewComplete: dailyReviewComplete,
                       resumeReview: resumeDailyReview,

@@ -37,7 +37,8 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     with WidgetsBindingObserver {
   List<DailyQueueCard> _queue = const [];
   bool _loading = true;
-  String? _error;
+  bool _hasLoadError = false;
+  int _loadRequestId = 0;
   Timer? _midnightTimer;
   DateTime? _loadedDay;
   DailyReviewSession? _session;
@@ -86,25 +87,54 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   }
 
   void _resetQueue() {
-    if (mounted) setState(() => _loading = true);
+    _beginQueueLoad(force: true);
+  }
+
+  void _beginQueueLoad({bool force = false}) {
+    if (!mounted || (_loading && !force)) return;
+    setState(() {
+      _loading = true;
+      _hasLoadError = false;
+    });
     unawaited(_loadQueue());
   }
 
-  Future<void> _loadQueue() async {
+  Future<LearnerSettings?> _loadSettingsSafely() async {
     try {
-      final day = widget.today ?? _systemTime();
+      return await widget.settingsRepository?.load();
+    } catch (error) {
+      debugPrint('Daily review settings load failed: $error');
+      return null;
+    }
+  }
+
+  Future<void> _applyLoadedSettings(
+    Future<LearnerSettings?> settings,
+    int requestId,
+  ) async {
+    final loadedSettings = await settings;
+    if (!mounted || requestId != _loadRequestId || loadedSettings == null) {
+      return;
+    }
+    setState(() => _showPinyin = loadedSettings.showPinyin);
+  }
+
+  Future<void> _loadQueue() async {
+    final requestId = ++_loadRequestId;
+    final day = widget.today ?? _systemTime();
+    final settings = _loadSettingsSafely();
+    try {
       final queue = await widget.progressRepository.dailyQueue(
         forDay: day,
         limit: widget.profile.dailyWordTarget,
         maxHskLevel: widget.profile.hskLevel,
       );
       final session = await widget.sessionRepository?.load(day);
-      final settings = await widget.settingsRepository?.load();
-      if (!mounted) return;
+      if (!mounted || requestId != _loadRequestId) return;
       setState(() {
         _queue = queue;
         _loading = false;
-        _error = null;
+        _hasLoadError = false;
         _loadedDay = day;
         _session =
             session ??
@@ -115,8 +145,8 @@ class _DailyQueuePageState extends State<DailyQueuePage>
                   .map((item) => item.card.id)
                   .toList(growable: false),
             );
-        _showPinyin = settings?.showPinyin ?? true;
       });
+      unawaited(_applyLoadedSettings(settings, requestId));
       if (widget.startImmediately &&
           !_consumedImmediateStart &&
           queue.isNotEmpty) {
@@ -124,10 +154,14 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         await _startReview();
       }
     } catch (error) {
-      if (!mounted) return;
+      debugPrint('Daily review queue load failed: $error');
+      if (!mounted || requestId != _loadRequestId) return;
       setState(() {
+        _queue = const [];
+        _session = null;
+        _loadedDay = null;
         _loading = false;
-        _error = 'Could not build today’s queue: $error';
+        _hasLoadError = true;
       });
     }
   }
@@ -145,63 +179,104 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         showPinyin: _showPinyin,
         onAnswer: _recordAnswer,
         onClose: () {
-          setState(() {
-            _reviewing = false;
-            _loading = true;
-          });
-          unawaited(_loadQueue());
+          setState(() => _reviewing = false);
+          _beginQueueLoad(force: true);
         },
       );
     }
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 24;
     return ColoredBox(
       color: AppColors.background,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            sliver: SliverToBoxAdapter(child: _buildQueueHeader()),
+          ),
+          if (_loading || _hasLoadError || _queue.isEmpty)
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding),
+              sliver: SliverToBoxAdapter(child: _buildStatusContent()),
+            )
+          else ...[
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              sliver: SliverToBoxAdapter(child: _buildQueueCounts()),
+            ),
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(24, 16, 24, bottomPadding),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index.isOdd) return const SizedBox(height: 10);
+                  final queueIndex = index ~/ 2;
+                  return _QueueCard(
+                    index: queueIndex + 1,
+                    item: _queue[queueIndex],
+                  );
+                }, childCount: _queue.length * 2 - 1),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQueueHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const heading = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '每日复习',
-                        style: TextStyle(
-                          fontFamily: 'serif',
-                          fontSize: 36,
-                          color: AppColors.text,
-                        ),
-                      ),
-                      Text(
-                        'Today’s review queue',
-                        style: TextStyle(fontSize: 16, color: AppColors.muted),
-                      ),
-                    ],
+                Text(
+                  '每日复习',
+                  style: TextStyle(
+                    fontFamily: 'serif',
+                    fontSize: 36,
+                    color: AppColors.text,
                   ),
                 ),
-                const SizedBox(width: 16),
-                FilledButton.icon(
-                  onPressed: !_loading && _queue.isNotEmpty
-                      ? _startReview
-                      : null,
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(_isResumable ? 'Resume review' : 'Start review'),
+                Text(
+                  'Today’s review queue',
+                  style: TextStyle(fontSize: 16, color: AppColors.muted),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Cards to review and weak cards come first, followed by new words. '
-              'Daily target: ${widget.profile.dailyWordTarget}.',
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 22),
-            Expanded(child: _buildContent()),
-          ],
+            );
+            final action = FilledButton.icon(
+              onPressed: _canStartReview ? _startReview : null,
+              icon: const Icon(Icons.play_arrow),
+              label: Text(_isResumable ? 'Resume review' : 'Start review'),
+            );
+            if (constraints.maxWidth < 520) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [heading, const SizedBox(height: 16), action],
+              );
+            }
+            return Row(
+              children: [
+                const Expanded(child: heading),
+                const SizedBox(width: 16),
+                action,
+              ],
+            );
+          },
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          'Cards to review and weak cards come first, followed by new words. '
+          'Daily target: ${widget.profile.dailyWordTarget}.',
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 22),
+      ],
     );
   }
 
@@ -211,11 +286,27 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       _session!.currentPosition > 0 &&
       _session!.currentPosition < _session!.queuedCardIds.length;
 
+  bool get _canStartReview {
+    final loadedDay = _loadedDay;
+    final activeDay = widget.today ?? _systemTime();
+    return !_loading &&
+        !_hasLoadError &&
+        _queue.isNotEmpty &&
+        loadedDay != null &&
+        _isSameDay(loadedDay, activeDay);
+  }
+
   Future<void> _startReview() async {
     final session = _session;
-    if (session == null || _queue.isEmpty) return;
+    if (session == null || !_canStartReview) return;
+    final requestId = _loadRequestId;
     await widget.onStartReview?.call(session);
-    if (!mounted) return;
+    if (!mounted ||
+        requestId != _loadRequestId ||
+        !identical(session, _session) ||
+        !_canStartReview) {
+      return;
+    }
     setState(() {
       _reviewStartPosition = session.currentPosition;
       _reviewing = true;
@@ -323,38 +414,75 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     }
   }
 
-  Widget _buildContent() {
+  Widget _buildStatusContent() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const _DailyQueueStateCard(
+        key: Key('daily-review-loading-state'),
+        accent: AppColors.red,
+        icon: SizedBox.square(
+          dimension: 25,
+          child: CircularProgressIndicator(
+            color: AppColors.red,
+            strokeWidth: 2.5,
+            semanticsLabel: 'Loading today’s review queue',
+          ),
+        ),
+        title: 'Preparing today’s queue',
+        message:
+            'Prioritising cards that are due, words that need practice, '
+            'and new vocabulary.',
+      );
     }
-    if (_error != null) {
-      return Center(
-        child: Text(_error!, style: const TextStyle(color: AppColors.gold)),
+    if (_hasLoadError) {
+      return _DailyQueueStateCard(
+        key: const Key('daily-review-error-state'),
+        accent: AppColors.red,
+        icon: const Icon(
+          Icons.error_outline_rounded,
+          size: 30,
+          color: AppColors.red,
+        ),
+        title: 'We couldn’t load your queue',
+        message:
+            'Something went wrong while preparing today’s cards. Try again.',
+        action: FilledButton.icon(
+          key: const Key('daily-review-retry'),
+          onPressed: _beginQueueLoad,
+          icon: const Icon(Icons.refresh_rounded, size: 18),
+          label: const Text('Try again'),
+        ),
       );
     }
     if (_queue.isEmpty) {
-      return const SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.task_alt, size: 46, color: AppColors.teal),
-              SizedBox(height: 12),
-              Text(
-                'You’re all caught up.',
-                style: TextStyle(color: AppColors.text, fontSize: 18),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'There are no cards in today’s queue.',
-                style: TextStyle(color: AppColors.muted),
-              ),
-            ],
+      return _DailyQueueStateCard(
+        key: const Key('daily-review-empty-state'),
+        accent: AppColors.teal,
+        icon: const Icon(
+          Icons.task_alt_rounded,
+          size: 31,
+          color: AppColors.teal,
+        ),
+        title: 'You’re all caught up',
+        message:
+            'Nothing is waiting in today’s queue. New and due cards will '
+            'appear here when they’re ready.',
+        action: OutlinedButton.icon(
+          key: const Key('daily-review-refresh'),
+          onPressed: _beginQueueLoad,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.teal,
+            side: BorderSide(color: AppColors.teal.withValues(alpha: .65)),
           ),
+          icon: const Icon(Icons.refresh_rounded, size: 18),
+          label: const Text('Check again'),
         ),
       );
     }
 
+    throw StateError('A queue status was requested while cards are available.');
+  }
+
+  Widget _buildQueueCounts() {
     final dueCount = _queue
         .where((item) => item.reason == DailyQueueReason.due)
         .length;
@@ -364,32 +492,90 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     final newCount = _queue
         .where((item) => item.reason == DailyQueueReason.newWord)
         .length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _QueueCount(
-              label: 'To review',
-              count: dueCount,
-              color: AppColors.red,
+        _QueueCount(label: 'To review', count: dueCount, color: AppColors.red),
+        _QueueCount(label: 'Weak', count: weakCount, color: AppColors.gold),
+        _QueueCount(label: 'New', count: newCount, color: AppColors.teal),
+      ],
+    );
+  }
+}
+
+class _DailyQueueStateCard extends StatelessWidget {
+  const _DailyQueueStateCard({
+    super.key,
+    required this.accent,
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.action,
+  });
+
+  final Color accent;
+  final Widget icon;
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 580),
+        child: Semantics(
+          container: true,
+          liveRegion: true,
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 34),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border.all(color: accent.withValues(alpha: .55)),
+              borderRadius: BorderRadius.circular(18),
             ),
-            _QueueCount(label: 'Weak', count: weakCount, color: AppColors.gold),
-            _QueueCount(label: 'New', count: newCount, color: AppColors.teal),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: ListView.separated(
-            itemCount: _queue.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, index) =>
-                _QueueCard(index: index + 1, item: _queue[index]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: .12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: icon,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+                if (action != null) ...[const SizedBox(height: 22), action!],
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

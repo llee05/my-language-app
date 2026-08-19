@@ -6,7 +6,9 @@ class MainDashboard extends StatelessWidget {
     required this.onResume,
     required this.onStartLearning,
     required this.onStartReview,
+    this.onRetryReview,
     required this.loadingReview,
+    this.reviewLoadError = false,
     required this.pendingReviewCount,
     required this.reviewComplete,
     required this.resumeReview,
@@ -20,7 +22,9 @@ class MainDashboard extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onStartLearning;
   final VoidCallback onStartReview;
+  final VoidCallback? onRetryReview;
   final bool loadingReview;
+  final bool reviewLoadError;
   final int pendingReviewCount;
   final bool reviewComplete;
   final bool resumeReview;
@@ -50,11 +54,13 @@ class MainDashboard extends StatelessWidget {
           const SizedBox(height: 12),
           _DailyReviewPrompt(
             loading: loadingReview,
+            hasError: reviewLoadError,
             pendingCount: pendingReviewCount,
             complete: reviewComplete,
             resume: resumeReview,
             newLearner: isNewLearner,
             onPressed: onStartReview,
+            onRetry: onRetryReview,
           ),
           if (isNewLearner) ...[
             const SizedBox(height: 26),
@@ -155,87 +161,213 @@ class _NewLearnerPrompt extends StatelessWidget {
 class _DailyReviewPrompt extends StatelessWidget {
   const _DailyReviewPrompt({
     required this.loading,
+    required this.hasError,
     required this.pendingCount,
     required this.complete,
     required this.resume,
     required this.newLearner,
     required this.onPressed,
+    required this.onRetry,
   });
 
   final bool loading;
+  final bool hasError;
   final int pendingCount;
   final bool complete;
   final bool resume;
   final bool newLearner;
   final VoidCallback onPressed;
+  final VoidCallback? onRetry;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: AppColors.surface,
-      border: Border.all(color: AppColors.border),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: loading
-        ? const LinearProgressIndicator(color: AppColors.red)
-        : complete
-        ? const Row(
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: hasError ? AppColors.red : AppColors.border),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        child: loading
+            ? const _DailyReviewPromptLoading()
+            : hasError
+            ? _DailyReviewPromptError(onRetry: onRetry)
+            : complete
+            ? const _DailyReviewPromptComplete()
+            : _buildPending(),
+      ),
+    );
+  }
+
+  Widget _buildPending() => Row(
+    key: const ValueKey('daily-review-prompt-pending'),
+    children: [
+      const Icon(Icons.style_outlined, color: AppColors.gold),
+      const SizedBox(width: 12),
+      Expanded(
+        child: newLearner
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Learn your first $pendingCount word${pendingCount == 1 ? '' : 's'}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Reveal each meaning and rate how well you knew it. We’ll schedule the next review for you.',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  ),
+                ],
+              )
+            : Text(
+                '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
+                style: const TextStyle(color: AppColors.text),
+              ),
+      ),
+      const SizedBox(width: 12),
+      FilledButton(
+        onPressed: pendingCount == 0 ? null : onPressed,
+        child: Text(
+          resume
+              ? 'Resume review'
+              : newLearner
+              ? 'Begin first review'
+              : 'Start review',
+        ),
+      ),
+    ],
+  );
+}
+
+class _DailyReviewPromptLoading extends StatelessWidget {
+  const _DailyReviewPromptLoading();
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const ValueKey('daily-review-prompt-loading'),
+    container: true,
+    liveRegion: true,
+    child: const Row(
+      children: [
+        SizedBox.square(
+          dimension: 24,
+          child: CircularProgressIndicator(
+            color: AppColors.red,
+            strokeWidth: 2.5,
+            semanticsLabel: 'Loading daily review',
+          ),
+        ),
+        SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.task_alt, color: AppColors.teal),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Daily review complete — you’re all done!',
-                  style: TextStyle(color: AppColors.text),
+              Text(
+                'Checking today’s review',
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
-          )
-        : Row(
-            children: [
-              const Icon(Icons.style_outlined, color: AppColors.gold),
-              const SizedBox(width: 12),
-              Expanded(
-                child: newLearner
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Learn your first $pendingCount word${pendingCount == 1 ? '' : 's'}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.text,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Reveal each meaning and rate how well you knew it. We’ll schedule the next review for you.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.muted,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
-                        style: const TextStyle(color: AppColors.text),
-                      ),
-              ),
-              const SizedBox(width: 12),
-              FilledButton(
-                onPressed: pendingCount == 0 ? null : onPressed,
-                child: Text(
-                  resume
-                      ? 'Resume review'
-                      : newLearner
-                      ? 'Begin first review'
-                      : 'Start review',
-                ),
+              SizedBox(height: 3),
+              Text(
+                'Finding due, weak, and new cards for you.',
+                style: TextStyle(fontSize: 11, color: AppColors.muted),
               ),
             ],
           ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _DailyReviewPromptComplete extends StatelessWidget {
+  const _DailyReviewPromptComplete();
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const ValueKey('daily-review-prompt-complete'),
+    container: true,
+    liveRegion: true,
+    child: const Row(
+      children: [
+        Icon(Icons.task_alt, color: AppColors.teal),
+        SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            'Daily review complete — you’re all done!',
+            style: TextStyle(color: AppColors.text),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _DailyReviewPromptError extends StatelessWidget {
+  const _DailyReviewPromptError({required this.onRetry});
+
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const ValueKey('daily-review-prompt-error'),
+    container: true,
+    liveRegion: true,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final details = const Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: AppColors.red),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Daily review is unavailable',
+                    style: TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    'We couldn’t check today’s cards. Try loading them again.',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+        final retry = OutlinedButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded, size: 17),
+          label: const Text('Try again'),
+        );
+        if (constraints.maxWidth < 430) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [details, const SizedBox(height: 14), retry],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: details),
+            const SizedBox(width: 12),
+            retry,
+          ],
+        );
+      },
+    ),
   );
 }
 

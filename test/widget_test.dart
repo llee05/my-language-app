@@ -343,6 +343,48 @@ void main() {
     expect(find.text('Resume review'), findsNothing);
   });
 
+  testWidgets('dashboard explains review loading and an empty queue', (
+    tester,
+  ) async {
+    final result = Completer<List<DailyQueueCard>>();
+    final progress = _DeferredDailyQueueRepository(result);
+    final sessions = _MemoryDailyReviewSessionRepository(
+      DailyReviewSession(id: 11, date: DateTime.now(), queuedCardIds: const []),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: progress,
+          dailyReviewSessionRepository: sessions,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Checking today’s review'), findsOneWidget);
+    expect(
+      find.text('Finding due, weak, and new cards for you.'),
+      findsOneWidget,
+    );
+
+    result.complete(const []);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Daily review complete — you’re all done!'),
+      findsOneWidget,
+    );
+    expect(find.text('0 cards pending today'), findsNothing);
+  });
+
   testWidgets(
     'daily review journey creates, resumes, completes, and resets next day',
     (tester) async {
@@ -530,6 +572,269 @@ void main() {
     expect(find.text('Start review'), findsOneWidget);
   });
 
+  testWidgets('daily queue explains loading and empty states', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final result = Completer<List<DailyQueueCard>>();
+    final progress = _DeferredDailyQueueRepository(result);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: DailyQueuePage(
+            profile: testProfile,
+            progressRepository: progress,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+    await tester.pump();
+    expect(find.byKey(const Key('daily-review-loading-state')), findsOneWidget);
+    expect(find.text('Preparing today’s queue'), findsOneWidget);
+    expect(
+      find.textContaining('Prioritising cards that are due'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Start review'),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    result.complete(const []);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('daily-review-empty-state')),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('daily-review-empty-state')), findsOneWidget);
+    expect(find.text('You’re all caught up'), findsOneWidget);
+    expect(find.text('Check again'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('daily queue load error is friendly and retryable', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 31,
+          chinese: '再',
+          pinyin: 'zài',
+          englishMeaning: 'again',
+        ),
+        reason: DailyQueueReason.due,
+      ),
+    ];
+    final progress = _FailOnceDailyQueueRepository(queue: queue);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: DailyQueuePage(
+            profile: testProfile,
+            progressRepository: progress,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+    await tester.pump();
+    expect(find.byKey(const Key('daily-review-error-state')), findsOneWidget);
+    expect(find.text('We couldn’t load your queue'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Start review'),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1000));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('daily-review-retry')));
+    await tester.pumpAndSettle();
+
+    expect(progress.dailyQueueCalls, 2);
+    expect(find.byKey(const Key('daily-review-error-state')), findsNothing);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 2000));
+    await tester.pump();
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Start review'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('daily queue remains available when preferences fail to load', (
+    tester,
+  ) async {
+    final progress = _MemoryProgressRepository(
+      queue: const [
+        DailyQueueCard(
+          card: Flashcard(
+            id: 32,
+            chinese: '学',
+            pinyin: 'xué',
+            englishMeaning: 'study',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: progress,
+          settingsRepository: _FailingSettingsRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-review-error-state')), findsNothing);
+    expect(find.text('学'), findsOneWidget);
+    expect(find.text('Start review'), findsOneWidget);
+  });
+
+  testWidgets('daily queue does not wait for stalled preferences', (
+    tester,
+  ) async {
+    final progress = _MemoryProgressRepository(
+      queue: const [
+        DailyQueueCard(
+          card: Flashcard(
+            id: 35,
+            chinese: '写',
+            pinyin: 'xiě',
+            englishMeaning: 'write',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: progress,
+          settingsRepository: _StalledSettingsRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-review-loading-state')), findsNothing);
+    expect(find.text('写'), findsOneWidget);
+    expect(find.text('Start review'), findsOneWidget);
+  });
+
+  testWidgets('daily queue keeps the last pinyin preference on reload error', (
+    tester,
+  ) async {
+    final settings = _FailAfterFirstSettingsRepository();
+    final progress = _MemoryProgressRepository(
+      queue: const [
+        DailyQueueCard(
+          card: Flashcard(
+            id: 34,
+            chinese: '读',
+            pinyin: 'dú',
+            englishMeaning: 'read',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: progress,
+          settingsRepository: settings,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start review'));
+    await tester.pumpAndSettle();
+    expect(find.text('dú'), findsNothing);
+
+    await tester.tap(find.byTooltip('Back to review queue'));
+    await tester.pumpAndSettle();
+    expect(settings.loadCalls, 2);
+
+    await tester.tap(find.text('Start review'));
+    await tester.pumpAndSettle();
+    expect(find.text('dú'), findsNothing);
+  });
+
+  testWidgets('dashboard daily review error can be retried', (tester) async {
+    const queue = [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 33,
+          chinese: '习',
+          pinyin: 'xí',
+          englishMeaning: 'practise',
+        ),
+        reason: DailyQueueReason.weak,
+      ),
+    ];
+    final progress = _FailOnceDailyQueueRepository(queue: queue);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Daily review is unavailable'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(progress.dailyQueueCalls, 2);
+    expect(find.text('1 card pending today'), findsOneWidget);
+    expect(find.text('Start review'), findsOneWidget);
+  });
+
   testWidgets('daily queue reloads at local midnight', (tester) async {
     var systemTime = DateTime(2026, 8, 6, 23, 59, 59);
     final progress = _MemoryProgressRepository();
@@ -553,6 +858,111 @@ void main() {
 
     expect(progress.dailyQueueCalls, 2);
     expect(progress.requestedDays.last.day, 7);
+  });
+
+  testWidgets('daily queue ignores a stale load after midnight', (
+    tester,
+  ) async {
+    var systemTime = DateTime(2026, 8, 6, 23, 59, 59);
+    final first = Completer<List<DailyQueueCard>>();
+    final second = Completer<List<DailyQueueCard>>();
+    final progress = _SequencedDailyQueueRepository([first, second]);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DailyQueuePage(
+            profile: testProfile,
+            progressRepository: progress,
+            clock: () => systemTime,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    systemTime = DateTime(2026, 8, 7);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(progress.dailyQueueCalls, 2);
+
+    second.complete(const [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 42,
+          chinese: '今',
+          pinyin: 'jīn',
+          englishMeaning: 'today',
+        ),
+        reason: DailyQueueReason.newWord,
+      ),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.text('今'), findsOneWidget);
+
+    first.complete(const [
+      DailyQueueCard(
+        card: Flashcard(
+          id: 41,
+          chinese: '昨',
+          pinyin: 'zuó',
+          englishMeaning: 'yesterday',
+        ),
+        reason: DailyQueueReason.due,
+      ),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('今'), findsOneWidget);
+    expect(find.text('昨'), findsNothing);
+  });
+
+  testWidgets('daily queue cannot start after its loaded day changes', (
+    tester,
+  ) async {
+    var systemTime = DateTime(2026, 8, 6, 12);
+    var started = false;
+    final progress = _MemoryProgressRepository(
+      queue: const [
+        DailyQueueCard(
+          card: Flashcard(
+            id: 43,
+            chinese: '日',
+            pinyin: 'rì',
+            englishMeaning: 'day',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: progress,
+          clock: () => systemTime,
+          onStartReview: (_) => started = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Start review'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    systemTime = DateTime(2026, 8, 7, 12);
+    await tester.tap(find.text('Start review'));
+    await tester.pumpAndSettle();
+
+    expect(started, isFalse);
+    expect(find.text('Today’s review queue'), findsOneWidget);
+    expect(find.text('Daily review'), findsNothing);
   });
 
   testWidgets('review action starts or resumes the persisted session', (
@@ -1292,6 +1702,39 @@ class _MemorySettingsRepository implements SettingsRepository {
   }
 }
 
+class _FailingSettingsRepository implements SettingsRepository {
+  @override
+  Future<LearnerSettings> load() =>
+      Future.error(StateError('preferences unavailable'));
+
+  @override
+  Future<void> save(LearnerSettings settings) async {}
+}
+
+class _FailAfterFirstSettingsRepository implements SettingsRepository {
+  int loadCalls = 0;
+
+  @override
+  Future<LearnerSettings> load() async {
+    loadCalls++;
+    if (loadCalls > 1) throw StateError('preferences temporarily unavailable');
+    return const LearnerSettings(showPinyin: false);
+  }
+
+  @override
+  Future<void> save(LearnerSettings settings) async {}
+}
+
+class _StalledSettingsRepository implements SettingsRepository {
+  final _result = Completer<LearnerSettings>();
+
+  @override
+  Future<LearnerSettings> load() => _result.future;
+
+  @override
+  Future<void> save(LearnerSettings settings) async {}
+}
+
 class _MemoryDevelopmentRepository implements DevelopmentRepository {
   @override
   Future<String> databasePath() async => 'memory';
@@ -1454,6 +1897,70 @@ class _MemoryProgressRepository implements ProgressRepository {
     int? expectedCorrectAnswers,
   }) async {
     savedSession = session;
+  }
+}
+
+class _DeferredDailyQueueRepository extends _MemoryProgressRepository {
+  _DeferredDailyQueueRepository(this.result);
+
+  final Completer<List<DailyQueueCard>> result;
+
+  @override
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  }) {
+    dailyQueueCalls++;
+    requestedDays.add(forDay);
+    return result.future;
+  }
+}
+
+class _FailOnceDailyQueueRepository extends _MemoryProgressRepository {
+  _FailOnceDailyQueueRepository({required super.queue});
+
+  bool _shouldFail = true;
+
+  @override
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  }) {
+    if (_shouldFail) {
+      _shouldFail = false;
+      dailyQueueCalls++;
+      requestedDays.add(forDay);
+      return Future.error(StateError('sensitive database path'));
+    }
+    return super.dailyQueue(
+      forDay: forDay,
+      limit: limit,
+      weakThreshold: weakThreshold,
+      maxHskLevel: maxHskLevel,
+    );
+  }
+}
+
+class _SequencedDailyQueueRepository extends _MemoryProgressRepository {
+  _SequencedDailyQueueRepository(this.results);
+
+  final List<Completer<List<DailyQueueCard>>> results;
+  int _nextResult = 0;
+
+  @override
+  Future<List<DailyQueueCard>> dailyQueue({
+    required DateTime forDay,
+    required int limit,
+    double weakThreshold = .7,
+    int maxHskLevel = 6,
+  }) {
+    dailyQueueCalls++;
+    requestedDays.add(forDay);
+    return results[_nextResult++].future;
   }
 }
 

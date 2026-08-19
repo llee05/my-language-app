@@ -74,7 +74,40 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.queue.isEmpty) {
-      return const Center(child: Text('There are no cards to review.'));
+      return ColoredBox(
+        color: AppColors.background,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final minHeight = constraints.hasBoundedHeight
+                ? max(0.0, constraints.maxHeight - 48)
+                : 0.0;
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: minHeight),
+                child: _DailyQueueStateCard(
+                  key: const Key('daily-review-cards-empty-state'),
+                  accent: AppColors.teal,
+                  icon: const Icon(
+                    Icons.task_alt_rounded,
+                    size: 31,
+                    color: AppColors.teal,
+                  ),
+                  title: 'You’re all caught up',
+                  message: 'There are no cards to review.',
+                  action: widget.onClose == null
+                      ? null
+                      : OutlinedButton.icon(
+                          onPressed: widget.onClose,
+                          icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                          label: const Text('Back to review queue'),
+                        ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
     }
     if (_showSummary) return _buildCompletionSummary();
     final card = widget.queue[_position].card;
