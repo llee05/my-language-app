@@ -657,6 +657,7 @@ class _LessonsPageState extends State<LessonsPage> {
             DropdownButtonFormField<int>(
               key: ValueKey(_hskLevel),
               initialValue: _hskLevel,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'HSK level',
                 border: OutlineInputBorder(),
@@ -677,13 +678,17 @@ class _LessonsPageState extends State<LessonsPage> {
             DropdownButtonFormField<String>(
               key: ValueKey('topics-$_hskLevel'),
               initialValue: _selectedTopicTheme,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Topic for this HSK level',
                 border: OutlineInputBorder(),
               ),
               items: [
                 for (final topic in _availableTopics)
-                  DropdownMenuItem(value: topic, child: Text(topic)),
+                  DropdownMenuItem(
+                    value: topic,
+                    child: Text(topic, overflow: TextOverflow.ellipsis),
+                  ),
               ],
               onChanged: (value) => setState(
                 () => _selectedTopicTheme = value ?? _availableTopics.first,

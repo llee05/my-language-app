@@ -1332,6 +1332,164 @@ void main() {
     expect(find.text('Daily Life'), findsNothing);
   });
 
+  testWidgets('lesson library explains loading and empty states', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final topics = Completer<List<LessonSummary>>();
+    final lessons = _LessonStateRepository(firstTopics: topics.future);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: Scaffold(
+            body: LessonsPage(
+              repository: lessons,
+              progressRepository: _MemoryProgressRepository(
+                hasActiveSession: false,
+              ),
+              settingsRepository: _MemorySettingsRepository(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('lesson-library-loading-state')),
+      findsOneWidget,
+    );
+    expect(find.text('Loading your lesson library'), findsOneWidget);
+    expect(find.textContaining('Finding your saved lessons'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    topics.complete(const []);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('lesson-library-empty-state')), findsOneWidget);
+    expect(find.text('No saved lessons yet'), findsOneWidget);
+    expect(find.textContaining('create your first lesson'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('lesson library load error is friendly and retryable', (
+    tester,
+  ) async {
+    final lessons = _LessonStateRepository(failFirstTopicsLoad: true);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: lessons,
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('lesson-library-error-state')), findsOneWidget);
+    expect(find.text('Lessons are unavailable'), findsOneWidget);
+    expect(find.textContaining('sensitive database path'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('lesson-library-retry')));
+    await tester.pumpAndSettle();
+
+    expect(lessons.topicsCalls, 2);
+    expect(find.byKey(const Key('lesson-library-content')), findsOneWidget);
+    expect(find.text('Recovered lesson'), findsOneWidget);
+    expect(find.byKey(const Key('lesson-library-error-state')), findsNothing);
+  });
+
+  testWidgets('dashboard explains lesson loading and empty states', (
+    tester,
+  ) async {
+    final topics = Completer<List<LessonSummary>>();
+    final lessons = _LessonStateRepository(firstTopics: topics.future);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: lessons,
+          progressRepository: _MemoryProgressRepository(
+            hasActiveSession: false,
+          ),
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('available-lessons-loading-state')),
+      findsOneWidget,
+    );
+    expect(find.text('Loading available lessons'), findsOneWidget);
+
+    topics.complete(const []);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('available-lessons-empty-state')),
+      findsOneWidget,
+    );
+    expect(find.text('No saved lessons yet'), findsOneWidget);
+    expect(
+      find.text('Create a lesson to start building your library.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('dashboard lesson load error is retryable', (tester) async {
+    final lessons = _LessonStateRepository(failFirstTopicsLoad: true);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: lessons,
+          progressRepository: _MemoryProgressRepository(
+            hasActiveSession: false,
+          ),
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('available-lessons-error-state')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('sensitive database path'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('available-lessons-retry')));
+    await tester.pumpAndSettle();
+
+    expect(lessons.topicsCalls, 2);
+    expect(find.text('Recovered lesson'), findsOneWidget);
+    expect(
+      find.byKey(const Key('available-lessons-error-state')),
+      findsNothing,
+    );
+  });
+
   testWidgets('lesson resumes its position and records a familiar word', (
     tester,
   ) async {
@@ -1778,6 +1936,57 @@ class _MemoryLessonRepository implements LessonRepository {
 
   @override
   Future<List<LessonSummary>> topics() async => [lesson.summary];
+}
+
+class _LessonStateRepository implements LessonRepository {
+  _LessonStateRepository({this.firstTopics, this.failFirstTopicsLoad = false});
+
+  final Future<List<LessonSummary>>? firstTopics;
+  final bool failFirstTopicsLoad;
+  int topicsCalls = 0;
+
+  static const lesson = Lesson(
+    summary: LessonSummary(
+      id: 27,
+      title: 'Recovered lesson',
+      theme: 'Recovery',
+      hskLevel: 2,
+    ),
+    cards: [
+      Flashcard(id: 271, chinese: '好', pinyin: 'hǎo', englishMeaning: 'good'),
+    ],
+  );
+
+  @override
+  Future<List<LessonSummary>> topics() async {
+    topicsCalls++;
+    if (topicsCalls == 1) {
+      if (firstTopics case final firstTopics?) return firstTopics;
+      if (failFirstTopicsLoad) {
+        throw StateError('sensitive database path /private/lessons.db');
+      }
+    }
+    return [lesson.summary];
+  }
+
+  @override
+  Future<Lesson?> findById(int id) async =>
+      id == lesson.summary.id ? lesson : null;
+
+  @override
+  Future<Lesson?> findGenerated({
+    required String theme,
+    required int hskLevel,
+  }) async => null;
+
+  @override
+  Future<Flashcard> findOrCreateVocabularyCard({
+    required Flashcard card,
+    required int hskLevel,
+  }) async => card;
+
+  @override
+  Future<void> saveGenerated(Lesson lesson) async {}
 }
 
 class _MemoryProgressRepository implements ProgressRepository {
