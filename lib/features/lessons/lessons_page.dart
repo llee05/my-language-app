@@ -633,42 +633,10 @@ class _LessonsPageState extends State<LessonsPage> {
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
             const SizedBox(height: 24),
-            if (_loadingTopics)
-              const Text(
-                'Loading saved lessons…',
-                style: TextStyle(color: AppColors.muted),
-              )
-            else if (_libraryLoadFailed)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'We couldn’t load your saved lessons.',
-                    style: TextStyle(color: AppColors.text),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const Key('lesson-library-retry'),
-                    onPressed: _beginTopicsLoad,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Try again'),
-                  ),
-                ],
-              )
-            else if (_topics.isEmpty)
-              const Text(
-                'No saved lessons yet. Create your first lesson below.',
-                style: TextStyle(color: AppColors.muted),
-              )
-            else
-              for (final topic in _topics) ...[
-                _LessonLibraryCard(
-                  summary: topic,
-                  isActive: _activeSessions.containsKey(topic.id),
-                  onPressed: () => _startLesson(topic),
-                ),
-                const SizedBox(height: 10),
-              ],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: _buildLessonLibrary(),
+            ),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 20),
@@ -753,6 +721,69 @@ class _LessonsPageState extends State<LessonsPage> {
       ),
     ),
   );
+
+  Widget _buildLessonLibrary() {
+    if (_loadingTopics) {
+      return const _LessonLibraryStateCard(
+        key: Key('lesson-library-loading-state'),
+        accent: AppColors.red,
+        icon: SizedBox.square(
+          dimension: 25,
+          child: CircularProgressIndicator(
+            color: AppColors.red,
+            strokeWidth: 2.5,
+            semanticsLabel: 'Loading saved lessons',
+          ),
+        ),
+        title: 'Loading your lesson library',
+        message: 'Finding your saved lessons and current progress.',
+      );
+    }
+    if (_libraryLoadFailed) {
+      return _LessonLibraryStateCard(
+        key: const Key('lesson-library-error-state'),
+        accent: AppColors.red,
+        icon: const Icon(
+          Icons.error_outline_rounded,
+          size: 30,
+          color: AppColors.red,
+        ),
+        title: 'Lessons are unavailable',
+        message: 'We couldn’t load your saved lessons. Please try again.',
+        action: FilledButton.icon(
+          key: const Key('lesson-library-retry'),
+          onPressed: _beginTopicsLoad,
+          icon: const Icon(Icons.refresh_rounded, size: 18),
+          label: const Text('Try again'),
+        ),
+      );
+    }
+    if (_topics.isEmpty) {
+      return const _LessonLibraryStateCard(
+        key: Key('lesson-library-empty-state'),
+        accent: AppColors.teal,
+        icon: Icon(Icons.menu_book_outlined, size: 30, color: AppColors.teal),
+        title: 'No saved lessons yet',
+        message:
+            'Choose a topic below to create your first lesson. It will appear '
+            'here when you’re ready to return to it.',
+      );
+    }
+
+    return Column(
+      key: const Key('lesson-library-content'),
+      children: [
+        for (final topic in _topics) ...[
+          _LessonLibraryCard(
+            summary: topic,
+            isActive: _activeSessions.containsKey(topic.id),
+            onPressed: () => _startLesson(topic),
+          ),
+          if (topic != _topics.last) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
 
   Widget _buildFlashcards() => Column(
     children: [
@@ -987,6 +1018,77 @@ class _SummaryStat extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    ),
+  );
+}
+
+class _LessonLibraryStateCard extends StatelessWidget {
+  const _LessonLibraryStateCard({
+    super.key,
+    required this.accent,
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.action,
+  });
+
+  final Color accent;
+  final Widget icon;
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    liveRegion: true,
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: accent.withValues(alpha: .55)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: .12),
+              shape: BoxShape.circle,
+            ),
+            child: icon,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.text,
+              fontSize: 19,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+          if (action case final action?) ...[
+            const SizedBox(height: 18),
+            action,
+          ],
+        ],
       ),
     ),
   );
