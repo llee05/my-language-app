@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,59 +10,122 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'database/flashcard_seed.dart';
 import 'database/migrations.dart';
 
+class DatabaseResetInProgressException implements Exception {
+  const DatabaseResetInProgressException();
+
+  @override
+  String toString() => 'The local database is temporarily unavailable.';
+}
+
 class LocalDatabase {
   LocalDatabase._();
 
   static Database? _database;
+  static Future<Database>? _initialization;
+  static Future<void>? _resetOperation;
+  static Future<void>? _closeOperation;
+  static int _activeOperations = 0;
+  static Completer<void>? _operationsDrained;
+  static final Object _leaseKey = Object();
   static const String _dbName = 'local_app.db';
   static const String _tableName = 'app_data';
   static const String _lessonTable = 'lessons';
   static const String _cardTable = 'cards';
   static String? _databasePathOverride;
+  static String? _openedDatabasePath;
 
   static void useDatabasePathForTesting(String? path) {
     _databasePathOverride = path;
+    if (_database == null && _initialization == null) {
+      _openedDatabasePath = null;
+    }
   }
 
   static Future<String> databasePath() async {
-    if (_databasePathOverride case final path?) return path;
-
-    Directory documentsDirectory;
-    try {
-      documentsDirectory = await getApplicationDocumentsDirectory();
-    } catch (_) {
-      documentsDirectory = Directory.current;
-    }
-    return p.join(documentsDirectory.path, _dbName);
+    if (_openedDatabasePath case final path?) return path;
+    return _resolveDatabasePath();
   }
 
-  static Future<Database> ensureInitialized() async {
-    if (_database != null) {
-      return _database!;
+  static Future<T> use<T>(
+    Future<T> Function(Database database) operation,
+  ) async {
+    final leasedDatabase = Zone.current[_leaseKey];
+    if (leasedDatabase is Database) return operation(leasedDatabase);
+
+    if (_resetOperation != null || _closeOperation != null) {
+      throw const DatabaseResetInProgressException();
     }
 
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    _activeOperations++;
+    try {
+      final database = await _ensureInitialized();
+      return await runZoned<Future<T>>(
+        () => operation(database),
+        zoneValues: {_leaseKey: database},
+      );
+    } finally {
+      _activeOperations--;
+      if (_activeOperations == 0) {
+        final drained = _operationsDrained;
+        _operationsDrained = null;
+        drained?.complete();
+      }
+    }
+  }
 
-    _database = await openDatabase(
-      await databasePath(),
-      version: databaseSchemaVersion,
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-      onCreate: (db, version) async {
-        await _createSchema(db);
-        await migrateDatabase(db, fromVersion: 1, toVersion: version);
-        await _seedDefaultLessons(db);
-      },
-      onUpgrade: (db, oldVersion, newVersion) =>
-          migrateDatabase(db, fromVersion: oldVersion, toVersion: newVersion),
-      onDowngrade: (db, oldVersion, newVersion) => throw StateError(
-        'Database downgrade is not supported: $oldVersion → $newVersion.',
-      ),
-    );
+  static Future<void> initialize() => use((_) async {});
 
-    await _maybeSeedDefaultLessons(_database!);
-    await _applyTatoebaExamples(_database!);
-    return _database!;
+  /// Exposes the raw handle for database migration and integration tests.
+  /// Production operations should use [use] so resets can wait for them.
+  static Future<Database> ensureInitialized() {
+    if (_resetOperation != null || _closeOperation != null) {
+      return Future.error(const DatabaseResetInProgressException());
+    }
+    return _ensureInitialized();
+  }
+
+  static Future<Database> _ensureInitialized() {
+    if (_database case final database?) return Future.value(database);
+    if (_initialization case final initialization?) return initialization;
+
+    final initialization = _openAndInitialize();
+    _initialization = initialization;
+    return initialization;
+  }
+
+  static Future<Database> _openAndInitialize() async {
+    Database? openedDatabase;
+    try {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+
+      openedDatabase = await openDatabase(
+        await databasePath(),
+        version: databaseSchemaVersion,
+        onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
+        onCreate: (db, version) async {
+          await _createSchema(db);
+          await migrateDatabase(db, fromVersion: 1, toVersion: version);
+          await _seedDefaultLessons(db);
+        },
+        onUpgrade: (db, oldVersion, newVersion) =>
+            migrateDatabase(db, fromVersion: oldVersion, toVersion: newVersion),
+        onDowngrade: (db, oldVersion, newVersion) => throw StateError(
+          'Database downgrade is not supported: $oldVersion → $newVersion.',
+        ),
+      );
+
+      await _maybeSeedDefaultLessons(openedDatabase);
+      await _applyTatoebaExamples(openedDatabase);
+      _database = openedDatabase;
+      _openedDatabasePath = openedDatabase.path;
+      return openedDatabase;
+    } catch (_) {
+      await openedDatabase?.close();
+      rethrow;
+    } finally {
+      _initialization = null;
+    }
   }
 
   static Future<void> _createSchema(Database db) async {
@@ -206,29 +270,87 @@ class LocalDatabase {
     });
   }
 
-  static Future<void> resetAllData() async {
-    final database = _database;
-    _database = null;
-    await database?.close();
-    await databaseFactory.deleteDatabase(await databasePath());
+  static Future<void> resetAllData() {
+    if (_resetOperation case final reset?) return reset;
+    if (_closeOperation case final close?) {
+      return close.then((_) => resetAllData());
+    }
+
+    final reset = _performReset();
+    _resetOperation = reset;
+    return reset;
+  }
+
+  static Future<void> _performReset() async {
+    try {
+      await _waitForOperationsToDrain();
+      await _waitForInitialization();
+
+      final database = _database;
+      final path =
+          database?.path ?? _openedDatabasePath ?? await _resolveDatabasePath();
+      if (database != null) await database.close();
+      _database = null;
+      _openedDatabasePath = path;
+
+      await databaseFactory.deleteDatabase(path);
+      _openedDatabasePath = null;
+    } finally {
+      _resetOperation = null;
+    }
   }
 
   static Future<void> resetForTesting() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
-
-    final database = _database;
-    if (database != null) {
-      await database.close();
-      _database = null;
-    }
-
-    await databaseFactory.deleteDatabase(await databasePath());
+    await resetAllData();
   }
 
-  static Future<void> close() async {
-    final database = _database;
-    _database = null;
-    await database?.close();
+  static Future<void> close() {
+    if (_resetOperation case final reset?) return reset;
+    if (_closeOperation case final close?) return close;
+
+    final close = _performClose();
+    _closeOperation = close;
+    return close;
+  }
+
+  static Future<void> _performClose() async {
+    try {
+      await _waitForOperationsToDrain();
+      await _waitForInitialization();
+      final database = _database;
+      if (database != null) await database.close();
+      _database = null;
+    } finally {
+      _closeOperation = null;
+    }
+  }
+
+  static Future<void> _waitForOperationsToDrain() {
+    if (_activeOperations == 0) return Future.value();
+    return (_operationsDrained ??= Completer<void>()).future;
+  }
+
+  static Future<void> _waitForInitialization() async {
+    final initialization = _initialization;
+    if (initialization == null) return;
+    try {
+      await initialization;
+    } catch (_) {
+      // A reset still removes files left behind by failed initialization.
+    }
+  }
+
+  static Future<String> _resolveDatabasePath() async {
+    if (_databasePathOverride case final path?) return path;
+
+    Directory documentsDirectory;
+    try {
+      documentsDirectory = await getApplicationDocumentsDirectory();
+    } catch (_) {
+      documentsDirectory = Directory.current;
+    }
+    return p.join(documentsDirectory.path, _dbName);
   }
 }

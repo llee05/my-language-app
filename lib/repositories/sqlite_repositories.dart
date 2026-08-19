@@ -19,8 +19,7 @@ class SqliteLearnerRepository implements LearnerRepository {
   static const _onboardingRequiredKey = 'onboarding_required';
 
   @override
-  Future<LearnerProfile?> load() async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<LearnerProfile?> load() => LocalDatabase.use((db) async {
     final rows = await db.query(
       'learner_profiles',
       where:
@@ -37,11 +36,10 @@ class SqliteLearnerRepository implements LearnerRepository {
       hskLevel: row['hsk_level'] as int,
       dailyWordTarget: row['daily_word_target'] as int,
     );
-  }
+  });
 
   @override
-  Future<void> save(LearnerProfile profile) async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<void> save(LearnerProfile profile) => LocalDatabase.use((db) async {
     final now = DateTime.now().toUtc().toIso8601String();
     final values = {
       'name': profile.name.trim(),
@@ -69,24 +67,22 @@ class SqliteLearnerRepository implements LearnerRepository {
         whereArgs: [_onboardingRequiredKey],
       );
     });
-  }
+  });
 
   @override
-  Future<void> resetOnboarding() async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<void> resetOnboarding() => LocalDatabase.use((db) async {
     await db.insert('app_data', {
       'key': _onboardingRequiredKey,
       'value': '1',
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
-  }
+  });
 }
 
 class SqliteSettingsRepository implements SettingsRepository {
   const SqliteSettingsRepository();
 
   @override
-  Future<LearnerSettings> load() async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<LearnerSettings> load() => LocalDatabase.use((db) async {
     final rows = await db.query(
       'learner_settings',
       where: 'learner_id = ?',
@@ -101,11 +97,10 @@ class SqliteSettingsRepository implements SettingsRepository {
       reminderEnabled: row['reminder_enabled'] == 1,
       reminderHour: row['reminder_hour'] as int,
     );
-  }
+  });
 
   @override
-  Future<void> save(LearnerSettings settings) async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<void> save(LearnerSettings settings) => LocalDatabase.use((db) async {
     await db.insert('learner_settings', {
       'learner_id': 1,
       'show_pinyin': settings.showPinyin ? 1 : 0,
@@ -113,15 +108,14 @@ class SqliteSettingsRepository implements SettingsRepository {
       'reminder_enabled': settings.reminderEnabled ? 1 : 0,
       'reminder_hour': settings.reminderHour,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
+  });
 }
 
 class SqliteLessonRepository implements LessonRepository {
   const SqliteLessonRepository();
 
   @override
-  Future<List<LessonSummary>> topics() async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<List<LessonSummary>> topics() => LocalDatabase.use((db) async {
     final rows = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
@@ -130,11 +124,10 @@ class SqliteLessonRepository implements LessonRepository {
       orderBy: 'id DESC',
     );
     return rows.map(_summaryFromRow).toList(growable: false);
-  }
+  });
 
   @override
-  Future<Lesson?> findById(int id) async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<Lesson?> findById(int id) => LocalDatabase.use((db) async {
     final lessons = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
@@ -144,14 +137,13 @@ class SqliteLessonRepository implements LessonRepository {
     );
     if (lessons.isEmpty) return null;
     return _lessonFromSummary(db, _summaryFromRow(lessons.single));
-  }
+  });
 
   @override
   Future<Lesson?> findGenerated({
     required String theme,
     required int hskLevel,
-  }) async {
-    final db = await LocalDatabase.ensureInitialized();
+  }) => LocalDatabase.use((db) async {
     final lessons = await db.query(
       'lessons',
       columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
@@ -163,14 +155,13 @@ class SqliteLessonRepository implements LessonRepository {
     if (lessons.isEmpty) return null;
 
     return _lessonFromSummary(db, _summaryFromRow(lessons.single));
-  }
+  });
 
   @override
   Future<Flashcard> findOrCreateVocabularyCard({
     required Flashcard card,
     required int hskLevel,
-  }) async {
-    final db = await LocalDatabase.ensureInitialized();
+  }) => LocalDatabase.use((db) async {
     return db.transaction((txn) async {
       final existing = await txn.query(
         'cards',
@@ -223,7 +214,7 @@ class SqliteLessonRepository implements LessonRepository {
         quizOptions: card.quizOptions,
       );
     });
-  }
+  });
 
   Future<Lesson?> _lessonFromSummary(Database db, LessonSummary summary) async {
     final rows = await db.query(
@@ -240,8 +231,7 @@ class SqliteLessonRepository implements LessonRepository {
   }
 
   @override
-  Future<void> saveGenerated(Lesson lesson) async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<void> saveGenerated(Lesson lesson) => LocalDatabase.use((db) async {
     await db.transaction((txn) async {
       final existing = await txn.query(
         'lessons',
@@ -274,7 +264,7 @@ class SqliteLessonRepository implements LessonRepository {
         });
       }
     });
-  }
+  });
 
   LessonSummary _summaryFromRow(Map<String, Object?> row) => LessonSummary(
     id: row['id'] as int,
@@ -304,8 +294,9 @@ class SqliteProgressRepository implements ProgressRepository {
   const SqliteProgressRepository();
 
   @override
-  Future<LessonSession> startSession(int lessonId) async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<LessonSession> startSession(int lessonId) => LocalDatabase.use((
+    db,
+  ) async {
     return db.transaction((txn) async {
       final lesson = await txn.query(
         'lessons',
@@ -334,15 +325,14 @@ class SqliteProgressRepository implements ProgressRepository {
       });
       return LessonSession(id: id, lessonId: lessonId, startedAt: startedAt);
     });
-  }
+  });
 
   @override
   Future<void> updateSessionPosition({
     required int sessionId,
     required int currentCardIndex,
     required int expectedCardsReviewed,
-  }) async {
-    final db = await LocalDatabase.ensureInitialized();
+  }) => LocalDatabase.use((db) async {
     await db.update(
       'lesson_sessions',
       {'current_card_index': currentCardIndex},
@@ -351,7 +341,7 @@ class SqliteProgressRepository implements ProgressRepository {
           'AND cards_reviewed = ?',
       whereArgs: [sessionId, 1, expectedCardsReviewed],
     );
-  }
+  });
 
   @override
   Future<void> updateSession(
@@ -359,8 +349,7 @@ class SqliteProgressRepository implements ProgressRepository {
     bool reconcileFromHistory = false,
     int? expectedCardsReviewed,
     int? expectedCorrectAnswers,
-  }) async {
-    final db = await LocalDatabase.ensureInitialized();
+  }) => LocalDatabase.use((db) async {
     if (reconcileFromHistory) {
       if (expectedCardsReviewed == null || expectedCorrectAnswers == null) {
         throw ArgumentError(
@@ -410,13 +399,13 @@ class SqliteProgressRepository implements ProgressRepository {
         session.completedAt == null ? 0 : 1,
       ],
     );
-  }
+  });
 
   @override
-  Future<LessonSession?> activeSessionForLesson(int lessonId) async {
-    final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.rawQuery(
-      '''
+  Future<LessonSession?> activeSessionForLesson(int lessonId) =>
+      LocalDatabase.use((db) async {
+        final rows = await db.rawQuery(
+          '''
       SELECT lesson_sessions.*
       FROM lesson_sessions
       INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
@@ -427,14 +416,13 @@ class SqliteProgressRepository implements ProgressRepository {
       ORDER BY lesson_sessions.started_at DESC
       LIMIT 1
       ''',
-      [1, lessonId, 1],
-    );
-    return rows.isEmpty ? null : _sessionFromRow(rows.single);
-  }
+          [1, lessonId, 1],
+        );
+        return rows.isEmpty ? null : _sessionFromRow(rows.single);
+      });
 
   @override
-  Future<LessonSession?> latestActiveSession() async {
-    final db = await LocalDatabase.ensureInitialized();
+  Future<LessonSession?> latestActiveSession() => LocalDatabase.use((db) async {
     final rows = await db.rawQuery(
       '''
       SELECT lesson_sessions.*
@@ -449,18 +437,18 @@ class SqliteProgressRepository implements ProgressRepository {
       [1, 1],
     );
     return rows.isEmpty ? null : _sessionFromRow(rows.single);
-  }
+  });
 
-  Future<DailyReviewSession?> dailyReviewSession(DateTime forDay) async {
-    final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'daily_review_sessions',
-      where: 'learner_id = ? AND session_date = ?',
-      whereArgs: [1, _localDateKey(forDay)],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : _dailyReviewSessionFromRow(rows.single);
-  }
+  Future<DailyReviewSession?> dailyReviewSession(DateTime forDay) =>
+      LocalDatabase.use((db) async {
+        final rows = await db.query(
+          'daily_review_sessions',
+          where: 'learner_id = ? AND session_date = ?',
+          whereArgs: [1, _localDateKey(forDay)],
+          limit: 1,
+        );
+        return rows.isEmpty ? null : _dailyReviewSessionFromRow(rows.single);
+      });
 
   Future<void> updateDailyReviewSession(DailyReviewSession session) async {
     if (session.currentPosition < 0 ||
@@ -471,35 +459,38 @@ class SqliteProgressRepository implements ProgressRepository {
         'Must be within the queued card range.',
       );
     }
-    final db = await LocalDatabase.ensureInitialized();
-    final updated = await db.update(
-      'daily_review_sessions',
-      {
-        'current_position': session.currentPosition,
-        'completed_at': session.completedAt?.toUtc().toIso8601String(),
-      },
-      where:
-          'id = ? AND learner_id = ? AND session_date = ? '
-          'AND completed_at IS NULL AND current_position <= ?',
-      whereArgs: [
-        session.id,
-        1,
-        _localDateKey(session.date),
-        session.currentPosition,
-      ],
-    );
-    if (updated == 0) {
-      final existing = await db.query(
+    await LocalDatabase.use((db) async {
+      final updated = await db.update(
         'daily_review_sessions',
-        columns: ['id'],
-        where: 'id = ? AND learner_id = ? AND session_date = ?',
-        whereArgs: [session.id, 1, _localDateKey(session.date)],
-        limit: 1,
+        {
+          'current_position': session.currentPosition,
+          'completed_at': session.completedAt?.toUtc().toIso8601String(),
+        },
+        where:
+            'id = ? AND learner_id = ? AND session_date = ? '
+            'AND completed_at IS NULL AND current_position <= ?',
+        whereArgs: [
+          session.id,
+          1,
+          _localDateKey(session.date),
+          session.currentPosition,
+        ],
       );
-      if (existing.isEmpty) {
-        throw StateError('Daily review session ${session.id} does not exist.');
+      if (updated == 0) {
+        final existing = await db.query(
+          'daily_review_sessions',
+          columns: ['id'],
+          where: 'id = ? AND learner_id = ? AND session_date = ?',
+          whereArgs: [session.id, 1, _localDateKey(session.date)],
+          limit: 1,
+        );
+        if (existing.isEmpty) {
+          throw StateError(
+            'Daily review session ${session.id} does not exist.',
+          );
+        }
       }
-    }
+    });
   }
 
   @override
@@ -521,37 +512,37 @@ class SqliteProgressRepository implements ProgressRepository {
       );
     }
     final submissionKey = lessonSubmissionKey ?? review.submissionKey;
-    final db = await LocalDatabase.ensureInitialized();
-    await db.transaction((txn) async {
-      if (submissionKey != null) {
-        final existing = await txn.query(
+    await LocalDatabase.use((db) async {
+      await db.transaction((txn) async {
+        if (submissionKey != null) {
+          final existing = await txn.query(
+            'review_history',
+            columns: ['id'],
+            where: 'learner_id = ? AND submission_key = ?',
+            whereArgs: [1, submissionKey],
+            limit: 1,
+          );
+          if (existing.isNotEmpty) return;
+        }
+        final reviewId = await txn.insert(
           'review_history',
-          columns: ['id'],
-          where: 'learner_id = ? AND submission_key = ?',
-          whereArgs: [1, submissionKey],
-          limit: 1,
+          {
+            'learner_id': 1,
+            'card_id': review.cardId,
+            'session_id': review.sessionId,
+            'submission_key': submissionKey,
+            'reviewed_at': review.reviewedAt.toUtc().toIso8601String(),
+            'rating': review.rating.index,
+            'was_correct': review.wasCorrect ? 1 : 0,
+            'response_time_ms': review.responseTimeMs,
+          },
+          conflictAlgorithm: submissionKey == null
+              ? ConflictAlgorithm.abort
+              : ConflictAlgorithm.ignore,
         );
-        if (existing.isNotEmpty) return;
-      }
-      final reviewId = await txn.insert(
-        'review_history',
-        {
-          'learner_id': 1,
-          'card_id': review.cardId,
-          'session_id': review.sessionId,
-          'submission_key': submissionKey,
-          'reviewed_at': review.reviewedAt.toUtc().toIso8601String(),
-          'rating': review.rating.index,
-          'was_correct': review.wasCorrect ? 1 : 0,
-          'response_time_ms': review.responseTimeMs,
-        },
-        conflictAlgorithm: submissionKey == null
-            ? ConflictAlgorithm.abort
-            : ConflictAlgorithm.ignore,
-      );
-      if (reviewId == 0) return;
-      final totals = (await txn.rawQuery(
-        '''
+        if (reviewId == 0) return;
+        final totals = (await txn.rawQuery(
+          '''
         SELECT
           COUNT(*) AS times_seen,
           COALESCE(SUM(CASE WHEN was_correct = 1 THEN 1 ELSE 0 END), 0)
@@ -561,72 +552,75 @@ class SqliteProgressRepository implements ProgressRepository {
         FROM review_history
         WHERE learner_id = ? AND card_id = ?
         ''',
-        [1, review.cardId],
-      )).single;
-      final timesSeen = totals['times_seen'] as int;
-      final correctAnswers = totals['correct_answers'] as int;
-      final incorrectAnswers = totals['incorrect_answers'] as int;
-      await txn.insert('card_progress', {
-        'learner_id': 1,
-        'card_id': progress.cardId,
-        'times_seen': timesSeen,
-        'correct_answers': correctAnswers,
-        'incorrect_answers': incorrectAnswers,
-        'mastery': timesSeen == 0 ? 0.0 : correctAnswers / timesSeen,
-        'repetitions': progress.repetitions,
-        'lapses': progress.lapses,
-        'interval_days': progress.intervalDays,
-        'ease_factor': progress.easeFactor,
-        'due_at': progress.dueAt.toUtc().toIso8601String(),
-        'last_reviewed_at': progress.lastReviewedAt?.toUtc().toIso8601String(),
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+          [1, review.cardId],
+        )).single;
+        final timesSeen = totals['times_seen'] as int;
+        final correctAnswers = totals['correct_answers'] as int;
+        final incorrectAnswers = totals['incorrect_answers'] as int;
+        await txn.insert('card_progress', {
+          'learner_id': 1,
+          'card_id': progress.cardId,
+          'times_seen': timesSeen,
+          'correct_answers': correctAnswers,
+          'incorrect_answers': incorrectAnswers,
+          'mastery': timesSeen == 0 ? 0.0 : correctAnswers / timesSeen,
+          'repetitions': progress.repetitions,
+          'lapses': progress.lapses,
+          'interval_days': progress.intervalDays,
+          'ease_factor': progress.easeFactor,
+          'due_at': progress.dueAt.toUtc().toIso8601String(),
+          'last_reviewed_at': progress.lastReviewedAt
+              ?.toUtc()
+              .toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      });
     });
   }
 
   @override
-  Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) async {
-    final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'review_history',
-      where: cardId == null
-          ? 'learner_id = ?'
-          : 'learner_id = ? AND card_id = ?',
-      whereArgs: cardId == null ? [1] : [1, cardId],
-      orderBy: 'reviewed_at DESC',
-      limit: limit,
-    );
-    return rows.map(_reviewFromRow).toList(growable: false);
-  }
+  Future<List<ReviewRecord>> reviewHistory({int? cardId, int? limit}) =>
+      LocalDatabase.use((db) async {
+        final rows = await db.query(
+          'review_history',
+          where: cardId == null
+              ? 'learner_id = ?'
+              : 'learner_id = ? AND card_id = ?',
+          whereArgs: cardId == null ? [1] : [1, cardId],
+          orderBy: 'reviewed_at DESC',
+          limit: limit,
+        );
+        return rows.map(_reviewFromRow).toList(growable: false);
+      });
 
   @override
-  Future<CardProgress?> progressForCard(int cardId) async {
-    final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'card_progress',
-      where: 'learner_id = ? AND card_id = ?',
-      whereArgs: [1, cardId],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : _progressFromRow(rows.single);
-  }
+  Future<CardProgress?> progressForCard(int cardId) =>
+      LocalDatabase.use((db) async {
+        final rows = await db.query(
+          'card_progress',
+          where: 'learner_id = ? AND card_id = ?',
+          whereArgs: [1, cardId],
+          limit: 1,
+        );
+        return rows.isEmpty ? null : _progressFromRow(rows.single);
+      });
 
   @override
-  Future<List<CardProgress>> dueCards(DateTime through) async {
-    final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.query(
-      'card_progress',
-      where: 'learner_id = ? AND due_at <= ?',
-      whereArgs: [1, through.toUtc().toIso8601String()],
-      orderBy: 'due_at ASC',
-    );
-    return rows.map(_progressFromRow).toList(growable: false);
-  }
+  Future<List<CardProgress>> dueCards(DateTime through) =>
+      LocalDatabase.use((db) async {
+        final rows = await db.query(
+          'card_progress',
+          where: 'learner_id = ? AND due_at <= ?',
+          whereArgs: [1, through.toUtc().toIso8601String()],
+          orderBy: 'due_at ASC',
+        );
+        return rows.map(_progressFromRow).toList(growable: false);
+      });
 
   @override
-  Future<List<VocabularyCardProgress>> vocabularyProgress() async {
-    final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.rawQuery(
-      '''
+  Future<List<VocabularyCardProgress>> vocabularyProgress() =>
+      LocalDatabase.use((db) async {
+        final rows = await db.rawQuery(
+          '''
       SELECT
         cards.chinese,
         cards.pinyin,
@@ -636,18 +630,18 @@ class SqliteProgressRepository implements ProgressRepository {
       WHERE card_progress.learner_id = ?
       ORDER BY card_progress.last_reviewed_at DESC, cards.id ASC
     ''',
-      [1],
-    );
-    return rows
-        .map(
-          (row) => VocabularyCardProgress(
-            chinese: row['chinese'] as String,
-            pinyin: row['pinyin'] as String,
-            progress: _progressFromRow(row),
-          ),
-        )
-        .toList(growable: false);
-  }
+          [1],
+        );
+        return rows
+            .map(
+              (row) => VocabularyCardProgress(
+                chinese: row['chinese'] as String,
+                pinyin: row['pinyin'] as String,
+                progress: _progressFromRow(row),
+              ),
+            )
+            .toList(growable: false);
+      });
 
   @override
   Future<List<DailyQueueCard>> dailyQueue({
@@ -656,37 +650,38 @@ class SqliteProgressRepository implements ProgressRepository {
     double weakThreshold = .7,
     int maxHskLevel = 6,
   }) async {
-    if (limit <= 0) return const [];
-    final db = await LocalDatabase.ensureInitialized();
-    const sessions = SqliteDailyReviewSessionRepository();
-    final existing = await sessions.load(forDay);
-    if (existing != null) {
-      return _queueCardsByIds(
-        db,
-        existing.queuedCardIds.skip(existing.currentPosition).toList(),
-      );
-    }
+    if (limit <= 0) return const <DailyQueueCard>[];
+    return LocalDatabase.use((db) async {
+      const sessions = SqliteDailyReviewSessionRepository();
+      final existing = await sessions.load(forDay);
+      if (existing != null) {
+        return _queueCardsByIds(
+          db,
+          existing.queuedCardIds.skip(existing.currentPosition).toList(),
+        );
+      }
 
-    final queue = await _buildDailyQueue(
-      db,
-      forDay: forDay,
-      limit: limit,
-      weakThreshold: weakThreshold,
-      maxHskLevel: maxHskLevel,
-    );
-    final cardIds = queue.map((item) => item.card.id).toList(growable: false);
-    try {
-      await sessions.create(date: forDay, queuedCardIds: cardIds);
-      return queue;
-    } on DatabaseException {
-      // Another caller may have created today's unique session concurrently.
-      final saved = await sessions.load(forDay);
-      if (saved == null) rethrow;
-      return _queueCardsByIds(
+      final queue = await _buildDailyQueue(
         db,
-        saved.queuedCardIds.skip(saved.currentPosition).toList(),
+        forDay: forDay,
+        limit: limit,
+        weakThreshold: weakThreshold,
+        maxHskLevel: maxHskLevel,
       );
-    }
+      final cardIds = queue.map((item) => item.card.id).toList(growable: false);
+      try {
+        await sessions.create(date: forDay, queuedCardIds: cardIds);
+        return queue;
+      } on DatabaseException {
+        // Another caller may have created today's unique session concurrently.
+        final saved = await sessions.load(forDay);
+        if (saved == null) rethrow;
+        return _queueCardsByIds(
+          db,
+          saved.queuedCardIds.skip(saved.currentPosition).toList(),
+        );
+      }
+    });
   }
 
   Future<List<DailyQueueCard>> _buildDailyQueue(
@@ -905,11 +900,10 @@ class SqliteDailyReviewSessionRepository
   Future<DailyReviewSession> create({
     required DateTime date,
     required List<int> queuedCardIds,
-  }) async {
+  }) => LocalDatabase.use((db) async {
     final existing = await load(date);
     if (existing != null) return existing;
 
-    final db = await LocalDatabase.ensureInitialized();
     late final int id;
     try {
       id = await db.insert('daily_review_sessions', {
@@ -927,7 +921,7 @@ class SqliteDailyReviewSessionRepository
       date: DateTime(date.year, date.month, date.day),
       queuedCardIds: List.unmodifiable(queuedCardIds),
     );
-  }
+  });
 
   @override
   Future<DailyReviewSession?> load(DateTime date) =>
@@ -942,8 +936,7 @@ class SqliteDailyReviewSessionRepository
     required int sessionId,
     required DateTime completedAt,
     required int expectedCardCount,
-  }) async {
-    final db = await LocalDatabase.ensureInitialized();
+  }) => LocalDatabase.use((db) async {
     return db.transaction((txn) async {
       final rows = await txn.query(
         'daily_review_sessions',
@@ -992,40 +985,37 @@ class SqliteDailyReviewSessionRepository
       );
       return updated == 1;
     });
-  }
+  });
 
   @override
-  Future<void> enqueueCard({
-    required DateTime date,
-    required int cardId,
-  }) async {
-    final db = await LocalDatabase.ensureInitialized();
-    await db.transaction((txn) async {
-      final rows = await txn.query(
-        'daily_review_sessions',
-        where: 'learner_id = ? AND session_date = ?',
-        whereArgs: [1, _localDateKey(date)],
-        limit: 1,
-      );
-      if (rows.isEmpty) return;
-      final row = rows.single;
-      final ids = (jsonDecode(row['queued_card_ids'] as String) as List)
-          .cast<int>();
-      final position = row['current_position'] as int;
-      if (ids.skip(position).contains(cardId)) return;
-      ids.add(cardId);
-      await txn.update(
-        'daily_review_sessions',
-        {
-          'queued_card_ids': jsonEncode(ids),
-          'current_position': position,
-          'completed_at': null,
-        },
-        where: 'id = ? AND learner_id = ?',
-        whereArgs: [row['id'], 1],
-      );
-    });
-  }
+  Future<void> enqueueCard({required DateTime date, required int cardId}) =>
+      LocalDatabase.use((db) async {
+        await db.transaction((txn) async {
+          final rows = await txn.query(
+            'daily_review_sessions',
+            where: 'learner_id = ? AND session_date = ?',
+            whereArgs: [1, _localDateKey(date)],
+            limit: 1,
+          );
+          if (rows.isEmpty) return;
+          final row = rows.single;
+          final ids = (jsonDecode(row['queued_card_ids'] as String) as List)
+              .cast<int>();
+          final position = row['current_position'] as int;
+          if (ids.skip(position).contains(cardId)) return;
+          ids.add(cardId);
+          await txn.update(
+            'daily_review_sessions',
+            {
+              'queued_card_ids': jsonEncode(ids),
+              'current_position': position,
+              'completed_at': null,
+            },
+            where: 'id = ? AND learner_id = ?',
+            whereArgs: [row['id'], 1],
+          );
+        });
+      });
 
   String _localDateKey(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-'

@@ -51,7 +51,7 @@ Future<void> main() async {
   }
 
   // Initialize local services
-  await LocalDatabase.ensureInitialized();
+  await LocalDatabase.initialize();
   runApp(const HanziPathApp());
 }
 
