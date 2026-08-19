@@ -17,6 +17,8 @@ class DatabaseResetInProgressException implements Exception {
   String toString() => 'The local database is temporarily unavailable.';
 }
 
+typedef DatabaseArtifactDeleter = Future<void> Function(String path);
+
 class LocalDatabase {
   LocalDatabase._();
 
@@ -33,12 +35,19 @@ class LocalDatabase {
   static const String _cardTable = 'cards';
   static String? _databasePathOverride;
   static String? _openedDatabasePath;
+  static DatabaseArtifactDeleter? _artifactDeleterOverride;
 
   static void useDatabasePathForTesting(String? path) {
     _databasePathOverride = path;
     if (_database == null && _initialization == null) {
       _openedDatabasePath = null;
     }
+  }
+
+  static void useDatabaseArtifactDeleterForTesting(
+    DatabaseArtifactDeleter? deleter,
+  ) {
+    _artifactDeleterOverride = deleter;
   }
 
   static Future<String> databasePath() async {
@@ -293,7 +302,9 @@ class LocalDatabase {
       _database = null;
       _openedDatabasePath = path;
 
-      await databaseFactory.deleteDatabase(path);
+      final deleter = _artifactDeleterOverride ?? _deleteDatabaseArtifacts;
+      await deleter(path);
+      await _verifyDatabaseArtifactsDeleted(path);
       _openedDatabasePath = null;
     } finally {
       _resetOperation = null;
@@ -352,5 +363,39 @@ class LocalDatabase {
       documentsDirectory = Directory.current;
     }
     return p.join(documentsDirectory.path, _dbName);
+  }
+
+  static List<String> _databaseArtifactPaths(String path) {
+    if (path == inMemoryDatabasePath) return const [];
+    return ['$path-wal', '$path-shm', '$path-journal', path];
+  }
+
+  static Future<void> _deleteDatabaseArtifacts(String path) async {
+    for (final artifact in _databaseArtifactPaths(path)) {
+      final type = await FileSystemEntity.type(artifact, followLinks: false);
+      if (type == FileSystemEntityType.notFound) continue;
+      if (type != FileSystemEntityType.file &&
+          type != FileSystemEntityType.link) {
+        throw FileSystemException(
+          'Database artifact is not a regular file.',
+          artifact,
+        );
+      }
+      await File(artifact).delete();
+    }
+  }
+
+  static Future<void> _verifyDatabaseArtifactsDeleted(String path) async {
+    final remaining = <String>[];
+    for (final artifact in _databaseArtifactPaths(path)) {
+      final type = await FileSystemEntity.type(artifact, followLinks: false);
+      if (type != FileSystemEntityType.notFound) remaining.add(artifact);
+    }
+    if (remaining.isNotEmpty) {
+      throw FileSystemException(
+        'Database reset left local data behind: ${remaining.join(', ')}',
+        path,
+      );
+    }
   }
 }
