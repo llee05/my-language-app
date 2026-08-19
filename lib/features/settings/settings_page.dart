@@ -32,6 +32,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _loadingPreferences = true;
   bool _preferencesLoadFailed = false;
   _SettingsSaveTarget? _saveFailureTarget;
+  bool _resetting = false;
   bool _showPinyin = true;
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
@@ -140,16 +141,18 @@ class _SettingsPageState extends State<SettingsPage> {
         false;
   }
 
-  Future<void> _resetOnboarding() async {
+  Future<void> _resetOnboarding() => _withResetGuard(() async {
     final confirmed = await _confirm(
       title: 'Reset learner setup?',
       message:
           'Your learner profile will be removed. Lessons and other local data will be kept.',
       action: 'Reset setup',
     );
-    if (!confirmed) return;
-    await _performOnboardingReset();
-  }
+    if (confirmed) await _performOnboardingReset();
+  });
+
+  Future<void> _retryOnboardingReset() =>
+      _withResetGuard(_performOnboardingReset);
 
   Future<void> _performOnboardingReset() async {
     try {
@@ -159,22 +162,23 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         _showRetrySnackBar(
           message: _AppErrorCopy.resetSetup,
-          onRetry: _performOnboardingReset,
+          onRetry: _retryOnboardingReset,
         );
       }
     }
   }
 
-  Future<void> _resetAllData() async {
+  Future<void> _resetAllData() => _withResetGuard(() async {
     final confirmed = await _confirm(
       title: 'Reset all local data?',
       message:
           'This permanently removes the learner profile, generated lessons, and all other local app data.',
       action: 'Reset everything',
     );
-    if (!confirmed) return;
-    await _performAllDataReset();
-  }
+    if (confirmed) await _performAllDataReset();
+  });
+
+  Future<void> _retryAllDataReset() => _withResetGuard(_performAllDataReset);
 
   Future<void> _performAllDataReset() async {
     try {
@@ -184,9 +188,19 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         _showRetrySnackBar(
           message: _AppErrorCopy.resetData,
-          onRetry: _performAllDataReset,
+          onRetry: _retryAllDataReset,
         );
       }
+    }
+  }
+
+  Future<void> _withResetGuard(Future<void> Function() action) async {
+    if (!mounted || _resetting) return;
+    setState(() => _resetting = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _resetting = false);
     }
   }
 
@@ -387,12 +401,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   runSpacing: 10,
                   children: [
                     OutlinedButton.icon(
-                      onPressed: _resetOnboarding,
+                      key: const Key('settings-reset-onboarding'),
+                      onPressed: _resetting ? null : _resetOnboarding,
                       icon: const Icon(Icons.replay_rounded),
                       label: const Text('Reset onboarding only'),
                     ),
                     OutlinedButton.icon(
-                      onPressed: _resetAllData,
+                      key: const Key('settings-reset-all'),
+                      onPressed: _resetting ? null : _resetAllData,
                       icon: const Icon(Icons.delete_outline_rounded),
                       label: const Text('Reset all local data'),
                     ),
