@@ -148,6 +148,10 @@ class _SettingsPageState extends State<SettingsPage> {
       action: 'Reset setup',
     );
     if (!confirmed) return;
+    await _performOnboardingReset();
+  }
+
+  Future<void> _performOnboardingReset() async {
     try {
       await widget.onResetOnboarding();
     } catch (error) {
@@ -155,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         _showRetrySnackBar(
           message: _AppErrorCopy.resetSetup,
-          onRetry: _resetOnboarding,
+          onRetry: _performOnboardingReset,
         );
       }
     }
@@ -169,6 +173,10 @@ class _SettingsPageState extends State<SettingsPage> {
       action: 'Reset everything',
     );
     if (!confirmed) return;
+    await _performAllDataReset();
+  }
+
+  Future<void> _performAllDataReset() async {
     try {
       await widget.onResetAllData();
     } catch (error) {
@@ -176,7 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) {
         _showRetrySnackBar(
           message: _AppErrorCopy.resetData,
-          onRetry: _resetAllData,
+          onRetry: _performAllDataReset,
         );
       }
     }
