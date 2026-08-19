@@ -105,7 +105,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
   }
 
   Future<void> _resetOnboarding() async {
-    await widget.dependencies.learners.clear();
+    await widget.dependencies.learners.resetOnboarding();
     if (!mounted) return;
     setState(() {
       _profile = Future.value();

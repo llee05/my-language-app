@@ -60,7 +60,7 @@ class SqliteLearnerRepository implements LearnerRepository {
   }
 
   @override
-  Future<void> clear() async {
+  Future<void> resetOnboarding() async {
     final db = await LocalDatabase.ensureInitialized();
     await db.delete('learner_profiles', where: 'id = ?', whereArgs: [1]);
   }

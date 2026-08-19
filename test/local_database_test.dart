@@ -165,7 +165,7 @@ void main() {
     expect(profile?.hskLevel, 3);
     expect(profile?.dailyWordTarget, 20);
 
-    await learners.clear();
+    await learners.resetOnboarding();
     expect(await learners.load(), isNull);
   });
 

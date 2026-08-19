@@ -127,7 +127,7 @@ class _MemoryLearnerRepository implements LearnerRepository {
   LearnerProfile? profile;
 
   @override
-  Future<void> clear() async => profile = null;
+  Future<void> resetOnboarding() async => profile = null;
 
   @override
   Future<LearnerProfile?> load() async => profile;
@@ -142,7 +142,7 @@ class _FailOnceLearnerRepository implements LearnerRepository {
   int loadCalls = 0;
 
   @override
-  Future<void> clear() async {}
+  Future<void> resetOnboarding() async {}
 
   @override
   Future<LearnerProfile?> load() async {
