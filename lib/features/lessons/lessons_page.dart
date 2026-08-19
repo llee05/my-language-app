@@ -60,7 +60,8 @@ class _LessonsPageState extends State<LessonsPage> {
   List<LessonSummary> _topics = const [];
   Map<int, LessonSession> _activeSessions = const {};
   bool _loadingTopics = true;
-  String? _libraryError;
+  bool _libraryLoadFailed = false;
+  int _topicsRequestId = 0;
   List<Flashcard> _cards = const [];
   String _lessonTitle = '';
   bool _generating = false;
@@ -77,8 +78,8 @@ class _LessonsPageState extends State<LessonsPage> {
   @override
   void initState() {
     super.initState();
-    _loadTopics();
-    _loadSoundPreference();
+    _beginTopicsLoad();
+    unawaited(_loadSoundPreference());
   }
 
   @override
@@ -90,9 +91,13 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _loadSoundPreference() async {
-    final settings = await widget.settingsRepository.load();
-    if (!mounted) return;
-    setState(() => _soundEnabled = settings.soundEnabled);
+    try {
+      final settings = await widget.settingsRepository.load();
+      if (!mounted) return;
+      setState(() => _soundEnabled = settings.soundEnabled);
+    } catch (error) {
+      debugPrint('Lesson sound preference load failed: $error');
+    }
   }
 
   Future<void> _speak(Flashcard card) async {
@@ -124,22 +129,35 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
+  void _beginTopicsLoad() {
+    unawaited(_loadTopics());
+  }
+
   Future<void> _loadTopics() async {
+    final requestId = ++_topicsRequestId;
+    if (!_loadingTopics && mounted) {
+      setState(() {
+        _loadingTopics = true;
+        _libraryLoadFailed = false;
+      });
+    }
     try {
       final topics = await widget.repository.topics();
-      final sessions = <int, LessonSession>{};
-      for (final topic in topics) {
-        final session = await widget.progressRepository.activeSessionForLesson(
-          topic.id,
-        );
-        if (session != null) sessions[topic.id] = session;
-      }
-      if (!mounted) return;
+      final activeSessions = await Future.wait(
+        topics.map(
+          (topic) => widget.progressRepository.activeSessionForLesson(topic.id),
+        ),
+      );
+      if (!mounted || requestId != _topicsRequestId) return;
+      final sessions = <int, LessonSession>{
+        for (var index = 0; index < topics.length; index++)
+          topics[index].id: ?activeSessions[index],
+      };
       setState(() {
         _topics = topics;
         _activeSessions = sessions;
         _loadingTopics = false;
-        _libraryError = null;
+        _libraryLoadFailed = false;
       });
       if (!widget.resumeLatest) return;
       final session = await widget.progressRepository.latestActiveSession();
@@ -149,10 +167,13 @@ class _LessonsPageState extends State<LessonsPage> {
         await _openLesson(lesson, session: session, resumed: true);
       }
     } catch (error) {
-      if (!mounted) return;
+      debugPrint('Lesson library load failed: $error');
+      if (!mounted || requestId != _topicsRequestId) return;
       setState(() {
+        _topics = const [];
+        _activeSessions = const {};
         _loadingTopics = false;
-        _libraryError = 'Could not load lessons: $error';
+        _libraryLoadFailed = true;
       });
     }
   }
@@ -617,10 +638,22 @@ class _LessonsPageState extends State<LessonsPage> {
                 'Loading saved lessons…',
                 style: TextStyle(color: AppColors.muted),
               )
-            else if (_libraryError != null)
-              Text(
-                _libraryError!,
-                style: const TextStyle(color: AppColors.gold),
+            else if (_libraryLoadFailed)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'We couldn’t load your saved lessons.',
+                    style: TextStyle(color: AppColors.text),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('lesson-library-retry'),
+                    onPressed: _beginTopicsLoad,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try again'),
+                  ),
+                ],
               )
             else if (_topics.isEmpty)
               const Text(
