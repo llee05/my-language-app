@@ -169,6 +169,191 @@ void main() {
     expect(await learners.load(), isNull);
   });
 
+  test('onboarding reset preserves the complete learning state', () async {
+    await LocalDatabase.resetForTesting();
+    await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(
+        name: 'Original Mei',
+        hskLevel: 2,
+        dailyWordTarget: 15,
+      ),
+    );
+    await settings.save(
+      const LearnerSettings(
+        showPinyin: false,
+        soundEnabled: false,
+        reminderEnabled: true,
+        reminderHour: 7,
+      ),
+    );
+    await lessons.saveGenerated(
+      const Lesson(
+        summary: LessonSummary(
+          id: 0,
+          title: 'Preserved topic · HSK 2',
+          theme: 'Preserved topic',
+          hskLevel: 2,
+        ),
+        cards: [
+          Flashcard(
+            chinese: '保留',
+            pinyin: 'bǎoliú',
+            englishMeaning: 'preserve',
+          ),
+        ],
+      ),
+    );
+    final generated = await lessons.findGenerated(
+      theme: 'Preserved topic',
+      hskLevel: 2,
+    );
+    final lessonId = generated!.summary.id;
+    final cardId = generated.cards.single.id;
+    final session = await progress.startSession(lessonId);
+    final reviewedAt = DateTime.utc(2026, 8, 18, 9);
+    await progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: cardId,
+        sessionId: session.id,
+        reviewedAt: reviewedAt,
+        rating: ReviewRating.good,
+        wasCorrect: true,
+      ),
+      progress: CardProgress(
+        cardId: cardId,
+        repetitions: 1,
+        intervalDays: 3,
+        dueAt: reviewedAt.add(const Duration(days: 3)),
+        lastReviewedAt: reviewedAt,
+      ),
+    );
+    await dailyReviews.create(
+      date: DateTime(2026, 8, 18),
+      queuedCardIds: [cardId],
+    );
+
+    var db = await LocalDatabase.ensureInitialized();
+    final originalProfile = (await db.query('learner_profiles')).single;
+    final originalSettings = await db.query('learner_settings');
+    final originalSessions = await db.query('lesson_sessions');
+    final originalHistory = await db.query('review_history');
+    final originalProgress = await db.query('card_progress');
+    final originalDailySessions = await db.query('daily_review_sessions');
+    final originalGeneratedLesson = await db.query(
+      'lessons',
+      where: 'id = ?',
+      whereArgs: [lessonId],
+    );
+    final originalGeneratedCards = await db.query(
+      'cards',
+      where: 'lesson_id = ?',
+      whereArgs: [lessonId],
+    );
+
+    await learners.resetOnboarding();
+    await learners.resetOnboarding();
+    expect(await learners.load(), isNull);
+
+    await LocalDatabase.close();
+    expect(await learners.load(), isNull);
+    db = await LocalDatabase.ensureInitialized();
+    expect(
+      await db.query(
+        'app_data',
+        where: 'key = ?',
+        whereArgs: ['onboarding_required'],
+      ),
+      hasLength(1),
+    );
+    expect((await db.query('learner_profiles')).single, originalProfile);
+    expect(await db.query('learner_settings'), originalSettings);
+    expect(await db.query('lesson_sessions'), originalSessions);
+    expect(await db.query('review_history'), originalHistory);
+    expect(await db.query('card_progress'), originalProgress);
+    expect(await db.query('daily_review_sessions'), originalDailySessions);
+    expect(
+      await db.query('lessons', where: 'id = ?', whereArgs: [lessonId]),
+      originalGeneratedLesson,
+    );
+    expect(
+      await db.query('cards', where: 'lesson_id = ?', whereArgs: [lessonId]),
+      originalGeneratedCards,
+    );
+    expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+
+    await learners.save(
+      const LearnerProfile(
+        name: 'Re-onboarded Mei',
+        hskLevel: 4,
+        dailyWordTarget: 30,
+      ),
+    );
+
+    final restoredProfile = await learners.load();
+    final restoredSettings = await settings.load();
+    final updatedProfile = (await db.query('learner_profiles')).single;
+    expect(restoredProfile?.name, 'Re-onboarded Mei');
+    expect(restoredProfile?.hskLevel, 4);
+    expect(restoredProfile?.dailyWordTarget, 30);
+    expect(updatedProfile['id'], originalProfile['id']);
+    expect(updatedProfile['created_at'], originalProfile['created_at']);
+    expect(restoredSettings.showPinyin, isFalse);
+    expect(restoredSettings.soundEnabled, isFalse);
+    expect(restoredSettings.reminderEnabled, isTrue);
+    expect(restoredSettings.reminderHour, 7);
+    expect(await db.query('lesson_sessions'), originalSessions);
+    expect(await db.query('review_history'), originalHistory);
+    expect(await db.query('card_progress'), originalProgress);
+    expect(await db.query('daily_review_sessions'), originalDailySessions);
+    expect(
+      await db.query(
+        'app_data',
+        where: 'key = ?',
+        whereArgs: ['onboarding_required'],
+      ),
+      isEmpty,
+    );
+    expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+  });
+
+  test('failed setup save keeps the onboarding reset atomic', () async {
+    await LocalDatabase.resetForTesting();
+    final db = await LocalDatabase.ensureInitialized();
+    await learners.save(
+      const LearnerProfile(
+        name: 'Original Mei',
+        hskLevel: 2,
+        dailyWordTarget: 15,
+      ),
+    );
+    final originalProfile = (await db.query('learner_profiles')).single;
+    await learners.resetOnboarding();
+
+    await expectLater(
+      learners.save(
+        const LearnerProfile(
+          name: 'Invalid Mei',
+          hskLevel: 7,
+          dailyWordTarget: 15,
+        ),
+      ),
+      throwsA(isA<DatabaseException>()),
+    );
+
+    expect(await learners.load(), isNull);
+    expect((await db.query('learner_profiles')).single, originalProfile);
+    expect(
+      await db.query(
+        'app_data',
+        where: 'key = ?',
+        whereArgs: ['onboarding_required'],
+      ),
+      hasLength(1),
+    );
+  });
+
   test('generated lessons are saved and offered as previous topics', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();
