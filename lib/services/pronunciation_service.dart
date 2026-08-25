@@ -200,11 +200,46 @@ PronunciationVoice resolvePronunciationVoice(
   PronunciationEngine engine,
   String? voiceId,
 ) {
-  if (engine == PronunciationEngine.melo) return meloPronunciationVoice;
-  return kokoroMandarinVoices.firstWhere(
-    (voice) => voice.id == voiceId,
-    orElse: () => kokoroMandarinVoices.first,
+  return resolvePronunciationVoices(
+    engine,
+    voiceId == null ? const [] : [voiceId],
+  ).first;
+}
+
+List<PronunciationVoice> resolvePronunciationVoices(
+  PronunciationEngine engine,
+  Iterable<String> voiceIds,
+) {
+  if (engine == PronunciationEngine.melo) {
+    return const [meloPronunciationVoice];
+  }
+  final requestedIds = {
+    for (final voiceId in voiceIds)
+      if (voiceId.trim().isNotEmpty) voiceId.trim(),
+  };
+  if (requestedIds.isEmpty) return kokoroMandarinVoices;
+  final resolved = [
+    for (final voice in kokoroMandarinVoices)
+      if (requestedIds.contains(voice.id)) voice,
+  ];
+  return resolved.isEmpty ? kokoroMandarinVoices : List.unmodifiable(resolved);
+}
+
+PronunciationVoice pickPronunciationVoice(
+  List<PronunciationVoice> voices, {
+  required int Function(int upperBound) randomIndex,
+  String? previousVoiceId,
+}) {
+  if (voices.isEmpty) throw StateError('A pronunciation voice is required.');
+  if (voices.length == 1) return voices.single;
+
+  final previousIndex = voices.indexWhere(
+    (voice) => voice.id == previousVoiceId,
   );
+  if (previousIndex < 0) return voices[randomIndex(voices.length)];
+
+  final nextIndex = randomIndex(voices.length - 1);
+  return voices[nextIndex >= previousIndex ? nextIndex + 1 : nextIndex];
 }
 
 class OfflineVoiceNotInstalledException implements Exception {
@@ -239,7 +274,7 @@ abstract interface class OfflinePronunciationManager {
 
   Future<void> configurePronunciation({
     required PronunciationEngine engine,
-    String? voiceId,
+    List<String> voiceIds = const [],
   });
 }
 
@@ -250,7 +285,7 @@ Future<void> applyPronunciationSettings(
   if (service is! OfflinePronunciationManager) return;
   await (service as OfflinePronunciationManager).configurePronunciation(
     engine: settings.pronunciationEngine,
-    voiceId: settings.kokoroVoiceIds.firstOrNull,
+    voiceIds: settings.kokoroVoiceIds,
   );
 }
 

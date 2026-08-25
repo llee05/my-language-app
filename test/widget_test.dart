@@ -99,7 +99,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
-    expect(pronunciation.configuredVoiceId, 'zm_041');
+    expect(pronunciation.configuredVoiceIds, ['zm_041']);
   });
 
   testWidgets('dashboard statistics come from saved learning data', (
@@ -2652,7 +2652,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
-    expect(pronunciation.configuredVoiceId, 'zm_041');
+    expect(pronunciation.configuredVoiceIds, ['zm_041']);
 
     final save = find.text('Save preferences');
     await tester.ensureVisible(save);
@@ -2905,7 +2905,7 @@ class _ManagedFakePronunciationService extends _FakePronunciationService
   final Map<PronunciationEngine, OfflineVoiceStatus> statuses;
   final List<PronunciationEngine> installedEngines = [];
   PronunciationEngine? configuredEngine;
-  String? configuredVoiceId;
+  List<String> configuredVoiceIds = const [];
 
   @override
   Stream<OfflineVoiceStatus> get voicePackUpdates => _voicePackUpdates.stream;
@@ -2931,10 +2931,10 @@ class _ManagedFakePronunciationService extends _FakePronunciationService
   @override
   Future<void> configurePronunciation({
     required PronunciationEngine engine,
-    String? voiceId,
+    List<String> voiceIds = const [],
   }) async {
     configuredEngine = engine;
-    configuredVoiceId = voiceId;
+    configuredVoiceIds = List.of(voiceIds);
   }
 
   @override

@@ -112,14 +112,14 @@ void main() {
         await service.installVoicePack(PronunciationEngine.kokoro);
         await service.configurePronunciation(
           engine: PronunciationEngine.kokoro,
-          voiceId: 'zf_021',
+          voiceIds: const ['zf_021', 'zm_041'],
         );
 
         expect(kokoroStatus.engine, PronunciationEngine.kokoro);
         expect(primary.checkedEngines, [PronunciationEngine.kokoro]);
         expect(primary.installedEngines, [PronunciationEngine.kokoro]);
         expect(primary.configuredEngine, PronunciationEngine.kokoro);
-        expect(primary.configuredVoiceId, 'zf_021');
+        expect(primary.configuredVoiceIds, ['zf_021', 'zm_041']);
         expect(service.voicesFor(PronunciationEngine.kokoro), hasLength(100));
       },
     );
@@ -161,6 +161,53 @@ void main() {
     );
   });
 
+  test('empty Kokoro selection resolves to the complete random pool', () {
+    final voices = resolvePronunciationVoices(
+      PronunciationEngine.kokoro,
+      const [],
+    );
+
+    expect(voices, same(kokoroMandarinVoices));
+  });
+
+  test('Kokoro pools discard duplicates and unknown IDs', () {
+    final voices = resolvePronunciationVoices(
+      PronunciationEngine.kokoro,
+      const ['zm_041', 'unknown', 'zf_021', 'zm_041'],
+    );
+
+    expect(voices.map((voice) => voice.id), ['zf_021', 'zm_041']);
+  });
+
+  test('random voice selection avoids an immediate repeat', () {
+    final voices = resolvePronunciationVoices(
+      PronunciationEngine.kokoro,
+      const ['zf_001', 'zm_041'],
+    );
+
+    final selected = pickPronunciationVoice(
+      voices,
+      randomIndex: (_) => 0,
+      previousVoiceId: 'zf_001',
+    );
+
+    expect(selected.id, 'zm_041');
+  });
+
+  test('a one-voice Kokoro pool stays fixed', () {
+    final voices = resolvePronunciationVoices(
+      PronunciationEngine.kokoro,
+      const ['zm_041'],
+    );
+
+    final selected = pickPronunciationVoice(
+      voices,
+      randomIndex: (_) => fail('A one-voice pool does not need randomness.'),
+    );
+
+    expect(selected.id, 'zm_041');
+  });
+
   test('applies a learner voice preference before pronunciation', () async {
     final service = _FakeManagedPronunciationService();
 
@@ -173,7 +220,7 @@ void main() {
     );
 
     expect(service.configuredEngine, PronunciationEngine.kokoro);
-    expect(service.configuredVoiceId, 'zm_041');
+    expect(service.configuredVoiceIds, ['zm_041']);
   });
 }
 
@@ -182,7 +229,7 @@ class _FakeManagedPronunciationService extends _FakePronunciationService
   final List<PronunciationEngine> checkedEngines = [];
   final List<PronunciationEngine> installedEngines = [];
   PronunciationEngine? configuredEngine;
-  String? configuredVoiceId;
+  List<String> configuredVoiceIds = const [];
 
   @override
   Stream<OfflineVoiceStatus> get voicePackUpdates => const Stream.empty();
@@ -207,10 +254,10 @@ class _FakeManagedPronunciationService extends _FakePronunciationService
   @override
   Future<void> configurePronunciation({
     required PronunciationEngine engine,
-    String? voiceId,
+    List<String> voiceIds = const [],
   }) async {
     configuredEngine = engine;
-    configuredVoiceId = voiceId;
+    configuredVoiceIds = List.of(voiceIds);
   }
 }
 

@@ -269,8 +269,11 @@ class _SherpaPronunciationService
   late final List<StreamSubscription<OfflineVoiceStatus>>
   _voicePackSubscriptions;
   final _SherpaWorker _worker = _SherpaWorker();
+  final math.Random _random = math.Random();
   AudioSource? _audioSource;
-  PronunciationVoice _configuredVoice = meloPronunciationVoice;
+  PronunciationEngine _configuredEngine = PronunciationEngine.melo;
+  List<PronunciationVoice> _configuredVoices = const [meloPronunciationVoice];
+  String? _previousKokoroVoiceId;
   int _requestId = 0;
   bool _disposed = false;
 
@@ -309,16 +312,20 @@ class _SherpaPronunciationService
   @override
   Future<void> configurePronunciation({
     required PronunciationEngine engine,
-    String? voiceId,
+    List<String> voiceIds = const [],
   }) async {
     if (_disposed) return;
-    final voice = resolvePronunciationVoice(engine, voiceId);
-    if (_configuredVoice.engine == voice.engine &&
-        _configuredVoice.id == voice.id) {
+    final voices = resolvePronunciationVoices(engine, voiceIds);
+    if (_configuredEngine == engine &&
+        _sameVoicePool(_configuredVoices, voices)) {
       return;
     }
     await stop();
-    _configuredVoice = voice;
+    _configuredEngine = engine;
+    _configuredVoices = voices;
+    if (!voices.any((voice) => voice.id == _previousKokoroVoiceId)) {
+      _previousKokoroVoiceId = null;
+    }
   }
 
   @override
@@ -326,7 +333,14 @@ class _SherpaPronunciationService
     if (_disposed || text.trim().isEmpty) return;
     final requestId = ++_requestId;
     await _stopPlayback();
-    final voice = _configuredVoice;
+    if (_disposed || requestId != _requestId) return;
+    final voice = pickPronunciationVoice(
+      _configuredVoices,
+      randomIndex: _random.nextInt,
+      previousVoiceId: _configuredEngine == PronunciationEngine.kokoro
+          ? _previousKokoroVoiceId
+          : null,
+    );
     final directory = await switch (voice.engine) {
       PronunciationEngine.melo => _meloVoicePack.installedDirectory(),
       PronunciationEngine.kokoro => _kokoroVoicePack.installedDirectory(),
@@ -343,6 +357,9 @@ class _SherpaPronunciationService
     if (_disposed || requestId != _requestId) return;
     if (audio.samples.isEmpty || audio.sampleRate <= 0) {
       throw StateError('Sherpa produced no audio.');
+    }
+    if (voice.engine == PronunciationEngine.kokoro) {
+      _previousKokoroVoiceId = voice.id;
     }
 
     final soLoud = SoLoud.instance;
@@ -395,6 +412,17 @@ class _SherpaPronunciationService
     await _kokoroVoicePack.dispose();
     await _voicePackUpdates.close();
   }
+}
+
+bool _sameVoicePool(
+  List<PronunciationVoice> first,
+  List<PronunciationVoice> second,
+) {
+  if (first.length != second.length) return false;
+  for (var index = 0; index < first.length; index++) {
+    if (first[index].id != second[index].id) return false;
+  }
+  return true;
 }
 
 class _SherpaAudio {

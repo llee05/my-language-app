@@ -54,9 +54,11 @@ class FallbackPronunciationService
   @override
   Future<void> configurePronunciation({
     required PronunciationEngine engine,
-    String? voiceId,
-  }) =>
-      _offlineManager.configurePronunciation(engine: engine, voiceId: voiceId);
+    List<String> voiceIds = const [],
+  }) => _offlineManager.configurePronunciation(
+    engine: engine,
+    voiceIds: voiceIds,
+  );
 
   @override
   Future<void> speakMandarin(String text) async {

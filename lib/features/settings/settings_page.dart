@@ -257,7 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await manager.configurePronunciation(
         engine: _pronunciationEngine,
-        voiceId: _kokoroVoiceIds.firstOrNull,
+        voiceIds: _kokoroVoiceIds,
       );
     } catch (error) {
       debugPrint('Pronunciation selection could not be applied: $error');
