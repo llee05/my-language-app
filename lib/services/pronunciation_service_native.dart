@@ -520,9 +520,17 @@ void _sherpaWorkerMain(Map<String, Object> setup) {
 Uint8List _encodeWave(Float32List samples, int sampleRate) {
   const headerSize = 44;
   const bytesPerSample = 2;
+  const targetPeak = .85;
+  const maximumGain = 12.0;
   final dataLength = samples.length * bytesPerSample;
   final output = Uint8List(headerSize + dataLength);
   final data = ByteData.view(output.buffer);
+
+  var peak = 0.0;
+  for (final sample in samples) {
+    if (sample.isFinite) peak = math.max(peak, sample.abs());
+  }
+  final gain = peak > 0 ? math.min(maximumGain, targetPeak / peak) : 1.0;
 
   void writeText(int offset, String value) {
     for (var index = 0; index < value.length; index++) {
@@ -545,7 +553,11 @@ Uint8List _encodeWave(Float32List samples, int sampleRate) {
   data.setUint32(40, dataLength, Endian.little);
 
   for (var index = 0; index < samples.length; index++) {
-    final sample = samples[index].clamp(-1.0, 1.0);
+    final rawSample = samples[index];
+    final sample = (rawSample.isFinite ? rawSample * gain : 0.0).clamp(
+      -1.0,
+      1.0,
+    );
     final pcm = sample < 0
         ? (sample * 32768).round()
         : (sample * 32767).round();

@@ -16,6 +16,12 @@ cmake_policy(SET CMP0063 NEW)
 # Load bundled libraries from the lib/ directory relative to the binary.
 set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
 
+# TingShuo feeds generated PCM WAV data to SoLoud and does not need its
+# optional Xiph codecs. The plugin's bundled codec binaries target a newer
+# glibc than some supported Linux systems, which prevents the SoLoud plugin
+# from loading at runtime even though the app builds successfully.
+set(ENV{NO_XIPH_LIBS} "1")
+
 # Root filesystem for cross-building.
 if(FLUTTER_TARGET_PLATFORM_SYSROOT)
   set(CMAKE_SYSROOT ${FLUTTER_TARGET_PLATFORM_SYSROOT})
