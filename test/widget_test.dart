@@ -75,6 +75,33 @@ void main() {
     expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
   });
 
+  testWidgets('app restores the selected pronunciation engine and voice', (
+    tester,
+  ) async {
+    final pronunciation = _ManagedFakePronunciationService();
+    await tester.pumpWidget(
+      HanziPathApp(
+        dependencies: AppDependencies(
+          learners: _MemoryLearnerRepository(testProfile),
+          lessons: _MemoryLessonRepository(),
+          settings: _MemorySettingsRepository(
+            const LearnerSettings(
+              pronunciationEngine: PronunciationEngine.kokoro,
+              pronunciationVoiceId: 'zm_041',
+            ),
+          ),
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+          createPronunciationService: () => pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
+    expect(pronunciation.configuredVoiceId, 'zm_041');
+  });
+
   testWidgets('dashboard statistics come from saved learning data', (
     tester,
   ) async {
@@ -2748,6 +2775,37 @@ class _FakePronunciationService implements PronunciationService {
     if (disposeCalls > 0) return;
     disposeCalls++;
     await _updates.close();
+  }
+}
+
+class _ManagedFakePronunciationService extends _FakePronunciationService
+    implements OfflinePronunciationManager {
+  PronunciationEngine? configuredEngine;
+  String? configuredVoiceId;
+
+  @override
+  Stream<OfflineVoiceStatus> get voicePackUpdates => const Stream.empty();
+
+  @override
+  Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) async =>
+      OfflineVoiceStatus.notInstalled(engine: engine);
+
+  @override
+  Future<void> installVoicePack(PronunciationEngine engine) async {}
+
+  @override
+  List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
+      engine == PronunciationEngine.kokoro
+      ? kokoroMandarinVoices
+      : const [meloPronunciationVoice];
+
+  @override
+  Future<void> configurePronunciation({
+    required PronunciationEngine engine,
+    String? voiceId,
+  }) async {
+    configuredEngine = engine;
+    configuredVoiceId = voiceId;
   }
 }
 

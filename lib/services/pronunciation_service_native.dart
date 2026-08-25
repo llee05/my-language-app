@@ -16,6 +16,7 @@ import 'fallback_pronunciation_service.dart';
 import 'kokoro_voice_pack.dart';
 import 'pronunciation_service.dart';
 import 'pronunciation_service_system.dart';
+import 'sherpa_voice_config.dart';
 
 PronunciationService createPlatformPronunciationService() {
   return FallbackPronunciationService(
@@ -269,6 +270,7 @@ class _SherpaPronunciationService
   _voicePackSubscriptions;
   final _SherpaWorker _worker = _SherpaWorker();
   AudioSource? _audioSource;
+  PronunciationVoice _configuredVoice = meloPronunciationVoice;
   int _requestId = 0;
   bool _disposed = false;
 
@@ -309,7 +311,14 @@ class _SherpaPronunciationService
     required PronunciationEngine engine,
     String? voiceId,
   }) async {
-    resolvePronunciationVoice(engine, voiceId);
+    if (_disposed) return;
+    final voice = resolvePronunciationVoice(engine, voiceId);
+    if (_configuredVoice.engine == voice.engine &&
+        _configuredVoice.id == voice.id) {
+      return;
+    }
+    await stop();
+    _configuredVoice = voice;
   }
 
   @override
@@ -317,12 +326,18 @@ class _SherpaPronunciationService
     if (_disposed || text.trim().isEmpty) return;
     final requestId = ++_requestId;
     await _stopPlayback();
-    final directory = await _meloVoicePack.installedDirectory();
+    final voice = _configuredVoice;
+    final directory = await switch (voice.engine) {
+      PronunciationEngine.melo => _meloVoicePack.installedDirectory(),
+      PronunciationEngine.kokoro => _kokoroVoicePack.installedDirectory(),
+    };
     if (directory == null) throw const OfflineVoiceNotInstalledException();
     if (_disposed || requestId != _requestId) return;
 
     final audio = await _worker.generate(
+      engine: voice.engine,
       modelDirectory: directory.path,
+      speakerId: voice.speakerId,
       text: text,
     );
     if (_disposed || requestId != _requestId) return;
@@ -402,35 +417,44 @@ class _SherpaWorker {
   bool _disposed = false;
 
   Future<_SherpaAudio> generate({
+    required PronunciationEngine engine,
     required String modelDirectory,
+    required int speakerId,
     required String text,
   }) async {
     if (_disposed) throw StateError('The Sherpa worker is closed.');
     final existingStartupError = _startupError;
     if (existingStartupError != null) throw existingStartupError;
-    await _ensureStarted(modelDirectory);
+    await _ensureStarted();
     if (_disposed) throw StateError('The Sherpa worker is closed.');
     final startupError = _startupError;
     if (startupError != null) throw startupError;
     final requestId = ++_nextRequestId;
     final completer = Completer<_SherpaAudio>();
     _pending[requestId] = completer;
-    _commands!.send({'type': 'generate', 'id': requestId, 'text': text});
+    _commands!.send({
+      'type': 'generate',
+      'id': requestId,
+      'engine': engine.name,
+      'modelDirectory': modelDirectory,
+      'speakerId': speakerId,
+      'text': text,
+    });
     return completer.future;
   }
 
-  Future<void> _ensureStarted(String modelDirectory) {
+  Future<void> _ensureStarted() {
     final starting = _starting;
     if (starting != null) return starting;
     if (_commands != null) return Future.value();
-    final future = _start(modelDirectory);
+    final future = _start();
     _starting = future;
     return future.whenComplete(() {
       if (identical(_starting, future)) _starting = null;
     });
   }
 
-  Future<void> _start(String modelDirectory) async {
+  Future<void> _start() async {
     final ready = Completer<void>();
     _responseSubscription ??= _responses.listen((dynamic message) {
       if (message is! Map) return;
@@ -466,7 +490,6 @@ class _SherpaWorker {
     try {
       _isolate = await Isolate.spawn<Map<String, Object>>(_sherpaWorkerMain, {
         'responses': _responses.sendPort,
-        'modelDirectory': modelDirectory,
         'numThreads': math.min(2, Platform.numberOfProcessors),
       }, debugName: 'ting-shuo-sherpa-tts');
       await ready.future;
@@ -510,26 +533,9 @@ class _SherpaWorker {
 void _sherpaWorkerMain(Map<String, Object> setup) {
   final responses = setup['responses']! as SendPort;
   sherpa_onnx.OfflineTts? tts;
+  String? loadedModelKey;
   try {
     sherpa_onnx.initBindings();
-    final directory = setup['modelDirectory']! as String;
-    String path(String name) => p.join(directory, name);
-    tts = sherpa_onnx.OfflineTts(
-      sherpa_onnx.OfflineTtsConfig(
-        model: sherpa_onnx.OfflineTtsModelConfig(
-          vits: sherpa_onnx.OfflineTtsVitsModelConfig(
-            model: path('model.int8.onnx'),
-            lexicon: path('lexicon.txt'),
-            tokens: path('tokens.txt'),
-          ),
-          numThreads: setup['numThreads']! as int,
-          debug: false,
-          provider: 'cpu',
-        ),
-        ruleFsts: '${path('date.fst')},${path('number.fst')}',
-        maxNumSenetences: 1,
-      ),
-    );
     final commands = ReceivePort();
     responses.send({'type': 'ready', 'commands': commands.sendPort});
     commands.listen((dynamic message) {
@@ -544,10 +550,38 @@ void _sherpaWorkerMain(Map<String, Object> setup) {
       if (message['type'] != 'generate') return;
       final id = message['id'] as int;
       try {
+        final engine = PronunciationEngine.values.byName(
+          message['engine'] as String,
+        );
+        final modelDirectory = message['modelDirectory'] as String;
+        final modelKey = '${engine.name}:$modelDirectory';
+        if (loadedModelKey != modelKey) {
+          tts?.free();
+          tts = null;
+          loadedModelKey = null;
+          final nextTts = sherpa_onnx.OfflineTts(
+            createSherpaVoiceConfig(
+              engine: engine,
+              modelDirectory: modelDirectory,
+              numThreads: setup['numThreads']! as int,
+            ),
+          );
+          tts = nextTts;
+          loadedModelKey = modelKey;
+        }
+        final speakerId = message['speakerId'] as int;
+        if (speakerId < 0 || speakerId >= tts!.numSpeakers) {
+          throw RangeError.range(
+            speakerId,
+            0,
+            tts!.numSpeakers - 1,
+            'speakerId',
+          );
+        }
         final audio = tts!.generateWithConfig(
           text: message['text'] as String,
-          config: const sherpa_onnx.OfflineTtsGenerationConfig(
-            sid: 0,
+          config: sherpa_onnx.OfflineTtsGenerationConfig(
+            sid: speakerId,
             speed: .92,
             silenceScale: .2,
           ),

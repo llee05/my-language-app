@@ -78,9 +78,32 @@ class _HanziPathAppState extends State<HanziPathApp> {
   void initState() {
     super.initState();
     _pronunciationService = widget.dependencies.createPronunciationService();
-    _profile = widget.initialProfile == null
-        ? _loadProfile()
-        : Future.value(widget.initialProfile);
+    final initialProfile = widget.initialProfile;
+    if (initialProfile == null) {
+      _profile = _loadProfileAndPronunciation();
+    } else {
+      _profile = Future.value(initialProfile);
+    }
+  }
+
+  Future<LearnerProfile?> _loadProfileAndPronunciation() async {
+    final profile = await _loadProfile();
+    await _restorePronunciationPreferences();
+    return profile;
+  }
+
+  Future<void> _restorePronunciationPreferences() async {
+    final service = _pronunciationService;
+    if (service is! OfflinePronunciationManager) return;
+    try {
+      final settings = await widget.dependencies.settings.load();
+      await (service as OfflinePronunciationManager).configurePronunciation(
+        engine: settings.pronunciationEngine,
+        voiceId: settings.pronunciationVoiceId,
+      );
+    } catch (error) {
+      debugPrint('Pronunciation preferences could not be restored: $error');
+    }
   }
 
   Future<LearnerProfile?> _loadProfile() async {
@@ -94,7 +117,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
 
   void _retryProfileLoad() {
     setState(() {
-      _profile = _loadProfile();
+      _profile = _loadProfileAndPronunciation();
     });
   }
 
