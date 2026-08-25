@@ -243,4 +243,15 @@ abstract interface class OfflinePronunciationManager {
   });
 }
 
+Future<void> applyPronunciationSettings(
+  PronunciationService service,
+  LearnerSettings settings,
+) async {
+  if (service is! OfflinePronunciationManager) return;
+  await (service as OfflinePronunciationManager).configurePronunciation(
+    engine: settings.pronunciationEngine,
+    voiceId: settings.pronunciationVoiceId,
+  );
+}
+
 typedef PronunciationServiceFactory = PronunciationService Function();

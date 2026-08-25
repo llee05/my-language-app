@@ -31,6 +31,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
   bool _loading = true;
   bool _loadFailed = false;
   bool _soundEnabled = true;
+  LearnerSettings _learnerSettings = const LearnerSettings();
   int? _hskLevel;
   VocabularyLearningState? _learningState;
   late final PronunciationService _pronunciationService;
@@ -63,7 +64,10 @@ class _VocabularyPageState extends State<VocabularyPage> {
     try {
       final settings = await widget.settingsRepository.load();
       if (!mounted) return;
-      setState(() => _soundEnabled = settings.soundEnabled);
+      setState(() {
+        _learnerSettings = settings;
+        _soundEnabled = settings.soundEnabled;
+      });
     } catch (error) {
       debugPrint('Vocabulary sound preference load failed: $error');
     }
@@ -72,6 +76,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
   Future<void> _speak(String text) async {
     if (!_soundEnabled || text.trim().isEmpty) return;
     try {
+      await applyPronunciationSettings(_pronunciationService, _learnerSettings);
       await _pronunciationService.speakMandarin(text);
     } catch (_) {
       if (!mounted) return;

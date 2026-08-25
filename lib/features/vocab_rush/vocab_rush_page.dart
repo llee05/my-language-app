@@ -67,6 +67,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
   bool _playing = false;
   bool _finished = false;
   bool _soundEnabled = true;
+  LearnerSettings _learnerSettings = const LearnerSettings();
 
   @override
   void initState() {
@@ -92,7 +93,10 @@ class _VocabRushPageState extends State<VocabRushPage> {
     try {
       final settings = await widget.settingsRepository.load();
       if (!mounted) return;
-      setState(() => _soundEnabled = settings.soundEnabled);
+      setState(() {
+        _learnerSettings = settings;
+        _soundEnabled = settings.soundEnabled;
+      });
     } catch (error) {
       debugPrint('Vocab Rush sound preference load failed: $error');
     }
@@ -102,6 +106,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
     final card = _card;
     if (!_soundEnabled || card == null) return;
     try {
+      await applyPronunciationSettings(_pronunciationService, _learnerSettings);
       await _pronunciationService.speakMandarin(card['chinese'] as String);
     } catch (_) {
       if (!mounted) return;

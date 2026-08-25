@@ -78,6 +78,7 @@ class _LessonsPageState extends State<LessonsPage> {
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   bool _soundEnabled = true;
+  LearnerSettings _learnerSettings = const LearnerSettings();
 
   @override
   void initState() {
@@ -105,7 +106,10 @@ class _LessonsPageState extends State<LessonsPage> {
     try {
       final settings = await widget.settingsRepository.load();
       if (!mounted) return;
-      setState(() => _soundEnabled = settings.soundEnabled);
+      setState(() {
+        _learnerSettings = settings;
+        _soundEnabled = settings.soundEnabled;
+      });
     } catch (error) {
       debugPrint('Lesson sound preference load failed: $error');
     }
@@ -114,6 +118,7 @@ class _LessonsPageState extends State<LessonsPage> {
   Future<void> _speak(Flashcard card) async {
     if (!_soundEnabled) return;
     try {
+      await applyPronunciationSettings(_pronunciationService, _learnerSettings);
       await _pronunciationService.speakMandarin(card.chinese);
     } catch (_) {
       if (!mounted) return;

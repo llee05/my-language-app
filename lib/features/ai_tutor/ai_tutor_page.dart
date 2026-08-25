@@ -55,6 +55,7 @@ Use an empty string for any field that is not needed.
   var _messages = _initialMessages;
   var _sending = false;
   var _soundEnabled = true;
+  LearnerSettings _learnerSettings = const LearnerSettings();
   String? _sendError;
   String? _failedPrompt;
   late final PronunciationService _pronunciationService;
@@ -97,7 +98,10 @@ Use an empty string for any field that is not needed.
     try {
       final settings = await widget.settingsRepository.load();
       if (!mounted) return;
-      setState(() => _soundEnabled = settings.soundEnabled);
+      setState(() {
+        _learnerSettings = settings;
+        _soundEnabled = settings.soundEnabled;
+      });
     } catch (error) {
       debugPrint('AI tutor sound preference load failed: $error');
     }
@@ -106,6 +110,7 @@ Use an empty string for any field that is not needed.
   Future<void> _speak(String text) async {
     if (!_soundEnabled || text.trim().isEmpty) return;
     try {
+      await applyPronunciationSettings(_pronunciationService, _learnerSettings);
       await _pronunciationService.speakMandarin(text);
     } catch (_) {
       if (!mounted) return;

@@ -88,7 +88,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
 
   Future<LearnerProfile?> _loadProfileAndPronunciation() async {
     final profile = await _loadProfile();
-    await _restorePronunciationPreferences();
+    if (profile != null) unawaited(_restorePronunciationPreferences());
     return profile;
   }
 

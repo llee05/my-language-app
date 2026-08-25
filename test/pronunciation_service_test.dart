@@ -160,6 +160,21 @@ void main() {
       'zf_001',
     );
   });
+
+  test('applies a learner voice preference before pronunciation', () async {
+    final service = _FakeManagedPronunciationService();
+
+    await applyPronunciationSettings(
+      service,
+      const LearnerSettings(
+        pronunciationEngine: PronunciationEngine.kokoro,
+        pronunciationVoiceId: 'zm_041',
+      ),
+    );
+
+    expect(service.configuredEngine, PronunciationEngine.kokoro);
+    expect(service.configuredVoiceId, 'zm_041');
+  });
 }
 
 class _FakeManagedPronunciationService extends _FakePronunciationService

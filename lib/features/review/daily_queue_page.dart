@@ -48,6 +48,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   int _reviewStartPosition = 0;
   bool _showPinyin = true;
   bool _soundEnabled = true;
+  LearnerSettings _learnerSettings = const LearnerSettings();
   bool _consumedImmediateStart = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
@@ -130,6 +131,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       return;
     }
     setState(() {
+      _learnerSettings = loadedSettings;
       _showPinyin = loadedSettings.showPinyin;
       _soundEnabled = loadedSettings.soundEnabled;
     });
@@ -138,6 +140,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   Future<void> _speak(Flashcard card) async {
     if (!_soundEnabled) return;
     try {
+      await applyPronunciationSettings(_pronunciationService, _learnerSettings);
       await _pronunciationService.speakMandarin(card.chinese);
     } catch (_) {
       if (!mounted) return;
