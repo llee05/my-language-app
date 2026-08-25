@@ -831,6 +831,100 @@ void main() {
     expect(find.text('dú'), findsNothing);
   });
 
+  testWidgets('daily review speaks the current card with the shared service', (
+    tester,
+  ) async {
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+    final progress = _MemoryProgressRepository(
+      queue: const [
+        DailyQueueCard(
+          card: Flashcard(
+            id: 36,
+            chinese: '听',
+            pinyin: 'tīng',
+            englishMeaning: 'listen',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start review'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Hear Mandarin pronunciation'));
+    await tester.pump();
+
+    expect(pronunciation.spoken, ['听']);
+
+    await tester.tap(find.byTooltip('Back to review queue'));
+    await tester.pumpAndSettle();
+    expect(pronunciation.stopCalls, greaterThan(0));
+    expect(pronunciation.disposeCalls, 0);
+  });
+
+  testWidgets('daily review disables audio when sound is turned off', (
+    tester,
+  ) async {
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+    final progress = _MemoryProgressRepository(
+      queue: const [
+        DailyQueueCard(
+          card: Flashcard(
+            id: 37,
+            chinese: '说',
+            pinyin: 'shuō',
+            englishMeaning: 'speak',
+          ),
+          reason: DailyQueueReason.newWord,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyQueuePage(
+          profile: testProfile,
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(
+            const LearnerSettings(soundEnabled: false),
+          ),
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start review'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byTooltip('Pronunciation audio is disabled in Settings'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const Key('daily-review-pronunciation')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(pronunciation.spoken, isEmpty);
+  });
+
   testWidgets('dashboard daily review error can be retried', (tester) async {
     const queue = [
       DailyQueueCard(

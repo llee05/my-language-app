@@ -8,12 +8,16 @@ class DailyReviewCardScreen extends StatefulWidget {
     this.showPinyin = true,
     this.onClose,
     this.onAnswer,
+    this.onSpeak,
+    this.onStopAudio,
   });
 
   final List<DailyQueueCard> queue;
   final int initialPosition;
   final bool showPinyin;
   final VoidCallback? onClose;
+  final Future<void> Function(Flashcard card)? onSpeak;
+  final Future<void> Function()? onStopAudio;
   final Future<void> Function(
     int position,
     Flashcard card,
@@ -42,10 +46,32 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
         : widget.initialPosition.clamp(0, widget.queue.length - 1);
   }
 
+  @override
+  void dispose() {
+    _stopAudio();
+    super.dispose();
+  }
+
+  void _stopAudio() {
+    final onStopAudio = widget.onStopAudio;
+    if (onStopAudio != null) unawaited(onStopAudio());
+  }
+
+  void _close() {
+    _stopAudio();
+    widget.onClose?.call();
+  }
+
+  void _finish() {
+    _stopAudio();
+    setState(() => _showSummary = true);
+  }
+
   void _move(int offset) {
     if (_savingAnswer) return;
     final next = _position + offset;
     if (next < 0 || next >= widget.queue.length) return;
+    _stopAudio();
     setState(() {
       _position = next;
       _meaningRevealed = false;
@@ -56,6 +82,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
 
   Future<void> _selectAnswer(ReviewRating rating) async {
     if (_savingAnswer || _answers.containsKey(_position)) return;
+    _stopAudio();
     final submittedPosition = _position;
     final submittedCard = widget.queue[submittedPosition].card;
     setState(() {
@@ -106,7 +133,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                   action: widget.onClose == null
                       ? null
                       : OutlinedButton.icon(
-                          onPressed: widget.onClose,
+                          onPressed: _close,
                           icon: const Icon(Icons.arrow_back_rounded, size: 18),
                           label: const Text('Back to review queue'),
                         ),
@@ -131,7 +158,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
               children: [
                 IconButton(
                   tooltip: 'Back to review queue',
-                  onPressed: _savingAnswer ? null : widget.onClose,
+                  onPressed: _savingAnswer ? null : _close,
                   icon: const Icon(Icons.close),
                 ),
                 const SizedBox(width: 8),
@@ -170,13 +197,35 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Text(
-                        card.chinese,
-                        style: const TextStyle(
-                          fontFamily: 'serif',
-                          fontSize: 76,
-                          color: AppColors.text,
-                        ),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 48),
+                            child: Text(
+                              card.chinese,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: 'serif',
+                                fontSize: 76,
+                                color: AppColors.text,
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              key: const Key('daily-review-pronunciation'),
+                              tooltip: widget.onSpeak == null
+                                  ? 'Pronunciation audio is disabled in Settings'
+                                  : 'Hear Mandarin pronunciation',
+                              onPressed: widget.onSpeak == null
+                                  ? null
+                                  : () => unawaited(widget.onSpeak!(card)),
+                              icon: const Icon(Icons.volume_up_outlined),
+                            ),
+                          ),
+                        ],
                       ),
                       if (widget.showPinyin) ...[
                         const SizedBox(height: 8),
@@ -277,7 +326,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                     onPressed: selectedAnswer == null
                         ? null
                         : _position == widget.queue.length - 1
-                        ? () => setState(() => _showSummary = true)
+                        ? _finish
                         : () => _move(1),
                     icon: Icon(
                       _position == widget.queue.length - 1
@@ -367,7 +416,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                     ),
                     const SizedBox(height: 28),
                     FilledButton.icon(
-                      onPressed: widget.onClose,
+                      onPressed: widget.onClose == null ? null : _close,
                       icon: const Icon(Icons.check),
                       label: const Text('Done'),
                     ),

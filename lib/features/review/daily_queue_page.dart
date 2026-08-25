@@ -10,6 +10,7 @@ class DailyQueuePage extends StatefulWidget {
     required this.progressRepository,
     this.sessionRepository,
     this.settingsRepository,
+    this.pronunciationService,
     this.onStartReview,
     this.startImmediately = false,
     this.onSessionCompleted,
@@ -22,6 +23,7 @@ class DailyQueuePage extends StatefulWidget {
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? sessionRepository;
   final SettingsRepository? settingsRepository;
+  final PronunciationService? pronunciationService;
   final FutureOr<void> Function(DailyReviewSession session)? onStartReview;
   final bool startImmediately;
   final VoidCallback? onSessionCompleted;
@@ -45,7 +47,10 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   bool _reviewing = false;
   int _reviewStartPosition = 0;
   bool _showPinyin = true;
+  bool _soundEnabled = true;
   bool _consumedImmediateStart = false;
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
   final Set<String> _pendingAnswerKeys = {};
   final Set<String> _completedAnswerKeys = {};
 
@@ -54,6 +59,9 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   @override
   void initState() {
     super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
     WidgetsBinding.instance.addObserver(this);
     _loadQueue();
     _scheduleMidnightReset();
@@ -63,6 +71,11 @@ class _DailyQueuePageState extends State<DailyQueuePage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _midnightTimer?.cancel();
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_stopPronunciation());
+    }
     super.dispose();
   }
 
@@ -116,7 +129,34 @@ class _DailyQueuePageState extends State<DailyQueuePage>
     if (!mounted || requestId != _loadRequestId || loadedSettings == null) {
       return;
     }
-    setState(() => _showPinyin = loadedSettings.showPinyin);
+    setState(() {
+      _showPinyin = loadedSettings.showPinyin;
+      _soundEnabled = loadedSettings.soundEnabled;
+    });
+  }
+
+  Future<void> _speak(Flashcard card) async {
+    if (!_soundEnabled) return;
+    try {
+      await _pronunciationService.speakMandarin(card.chinese);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Mandarin audio is unavailable. Check your device text-to-speech voices.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopPronunciation() async {
+    try {
+      await _pronunciationService.stop();
+    } catch (error) {
+      debugPrint('Daily review pronunciation stop failed: $error');
+    }
   }
 
   Future<void> _loadQueue() async {
@@ -177,6 +217,8 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         queue: _queue,
         initialPosition: 0,
         showPinyin: _showPinyin,
+        onSpeak: _soundEnabled ? _speak : null,
+        onStopAudio: _stopPronunciation,
         onAnswer: _recordAnswer,
         onClose: () {
           setState(() => _reviewing = false);

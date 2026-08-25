@@ -423,6 +423,7 @@ class _DashboardBody extends StatelessWidget {
         progressRepository: progressRepository,
         sessionRepository: dailyReviewSessionRepository,
         settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
         startImmediately: startDailyReview,
         onSessionCompleted: onDailyReviewCompleted,
         onProgressChanged: onLearningProgressChanged,
