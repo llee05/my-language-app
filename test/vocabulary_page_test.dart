@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/repositories/settings_repository.dart';
+import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 const _entries = [
   {
@@ -77,13 +81,20 @@ final _progress = [
 ];
 
 void main() {
-  Future<void> pumpPage(WidgetTester tester) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    LearnerSettings settings = const LearnerSettings(),
+    PronunciationService? pronunciationService,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: VocabularyPage(
             initialEntries: _entries,
             initialProgress: _progress,
+            settingsRepository: _MemorySettingsRepository(settings),
+            pronunciationService:
+                pronunciationService ?? _FakePronunciationService(),
             clock: () => _now,
           ),
         ),
@@ -172,7 +183,14 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: VocabularyPage(initialEntries: entries, clock: () => _now),
+          body: VocabularyPage(
+            initialEntries: entries,
+            settingsRepository: _MemorySettingsRepository(
+              const LearnerSettings(),
+            ),
+            pronunciationService: _FakePronunciationService(),
+            clock: () => _now,
+          ),
         ),
       ),
     );
@@ -210,6 +228,65 @@ void main() {
     expect(find.text('Hello, nice to meet you.'), findsOneWidget);
   });
 
+  testWidgets('word details speak the headword and full example sentence', (
+    tester,
+  ) async {
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+    await pumpPage(tester, pronunciationService: pronunciation);
+
+    await tester.tap(find.text('你好'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Hear word pronunciation'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Hear example sentence'));
+    await tester.pump();
+
+    expect(pronunciation.spoken, ['你好', '你好，很高兴认识你。']);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(pronunciation.stopCalls, greaterThan(0));
+    expect(pronunciation.disposeCalls, 0);
+  });
+
+  testWidgets('word details respect the disabled sound preference', (
+    tester,
+  ) async {
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+    await pumpPage(
+      tester,
+      settings: const LearnerSettings(soundEnabled: false),
+      pronunciationService: pronunciation,
+    );
+
+    await tester.tap(find.text('你好'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byTooltip('Pronunciation audio is disabled in Settings'),
+      findsNWidgets(2),
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const Key('vocabulary-word-pronunciation')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const Key('vocabulary-example-pronunciation')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(pronunciation.spoken, isEmpty);
+  });
+
   testWidgets('shows an honest empty state when an example is unavailable', (
     tester,
   ) async {
@@ -225,4 +302,43 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+class _MemorySettingsRepository implements SettingsRepository {
+  _MemorySettingsRepository(this.settings);
+
+  LearnerSettings settings;
+
+  @override
+  Future<LearnerSettings> load() async => settings;
+
+  @override
+  Future<void> save(LearnerSettings settings) async {
+    this.settings = settings;
+  }
+}
+
+class _FakePronunciationService implements PronunciationService {
+  final List<String> spoken = [];
+  int stopCalls = 0;
+  int disposeCalls = 0;
+
+  @override
+  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => const Stream.empty();
+
+  @override
+  Future<OfflineVoiceStatus> checkOfflineVoice() async =>
+      const OfflineVoiceStatus.notInstalled();
+
+  @override
+  Future<void> installOfflineVoice() async {}
+
+  @override
+  Future<void> speakMandarin(String text) async => spoken.add(text);
+
+  @override
+  Future<void> stop() async => stopCalls++;
+
+  @override
+  Future<void> dispose() async => disposeCalls++;
 }

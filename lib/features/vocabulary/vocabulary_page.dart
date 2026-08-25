@@ -6,6 +6,8 @@ class VocabularyPage extends StatefulWidget {
   const VocabularyPage({
     super.key,
     this.progressRepository = const SqliteProgressRepository(),
+    this.settingsRepository = const SqliteSettingsRepository(),
+    this.pronunciationService,
     this.initialEntries,
     this.initialProgress,
     this.clock,
@@ -14,6 +16,8 @@ class VocabularyPage extends StatefulWidget {
   /// Allows focused previews and tests without loading the bundled asset.
   final List<Map<String, dynamic>>? initialEntries;
   final ProgressRepository progressRepository;
+  final SettingsRepository settingsRepository;
+  final PronunciationService? pronunciationService;
   final List<VocabularyCardProgress>? initialProgress;
   final DateTime Function()? clock;
 
@@ -26,21 +30,67 @@ class _VocabularyPageState extends State<VocabularyPage> {
   List<_VocabularyEntry> _entries = const [];
   bool _loading = true;
   bool _loadFailed = false;
+  bool _soundEnabled = true;
   int? _hskLevel;
   VocabularyLearningState? _learningState;
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
 
   DateTime _now() => widget.clock?.call() ?? DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
     _loadVocabulary();
+    unawaited(_loadSoundPreference());
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_stopPronunciation());
+    }
     super.dispose();
+  }
+
+  Future<void> _loadSoundPreference() async {
+    try {
+      final settings = await widget.settingsRepository.load();
+      if (!mounted) return;
+      setState(() => _soundEnabled = settings.soundEnabled);
+    } catch (error) {
+      debugPrint('Vocabulary sound preference load failed: $error');
+    }
+  }
+
+  Future<void> _speak(String text) async {
+    if (!_soundEnabled || text.trim().isEmpty) return;
+    try {
+      await _pronunciationService.speakMandarin(text);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Mandarin audio is unavailable. Check your device text-to-speech voices.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopPronunciation() async {
+    try {
+      await _pronunciationService.stop();
+    } catch (error) {
+      debugPrint('Vocabulary pronunciation stop failed: $error');
+    }
   }
 
   Future<void> _loadVocabulary() async {
@@ -124,12 +174,19 @@ class _VocabularyPageState extends State<VocabularyPage> {
         .toList(growable: false);
   }
 
-  void _openDetails(_VocabularyEntry entry) {
-    Navigator.of(context).push(
+  Future<void> _openDetails(_VocabularyEntry entry) async {
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => _VocabularyDetailPage(entry: entry),
+        builder: (_) => _VocabularyDetailPage(
+          entry: entry,
+          onSpeakWord: _soundEnabled ? () => _speak(entry.simplified) : null,
+          onSpeakExample: _soundEnabled && entry.hasExample
+              ? () => _speak(entry.exampleChinese)
+              : null,
+        ),
       ),
     );
+    await _stopPronunciation();
   }
 
   @override
@@ -285,7 +342,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
             itemBuilder: (context, index) => _VocabularyListItem(
               entry: results[index],
               learningState: results[index].learningState(_now()),
-              onTap: () => _openDetails(results[index]),
+              onTap: () => unawaited(_openDetails(results[index])),
             ),
           ),
         ),
@@ -518,9 +575,15 @@ class _VocabularyStateBadge extends StatelessWidget {
 }
 
 class _VocabularyDetailPage extends StatelessWidget {
-  const _VocabularyDetailPage({required this.entry});
+  const _VocabularyDetailPage({
+    required this.entry,
+    this.onSpeakWord,
+    this.onSpeakExample,
+  });
 
   final _VocabularyEntry entry;
+  final Future<void> Function()? onSpeakWord;
+  final Future<void> Function()? onSpeakExample;
 
   @override
   Widget build(BuildContext context) {
@@ -539,7 +602,7 @@ class _VocabularyDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _DetailHeader(entry: entry),
+                _DetailHeader(entry: entry, onSpeak: onSpeakWord),
                 const SizedBox(height: 18),
                 _DetailSection(
                   title: 'Meanings',
@@ -591,14 +654,33 @@ class _VocabularyDetailPage extends StatelessWidget {
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              entry.exampleChinese,
-                              key: const Key('example-sentence-chinese'),
-                              style: const TextStyle(
-                                fontFamily: 'serif',
-                                color: AppColors.text,
-                                fontSize: 24,
-                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    entry.exampleChinese,
+                                    key: const Key('example-sentence-chinese'),
+                                    style: const TextStyle(
+                                      fontFamily: 'serif',
+                                      color: AppColors.text,
+                                      fontSize: 24,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  key: const Key(
+                                    'vocabulary-example-pronunciation',
+                                  ),
+                                  tooltip: onSpeakExample == null
+                                      ? 'Pronunciation audio is disabled in Settings'
+                                      : 'Hear example sentence',
+                                  onPressed: onSpeakExample == null
+                                      ? null
+                                      : () => unawaited(onSpeakExample!()),
+                                  icon: const Icon(Icons.volume_up_outlined),
+                                ),
+                              ],
                             ),
                             if (entry.examplePinyin.isNotEmpty) ...[
                               const SizedBox(height: 8),
@@ -649,9 +731,10 @@ class _VocabularyDetailPage extends StatelessWidget {
 }
 
 class _DetailHeader extends StatelessWidget {
-  const _DetailHeader({required this.entry});
+  const _DetailHeader({required this.entry, this.onSpeak});
 
   final _VocabularyEntry entry;
+  final Future<void> Function()? onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -669,14 +752,30 @@ class _DetailHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  entry.simplified,
-                  style: const TextStyle(
-                    fontFamily: 'serif',
-                    fontSize: 54,
-                    height: 1.05,
-                    color: AppColors.text,
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        entry.simplified,
+                        style: const TextStyle(
+                          fontFamily: 'serif',
+                          fontSize: 54,
+                          height: 1.05,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      key: const Key('vocabulary-word-pronunciation'),
+                      tooltip: onSpeak == null
+                          ? 'Pronunciation audio is disabled in Settings'
+                          : 'Hear word pronunciation',
+                      onPressed: onSpeak == null
+                          ? null
+                          : () => unawaited(onSpeak!()),
+                      icon: const Icon(Icons.volume_up_outlined),
+                    ),
+                  ],
                 ),
               ),
               Container(

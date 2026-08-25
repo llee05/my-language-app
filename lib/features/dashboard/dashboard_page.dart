@@ -415,7 +415,11 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 3) {
-      return VocabularyPage(progressRepository: progressRepository);
+      return VocabularyPage(
+        progressRepository: progressRepository,
+        settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
+      );
     }
     if (selectedNav == 4) {
       return DailyQueuePage(
