@@ -88,13 +88,22 @@ The speaker button on lesson cards does not require Ollama. Sound can be
 enabled or disabled under **Settings → Sound**.
 
 For consistent mobile and desktop pronunciation, open **Settings → Offline
-Mandarin voice** and choose **Download offline voice**. TingShuo downloads the
-approximately 61 MB MeloTTS voice pack, verifies it, and stores it in the app's
-private support directory; no manual model-file setup is needed. Synthesis then
-runs locally through sherpa-onnx, including on Linux. Until the pack is ready,
-the app falls back to a compatible Simplified Chinese (`zh-CN`) system voice
-where one is available. The downloaded voice is the MIT-licensed
-[MeloTTS Chinese/English model](https://huggingface.co/csukuangfj/vits-melo-tts-zh_en).
+Mandarin voices**. TingShuo can download and verify either of these packs into
+the app's private support directory; no manual model-file setup is needed:
+
+- **MeloTTS:** an approximately 61 MB download with one compact, fast voice.
+- **Kokoro int8 v1.1:** a 147 MB download (about 215 MB installed) with 100
+  selectable Mandarin voices. Extraction needs about 600 MB of temporary free
+  space.
+
+Choose the speech engine and Kokoro voice after installation, then save the
+preference for future launches. Synthesis runs locally through sherpa-onnx,
+including on Linux. Until the selected pack is ready, the app falls back to a
+compatible Simplified Chinese (`zh-CN`) system voice where one is available.
+Melo uses the MIT-licensed
+[MeloTTS Chinese/English model](https://huggingface.co/csukuangfj/vits-melo-tts-zh_en);
+Kokoro uses the Apache-2.0-licensed
+[Kokoro int8 multilingual v1.1 model](https://huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1).
 
 ### Optional AI tutor
 
@@ -149,8 +158,8 @@ and Vocab Rush review integration.
 - **Language:** Dart
 - **Storage:** SQLite via `sqflite_common_ffi`
 - **AI:** Ollama's local chat API through a lightweight HTTP client
-- **Audio:** offline MeloTTS via `sherpa_onnx` and `flutter_soloud`, with a
-  `flutter_tts` system-voice fallback
+- **Audio:** selectable offline MeloTTS or Kokoro via `sherpa_onnx` and
+  `flutter_soloud`, with a `flutter_tts` system-voice fallback
 - **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
 
 ### Project structure
