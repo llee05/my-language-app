@@ -90,7 +90,7 @@ void main() {
     expect(extracted, isFalse);
     expect(await target.exists(), isFalse);
     expect(await Directory('${target.path}.installing').exists(), isFalse);
-    expect(await File('${target.path}.download').exists(), isFalse);
+    expect(await File('${target.path}.download.tar.bz2').exists(), isFalse);
     expect(updates.last.state, OfflineVoiceState.failed);
     expect(updates.last.message, contains('corrupted'));
 

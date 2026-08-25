@@ -135,7 +135,7 @@ class KokoroVoicePackInstaller {
     }
 
     final staging = Directory('${target.path}.installing');
-    final archive = File('${target.path}.download');
+    final archive = File('${target.path}.download.tar.bz2');
     if (await staging.exists()) await staging.delete(recursive: true);
     if (await archive.exists()) await archive.delete();
     await staging.create(recursive: true);
