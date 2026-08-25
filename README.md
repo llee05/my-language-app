@@ -39,6 +39,8 @@ or Ollama.
 
 - A Flutter SDK compatible with Dart `^3.12.2`
 - A supported Flutter desktop, mobile, or web toolchain for the target platform
+- Linux builds: ALSA development headers (`sudo apt install libasound2-dev` on
+  Ubuntu/Debian)
 - Optional: [Ollama](https://ollama.com/) for Long Laoshi and AI-assisted
   lesson content
 
@@ -82,14 +84,17 @@ return in daily review.
 
 ### Pronunciation audio
 
-The speaker button on lesson cards uses the device's text-to-speech engine and
-does not require Ollama. Sound can be enabled or disabled under
-**Settings → Sound**.
+The speaker button on lesson cards does not require Ollama. Sound can be
+enabled or disabled under **Settings → Sound**.
 
-Mandarin speech is available on Android, iOS, macOS, Windows, and web when a
-compatible Chinese voice is installed. Linux is not currently supported by the
-selected text-to-speech plugin. If playback is unavailable, install a
-Simplified Chinese (`zh-CN`) system voice and restart the app.
+For consistent mobile and desktop pronunciation, open **Settings → Offline
+Mandarin voice** and choose **Download offline voice**. TingShuo downloads the
+approximately 61 MB MeloTTS voice pack, verifies it, and stores it in the app's
+private support directory; no manual model-file setup is needed. Synthesis then
+runs locally through sherpa-onnx, including on Linux. Until the pack is ready,
+the app falls back to a compatible Simplified Chinese (`zh-CN`) system voice
+where one is available. The downloaded voice is the MIT-licensed
+[MeloTTS Chinese/English model](https://huggingface.co/csukuangfj/vits-melo-tts-zh_en).
 
 ### Optional AI tutor
 
@@ -144,7 +149,8 @@ and Vocab Rush review integration.
 - **Language:** Dart
 - **Storage:** SQLite via `sqflite_common_ffi`
 - **AI:** Ollama's local chat API through a lightweight HTTP client
-- **Audio:** on-device Mandarin text-to-speech via `flutter_tts`
+- **Audio:** offline MeloTTS via `sherpa_onnx` and `flutter_soloud`, with a
+  `flutter_tts` system-voice fallback
 - **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
 
 ### Project structure

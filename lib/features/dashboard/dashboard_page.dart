@@ -12,6 +12,7 @@ class DashboardPage extends StatefulWidget {
     this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
+    this.pronunciationService,
     this.clock,
   });
 
@@ -24,6 +25,7 @@ class DashboardPage extends StatefulWidget {
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
+  final PronunciationService? pronunciationService;
   final DateTime Function()? clock;
 
   @override
@@ -31,6 +33,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
   int selectedNav = 0;
   bool _resumeLatestLesson = false;
   bool _startDailyReview = false;
@@ -52,10 +56,23 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
     _loadDailyReviewPrompt();
     _loadActiveLesson();
     _loadLearningStats();
     _loadAvailableLessons();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_pronunciationService.stop());
+    }
+    super.dispose();
   }
 
   Future<void> _loadAvailableLessons() async {
@@ -289,6 +306,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             widget.dailyReviewSessionRepository,
                         settingsRepository: widget.settingsRepository,
                         developmentRepository: widget.developmentRepository,
+                        pronunciationService: _pronunciationService,
                         clock: widget.clock,
                       ),
                     ),
@@ -337,6 +355,7 @@ class _DashboardBody extends StatelessWidget {
     this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
+    required this.pronunciationService,
     this.clock,
   });
   final int selectedNav;
@@ -371,6 +390,7 @@ class _DashboardBody extends StatelessWidget {
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
+  final PronunciationService pronunciationService;
   final DateTime Function()? clock;
 
   @override
@@ -380,6 +400,7 @@ class _DashboardBody extends StatelessWidget {
         repository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
         resumeLatest: resumeLatestLesson,
         onProgressChanged: onLessonProgressChanged,
       );
@@ -417,6 +438,7 @@ class _DashboardBody extends StatelessWidget {
         onResetAllData: onResetAllData,
         developmentRepository: developmentRepository,
         settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
       );
     }
 

@@ -5,7 +5,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter_tts/flutter_tts.dart';
 
 import 'local_database.dart';
 import 'database/flashcard_seed.dart';
@@ -21,6 +20,7 @@ import 'repositories/progress_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'repositories/sqlite_repositories.dart';
 import 'services/review_scheduler.dart';
+import 'services/pronunciation_service_factory.dart';
 import 'services/study_streak_calculator.dart';
 
 export 'models/learner_profile.dart';
@@ -72,10 +72,12 @@ class HanziPathApp extends StatefulWidget {
 
 class _HanziPathAppState extends State<HanziPathApp> {
   late Future<LearnerProfile?> _profile;
+  late final PronunciationService _pronunciationService;
 
   @override
   void initState() {
     super.initState();
+    _pronunciationService = widget.dependencies.createPronunciationService();
     _profile = widget.initialProfile == null
         ? _loadProfile()
         : Future.value(widget.initialProfile);
@@ -118,6 +120,12 @@ class _HanziPathAppState extends State<HanziPathApp> {
     setState(() {
       _profile = Future.value();
     });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_pronunciationService.dispose());
+    super.dispose();
   }
 
   @override
@@ -180,6 +188,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             dailyReviewSessionRepository: widget.dependencies.dailyReviews,
             settingsRepository: widget.dependencies.settings,
             developmentRepository: widget.dependencies.development,
+            pronunciationService: _pronunciationService,
           );
         },
       ),

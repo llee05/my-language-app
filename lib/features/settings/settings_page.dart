@@ -11,6 +11,7 @@ class SettingsPage extends StatefulWidget {
     required this.onResetAllData,
     required this.developmentRepository,
     required this.settingsRepository,
+    this.pronunciationService,
   });
 
   final LearnerProfile profile;
@@ -19,6 +20,7 @@ class SettingsPage extends StatefulWidget {
   final Future<void> Function() onResetAllData;
   final DevelopmentRepository developmentRepository;
   final SettingsRepository settingsRepository;
+  final PronunciationService? pronunciationService;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -38,6 +40,11 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _reminderEnabled = false;
   int _reminderHour = 18;
   late final Future<String> _databasePath;
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
+  StreamSubscription<OfflineVoiceStatus>? _offlineVoiceSubscription;
+  OfflineVoiceStatus? _offlineVoiceStatus;
+  bool _checkingOfflineVoice = true;
 
   static const _targets = [5, 10, 15, 20, 30];
 
@@ -48,7 +55,70 @@ class _SettingsPageState extends State<SettingsPage> {
     _hskLevel = widget.profile.hskLevel;
     _dailyTarget = widget.profile.dailyWordTarget;
     _databasePath = widget.developmentRepository.databasePath();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
+    _offlineVoiceSubscription = _pronunciationService.offlineVoiceUpdates
+        .listen(_handleOfflineVoiceUpdate);
     _loadPreferences();
+    unawaited(_loadOfflineVoiceStatus());
+  }
+
+  void _handleOfflineVoiceUpdate(OfflineVoiceStatus status) {
+    if (!mounted) return;
+    setState(() {
+      _offlineVoiceStatus = status;
+      _checkingOfflineVoice = false;
+    });
+  }
+
+  Future<void> _loadOfflineVoiceStatus() async {
+    if (mounted) setState(() => _checkingOfflineVoice = true);
+    try {
+      final status = await _pronunciationService.checkOfflineVoice();
+      if (!mounted) return;
+      setState(() {
+        _offlineVoiceStatus = status;
+        _checkingOfflineVoice = false;
+      });
+    } catch (error) {
+      debugPrint('Offline voice status check failed: $error');
+      if (!mounted) return;
+      setState(() {
+        _offlineVoiceStatus = const OfflineVoiceStatus(
+          state: OfflineVoiceState.failed,
+          message: 'The offline voice status could not be checked.',
+        );
+        _checkingOfflineVoice = false;
+      });
+    }
+  }
+
+  Future<void> _installOfflineVoice() async {
+    if (_offlineVoiceStatus?.state == OfflineVoiceState.downloading) return;
+    setState(() {
+      _offlineVoiceStatus = const OfflineVoiceStatus(
+        state: OfflineVoiceState.downloading,
+        totalBytes: 60480445,
+      );
+      _checkingOfflineVoice = false;
+    });
+    try {
+      await _pronunciationService.installOfflineVoice();
+      await _loadOfflineVoiceStatus();
+    } catch (error) {
+      debugPrint('Offline voice installation failed: $error');
+      if (!mounted || _offlineVoiceStatus?.state == OfflineVoiceState.failed) {
+        return;
+      }
+      setState(() {
+        _offlineVoiceStatus = const OfflineVoiceStatus(
+          state: OfflineVoiceState.failed,
+          message:
+              'The offline voice could not be installed. Please try again.',
+        );
+      });
+    }
   }
 
   Future<void> _loadPreferences() async {
@@ -82,6 +152,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    unawaited(_offlineVoiceSubscription?.cancel());
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    }
     super.dispose();
   }
 
@@ -400,6 +474,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
         ),
+        if (_offlineVoiceStatus != null &&
+            _offlineVoiceStatus!.state != OfflineVoiceState.unavailable) ...[
+          const SizedBox(height: 20),
+          _SettingsCard(
+            title: 'Offline Mandarin voice',
+            subtitle:
+                'MeloTTS runs on your device. Lessons fall back to the system Mandarin voice until it is ready.',
+            child: _buildOfflineVoiceControl(),
+          ),
+        ],
         if (kDebugMode) ...[
           const SizedBox(height: 20),
           _SettingsCard(
@@ -445,6 +529,97 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
     );
   }
+
+  Widget _buildOfflineVoiceControl() {
+    final status = _offlineVoiceStatus;
+    if (_checkingOfflineVoice || status == null) {
+      return const Row(
+        children: [
+          SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
+          Text('Checking voice pack…'),
+        ],
+      );
+    }
+
+    switch (status.state) {
+      case OfflineVoiceState.ready:
+        return const Row(
+          key: Key('offline-voice-ready'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.check_circle_outline_rounded, color: AppColors.teal),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'MeloTTS is installed. Pronunciation now works fully offline.',
+              ),
+            ),
+          ],
+        );
+      case OfflineVoiceState.downloading:
+        final progress = status.progress;
+        final percent = progress == null ? null : (progress * 100).round();
+        return Column(
+          key: const Key('offline-voice-downloading'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LinearProgressIndicator(value: progress),
+            const SizedBox(height: 10),
+            Text(
+              percent == null
+                  ? 'Preparing the voice download…'
+                  : 'Downloading… $percent% '
+                        '(${_formatMegabytes(status.downloadedBytes)} of 60.5 MB)',
+              style: const TextStyle(color: AppColors.muted),
+            ),
+          ],
+        );
+      case OfflineVoiceState.failed:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              status.message ??
+                  'The offline voice could not be installed. Please try again.',
+              style: const TextStyle(color: AppColors.red),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('offline-voice-retry'),
+              onPressed: _installOfflineVoice,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Try download again'),
+            ),
+          ],
+        );
+      case OfflineVoiceState.notInstalled:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Optional one-time download: about 61 MB. No manual file setup is needed.',
+              style: TextStyle(color: AppColors.muted),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: const Key('offline-voice-download'),
+              onPressed: _installOfflineVoice,
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('Download offline voice'),
+            ),
+          ],
+        );
+      case OfflineVoiceState.unavailable:
+        return const SizedBox.shrink();
+    }
+  }
+
+  String _formatMegabytes(int bytes) =>
+      (bytes / (1000 * 1000)).toStringAsFixed(1);
 }
 
 class _SettingsCard extends StatelessWidget {

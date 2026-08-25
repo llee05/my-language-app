@@ -39,6 +39,7 @@ class LessonsPage extends StatefulWidget {
     required this.repository,
     required this.progressRepository,
     required this.settingsRepository,
+    this.pronunciationService,
     this.resumeLatest = false,
     this.onProgressChanged,
   });
@@ -46,6 +47,7 @@ class LessonsPage extends StatefulWidget {
   final LessonRepository repository;
   final ProgressRepository progressRepository;
   final SettingsRepository settingsRepository;
+  final PronunciationService? pronunciationService;
   final bool resumeLatest;
   final VoidCallback? onProgressChanged;
   @override
@@ -73,12 +75,16 @@ class _LessonsPageState extends State<LessonsPage> {
   final Set<int> _reviewCardIds = {};
   final Set<String> _pendingAnswerKeys = {};
   bool _savingAnswer = false;
-  final FlutterTts _tts = FlutterTts();
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
   bool _soundEnabled = true;
 
   @override
   void initState() {
     super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
     _beginTopicsLoad();
     unawaited(_loadSoundPreference());
   }
@@ -87,7 +93,11 @@ class _LessonsPageState extends State<LessonsPage> {
   void dispose() {
     _topicController.dispose();
     _pageController.dispose();
-    _tts.stop();
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_pronunciationService.stop());
+    }
     super.dispose();
   }
 
@@ -104,11 +114,7 @@ class _LessonsPageState extends State<LessonsPage> {
   Future<void> _speak(Flashcard card) async {
     if (!_soundEnabled) return;
     try {
-      await _tts.stop();
-      await _tts.setLanguage('zh-CN');
-      await _tts.setSpeechRate(.42);
-      await _tts.setPitch(1);
-      await _tts.speak(card.chinese);
+      await _pronunciationService.speakMandarin(card.chinese);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

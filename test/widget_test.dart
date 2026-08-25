@@ -12,6 +12,7 @@ import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
+import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 const testProfile = LearnerProfile(
   name: 'Mei',
@@ -1676,6 +1677,43 @@ void main() {
     expect(find.text('Resume'), findsNothing);
   });
 
+  testWidgets('lesson audio uses the shared pronunciation service', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _MemoryLessonRepository(),
+            progressRepository: _MemoryProgressRepository(),
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+
+    final speaker = find.byTooltip('Hear Mandarin pronunciation').hitTestable();
+    expect(speaker, findsOneWidget);
+    await tester.tap(speaker);
+    await tester.pump();
+
+    expect(pronunciation.spoken, ['学']);
+
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pump();
+    expect(pronunciation.stopCalls, 1);
+    expect(pronunciation.disposeCalls, 0);
+  });
+
   testWidgets('lesson answer is submitted only once while saving', (
     tester,
   ) async {
@@ -2313,6 +2351,41 @@ void main() {
     expect(find.text('Preferences saved.'), findsOneWidget);
   });
 
+  testWidgets('settings installs the offline voice without manual files', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: _MemoryDevelopmentRepository(),
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final download = find.byKey(const Key('offline-voice-download'));
+    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    await tester.tap(download);
+    await tester.pumpAndSettle();
+
+    expect(pronunciation.installCalls, 1);
+    expect(find.byKey(const Key('offline-voice-ready')), findsOneWidget);
+  });
+
   testWidgets('settings preference load error is friendly and retryable', (
     tester,
   ) async {
@@ -2456,6 +2529,42 @@ void main() {
     expect(find.text('Travel & Directions'), findsOneWidget);
     expect(find.text('+80 XP'), findsOneWidget);
   });
+}
+
+class _FakePronunciationService implements PronunciationService {
+  final StreamController<OfflineVoiceStatus> _updates =
+      StreamController<OfflineVoiceStatus>.broadcast();
+  final List<String> spoken = [];
+  OfflineVoiceStatus status = const OfflineVoiceStatus.notInstalled();
+  int installCalls = 0;
+  int stopCalls = 0;
+  int disposeCalls = 0;
+
+  @override
+  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => _updates.stream;
+
+  @override
+  Future<OfflineVoiceStatus> checkOfflineVoice() async => status;
+
+  @override
+  Future<void> installOfflineVoice() async {
+    installCalls++;
+    status = const OfflineVoiceStatus.ready();
+    _updates.add(status);
+  }
+
+  @override
+  Future<void> speakMandarin(String text) async => spoken.add(text);
+
+  @override
+  Future<void> stop() async => stopCalls++;
+
+  @override
+  Future<void> dispose() async {
+    if (disposeCalls > 0) return;
+    disposeCalls++;
+    await _updates.close();
+  }
 }
 
 class _MemorySettingsRepository implements SettingsRepository {

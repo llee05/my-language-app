@@ -5,6 +5,7 @@ import 'lesson_repository.dart';
 import 'progress_repository.dart';
 import 'settings_repository.dart';
 import 'sqlite_repositories.dart';
+import '../services/pronunciation_service_factory.dart';
 
 class AppDependencies {
   const AppDependencies({
@@ -14,6 +15,7 @@ class AppDependencies {
     this.settings = const SqliteSettingsRepository(),
     this.progress = const SqliteProgressRepository(),
     this.dailyReviews = const SqliteDailyReviewSessionRepository(),
+    this.createPronunciationService = createDefaultPronunciationService,
   });
 
   final LearnerRepository learners;
@@ -22,4 +24,5 @@ class AppDependencies {
   final SettingsRepository settings;
   final ProgressRepository progress;
   final DailyReviewSessionRepository dailyReviews;
+  final PronunciationServiceFactory createPronunciationService;
 }
