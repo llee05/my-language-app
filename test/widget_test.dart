@@ -1996,11 +1996,20 @@ void main() {
   testWidgets('ai tutor tab opens the tutor chat page', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
 
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: AiTutorPage())),
+      MaterialApp(
+        home: Scaffold(
+          body: AiTutorPage(
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('龙老师 - Long Laoshi'), findsOneWidget);
     expect(find.text("TODAY'S FOCUS"), findsNothing);
@@ -2017,11 +2026,15 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     var calls = 0;
     final requests = <List<Map<String, String>>>[];
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: AiTutorPage(
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: pronunciation,
             request: (messages) async {
               calls++;
               requests.add([for (final message in messages) Map.of(message)]);
@@ -2064,6 +2077,83 @@ void main() {
     expect(find.text('Practise this sentence'), findsOneWidget);
     expect(find.text('你好，梅！'), findsOneWidget);
     expect(find.byKey(const Key('ai-tutor-error')), findsNothing);
+  });
+
+  testWidgets('ai tutor speaks assistant Chinese replies only', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AiTutorPage(
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: pronunciation,
+            request: (_) async =>
+                '{"chinese":"你好，梅！","pinyin":"nǐ hǎo, Méi!",'
+                '"english":"Hello, Mei!","tip":""}',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Hear Mandarin reply'));
+    await tester.pump();
+    expect(pronunciation.spoken, ['你好！我是龙老师。你想练习什么中文？']);
+
+    await tester.enterText(find.byType(TextField), 'Say hello to Mei');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('ai-tutor-pronunciation')), findsNWidgets(2));
+    await tester.tap(find.byTooltip('Hear Mandarin reply').last);
+    await tester.pump();
+    expect(pronunciation.spoken, ['你好！我是龙老师。你想练习什么中文？', '你好，梅！']);
+
+    final stopsBeforeReset = pronunciation.stopCalls;
+    await tester.tap(find.text('Reset'));
+    await tester.pump();
+    expect(pronunciation.stopCalls, greaterThan(stopsBeforeReset));
+
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pump();
+    expect(pronunciation.disposeCalls, 0);
+  });
+
+  testWidgets('ai tutor disables reply audio when sound is turned off', (
+    tester,
+  ) async {
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AiTutorPage(
+            settingsRepository: _MemorySettingsRepository(
+              const LearnerSettings(soundEnabled: false),
+            ),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byTooltip('Pronunciation audio is disabled in Settings'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const Key('ai-tutor-pronunciation')))
+          .onPressed,
+      isNull,
+    );
+    expect(pronunciation.spoken, isEmpty);
   });
 
   testWidgets(

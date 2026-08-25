@@ -435,7 +435,10 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 5) {
-      return const AiTutorPage();
+      return AiTutorPage(
+        settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
+      );
     }
     if (selectedNav == 6) {
       return SettingsPage(

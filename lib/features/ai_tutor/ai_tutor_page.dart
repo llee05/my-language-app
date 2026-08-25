@@ -4,20 +4,37 @@ typedef AiTutorRequest =
     Future<String> Function(List<Map<String, String>> messages);
 
 class AiTutorPage extends StatelessWidget {
-  const AiTutorPage({super.key, this.request});
+  const AiTutorPage({
+    super.key,
+    this.request,
+    this.settingsRepository = const SqliteSettingsRepository(),
+    this.pronunciationService,
+  });
 
   final AiTutorRequest? request;
+  final SettingsRepository settingsRepository;
+  final PronunciationService? pronunciationService;
 
   @override
   Widget build(BuildContext context) {
-    return _TutorChat(request: request);
+    return _TutorChat(
+      request: request,
+      settingsRepository: settingsRepository,
+      pronunciationService: pronunciationService,
+    );
   }
 }
 
 class _TutorChat extends StatefulWidget {
-  const _TutorChat({this.request});
+  const _TutorChat({
+    this.request,
+    required this.settingsRepository,
+    this.pronunciationService,
+  });
 
   final AiTutorRequest? request;
+  final SettingsRepository settingsRepository;
+  final PronunciationService? pronunciationService;
 
   @override
   State<_TutorChat> createState() => _TutorChatState();
@@ -37,8 +54,11 @@ Use an empty string for any field that is not needed.
   final _scrollController = ScrollController();
   var _messages = _initialMessages;
   var _sending = false;
+  var _soundEnabled = true;
   String? _sendError;
   String? _failedPrompt;
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
 
   static const _initialMessages = [
     _ChatMessage.assistant(
@@ -53,10 +73,58 @@ Use an empty string for any field that is not needed.
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
+    unawaited(_loadSoundPreference());
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_stopPronunciation());
+    }
     super.dispose();
+  }
+
+  Future<void> _loadSoundPreference() async {
+    try {
+      final settings = await widget.settingsRepository.load();
+      if (!mounted) return;
+      setState(() => _soundEnabled = settings.soundEnabled);
+    } catch (error) {
+      debugPrint('AI tutor sound preference load failed: $error');
+    }
+  }
+
+  Future<void> _speak(String text) async {
+    if (!_soundEnabled || text.trim().isEmpty) return;
+    try {
+      await _pronunciationService.speakMandarin(text);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Mandarin audio is unavailable. Check your device text-to-speech voices.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopPronunciation() async {
+    try {
+      await _pronunciationService.stop();
+    } catch (error) {
+      debugPrint('AI tutor pronunciation stop failed: $error');
+    }
   }
 
   Future<void> _send([String? prompt]) async {
@@ -75,6 +143,7 @@ Use an empty string for any field that is not needed.
   }
 
   Future<void> _submit(String text, {required bool appendUserMessage}) async {
+    unawaited(_stopPronunciation());
     setState(() {
       _sending = true;
       if (appendUserMessage) {
@@ -124,6 +193,7 @@ Use an empty string for any field that is not needed.
   }
 
   void _reset() {
+    unawaited(_stopPronunciation());
     setState(() {
       _messages = _initialMessages;
       _sending = false;
@@ -221,6 +291,7 @@ Use an empty string for any field that is not needed.
             messages: _messages,
             sending: _sending,
             controller: _scrollController,
+            onSpeak: _soundEnabled ? _speak : null,
           ),
         ),
         _TutorComposer(
@@ -241,11 +312,13 @@ class _Conversation extends StatelessWidget {
     required this.messages,
     required this.sending,
     required this.controller,
+    required this.onSpeak,
   });
 
   final List<_ChatMessage> messages;
   final bool sending;
   final ScrollController controller;
+  final Future<void> Function(String text)? onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -264,6 +337,9 @@ class _Conversation extends StatelessWidget {
                 pinyin: message.pinyin,
                 english: message.english,
                 wide: message.wide,
+                onSpeak: onSpeak == null
+                    ? null
+                    : () => onSpeak!(message.chinese),
               ),
               if (message.tip.isNotEmpty) _TipBubble(message.tip),
             ],
@@ -280,12 +356,14 @@ class _TutorMessage extends StatelessWidget {
     required this.chinese,
     required this.pinyin,
     required this.english,
+    this.onSpeak,
     this.wide = false,
   });
 
   final String chinese;
   final String pinyin;
   final String english;
+  final Future<void> Function()? onSpeak;
   final bool wide;
 
   @override
@@ -310,16 +388,41 @@ class _TutorMessage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    chinese,
-                    style: const TextStyle(
-                      color: AppColors.text,
-                      fontSize: 13,
-                      height: 1.35,
+                  if (chinese.isNotEmpty)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            chinese,
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          key: const Key('ai-tutor-pronunciation'),
+                          tooltip: onSpeak == null
+                              ? 'Pronunciation audio is disabled in Settings'
+                              : 'Hear Mandarin reply',
+                          onPressed: onSpeak == null
+                              ? null
+                              : () => unawaited(onSpeak!()),
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 36,
+                            height: 36,
+                          ),
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.volume_up_outlined, size: 19),
+                        ),
+                      ],
                     ),
-                  ),
                   if (pinyin.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    if (chinese.isNotEmpty) const SizedBox(height: 6),
                     Text(
                       pinyin,
                       style: const TextStyle(
@@ -330,7 +433,8 @@ class _TutorMessage extends StatelessWidget {
                     ),
                   ],
                   if (english.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    if (chinese.isNotEmpty || pinyin.isNotEmpty)
+                      const SizedBox(height: 4),
                     Text(
                       english,
                       style: const TextStyle(
