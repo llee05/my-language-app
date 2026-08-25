@@ -30,12 +30,16 @@ class VocabRushPage extends StatefulWidget {
     this.lessonRepository = const SqliteLessonRepository(),
     this.progressRepository = const SqliteProgressRepository(),
     this.dailyReviewSessionRepository,
+    this.settingsRepository = const SqliteSettingsRepository(),
+    this.pronunciationService,
     this.initialVocabulary,
   });
 
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
+  final SettingsRepository settingsRepository;
+  final PronunciationService? pronunciationService;
   final List<Map<String, dynamic>>? initialVocabulary;
 
   @override
@@ -44,6 +48,8 @@ class VocabRushPage extends StatefulWidget {
 
 class _VocabRushPageState extends State<VocabRushPage> {
   final _random = Random();
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
   _RushDifficulty _difficulty = _RushDifficulty.beginner;
   _RushDuration _duration = _RushDuration.threeMinutes;
   Timer? _timer;
@@ -60,11 +66,61 @@ class _VocabRushPageState extends State<VocabRushPage> {
   String _gameRunId = '';
   bool _playing = false;
   bool _finished = false;
+  bool _soundEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
+    unawaited(_loadSoundPreference());
+  }
 
   @override
   void dispose() {
     _timer?.cancel();
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_stopPronunciation());
+    }
     super.dispose();
+  }
+
+  Future<void> _loadSoundPreference() async {
+    try {
+      final settings = await widget.settingsRepository.load();
+      if (!mounted) return;
+      setState(() => _soundEnabled = settings.soundEnabled);
+    } catch (error) {
+      debugPrint('Vocab Rush sound preference load failed: $error');
+    }
+  }
+
+  Future<void> _speakCurrentCard() async {
+    final card = _card;
+    if (!_soundEnabled || card == null) return;
+    try {
+      await _pronunciationService.speakMandarin(card['chinese'] as String);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Mandarin audio is unavailable. Check your device text-to-speech voices.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopPronunciation() async {
+    try {
+      await _pronunciationService.stop();
+    } catch (error) {
+      debugPrint('Vocab Rush pronunciation stop failed: $error');
+    }
   }
 
   Future<void> _start() async {
@@ -139,6 +195,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
 
   void _answer(String answer) {
     if (_selectedAnswer != null || !_playing) return;
+    unawaited(_stopPronunciation());
     final source = Map<String, dynamic>.of(_card!);
     final correct = answer == source['english_meaning'];
     setState(() {
@@ -226,6 +283,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
 
   void _finish() {
     _timer?.cancel();
+    unawaited(_stopPronunciation());
     setState(() {
       _secondsLeft = 0;
       _playing = false;
@@ -394,6 +452,14 @@ class _VocabRushPageState extends State<VocabRushPage> {
         Text(
           _card!['pinyin'] as String,
           style: const TextStyle(fontSize: 16, color: AppColors.gold),
+        ),
+        IconButton(
+          key: const Key('vocab-rush-pronunciation'),
+          tooltip: _soundEnabled
+              ? 'Hear Mandarin pronunciation'
+              : 'Pronunciation audio is disabled in Settings',
+          onPressed: _soundEnabled ? _speakCurrentCard : null,
+          icon: const Icon(Icons.volume_up_outlined),
         ),
         const SizedBox(height: 38),
         GridView.count(

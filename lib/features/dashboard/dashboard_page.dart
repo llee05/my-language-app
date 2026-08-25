@@ -410,6 +410,8 @@ class _DashboardBody extends StatelessWidget {
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,
         dailyReviewSessionRepository: dailyReviewSessionRepository,
+        settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
       );
     }
     if (selectedNav == 3) {

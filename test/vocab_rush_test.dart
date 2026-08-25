@@ -8,6 +8,8 @@ import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
+import 'package:mylanguageapp/repositories/settings_repository.dart';
+import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 Future<void> startGame(WidgetTester tester) async {
   final startButton = find.text('开始游戏 — Start Game');
@@ -29,7 +31,11 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1000, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: VocabRushPage())),
+      const MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(settingsRepository: _RushSettingsRepository()),
+        ),
+      ),
     );
 
     expect(find.text('HSK 1–2'), findsOneWidget);
@@ -137,6 +143,7 @@ void main() {
             lessonRepository: lessons,
             progressRepository: progress,
             dailyReviewSessionRepository: dailyReviews,
+            settingsRepository: const _RushSettingsRepository(),
             initialVocabulary: vocabulary,
           ),
         ),
@@ -220,6 +227,7 @@ void main() {
               lessonRepository: lessons,
               progressRepository: progress,
               dailyReviewSessionRepository: dailyReviews,
+              settingsRepository: const _RushSettingsRepository(),
               initialVocabulary: vocabulary,
             ),
           ),
@@ -280,6 +288,154 @@ void main() {
       );
     },
   );
+
+  testWidgets('Vocab Rush speaks the visible Mandarin word', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _RushPronunciationService();
+    const vocabulary = [
+      {
+        'simplified': '错',
+        'pinyin': 'cuò',
+        'meanings': ['wrong'],
+        'partOfSpeech': ['adjective'],
+        'hskLevel': 1,
+      },
+      {
+        'simplified': '对',
+        'pinyin': 'duì',
+        'meanings': ['correct'],
+        'partOfSpeech': ['adjective'],
+        'hskLevel': 1,
+      },
+      {
+        'simplified': '人',
+        'pinyin': 'rén',
+        'meanings': ['person'],
+        'partOfSpeech': ['noun'],
+        'hskLevel': 1,
+      },
+      {
+        'simplified': '书',
+        'pinyin': 'shū',
+        'meanings': ['book'],
+        'partOfSpeech': ['noun'],
+        'hskLevel': 1,
+      },
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: const _RushSettingsRepository(),
+            pronunciationService: pronunciation,
+            initialVocabulary: vocabulary,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Survival'));
+    await startGame(tester);
+
+    final visibleHanzi = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((text) => text.data)
+        .whereType<String>()
+        .firstWhere((text) => const {'错', '对', '人', '书'}.contains(text));
+    await tester.tap(find.byKey(const Key('vocab-rush-pronunciation')));
+    await tester.pump();
+
+    expect(pronunciation.spoken, [visibleHanzi]);
+
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pump();
+    expect(pronunciation.stopCalls, 1);
+    expect(pronunciation.disposeCalls, 0);
+  });
+
+  testWidgets('Vocab Rush honors the disabled sound preference', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _RushPronunciationService();
+    const vocabulary = [
+      {
+        'simplified': '书',
+        'pinyin': 'shū',
+        'meanings': ['book'],
+        'partOfSpeech': ['noun'],
+        'hskLevel': 1,
+      },
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: const _RushSettingsRepository(
+              soundEnabled: false,
+            ),
+            pronunciationService: pronunciation,
+            initialVocabulary: vocabulary,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Survival'));
+    await startGame(tester);
+
+    final button = tester.widget<IconButton>(
+      find.byKey(const Key('vocab-rush-pronunciation')),
+    );
+    expect(button.onPressed, isNull);
+    expect(
+      find.byTooltip('Pronunciation audio is disabled in Settings'),
+      findsOneWidget,
+    );
+    expect(pronunciation.spoken, isEmpty);
+  });
+}
+
+class _RushSettingsRepository implements SettingsRepository {
+  const _RushSettingsRepository({this.soundEnabled = true});
+
+  final bool soundEnabled;
+
+  @override
+  Future<LearnerSettings> load() async =>
+      LearnerSettings(soundEnabled: soundEnabled);
+
+  @override
+  Future<void> save(LearnerSettings settings) async {}
+}
+
+class _RushPronunciationService implements PronunciationService {
+  final List<String> spoken = [];
+  int stopCalls = 0;
+  int disposeCalls = 0;
+
+  @override
+  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => const Stream.empty();
+
+  @override
+  Future<OfflineVoiceStatus> checkOfflineVoice() async =>
+      const OfflineVoiceStatus.unavailable();
+
+  @override
+  Future<void> installOfflineVoice() async {}
+
+  @override
+  Future<void> speakMandarin(String text) async => spoken.add(text);
+
+  @override
+  Future<void> stop() async => stopCalls++;
+
+  @override
+  Future<void> dispose() async => disposeCalls++;
 }
 
 class _RushLessonRepository implements LessonRepository {
