@@ -28,7 +28,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late final TextEditingController _nameController;
   late int _hskLevel;
   late int _dailyTarget;
-  bool _saving = false;
+  _SettingsSaveTarget? _savingTarget;
   bool _loadingPreferences = true;
   bool _preferencesLoadFailed = false;
   _SettingsSaveTarget? _saveFailureTarget;
@@ -87,9 +87,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _save(_SettingsSaveTarget target) async {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _saving) return;
+    if (name.isEmpty || _savingTarget != null) return;
     setState(() {
-      _saving = true;
+      _savingTarget = target;
       if (_saveFailureTarget == target) _saveFailureTarget = null;
     });
     try {
@@ -108,12 +108,28 @@ class _SettingsPageState extends State<SettingsPage> {
           reminderHour: _reminderHour,
         ),
       );
+      if (mounted) _showSaveSuccess(target);
     } catch (error) {
       debugPrint('Settings save failed: $error');
       if (mounted) setState(() => _saveFailureTarget = target);
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) setState(() => _savingTarget = null);
     }
+  }
+
+  void _showSaveSuccess(_SettingsSaveTarget target) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(switch (target) {
+            _SettingsSaveTarget.profile => 'Profile changes saved.',
+            _SettingsSaveTarget.preferences => 'Preferences saved.',
+          }),
+        ),
+      );
   }
 
   Future<bool> _confirm({
@@ -296,16 +312,20 @@ class _SettingsPageState extends State<SettingsPage> {
                 )
               else
                 FilledButton.icon(
-                  onPressed: _saving
+                  onPressed: _savingTarget != null
                       ? null
                       : () => _save(_SettingsSaveTarget.profile),
-                  icon: _saving
+                  icon: _savingTarget == _SettingsSaveTarget.profile
                       ? const SizedBox.square(
                           dimension: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.save_outlined),
-                  label: Text(_saving ? 'Saving…' : 'Save changes'),
+                  label: Text(
+                    _savingTarget == _SettingsSaveTarget.profile
+                        ? 'Saving…'
+                        : 'Save changes',
+                  ),
                 ),
             ],
           ),
@@ -359,10 +379,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: FilledButton.icon(
-                          onPressed: _saving
+                          onPressed: _savingTarget != null
                               ? null
                               : () => _save(_SettingsSaveTarget.preferences),
-                          icon: _saving
+                          icon: _savingTarget == _SettingsSaveTarget.preferences
                               ? const SizedBox.square(
                                   dimension: 16,
                                   child: CircularProgressIndicator(
@@ -370,7 +390,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 )
                               : const Icon(Icons.save_outlined),
-                          label: Text(_saving ? 'Saving…' : 'Save preferences'),
+                          label: Text(
+                            _savingTarget == _SettingsSaveTarget.preferences
+                                ? 'Saving…'
+                                : 'Save preferences',
+                          ),
                         ),
                       ),
                   ],

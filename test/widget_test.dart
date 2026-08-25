@@ -7,6 +7,7 @@ import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/app_dependencies.dart';
+import 'package:mylanguageapp/repositories/learner_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
@@ -17,6 +18,41 @@ const testProfile = LearnerProfile(
   hskLevel: 2,
   dailyWordTarget: 10,
 );
+
+Future<void> _pumpResetSettings(
+  WidgetTester tester,
+  _MemoryDevelopmentRepository developmentRepository, {
+  Future<void> Function()? onResetOnboarding,
+}) async {
+  await tester.binding.setSurfaceSize(const Size(1000, 900));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: SettingsPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: onResetOnboarding ?? () async {},
+          onResetAllData: developmentRepository.resetAllData,
+          developmentRepository: developmentRepository,
+          settingsRepository: _MemorySettingsRepository(),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _openSettingsResetDialog(
+  WidgetTester tester,
+  Key buttonKey,
+) async {
+  await tester.drag(find.byType(ListView), const Offset(0, -700));
+  await tester.pumpAndSettle();
+  final button = find.byKey(buttonKey);
+  await tester.tap(button);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   testWidgets('dashboard renders core learning content', (tester) async {
@@ -1962,6 +1998,281 @@ void main() {
     expect(resetOnboarding, isTrue);
   });
 
+  testWidgets(
+    'settings shows progress and confirms a successful profile save',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final saveGate = Completer<void>();
+      addTearDown(() {
+        if (!saveGate.isCompleted) saveGate.complete();
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SettingsPage(
+              profile: testProfile,
+              onProfileChanged: (_) async {},
+              onResetOnboarding: () async {},
+              onResetAllData: () async {},
+              developmentRepository: _MemoryDevelopmentRepository(),
+              settingsRepository: _GatedSettingsRepository(saveGate),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save changes'));
+      await tester.pump();
+
+      expect(find.text('Saving…'), findsOneWidget);
+      expect(find.text('Save preferences'), findsOneWidget);
+      expect(find.text('Profile changes saved.'), findsNothing);
+
+      saveGate.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Saving…'), findsNothing);
+      expect(find.text('Save changes'), findsOneWidget);
+      expect(find.text('Profile changes saved.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('settings reset-all cancellation is inert', (tester) async {
+    final developmentRepository = _MemoryDevelopmentRepository();
+    await _pumpResetSettings(tester, developmentRepository);
+
+    await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+
+    expect(find.text('Reset all local data?'), findsOneWidget);
+    expect(developmentRepository.resetAllDataCalls, 0);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(developmentRepository.resetAllDataCalls, 0);
+    expect(find.text('Reset all local data?'), findsNothing);
+  });
+
+  testWidgets('settings reset-all confirmation invokes once with clear copy', (
+    tester,
+  ) async {
+    final developmentRepository = _MemoryDevelopmentRepository();
+    await _pumpResetSettings(tester, developmentRepository);
+
+    await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+
+    expect(find.text('Reset all local data?'), findsOneWidget);
+    expect(
+      find.text(
+        'This permanently removes the learner profile, generated lessons, '
+        'and all other local app data.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Reset everything'), findsOneWidget);
+    expect(developmentRepository.resetAllDataCalls, 0);
+
+    await tester.tap(find.text('Reset everything'));
+    await tester.pumpAndSettle();
+
+    expect(developmentRepository.resetAllDataCalls, 1);
+    expect(find.text('Reset all local data?'), findsNothing);
+  });
+
+  testWidgets('settings reset-all failure retries directly and safely', (
+    tester,
+  ) async {
+    var failNextReset = true;
+    final developmentRepository = _MemoryDevelopmentRepository(
+      onReset: () async {
+        if (failNextReset) {
+          failNextReset = false;
+          throw StateError('sensitive reset path /private/local_app.db');
+        }
+      },
+    );
+    await _pumpResetSettings(tester, developmentRepository);
+
+    await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+    await tester.tap(find.text('Reset everything'));
+    await tester.pumpAndSettle();
+
+    expect(developmentRepository.resetAllDataCalls, 1);
+    expect(find.text('We couldn’t reset your local data.'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.textContaining('sensitive reset path'), findsNothing);
+
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(developmentRepository.resetAllDataCalls, 2);
+    expect(find.text('Reset all local data?'), findsNothing);
+    expect(find.text('We couldn’t reset your local data.'), findsNothing);
+  });
+
+  testWidgets(
+    'settings onboarding reset failure retries without reconfirming',
+    (tester) async {
+      var resetCalls = 0;
+      await _pumpResetSettings(
+        tester,
+        _MemoryDevelopmentRepository(),
+        onResetOnboarding: () async {
+          resetCalls++;
+          if (resetCalls == 1) {
+            throw StateError('sensitive learner path /private/learner.db');
+          }
+        },
+      );
+
+      await _openSettingsResetDialog(
+        tester,
+        const Key('settings-reset-onboarding'),
+      );
+      await tester.tap(find.text('Reset setup'));
+      await tester.pumpAndSettle();
+
+      expect(resetCalls, 1);
+      expect(find.text('We couldn’t reset learner setup.'), findsOneWidget);
+      expect(find.textContaining('sensitive learner path'), findsNothing);
+
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+
+      expect(resetCalls, 2);
+      expect(find.text('Reset learner setup?'), findsNothing);
+      expect(find.text('We couldn’t reset learner setup.'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'settings disables both reset actions while reset-all is pending',
+    (tester) async {
+      final resetGate = Completer<void>();
+      final developmentRepository = _MemoryDevelopmentRepository(
+        onReset: () => resetGate.future,
+      );
+      await _pumpResetSettings(tester, developmentRepository);
+
+      await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+      await tester.tap(find.text('Reset everything'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(developmentRepository.resetAllDataCalls, 1);
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.byKey(const Key('settings-reset-onboarding')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<OutlinedButton>(find.byKey(const Key('settings-reset-all')))
+            .onPressed,
+        isNull,
+      );
+
+      resetGate.complete();
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.byKey(const Key('settings-reset-onboarding')),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      expect(
+        tester
+            .widget<OutlinedButton>(find.byKey(const Key('settings-reset-all')))
+            .onPressed,
+        isNotNull,
+      );
+    },
+  );
+
+  testWidgets('reset-all returns the app root to learner setup', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final developmentRepository = _MemoryDevelopmentRepository();
+
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          development: developmentRepository,
+          settings: _MemorySettingsRepository(),
+          progress: _MemoryProgressRepository(hasActiveSession: false),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Manage your learning preferences and local test data.'),
+      findsOneWidget,
+    );
+    await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+    await tester.tap(find.text('Reset everything'));
+    await tester.pumpAndSettle();
+
+    expect(developmentRepository.resetAllDataCalls, 1);
+    expect(find.text('Build your learning path'), findsOneWidget);
+    expect(find.text('你好，Mei'), findsNothing);
+  });
+
+  testWidgets('onboarding reset returns the app root to learner setup', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final learnerRepository = _MemoryLearnerRepository(testProfile);
+
+    await tester.pumpWidget(
+      HanziPathApp(
+        dependencies: AppDependencies(
+          learners: learnerRepository,
+          lessons: _MemoryLessonRepository(),
+          development: _MemoryDevelopmentRepository(),
+          settings: _MemorySettingsRepository(),
+          progress: _MemoryProgressRepository(hasActiveSession: false),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Manage your learning preferences and local test data.'),
+      findsOneWidget,
+    );
+    await _openSettingsResetDialog(
+      tester,
+      const Key('settings-reset-onboarding'),
+    );
+    await tester.tap(find.text('Reset setup'));
+    await tester.pumpAndSettle();
+
+    expect(learnerRepository.resetOnboardingCalls, 1);
+    expect(find.text('Build your learning path'), findsOneWidget);
+    expect(find.text('你好，Mei'), findsNothing);
+  });
+
   testWidgets('settings restores and saves learning preferences', (
     tester,
   ) async {
@@ -1999,6 +2310,7 @@ void main() {
 
     expect(repository.settings.showPinyin, isTrue);
     expect(repository.settings.soundEnabled, isFalse);
+    expect(find.text('Preferences saved.'), findsOneWidget);
   });
 
   testWidgets('settings preference load error is friendly and retryable', (
@@ -2087,6 +2399,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.saveAttempts, hasLength(1));
+    expect(find.text('Preferences saved.'), findsNothing);
     expect(
       find.byKey(const Key('settings-preferences-save-error')),
       findsOneWidget,
@@ -2109,6 +2422,7 @@ void main() {
       find.byKey(const Key('settings-preferences-save-error')),
       findsNothing,
     );
+    expect(find.text('Preferences saved.'), findsOneWidget);
   });
 
   testWidgets('locked lesson tile renders with reduced opacity', (
@@ -2155,6 +2469,18 @@ class _MemorySettingsRepository implements SettingsRepository {
   @override
   Future<void> save(LearnerSettings settings) async {
     this.settings = settings;
+  }
+}
+
+class _GatedSettingsRepository extends _MemorySettingsRepository {
+  _GatedSettingsRepository(this.saveGate);
+
+  final Completer<void> saveGate;
+
+  @override
+  Future<void> save(LearnerSettings settings) async {
+    await saveGate.future;
+    await super.save(settings);
   }
 }
 
@@ -2226,11 +2552,41 @@ class _StalledSettingsRepository implements SettingsRepository {
 }
 
 class _MemoryDevelopmentRepository implements DevelopmentRepository {
+  _MemoryDevelopmentRepository({this.onReset});
+
+  final Future<void> Function()? onReset;
+  int resetAllDataCalls = 0;
+
   @override
   Future<String> databasePath() async => 'memory';
 
   @override
-  Future<void> resetAllData() async {}
+  Future<void> resetAllData() async {
+    resetAllDataCalls++;
+    final callback = onReset;
+    if (callback != null) await callback();
+  }
+}
+
+class _MemoryLearnerRepository implements LearnerRepository {
+  _MemoryLearnerRepository(this.profile);
+
+  LearnerProfile? profile;
+  int resetOnboardingCalls = 0;
+
+  @override
+  Future<void> resetOnboarding() async {
+    resetOnboardingCalls++;
+    profile = null;
+  }
+
+  @override
+  Future<LearnerProfile?> load() async => profile;
+
+  @override
+  Future<void> save(LearnerProfile profile) async {
+    this.profile = profile;
+  }
 }
 
 class _MemoryLessonRepository implements LessonRepository {
