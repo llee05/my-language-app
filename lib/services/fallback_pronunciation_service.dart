@@ -1,12 +1,24 @@
+import '../models/learning_progress.dart';
 import 'pronunciation_service.dart';
 
-class FallbackPronunciationService implements PronunciationService {
+class FallbackPronunciationService
+    implements PronunciationService, OfflinePronunciationManager {
   FallbackPronunciationService(this._primary, this._fallback);
 
   final PronunciationService _primary;
   final PronunciationService _fallback;
   int _requestId = 0;
   bool _disposed = false;
+
+  OfflinePronunciationManager get _offlineManager {
+    final primary = _primary;
+    if (primary is OfflinePronunciationManager) {
+      return primary as OfflinePronunciationManager;
+    }
+    throw UnsupportedError(
+      'This pronunciation service does not manage offline voice packs.',
+    );
+  }
 
   @override
   Stream<OfflineVoiceStatus> get offlineVoiceUpdates =>
@@ -18,6 +30,33 @@ class FallbackPronunciationService implements PronunciationService {
 
   @override
   Future<void> installOfflineVoice() => _primary.installOfflineVoice();
+
+  @override
+  Stream<OfflineVoiceStatus> get voicePackUpdates {
+    final primary = _primary;
+    return primary is OfflinePronunciationManager
+        ? (primary as OfflinePronunciationManager).voicePackUpdates
+        : const Stream.empty();
+  }
+
+  @override
+  Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) =>
+      _offlineManager.checkVoicePack(engine);
+
+  @override
+  Future<void> installVoicePack(PronunciationEngine engine) =>
+      _offlineManager.installVoicePack(engine);
+
+  @override
+  List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
+      _offlineManager.voicesFor(engine);
+
+  @override
+  Future<void> configurePronunciation({
+    required PronunciationEngine engine,
+    String? voiceId,
+  }) =>
+      _offlineManager.configurePronunciation(engine: engine, voiceId: voiceId);
 
   @override
   Future<void> speakMandarin(String text) async {

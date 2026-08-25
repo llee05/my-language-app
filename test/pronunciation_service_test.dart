@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/services/fallback_pronunciation_service.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
@@ -95,7 +96,107 @@ void main() {
         expect(fallback.installCalls, 0);
       },
     );
+
+    test(
+      'delegates multi-pack management when the primary supports it',
+      () async {
+        final primary = _FakeManagedPronunciationService();
+        final service = FallbackPronunciationService(
+          primary,
+          _FakePronunciationService(),
+        );
+
+        final kokoroStatus = await service.checkVoicePack(
+          PronunciationEngine.kokoro,
+        );
+        await service.installVoicePack(PronunciationEngine.kokoro);
+        await service.configurePronunciation(
+          engine: PronunciationEngine.kokoro,
+          voiceId: 'zf_021',
+        );
+
+        expect(kokoroStatus.engine, PronunciationEngine.kokoro);
+        expect(primary.checkedEngines, [PronunciationEngine.kokoro]);
+        expect(primary.installedEngines, [PronunciationEngine.kokoro]);
+        expect(primary.configuredEngine, PronunciationEngine.kokoro);
+        expect(primary.configuredVoiceId, 'zf_021');
+        expect(service.voicesFor(PronunciationEngine.kokoro), hasLength(100));
+      },
+    );
+
+    test(
+      'reports unsupported multi-pack management without a capable primary',
+      () {
+        final service = FallbackPronunciationService(
+          _FakePronunciationService(),
+          _FakePronunciationService(),
+        );
+
+        expect(
+          () => service.checkVoicePack(PronunciationEngine.kokoro),
+          throwsUnsupportedError,
+        );
+        expect(service.voicePackUpdates, emitsDone);
+      },
+    );
   });
+
+  test('Kokoro catalog maps all Mandarin voices to their official IDs', () {
+    expect(kokoroMandarinVoices, hasLength(100));
+    expect(
+      kokoroMandarinVoices.map((voice) => voice.id).toSet(),
+      hasLength(100),
+    );
+    expect(kokoroMandarinVoices.first.id, 'zf_001');
+    expect(kokoroMandarinVoices.first.speakerId, 3);
+    expect(kokoroMandarinVoices[54].id, 'zf_099');
+    expect(kokoroMandarinVoices[54].speakerId, 57);
+    expect(kokoroMandarinVoices[55].id, 'zm_009');
+    expect(kokoroMandarinVoices[55].speakerId, 58);
+    expect(kokoroMandarinVoices.last.id, 'zm_100');
+    expect(kokoroMandarinVoices.last.speakerId, 102);
+    expect(
+      resolvePronunciationVoice(PronunciationEngine.kokoro, 'unknown').id,
+      'zf_001',
+    );
+  });
+}
+
+class _FakeManagedPronunciationService extends _FakePronunciationService
+    implements OfflinePronunciationManager {
+  final List<PronunciationEngine> checkedEngines = [];
+  final List<PronunciationEngine> installedEngines = [];
+  PronunciationEngine? configuredEngine;
+  String? configuredVoiceId;
+
+  @override
+  Stream<OfflineVoiceStatus> get voicePackUpdates => const Stream.empty();
+
+  @override
+  Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) async {
+    checkedEngines.add(engine);
+    return OfflineVoiceStatus.notInstalled(engine: engine);
+  }
+
+  @override
+  Future<void> installVoicePack(PronunciationEngine engine) async {
+    installedEngines.add(engine);
+  }
+
+  @override
+  List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
+      engine == PronunciationEngine.kokoro
+      ? kokoroMandarinVoices
+      : const [meloPronunciationVoice];
+
+  @override
+  Future<void> configurePronunciation({
+    required PronunciationEngine engine,
+    String? voiceId,
+  }) async {
+    configuredEngine = engine;
+    configuredVoiceId = voiceId;
+  }
 }
 
 class _FakePronunciationService implements PronunciationService {
