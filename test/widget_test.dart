@@ -2597,6 +2597,111 @@ void main() {
     expect(find.byKey(const Key('offline-voice-ready')), findsOneWidget);
   });
 
+  testWidgets('settings downloads Kokoro and saves its selected voice', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _ManagedFakePronunciationService();
+    final repository = _MemorySettingsRepository();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: _MemoryDevelopmentRepository(),
+            settingsRepository: repository,
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('kokoro-voice-picker')), findsNothing);
+    final download = find.byKey(const Key('kokoro-voice-download'));
+    await tester.ensureVisible(download);
+    await tester.pumpAndSettle();
+    await tester.tap(download);
+    await tester.pumpAndSettle();
+
+    expect(pronunciation.installedEngines, [PronunciationEngine.kokoro]);
+    expect(find.byKey(const Key('kokoro-voice-ready')), findsOneWidget);
+    expect(find.byKey(const Key('kokoro-voice-picker')), findsOneWidget);
+
+    final enginePicker = find.byKey(const Key('pronunciation-engine-picker'));
+    await tester.ensureVisible(enginePicker);
+    await tester.pumpAndSettle();
+    tester
+        .widget<DropdownButtonFormField<PronunciationEngine>>(enginePicker)
+        .onChanged!(PronunciationEngine.kokoro);
+    await tester.pumpAndSettle();
+
+    final voicePicker = find.descendant(
+      of: find.byKey(const Key('kokoro-voice-picker')),
+      matching: find.byType(DropdownButtonFormField<String>),
+    );
+    tester.widget<DropdownButtonFormField<String>>(voicePicker).onChanged!(
+      'zm_041',
+    );
+    await tester.pumpAndSettle();
+
+    expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
+    expect(pronunciation.configuredVoiceId, 'zm_041');
+
+    final save = find.text('Save preferences');
+    await tester.ensureVisible(save);
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    expect(repository.settings.pronunciationEngine, PronunciationEngine.kokoro);
+    expect(repository.settings.pronunciationVoiceId, 'zm_041');
+  });
+
+  testWidgets('settings restores a saved Kokoro voice once installed', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _ManagedFakePronunciationService(
+      kokoroStatus: const OfflineVoiceStatus.ready(
+        engine: PronunciationEngine.kokoro,
+      ),
+    );
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: _MemoryDevelopmentRepository(),
+            settingsRepository: _MemorySettingsRepository(
+              const LearnerSettings(
+                pronunciationEngine: PronunciationEngine.kokoro,
+                pronunciationVoiceId: 'zm_041',
+              ),
+            ),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('kokoro-voice-picker')), findsOneWidget);
+    expect(find.text('Male 041'), findsOneWidget);
+  });
+
   testWidgets('settings preference load error is friendly and retryable', (
     tester,
   ) async {
@@ -2657,6 +2762,8 @@ void main() {
         soundEnabled: false,
         reminderEnabled: true,
         reminderHour: 7,
+        pronunciationEngine: PronunciationEngine.kokoro,
+        pronunciationVoiceId: 'zf_021',
       ),
     );
 
@@ -2702,6 +2809,11 @@ void main() {
     expect(retryAttempt.soundEnabled, firstAttempt.soundEnabled);
     expect(retryAttempt.reminderEnabled, firstAttempt.reminderEnabled);
     expect(retryAttempt.reminderHour, firstAttempt.reminderHour);
+    expect(retryAttempt.pronunciationEngine, firstAttempt.pronunciationEngine);
+    expect(
+      retryAttempt.pronunciationVoiceId,
+      firstAttempt.pronunciationVoiceId,
+    );
     expect(
       find.byKey(const Key('settings-preferences-save-error')),
       findsNothing,
@@ -2780,18 +2892,38 @@ class _FakePronunciationService implements PronunciationService {
 
 class _ManagedFakePronunciationService extends _FakePronunciationService
     implements OfflinePronunciationManager {
+  _ManagedFakePronunciationService({
+    OfflineVoiceStatus meloStatus = const OfflineVoiceStatus.ready(),
+    OfflineVoiceStatus kokoroStatus = const OfflineVoiceStatus.notInstalled(
+      engine: PronunciationEngine.kokoro,
+      totalBytes: kokoroOfflineVoiceDownloadBytes,
+    ),
+  }) : statuses = {
+         PronunciationEngine.melo: meloStatus,
+         PronunciationEngine.kokoro: kokoroStatus,
+       };
+
+  final StreamController<OfflineVoiceStatus> _voicePackUpdates =
+      StreamController<OfflineVoiceStatus>.broadcast();
+  final Map<PronunciationEngine, OfflineVoiceStatus> statuses;
+  final List<PronunciationEngine> installedEngines = [];
   PronunciationEngine? configuredEngine;
   String? configuredVoiceId;
 
   @override
-  Stream<OfflineVoiceStatus> get voicePackUpdates => const Stream.empty();
+  Stream<OfflineVoiceStatus> get voicePackUpdates => _voicePackUpdates.stream;
 
   @override
   Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) async =>
-      OfflineVoiceStatus.notInstalled(engine: engine);
+      statuses[engine]!;
 
   @override
-  Future<void> installVoicePack(PronunciationEngine engine) async {}
+  Future<void> installVoicePack(PronunciationEngine engine) async {
+    installedEngines.add(engine);
+    final ready = OfflineVoiceStatus.ready(engine: engine);
+    statuses[engine] = ready;
+    _voicePackUpdates.add(ready);
+  }
 
   @override
   List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
@@ -2806,6 +2938,12 @@ class _ManagedFakePronunciationService extends _FakePronunciationService
   }) async {
     configuredEngine = engine;
     configuredVoiceId = voiceId;
+  }
+
+  @override
+  Future<void> dispose() async {
+    if (!_voicePackUpdates.isClosed) await _voicePackUpdates.close();
+    await super.dispose();
   }
 }
 

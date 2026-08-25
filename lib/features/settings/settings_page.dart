@@ -39,12 +39,17 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
   int _reminderHour = 18;
+  PronunciationEngine _pronunciationEngine = PronunciationEngine.melo;
+  String? _pronunciationVoiceId;
   late final Future<String> _databasePath;
   late final PronunciationService _pronunciationService;
+  late final OfflinePronunciationManager? _offlineVoiceManager;
   late final bool _ownsPronunciationService;
   StreamSubscription<OfflineVoiceStatus>? _offlineVoiceSubscription;
   OfflineVoiceStatus? _offlineVoiceStatus;
+  OfflineVoiceStatus? _kokoroVoiceStatus;
   bool _checkingOfflineVoice = true;
+  bool _checkingKokoroVoice = false;
 
   static const _targets = [5, 10, 15, 20, 30];
 
@@ -58,68 +63,118 @@ class _SettingsPageState extends State<SettingsPage> {
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
-    _offlineVoiceSubscription = _pronunciationService.offlineVoiceUpdates
-        .listen(_handleOfflineVoiceUpdate);
+    final service = _pronunciationService;
+    _offlineVoiceManager = service is OfflinePronunciationManager
+        ? service as OfflinePronunciationManager
+        : null;
+    _offlineVoiceSubscription =
+        (_offlineVoiceManager?.voicePackUpdates ??
+                _pronunciationService.offlineVoiceUpdates)
+            .listen(_handleOfflineVoiceUpdate);
     _loadPreferences();
-    unawaited(_loadOfflineVoiceStatus());
+    unawaited(_loadVoicePackStatus(PronunciationEngine.melo));
+    if (_offlineVoiceManager != null) {
+      unawaited(_loadVoicePackStatus(PronunciationEngine.kokoro));
+    }
   }
 
   void _handleOfflineVoiceUpdate(OfflineVoiceStatus status) {
     if (!mounted) return;
     setState(() {
-      _offlineVoiceStatus = status;
-      _checkingOfflineVoice = false;
+      switch (status.engine) {
+        case PronunciationEngine.melo:
+          _offlineVoiceStatus = status;
+          _checkingOfflineVoice = false;
+        case PronunciationEngine.kokoro:
+          _kokoroVoiceStatus = status;
+          _checkingKokoroVoice = false;
+      }
     });
   }
 
-  Future<void> _loadOfflineVoiceStatus() async {
-    if (mounted) setState(() => _checkingOfflineVoice = true);
+  Future<void> _loadVoicePackStatus(PronunciationEngine engine) async {
+    if (mounted) {
+      setState(() {
+        switch (engine) {
+          case PronunciationEngine.melo:
+            _checkingOfflineVoice = true;
+          case PronunciationEngine.kokoro:
+            _checkingKokoroVoice = true;
+        }
+      });
+    }
     try {
-      final status = await _pronunciationService.checkOfflineVoice();
+      final manager = _offlineVoiceManager;
+      final status = manager == null
+          ? await _pronunciationService.checkOfflineVoice()
+          : await manager.checkVoicePack(engine);
       if (!mounted) return;
-      setState(() {
-        _offlineVoiceStatus = status;
-        _checkingOfflineVoice = false;
-      });
+      _handleOfflineVoiceUpdate(status);
     } catch (error) {
-      debugPrint('Offline voice status check failed: $error');
+      debugPrint('${engine.name} voice status check failed: $error');
       if (!mounted) return;
-      setState(() {
-        _offlineVoiceStatus = const OfflineVoiceStatus(
+      _handleOfflineVoiceUpdate(
+        OfflineVoiceStatus(
           state: OfflineVoiceState.failed,
-          message: 'The offline voice status could not be checked.',
-        );
-        _checkingOfflineVoice = false;
-      });
+          engine: engine,
+          message: 'The ${_engineName(engine)} status could not be checked.',
+        ),
+      );
     }
   }
 
-  Future<void> _installOfflineVoice() async {
-    if (_offlineVoiceStatus?.state == OfflineVoiceState.downloading) return;
-    setState(() {
-      _offlineVoiceStatus = const OfflineVoiceStatus(
+  Future<void> _installVoicePack(PronunciationEngine engine) async {
+    if (_voiceStatus(engine)?.state == OfflineVoiceState.downloading) return;
+    _handleOfflineVoiceUpdate(
+      OfflineVoiceStatus(
         state: OfflineVoiceState.downloading,
-        totalBytes: 60480445,
-      );
-      _checkingOfflineVoice = false;
-    });
+        engine: engine,
+        totalBytes: _downloadBytes(engine),
+      ),
+    );
     try {
-      await _pronunciationService.installOfflineVoice();
-      await _loadOfflineVoiceStatus();
+      final manager = _offlineVoiceManager;
+      if (manager == null) {
+        await _pronunciationService.installOfflineVoice();
+      } else {
+        await manager.installVoicePack(engine);
+      }
+      await _loadVoicePackStatus(engine);
     } catch (error) {
-      debugPrint('Offline voice installation failed: $error');
-      if (!mounted || _offlineVoiceStatus?.state == OfflineVoiceState.failed) {
+      debugPrint('${engine.name} voice installation failed: $error');
+      if (!mounted || _voiceStatus(engine)?.state == OfflineVoiceState.failed) {
         return;
       }
-      setState(() {
-        _offlineVoiceStatus = const OfflineVoiceStatus(
+      _handleOfflineVoiceUpdate(
+        OfflineVoiceStatus(
           state: OfflineVoiceState.failed,
-          message:
-              'The offline voice could not be installed. Please try again.',
-        );
-      });
+          engine: engine,
+          message: '${_engineName(engine)} could not be installed. Try again.',
+        ),
+      );
     }
   }
+
+  OfflineVoiceStatus? _voiceStatus(PronunciationEngine engine) =>
+      switch (engine) {
+        PronunciationEngine.melo => _offlineVoiceStatus,
+        PronunciationEngine.kokoro => _kokoroVoiceStatus,
+      };
+
+  bool _checkingVoiceStatus(PronunciationEngine engine) => switch (engine) {
+    PronunciationEngine.melo => _checkingOfflineVoice,
+    PronunciationEngine.kokoro => _checkingKokoroVoice,
+  };
+
+  int _downloadBytes(PronunciationEngine engine) => switch (engine) {
+    PronunciationEngine.melo => meloOfflineVoiceDownloadBytes,
+    PronunciationEngine.kokoro => kokoroOfflineVoiceDownloadBytes,
+  };
+
+  String _engineName(PronunciationEngine engine) => switch (engine) {
+    PronunciationEngine.melo => 'MeloTTS',
+    PronunciationEngine.kokoro => 'Kokoro',
+  };
 
   Future<void> _loadPreferences() async {
     if (!_loadingPreferences && mounted) {
@@ -136,6 +191,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _soundEnabled = settings.soundEnabled;
         _reminderEnabled = settings.reminderEnabled;
         _reminderHour = settings.reminderHour;
+        _pronunciationEngine = settings.pronunciationEngine;
+        _pronunciationVoiceId = settings.pronunciationVoiceId;
         _loadingPreferences = false;
         _preferencesLoadFailed = false;
       });
@@ -180,14 +237,30 @@ class _SettingsPageState extends State<SettingsPage> {
           soundEnabled: _soundEnabled,
           reminderEnabled: _reminderEnabled,
           reminderHour: _reminderHour,
+          pronunciationEngine: _pronunciationEngine,
+          pronunciationVoiceId: _pronunciationVoiceId,
         ),
       );
+      await _applyPronunciationSelection();
       if (mounted) _showSaveSuccess(target);
     } catch (error) {
       debugPrint('Settings save failed: $error');
       if (mounted) setState(() => _saveFailureTarget = target);
     } finally {
       if (mounted) setState(() => _savingTarget = null);
+    }
+  }
+
+  Future<void> _applyPronunciationSelection() async {
+    final manager = _offlineVoiceManager;
+    if (manager == null) return;
+    try {
+      await manager.configurePronunciation(
+        engine: _pronunciationEngine,
+        voiceId: _pronunciationVoiceId,
+      );
+    } catch (error) {
+      debugPrint('Pronunciation selection could not be applied: $error');
     }
   }
 
@@ -474,14 +547,30 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
         ),
-        if (_offlineVoiceStatus != null &&
-            _offlineVoiceStatus!.state != OfflineVoiceState.unavailable) ...[
+        if (_shouldShowOfflineVoiceCard) ...[
           const SizedBox(height: 20),
           _SettingsCard(
-            title: 'Offline Mandarin voice',
+            title: 'Offline Mandarin voices',
             subtitle:
-                'MeloTTS runs on your device. Lessons fall back to the system Mandarin voice until it is ready.',
-            child: _buildOfflineVoiceControl(),
+                'Download either local engine. Lessons use the system Mandarin voice whenever the selected pack is unavailable.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildVoicePackSection(PronunciationEngine.melo),
+                if (_offlineVoiceManager != null) ...[
+                  const SizedBox(height: 22),
+                  const Divider(),
+                  const SizedBox(height: 22),
+                  _buildVoicePackSection(PronunciationEngine.kokoro),
+                  if (_kokoroVoiceStatus?.state == OfflineVoiceState.ready) ...[
+                    const SizedBox(height: 22),
+                    const Divider(),
+                    const SizedBox(height: 22),
+                    _buildPronunciationSelectors(),
+                  ],
+                ],
+              ],
+            ),
           ),
         ],
         if (kDebugMode) ...[
@@ -530,9 +619,47 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildOfflineVoiceControl() {
+  bool get _shouldShowOfflineVoiceCard {
+    if (_offlineVoiceManager != null) {
+      final meloStatus = _offlineVoiceStatus;
+      final kokoroStatus = _kokoroVoiceStatus;
+      if (meloStatus == null || kokoroStatus == null) return false;
+      return meloStatus.state != OfflineVoiceState.unavailable ||
+          kokoroStatus.state != OfflineVoiceState.unavailable;
+    }
     final status = _offlineVoiceStatus;
-    if (_checkingOfflineVoice || status == null) {
+    return status != null && status.state != OfflineVoiceState.unavailable;
+  }
+
+  Widget _buildVoicePackSection(PronunciationEngine engine) {
+    final isKokoro = engine == PronunciationEngine.kokoro;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _engineName(engine),
+          style: const TextStyle(
+            color: AppColors.text,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          isKokoro
+              ? 'Higher-quality int8 speech with 100 Mandarin voices.'
+              : 'Compact, fast Mandarin and English speech.',
+          style: const TextStyle(color: AppColors.muted),
+        ),
+        const SizedBox(height: 14),
+        _buildOfflineVoiceControl(engine),
+      ],
+    );
+  }
+
+  Widget _buildOfflineVoiceControl(PronunciationEngine engine) {
+    final status = _voiceStatus(engine);
+    if (_checkingVoiceStatus(engine) || status == null) {
       return const Row(
         children: [
           SizedBox.square(
@@ -547,15 +674,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
     switch (status.state) {
       case OfflineVoiceState.ready:
-        return const Row(
-          key: Key('offline-voice-ready'),
+        return Row(
+          key: _voiceControlKey(engine, 'ready'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.check_circle_outline_rounded, color: AppColors.teal),
-            SizedBox(width: 10),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: AppColors.teal,
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'MeloTTS is installed. Pronunciation now works fully offline.',
+                '${_engineName(engine)} is installed and ready offline.',
               ),
             ),
           ],
@@ -564,16 +694,17 @@ class _SettingsPageState extends State<SettingsPage> {
         final progress = status.progress;
         final percent = progress == null ? null : (progress * 100).round();
         return Column(
-          key: const Key('offline-voice-downloading'),
+          key: _voiceControlKey(engine, 'downloading'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             LinearProgressIndicator(value: progress),
             const SizedBox(height: 10),
             Text(
               percent == null
-                  ? 'Preparing the voice download…'
-                  : 'Downloading… $percent% '
-                        '(${_formatMegabytes(status.downloadedBytes)} of 60.5 MB)',
+                  ? status.message ?? 'Preparing the voice download…'
+                  : '${status.message ?? 'Downloading…'} $percent% '
+                        '(${_formatMegabytes(status.downloadedBytes)} of '
+                        '${_formatMegabytes(status.totalBytes)} MB)',
               style: const TextStyle(color: AppColors.muted),
             ),
           ],
@@ -589,33 +720,113 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              key: const Key('offline-voice-retry'),
-              onPressed: _installOfflineVoice,
+              key: _voiceControlKey(engine, 'retry'),
+              onPressed: () => _installVoicePack(engine),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Try download again'),
             ),
           ],
         );
       case OfflineVoiceState.notInstalled:
+        final isKokoro = engine == PronunciationEngine.kokoro;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Optional one-time download: about 61 MB. No manual file setup is needed.',
-              style: TextStyle(color: AppColors.muted),
+            Text(
+              isKokoro
+                  ? 'Optional one-time download: 147 MB, about 215 MB installed. Installation needs about 600 MB of temporary free space.'
+                  : 'Optional one-time download: about 61 MB. No manual file setup is needed.',
+              style: const TextStyle(color: AppColors.muted),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              key: const Key('offline-voice-download'),
-              onPressed: _installOfflineVoice,
+              key: _voiceControlKey(engine, 'download'),
+              onPressed: () => _installVoicePack(engine),
               icon: const Icon(Icons.download_rounded),
-              label: const Text('Download offline voice'),
+              label: Text('Download ${_engineName(engine)}'),
             ),
           ],
         );
       case OfflineVoiceState.unavailable:
         return const SizedBox.shrink();
     }
+  }
+
+  Key _voiceControlKey(PronunciationEngine engine, String suffix) => Key(
+    '${engine == PronunciationEngine.melo ? 'offline' : 'kokoro'}-voice-$suffix',
+  );
+
+  Widget _buildPronunciationSelectors() {
+    final manager = _offlineVoiceManager;
+    final voices =
+        manager?.voicesFor(PronunciationEngine.kokoro) ?? kokoroMandarinVoices;
+    final selectedVoice = voices.firstWhere(
+      (voice) => voice.id == _pronunciationVoiceId,
+      orElse: () => voices.first,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<PronunciationEngine>(
+          key: const Key('pronunciation-engine-picker'),
+          initialValue: _pronunciationEngine,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Speech engine',
+            border: OutlineInputBorder(),
+          ),
+          items: const [
+            DropdownMenuItem(
+              value: PronunciationEngine.melo,
+              child: Text('MeloTTS'),
+            ),
+            DropdownMenuItem(
+              value: PronunciationEngine.kokoro,
+              child: Text('Kokoro'),
+            ),
+          ],
+          onChanged: (engine) {
+            if (engine == null) return;
+            setState(() => _pronunciationEngine = engine);
+            unawaited(_applyPronunciationSelection());
+          },
+        ),
+        const SizedBox(height: 16),
+        KeyedSubtree(
+          key: const Key('kokoro-voice-picker'),
+          child: DropdownButtonFormField<String>(
+            key: ValueKey(
+              'kokoro-${_pronunciationEngine.name}-${selectedVoice.id}',
+            ),
+            initialValue: selectedVoice.id,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Kokoro voice',
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              for (final voice in voices)
+                DropdownMenuItem(
+                  value: voice.id,
+                  child: Text(voice.label, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+            onChanged: _pronunciationEngine == PronunciationEngine.kokoro
+                ? (voiceId) {
+                    if (voiceId == null) return;
+                    setState(() => _pronunciationVoiceId = voiceId);
+                    unawaited(_applyPronunciationSelection());
+                  }
+                : null,
+          ),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'Voice changes apply immediately. Use Save preferences above to keep the choice after restarting.',
+          style: TextStyle(color: AppColors.muted, fontSize: 12),
+        ),
+      ],
+    );
   }
 
   String _formatMegabytes(int bytes) =>

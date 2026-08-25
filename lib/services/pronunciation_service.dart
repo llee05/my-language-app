@@ -4,6 +4,9 @@ import '../models/learning_progress.dart';
 
 enum OfflineVoiceState { unavailable, notInstalled, downloading, ready, failed }
 
+const meloOfflineVoiceDownloadBytes = 60480445;
+const kokoroOfflineVoiceDownloadBytes = 147031220;
+
 class OfflineVoiceStatus {
   const OfflineVoiceStatus({
     required this.state,
