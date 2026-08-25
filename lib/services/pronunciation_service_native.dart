@@ -11,14 +11,18 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
+import '../models/learning_progress.dart';
 import 'fallback_pronunciation_service.dart';
+import 'kokoro_voice_pack.dart';
 import 'pronunciation_service.dart';
 import 'pronunciation_service_system.dart';
 
 PronunciationService createPlatformPronunciationService() {
-  final voicePack = _MeloVoicePack();
   return FallbackPronunciationService(
-    _SherpaPronunciationService(voicePack),
+    _SherpaPronunciationService(
+      meloVoicePack: _MeloVoicePack(),
+      kokoroVoicePack: KokoroVoicePackInstaller(),
+    ),
     SystemPronunciationService(),
   );
 }
@@ -51,7 +55,9 @@ class _MeloVoicePack {
   final StreamController<OfflineVoiceStatus> _updates =
       StreamController<OfflineVoiceStatus>.broadcast(sync: true);
   Future<void>? _installFuture;
-  OfflineVoiceStatus _lastStatus = const OfflineVoiceStatus.notInstalled();
+  OfflineVoiceStatus _lastStatus = const OfflineVoiceStatus.notInstalled(
+    totalBytes: _voicePackBytes,
+  );
   bool _disposed = false;
 
   Stream<OfflineVoiceStatus> get updates => _updates.stream;
@@ -70,7 +76,7 @@ class _MeloVoicePack {
       final installed = await _isComplete(directory);
       final status = installed
           ? const OfflineVoiceStatus.ready()
-          : const OfflineVoiceStatus.notInstalled();
+          : const OfflineVoiceStatus.notInstalled(totalBytes: _voicePackBytes);
       _emit(status);
       return status;
     } catch (_) {
@@ -243,30 +249,75 @@ class _MeloVoicePack {
   }
 }
 
-class _SherpaPronunciationService implements PronunciationService {
-  _SherpaPronunciationService(this._voicePack);
+class _SherpaPronunciationService
+    implements PronunciationService, OfflinePronunciationManager {
+  _SherpaPronunciationService({
+    required this._meloVoicePack,
+    required this._kokoroVoicePack,
+  }) {
+    _voicePackSubscriptions = [
+      _meloVoicePack.updates.listen(_voicePackUpdates.add),
+      _kokoroVoicePack.updates.listen(_voicePackUpdates.add),
+    ];
+  }
 
-  final _MeloVoicePack _voicePack;
+  final _MeloVoicePack _meloVoicePack;
+  final KokoroVoicePackInstaller _kokoroVoicePack;
+  final StreamController<OfflineVoiceStatus> _voicePackUpdates =
+      StreamController<OfflineVoiceStatus>.broadcast(sync: true);
+  late final List<StreamSubscription<OfflineVoiceStatus>>
+  _voicePackSubscriptions;
   final _SherpaWorker _worker = _SherpaWorker();
   AudioSource? _audioSource;
   int _requestId = 0;
   bool _disposed = false;
 
   @override
-  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => _voicePack.updates;
+  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => _meloVoicePack.updates;
 
   @override
-  Future<OfflineVoiceStatus> checkOfflineVoice() => _voicePack.check();
+  Stream<OfflineVoiceStatus> get voicePackUpdates => _voicePackUpdates.stream;
 
   @override
-  Future<void> installOfflineVoice() => _voicePack.install();
+  Future<OfflineVoiceStatus> checkOfflineVoice() => _meloVoicePack.check();
+
+  @override
+  Future<void> installOfflineVoice() => _meloVoicePack.install();
+
+  @override
+  Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) =>
+      switch (engine) {
+        PronunciationEngine.melo => _meloVoicePack.check(),
+        PronunciationEngine.kokoro => _kokoroVoicePack.check(),
+      };
+
+  @override
+  Future<void> installVoicePack(PronunciationEngine engine) => switch (engine) {
+    PronunciationEngine.melo => _meloVoicePack.install(),
+    PronunciationEngine.kokoro => _kokoroVoicePack.install(),
+  };
+
+  @override
+  List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
+      switch (engine) {
+        PronunciationEngine.melo => const [meloPronunciationVoice],
+        PronunciationEngine.kokoro => kokoroMandarinVoices,
+      };
+
+  @override
+  Future<void> configurePronunciation({
+    required PronunciationEngine engine,
+    String? voiceId,
+  }) async {
+    resolvePronunciationVoice(engine, voiceId);
+  }
 
   @override
   Future<void> speakMandarin(String text) async {
     if (_disposed || text.trim().isEmpty) return;
     final requestId = ++_requestId;
     await _stopPlayback();
-    final directory = await _voicePack.installedDirectory();
+    final directory = await _meloVoicePack.installedDirectory();
     if (directory == null) throw const OfflineVoiceNotInstalledException();
     if (_disposed || requestId != _requestId) return;
 
@@ -322,7 +373,12 @@ class _SherpaPronunciationService implements PronunciationService {
     _requestId++;
     await _stopPlayback();
     await _worker.dispose();
-    await _voicePack.dispose();
+    for (final subscription in _voicePackSubscriptions) {
+      await subscription.cancel();
+    }
+    await _meloVoicePack.dispose();
+    await _kokoroVoicePack.dispose();
+    await _voicePackUpdates.close();
   }
 }
 
