@@ -96,6 +96,11 @@ class SqliteSettingsRepository implements SettingsRepository {
       soundEnabled: row['sound_enabled'] == 1,
       reminderEnabled: row['reminder_enabled'] == 1,
       reminderHour: row['reminder_hour'] as int,
+      pronunciationEngine: switch (row['pronunciation_engine']) {
+        'kokoro' => PronunciationEngine.kokoro,
+        _ => PronunciationEngine.melo,
+      },
+      pronunciationVoiceId: row['pronunciation_voice_id'] as String?,
     );
   });
 
@@ -107,6 +112,8 @@ class SqliteSettingsRepository implements SettingsRepository {
       'sound_enabled': settings.soundEnabled ? 1 : 0,
       'reminder_enabled': settings.reminderEnabled ? 1 : 0,
       'reminder_hour': settings.reminderHour,
+      'pronunciation_engine': settings.pronunciationEngine.name,
+      'pronunciation_voice_id': settings.pronunciationVoiceId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   });
 }

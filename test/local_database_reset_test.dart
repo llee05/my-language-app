@@ -65,6 +65,8 @@ void main() {
           soundEnabled: false,
           reminderEnabled: true,
           reminderHour: 7,
+          pronunciationEngine: PronunciationEngine.kokoro,
+          pronunciationVoiceId: 'zf_032',
         ),
       );
 
@@ -138,6 +140,8 @@ void main() {
       expect(restoredSettings.soundEnabled, isTrue);
       expect(restoredSettings.reminderEnabled, isFalse);
       expect(restoredSettings.reminderHour, 18);
+      expect(restoredSettings.pronunciationEngine, PronunciationEngine.melo);
+      expect(restoredSettings.pronunciationVoiceId, isNull);
       expect(
         await lessons.findGenerated(theme: generatedTheme, hskLevel: 3),
         isNull,

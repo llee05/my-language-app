@@ -1,17 +1,23 @@
 import 'lesson.dart';
 
+enum PronunciationEngine { melo, kokoro }
+
 class LearnerSettings {
   const LearnerSettings({
     this.showPinyin = true,
     this.soundEnabled = true,
     this.reminderEnabled = false,
     this.reminderHour = 18,
+    this.pronunciationEngine = PronunciationEngine.melo,
+    this.pronunciationVoiceId,
   });
 
   final bool showPinyin;
   final bool soundEnabled;
   final bool reminderEnabled;
   final int reminderHour;
+  final PronunciationEngine pronunciationEngine;
+  final String? pronunciationVoiceId;
 }
 
 class LessonSession {

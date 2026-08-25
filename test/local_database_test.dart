@@ -125,7 +125,7 @@ void main() {
         "SELECT name FROM sqlite_master WHERE type = 'index'",
       );
 
-      expect(version, 8);
+      expect(version, databaseSchemaVersion);
       expect(marker.single['value'], 'preserve me');
       expect(
         indexes.map((row) => row['name']),
@@ -152,8 +152,51 @@ void main() {
       expect(migratedProfile?.name, 'Legacy learner');
       expect(migratedProfile?.hskLevel, 2);
       expect(migratedProfile?.dailyWordTarget, 15);
+      final migratedSettings = await settings.load();
+      expect(migratedSettings.pronunciationEngine, PronunciationEngine.melo);
+      expect(migratedSettings.pronunciationVoiceId, isNull);
     },
   );
+
+  test('version 8 settings migrate to Melo without data loss', () async {
+    await LocalDatabase.resetForTesting();
+    final path = await LocalDatabase.databasePath();
+    final versionEight = await openDatabase(
+      path,
+      version: 8,
+      onCreate: (db, _) async {
+        await _createVersionOneSchema(db);
+        await migrateDatabase(db, fromVersion: 1, toVersion: 8);
+      },
+    );
+    final now = DateTime.utc(2026, 8, 25).toIso8601String();
+    await versionEight.insert('learner_profiles', {
+      'id': 1,
+      'name': 'Existing learner',
+      'hsk_level': 2,
+      'daily_word_target': 15,
+      'created_at': now,
+      'updated_at': now,
+    });
+    await versionEight.insert('learner_settings', {
+      'learner_id': 1,
+      'show_pinyin': 0,
+      'sound_enabled': 1,
+      'reminder_enabled': 1,
+      'reminder_hour': 8,
+    });
+    await versionEight.close();
+
+    final upgraded = await LocalDatabase.ensureInitialized();
+    expect(await upgraded.getVersion(), databaseSchemaVersion);
+    final restored = await settings.load();
+    expect(restored.showPinyin, isFalse);
+    expect(restored.soundEnabled, isTrue);
+    expect(restored.reminderEnabled, isTrue);
+    expect(restored.reminderHour, 8);
+    expect(restored.pronunciationEngine, PronunciationEngine.melo);
+    expect(restored.pronunciationVoiceId, isNull);
+  });
 
   test('learner profile is persisted in its typed repository', () async {
     await learners.save(
@@ -185,6 +228,8 @@ void main() {
         soundEnabled: false,
         reminderEnabled: true,
         reminderHour: 7,
+        pronunciationEngine: PronunciationEngine.kokoro,
+        pronunciationVoiceId: 'zf_017',
       ),
     );
     await lessons.saveGenerated(
@@ -425,6 +470,8 @@ void main() {
         soundEnabled: false,
         reminderEnabled: true,
         reminderHour: 9,
+        pronunciationEngine: PronunciationEngine.kokoro,
+        pronunciationVoiceId: 'zf_021',
       ),
     );
 
@@ -433,6 +480,8 @@ void main() {
     expect(storedSettings.soundEnabled, isFalse);
     expect(storedSettings.reminderEnabled, isTrue);
     expect(storedSettings.reminderHour, 9);
+    expect(storedSettings.pronunciationEngine, PronunciationEngine.kokoro);
+    expect(storedSettings.pronunciationVoiceId, 'zf_021');
 
     final lessonSummary = (await lessons.topics()).first;
     final lesson = await lessons.findGenerated(
@@ -991,6 +1040,9 @@ void main() {
     final progressColumns = await db.rawQuery(
       'PRAGMA table_info(card_progress)',
     );
+    final settingsColumns = await db.rawQuery(
+      'PRAGMA table_info(learner_settings)',
+    );
 
     final cardColumns = await db.rawQuery('PRAGMA table_info(cards)');
     final lessonColumns = await db.rawQuery('PRAGMA table_info(lessons)');
@@ -999,6 +1051,10 @@ void main() {
     );
     expect(lessonColumns.map((row) => row['name']), contains('is_listed'));
     expect(reviewColumns.map((row) => row['name']), contains('submission_key'));
+    expect(
+      settingsColumns.map((row) => row['name']),
+      containsAll(['pronunciation_engine', 'pronunciation_voice_id']),
+    );
     expect(
       cardColumns.map((row) => row['name']),
       containsAll([
@@ -1079,6 +1135,8 @@ void main() {
           soundEnabled: false,
           reminderEnabled: true,
           reminderHour: 7,
+          pronunciationEngine: PronunciationEngine.kokoro,
+          pronunciationVoiceId: 'zm_041',
         ),
       );
       final summary = (await lessons.topics()).first;
@@ -1132,6 +1190,8 @@ void main() {
       expect(restoredSettings.soundEnabled, isFalse);
       expect(restoredSettings.reminderEnabled, isTrue);
       expect(restoredSettings.reminderHour, 7);
+      expect(restoredSettings.pronunciationEngine, PronunciationEngine.kokoro);
+      expect(restoredSettings.pronunciationVoiceId, 'zm_041');
       expect(restoredSession?.currentCardIndex, 2);
       expect(restoredSession?.cardsReviewed, 1);
       expect(restoredSession?.correctAnswers, 1);
@@ -1404,7 +1464,7 @@ void main() {
       await versionThree.close();
 
       final upgraded = await LocalDatabase.ensureInitialized();
-      expect(await upgraded.getVersion(), 8);
+      expect(await upgraded.getVersion(), databaseSchemaVersion);
       final restored = await progress.progressForCard(cardId);
       expect(restored?.timesSeen, 3);
       expect(restored?.correctAnswers, 2);

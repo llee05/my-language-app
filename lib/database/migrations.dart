@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 8;
+const int databaseSchemaVersion = 9;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -273,6 +273,15 @@ final Map<int, MigrationStep> databaseMigrations = {
       'CREATE UNIQUE INDEX idx_reviews_submission_key '
       'ON review_history(learner_id, submission_key) '
       'WHERE submission_key IS NOT NULL',
+    );
+  },
+  9: (db) async {
+    await db.execute(
+      'ALTER TABLE learner_settings '
+      "ADD COLUMN pronunciation_engine TEXT NOT NULL DEFAULT 'melo'",
+    );
+    await db.execute(
+      'ALTER TABLE learner_settings ADD COLUMN pronunciation_voice_id TEXT',
     );
   },
 };
