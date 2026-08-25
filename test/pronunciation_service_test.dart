@@ -168,7 +168,7 @@ void main() {
       service,
       const LearnerSettings(
         pronunciationEngine: PronunciationEngine.kokoro,
-        pronunciationVoiceId: 'zm_041',
+        kokoroVoiceIds: ['zm_041'],
       ),
     );
 

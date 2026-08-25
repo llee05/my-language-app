@@ -87,7 +87,7 @@ void main() {
           settings: _MemorySettingsRepository(
             const LearnerSettings(
               pronunciationEngine: PronunciationEngine.kokoro,
-              pronunciationVoiceId: 'zm_041',
+              kokoroVoiceIds: ['zm_041'],
             ),
           ),
           progress: _MemoryProgressRepository(),
@@ -2661,7 +2661,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.settings.pronunciationEngine, PronunciationEngine.kokoro);
-    expect(repository.settings.pronunciationVoiceId, 'zm_041');
+    expect(repository.settings.kokoroVoiceIds, ['zm_041']);
   });
 
   testWidgets('settings restores a saved Kokoro voice once installed', (
@@ -2688,7 +2688,7 @@ void main() {
             settingsRepository: _MemorySettingsRepository(
               const LearnerSettings(
                 pronunciationEngine: PronunciationEngine.kokoro,
-                pronunciationVoiceId: 'zm_041',
+                kokoroVoiceIds: ['zm_041'],
               ),
             ),
             pronunciationService: pronunciation,
@@ -2763,7 +2763,7 @@ void main() {
         reminderEnabled: true,
         reminderHour: 7,
         pronunciationEngine: PronunciationEngine.kokoro,
-        pronunciationVoiceId: 'zf_021',
+        kokoroVoiceIds: ['zf_021'],
       ),
     );
 
@@ -2810,10 +2810,7 @@ void main() {
     expect(retryAttempt.reminderEnabled, firstAttempt.reminderEnabled);
     expect(retryAttempt.reminderHour, firstAttempt.reminderHour);
     expect(retryAttempt.pronunciationEngine, firstAttempt.pronunciationEngine);
-    expect(
-      retryAttempt.pronunciationVoiceId,
-      firstAttempt.pronunciationVoiceId,
-    );
+    expect(retryAttempt.kokoroVoiceIds, firstAttempt.kokoroVoiceIds);
     expect(
       find.byKey(const Key('settings-preferences-save-error')),
       findsNothing,

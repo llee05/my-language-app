@@ -9,7 +9,7 @@ class LearnerSettings {
     this.reminderEnabled = false,
     this.reminderHour = 18,
     this.pronunciationEngine = PronunciationEngine.melo,
-    this.pronunciationVoiceId,
+    this.kokoroVoiceIds = const [],
   });
 
   final bool showPinyin;
@@ -17,7 +17,12 @@ class LearnerSettings {
   final bool reminderEnabled;
   final int reminderHour;
   final PronunciationEngine pronunciationEngine;
-  final String? pronunciationVoiceId;
+
+  /// Kokoro voices to choose between for each phrase.
+  ///
+  /// An empty list means all available Mandarin voices. A one-item list keeps
+  /// pronunciation on that voice, while larger lists form a random voice pool.
+  final List<String> kokoroVoiceIds;
 }
 
 class LessonSession {

@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 9;
+const int databaseSchemaVersion = 10;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -283,6 +283,28 @@ final Map<int, MigrationStep> databaseMigrations = {
     await db.execute(
       'ALTER TABLE learner_settings ADD COLUMN pronunciation_voice_id TEXT',
     );
+  },
+  10: (db) async {
+    await db.execute(
+      "ALTER TABLE learner_settings ADD COLUMN kokoro_voice_ids TEXT NOT NULL DEFAULT '[]'",
+    );
+
+    final settings = await db.query(
+      'learner_settings',
+      columns: ['learner_id', 'pronunciation_voice_id'],
+    );
+    for (final row in settings) {
+      final legacyVoiceId = (row['pronunciation_voice_id'] as String?)?.trim();
+      if (legacyVoiceId == null || legacyVoiceId.isEmpty) continue;
+      await db.update(
+        'learner_settings',
+        {
+          'kokoro_voice_ids': jsonEncode([legacyVoiceId]),
+        },
+        where: 'learner_id = ?',
+        whereArgs: [row['learner_id']],
+      );
+    }
   },
 };
 

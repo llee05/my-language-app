@@ -250,7 +250,7 @@ Future<void> applyPronunciationSettings(
   if (service is! OfflinePronunciationManager) return;
   await (service as OfflinePronunciationManager).configurePronunciation(
     engine: settings.pronunciationEngine,
-    voiceId: settings.pronunciationVoiceId,
+    voiceId: settings.kokoroVoiceIds.firstOrNull,
   );
 }
 

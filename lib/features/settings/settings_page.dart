@@ -40,7 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _reminderEnabled = false;
   int _reminderHour = 18;
   PronunciationEngine _pronunciationEngine = PronunciationEngine.melo;
-  String? _pronunciationVoiceId;
+  List<String> _kokoroVoiceIds = const [];
   late final Future<String> _databasePath;
   late final PronunciationService _pronunciationService;
   late final OfflinePronunciationManager? _offlineVoiceManager;
@@ -192,7 +192,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _reminderEnabled = settings.reminderEnabled;
         _reminderHour = settings.reminderHour;
         _pronunciationEngine = settings.pronunciationEngine;
-        _pronunciationVoiceId = settings.pronunciationVoiceId;
+        _kokoroVoiceIds = settings.kokoroVoiceIds;
         _loadingPreferences = false;
         _preferencesLoadFailed = false;
       });
@@ -238,7 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
           reminderEnabled: _reminderEnabled,
           reminderHour: _reminderHour,
           pronunciationEngine: _pronunciationEngine,
-          pronunciationVoiceId: _pronunciationVoiceId,
+          kokoroVoiceIds: _kokoroVoiceIds,
         ),
       );
       await _applyPronunciationSelection();
@@ -257,7 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await manager.configurePronunciation(
         engine: _pronunciationEngine,
-        voiceId: _pronunciationVoiceId,
+        voiceId: _kokoroVoiceIds.firstOrNull,
       );
     } catch (error) {
       debugPrint('Pronunciation selection could not be applied: $error');
@@ -761,7 +761,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final voices =
         manager?.voicesFor(PronunciationEngine.kokoro) ?? kokoroMandarinVoices;
     final selectedVoice = voices.firstWhere(
-      (voice) => voice.id == _pronunciationVoiceId,
+      (voice) => voice.id == _kokoroVoiceIds.firstOrNull,
       orElse: () => voices.first,
     );
     return Column(
@@ -814,7 +814,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onChanged: _pronunciationEngine == PronunciationEngine.kokoro
                 ? (voiceId) {
                     if (voiceId == null) return;
-                    setState(() => _pronunciationVoiceId = voiceId);
+                    setState(() => _kokoroVoiceIds = [voiceId]);
                     unawaited(_applyPronunciationSelection());
                   }
                 : null,

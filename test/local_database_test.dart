@@ -154,7 +154,7 @@ void main() {
       expect(migratedProfile?.dailyWordTarget, 15);
       final migratedSettings = await settings.load();
       expect(migratedSettings.pronunciationEngine, PronunciationEngine.melo);
-      expect(migratedSettings.pronunciationVoiceId, isNull);
+      expect(migratedSettings.kokoroVoiceIds, isEmpty);
     },
   );
 
@@ -195,7 +195,45 @@ void main() {
     expect(restored.reminderEnabled, isTrue);
     expect(restored.reminderHour, 8);
     expect(restored.pronunciationEngine, PronunciationEngine.melo);
-    expect(restored.pronunciationVoiceId, isNull);
+    expect(restored.kokoroVoiceIds, isEmpty);
+  });
+
+  test('version 9 voice choice migrates to a one-voice Kokoro pool', () async {
+    await LocalDatabase.resetForTesting();
+    final path = await LocalDatabase.databasePath();
+    final versionNine = await openDatabase(
+      path,
+      version: 9,
+      onCreate: (db, _) async {
+        await _createVersionOneSchema(db);
+        await migrateDatabase(db, fromVersion: 1, toVersion: 9);
+      },
+    );
+    final now = DateTime.utc(2026, 8, 25).toIso8601String();
+    await versionNine.insert('learner_profiles', {
+      'id': 1,
+      'name': 'Existing Kokoro learner',
+      'hsk_level': 2,
+      'daily_word_target': 15,
+      'created_at': now,
+      'updated_at': now,
+    });
+    await versionNine.insert('learner_settings', {
+      'learner_id': 1,
+      'show_pinyin': 1,
+      'sound_enabled': 1,
+      'reminder_enabled': 0,
+      'reminder_hour': 18,
+      'pronunciation_engine': 'kokoro',
+      'pronunciation_voice_id': 'zm_041',
+    });
+    await versionNine.close();
+
+    final upgraded = await LocalDatabase.ensureInitialized();
+    expect(await upgraded.getVersion(), databaseSchemaVersion);
+    final restored = await settings.load();
+    expect(restored.pronunciationEngine, PronunciationEngine.kokoro);
+    expect(restored.kokoroVoiceIds, ['zm_041']);
   });
 
   test('learner profile is persisted in its typed repository', () async {
@@ -229,7 +267,7 @@ void main() {
         reminderEnabled: true,
         reminderHour: 7,
         pronunciationEngine: PronunciationEngine.kokoro,
-        pronunciationVoiceId: 'zf_017',
+        kokoroVoiceIds: ['zf_017'],
       ),
     );
     await lessons.saveGenerated(
@@ -471,7 +509,7 @@ void main() {
         reminderEnabled: true,
         reminderHour: 9,
         pronunciationEngine: PronunciationEngine.kokoro,
-        pronunciationVoiceId: 'zf_021',
+        kokoroVoiceIds: ['zf_021', 'zm_041'],
       ),
     );
 
@@ -481,7 +519,7 @@ void main() {
     expect(storedSettings.reminderEnabled, isTrue);
     expect(storedSettings.reminderHour, 9);
     expect(storedSettings.pronunciationEngine, PronunciationEngine.kokoro);
-    expect(storedSettings.pronunciationVoiceId, 'zf_021');
+    expect(storedSettings.kokoroVoiceIds, ['zf_021', 'zm_041']);
 
     final lessonSummary = (await lessons.topics()).first;
     final lesson = await lessons.findGenerated(
@@ -1053,7 +1091,11 @@ void main() {
     expect(reviewColumns.map((row) => row['name']), contains('submission_key'));
     expect(
       settingsColumns.map((row) => row['name']),
-      containsAll(['pronunciation_engine', 'pronunciation_voice_id']),
+      containsAll([
+        'pronunciation_engine',
+        'pronunciation_voice_id',
+        'kokoro_voice_ids',
+      ]),
     );
     expect(
       cardColumns.map((row) => row['name']),
@@ -1136,7 +1178,7 @@ void main() {
           reminderEnabled: true,
           reminderHour: 7,
           pronunciationEngine: PronunciationEngine.kokoro,
-          pronunciationVoiceId: 'zm_041',
+          kokoroVoiceIds: ['zm_041', 'zf_021'],
         ),
       );
       final summary = (await lessons.topics()).first;
@@ -1191,7 +1233,7 @@ void main() {
       expect(restoredSettings.reminderEnabled, isTrue);
       expect(restoredSettings.reminderHour, 7);
       expect(restoredSettings.pronunciationEngine, PronunciationEngine.kokoro);
-      expect(restoredSettings.pronunciationVoiceId, 'zm_041');
+      expect(restoredSettings.kokoroVoiceIds, ['zm_041', 'zf_021']);
       expect(restoredSession?.currentCardIndex, 2);
       expect(restoredSession?.cardsReviewed, 1);
       expect(restoredSession?.correctAnswers, 1);

@@ -99,7 +99,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
       final settings = await widget.dependencies.settings.load();
       await (service as OfflinePronunciationManager).configurePronunciation(
         engine: settings.pronunciationEngine,
-        voiceId: settings.pronunciationVoiceId,
+        voiceId: settings.kokoroVoiceIds.firstOrNull,
       );
     } catch (error) {
       debugPrint('Pronunciation preferences could not be restored: $error');

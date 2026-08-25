@@ -100,7 +100,7 @@ class SqliteSettingsRepository implements SettingsRepository {
         'kokoro' => PronunciationEngine.kokoro,
         _ => PronunciationEngine.melo,
       },
-      pronunciationVoiceId: row['pronunciation_voice_id'] as String?,
+      kokoroVoiceIds: _decodeKokoroVoiceIds(row['kokoro_voice_ids']),
     );
   });
 
@@ -113,9 +113,29 @@ class SqliteSettingsRepository implements SettingsRepository {
       'reminder_enabled': settings.reminderEnabled ? 1 : 0,
       'reminder_hour': settings.reminderHour,
       'pronunciation_engine': settings.pronunciationEngine.name,
-      'pronunciation_voice_id': settings.pronunciationVoiceId,
+      'pronunciation_voice_id': settings.kokoroVoiceIds.length == 1
+          ? settings.kokoroVoiceIds.single
+          : null,
+      'kokoro_voice_ids': jsonEncode(settings.kokoroVoiceIds),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   });
+}
+
+List<String> _decodeKokoroVoiceIds(Object? storedValue) {
+  if (storedValue is! String) return const [];
+  try {
+    final decoded = jsonDecode(storedValue);
+    if (decoded is! List) return const [];
+    final uniqueIds = <String>{};
+    for (final value in decoded) {
+      if (value is! String) continue;
+      final id = value.trim();
+      if (id.isNotEmpty) uniqueIds.add(id);
+    }
+    return List.unmodifiable(uniqueIds);
+  } on FormatException {
+    return const [];
+  }
 }
 
 class SqliteLessonRepository implements LessonRepository {
