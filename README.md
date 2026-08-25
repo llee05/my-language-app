@@ -93,13 +93,15 @@ the app's private support directory; no manual model-file setup is needed:
 
 - **MeloTTS:** an approximately 61 MB download with one compact, fast voice.
 - **Kokoro int8 v1.1:** a 147 MB download (about 215 MB installed) with 100
-  selectable Mandarin voices. Extraction needs about 600 MB of temporary free
-  space.
+  Mandarin voices. Extraction needs about 600 MB of temporary free space.
 
-Choose the speech engine and Kokoro voice after installation, then save the
-preference for future launches. Synthesis runs locally through sherpa-onnx,
-including on Linux. Until the selected pack is ready, the app falls back to a
-compatible Simplified Chinese (`zh-CN`) system voice where one is available.
+After installing Kokoro, its default voice pool includes all 100 voices and
+chooses one randomly for each phrase without immediately repeating a voice.
+The searchable voice picker can limit that pool to any subset; selecting one
+voice keeps pronunciation consistent. Save preferences to keep the engine and
+pool for future launches. Synthesis runs locally through sherpa-onnx, including
+on Linux. Until the selected pack is ready, the app falls back to a compatible
+Simplified Chinese (`zh-CN`) system voice where one is available.
 Melo uses the MIT-licensed
 [MeloTTS Chinese/English model](https://huggingface.co/csukuangfj/vits-melo-tts-zh_en);
 Kokoro uses the Apache-2.0-licensed
