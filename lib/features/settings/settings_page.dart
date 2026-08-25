@@ -186,13 +186,14 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final settings = await widget.settingsRepository.load();
       if (!mounted) return;
+      final kokoroVoiceIds = _canonicalKokoroVoiceIds(settings.kokoroVoiceIds);
       setState(() {
         _showPinyin = settings.showPinyin;
         _soundEnabled = settings.soundEnabled;
         _reminderEnabled = settings.reminderEnabled;
         _reminderHour = settings.reminderHour;
         _pronunciationEngine = settings.pronunciationEngine;
-        _kokoroVoiceIds = settings.kokoroVoiceIds;
+        _kokoroVoiceIds = kokoroVoiceIds;
         _loadingPreferences = false;
         _preferencesLoadFailed = false;
       });
@@ -757,13 +758,7 @@ class _SettingsPageState extends State<SettingsPage> {
   );
 
   Widget _buildPronunciationSelectors() {
-    final manager = _offlineVoiceManager;
-    final voices =
-        manager?.voicesFor(PronunciationEngine.kokoro) ?? kokoroMandarinVoices;
-    final selectedVoice = voices.firstWhere(
-      (voice) => voice.id == _kokoroVoiceIds.firstOrNull,
-      orElse: () => voices.first,
-    );
+    final voices = _availableKokoroVoices();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -792,45 +787,267 @@ class _SettingsPageState extends State<SettingsPage> {
           },
         ),
         const SizedBox(height: 16),
-        KeyedSubtree(
+        SizedBox(
+          width: double.infinity,
           key: const Key('kokoro-voice-picker'),
-          child: DropdownButtonFormField<String>(
-            key: ValueKey(
-              'kokoro-${_pronunciationEngine.name}-${selectedVoice.id}',
+          child: OutlinedButton(
+            onPressed: _openKokoroVoicePicker,
+            style: OutlinedButton.styleFrom(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
             ),
-            initialValue: selectedVoice.id,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              labelText: 'Kokoro voice',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              for (final voice in voices)
-                DropdownMenuItem(
-                  value: voice.id,
-                  child: Text(voice.label, overflow: TextOverflow.ellipsis),
+            child: Row(
+              children: [
+                const Icon(Icons.record_voice_over_outlined),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Kokoro voice pool',
+                        style: TextStyle(fontSize: 12, color: AppColors.muted),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _kokoroVoiceSummary(voices),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.text),
+                      ),
+                    ],
+                  ),
                 ),
-            ],
-            onChanged: _pronunciationEngine == PronunciationEngine.kokoro
-                ? (voiceId) {
-                    if (voiceId == null) return;
-                    setState(() => _kokoroVoiceIds = [voiceId]);
-                    unawaited(_applyPronunciationSelection());
-                  }
-                : null,
+                const SizedBox(width: 12),
+                const Icon(Icons.chevron_right_rounded),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 10),
         const Text(
-          'Voice changes apply immediately. Use Save preferences above to keep the choice after restarting.',
+          'A voice is chosen for each phrase. Select one voice to keep it consistent. Changes apply immediately; save preferences to keep them after restarting.',
           style: TextStyle(color: AppColors.muted, fontSize: 12),
         ),
       ],
     );
   }
 
+  List<PronunciationVoice> _availableKokoroVoices() {
+    final voices =
+        _offlineVoiceManager?.voicesFor(PronunciationEngine.kokoro) ??
+        kokoroMandarinVoices;
+    return voices.isEmpty ? kokoroMandarinVoices : voices;
+  }
+
+  List<String> _canonicalKokoroVoiceIds(Iterable<String> voiceIds) {
+    final voices = _availableKokoroVoices();
+    final requestedIds = voiceIds.toSet();
+    final selectedIds = [
+      for (final voice in voices)
+        if (requestedIds.contains(voice.id)) voice.id,
+    ];
+    if (selectedIds.isEmpty || selectedIds.length == voices.length) {
+      return const [];
+    }
+    return List.unmodifiable(selectedIds);
+  }
+
+  String _kokoroVoiceSummary(List<PronunciationVoice> voices) {
+    final selectedIds = _canonicalKokoroVoiceIds(_kokoroVoiceIds);
+    if (selectedIds.isEmpty) return 'All ${voices.length} voices (random)';
+    if (selectedIds.length > 1) {
+      return '${selectedIds.length} voices (random)';
+    }
+    return voices.firstWhere((voice) => voice.id == selectedIds.single).label;
+  }
+
+  Future<void> _openKokoroVoicePicker() async {
+    final voices = _availableKokoroVoices();
+    final selectedIds = _canonicalKokoroVoiceIds(_kokoroVoiceIds);
+    final result = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => _KokoroVoicePoolDialog(
+        voices: voices,
+        selectedVoiceIds: selectedIds.isEmpty
+            ? {for (final voice in voices) voice.id}
+            : selectedIds.toSet(),
+      ),
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      _kokoroVoiceIds = _canonicalKokoroVoiceIds(result);
+    });
+    unawaited(_applyPronunciationSelection());
+  }
+
   String _formatMegabytes(int bytes) =>
       (bytes / (1000 * 1000)).toStringAsFixed(1);
+}
+
+class _KokoroVoicePoolDialog extends StatefulWidget {
+  const _KokoroVoicePoolDialog({
+    required this.voices,
+    required this.selectedVoiceIds,
+  });
+
+  final List<PronunciationVoice> voices;
+  final Set<String> selectedVoiceIds;
+
+  @override
+  State<_KokoroVoicePoolDialog> createState() => _KokoroVoicePoolDialogState();
+}
+
+class _KokoroVoicePoolDialogState extends State<_KokoroVoicePoolDialog> {
+  late Set<String> _selectedVoiceIds;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedVoiceIds = Set.of(widget.selectedVoiceIds);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _query.trim().toLowerCase();
+    final visibleVoices = [
+      for (final voice in widget.voices)
+        if (query.isEmpty ||
+            voice.label.toLowerCase().contains(query) ||
+            voice.id.toLowerCase().contains(query))
+          voice,
+    ];
+    final femaleVoices = visibleVoices
+        .where((voice) => voice.id.startsWith('zf_'))
+        .toList(growable: false);
+    final maleVoices = visibleVoices
+        .where((voice) => voice.id.startsWith('zm_'))
+        .toList(growable: false);
+
+    return AlertDialog(
+      key: const Key('kokoro-voice-dialog'),
+      title: const Text('Choose Kokoro voices'),
+      content: SizedBox(
+        width: 480,
+        height: 520,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              key: const Key('kokoro-voice-search'),
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Search voices',
+                prefixIcon: Icon(Icons.search_rounded),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => setState(() => _query = value),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      '${_selectedVoiceIds.length} of ${widget.voices.length} selected',
+                      key: const Key('kokoro-voice-selected-count'),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  key: const Key('kokoro-voice-select-all'),
+                  onPressed: () => setState(() {
+                    _selectedVoiceIds = {
+                      for (final voice in widget.voices) voice.id,
+                    };
+                  }),
+                  child: const Text('Select all'),
+                ),
+                TextButton(
+                  key: const Key('kokoro-voice-clear-all'),
+                  onPressed: () => setState(_selectedVoiceIds.clear),
+                  child: const Text('Clear'),
+                ),
+              ],
+            ),
+            if (_selectedVoiceIds.isEmpty)
+              const Padding(
+                key: Key('kokoro-voice-empty-error'),
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Choose at least one voice.',
+                  style: TextStyle(color: AppColors.red, fontSize: 12),
+                ),
+              ),
+            const Divider(height: 1),
+            Expanded(
+              child: visibleVoices.isEmpty
+                  ? const Center(child: Text('No matching voices.'))
+                  : ListView(
+                      children: [
+                        ..._buildVoiceGroup('Female voices', femaleVoices),
+                        ..._buildVoiceGroup('Male voices', maleVoices),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('kokoro-voice-apply'),
+          onPressed: _selectedVoiceIds.isEmpty
+              ? null
+              : () => Navigator.pop(context, [
+                  for (final voice in widget.voices)
+                    if (_selectedVoiceIds.contains(voice.id)) voice.id,
+                ]),
+          child: const Text('Apply'),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildVoiceGroup(String title, List<PronunciationVoice> voices) {
+    if (voices.isEmpty) return const [];
+    return [
+      Semantics(
+        header: true,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+      for (final voice in voices)
+        CheckboxListTile(
+          key: Key('kokoro-voice-choice-${voice.id}'),
+          value: _selectedVoiceIds.contains(voice.id),
+          controlAffinity: ListTileControlAffinity.leading,
+          title: Text(voice.label),
+          subtitle: Text(voice.id),
+          onChanged: (selected) => setState(() {
+            final nextIds = Set<String>.of(_selectedVoiceIds);
+            if (selected ?? false) {
+              nextIds.add(voice.id);
+            } else {
+              nextIds.remove(voice.id);
+            }
+            _selectedVoiceIds = nextIds;
+          }),
+        ),
+    ];
+  }
 }
 
 class _SettingsCard extends StatelessWidget {

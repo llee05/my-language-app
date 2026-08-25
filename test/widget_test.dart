@@ -2597,7 +2597,7 @@ void main() {
     expect(find.byKey(const Key('offline-voice-ready')), findsOneWidget);
   });
 
-  testWidgets('settings downloads Kokoro and saves its selected voice', (
+  testWidgets('settings downloads Kokoro and saves a random voice pool', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1000, 1100));
@@ -2633,6 +2633,36 @@ void main() {
     expect(pronunciation.installedEngines, [PronunciationEngine.kokoro]);
     expect(find.byKey(const Key('kokoro-voice-ready')), findsOneWidget);
     expect(find.byKey(const Key('kokoro-voice-picker')), findsOneWidget);
+    expect(find.text('All 100 voices (random)'), findsOneWidget);
+
+    final voicePicker = find.byKey(const Key('kokoro-voice-picker'));
+    await tester.ensureVisible(voicePicker);
+    await tester.tap(voicePicker);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('kokoro-voice-dialog')), findsOneWidget);
+    expect(find.text('100 of 100 selected'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('kokoro-voice-clear-all')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('kokoro-voice-empty-error')), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('kokoro-voice-apply')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.byKey(const Key('kokoro-voice-choice-zf_001')));
+    await tester.enterText(
+      find.byKey(const Key('kokoro-voice-search')),
+      'zm_041',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('kokoro-voice-choice-zm_041')));
+    await tester.tap(find.byKey(const Key('kokoro-voice-apply')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 voices (random)'), findsOneWidget);
 
     final enginePicker = find.byKey(const Key('pronunciation-engine-picker'));
     await tester.ensureVisible(enginePicker);
@@ -2642,17 +2672,8 @@ void main() {
         .onChanged!(PronunciationEngine.kokoro);
     await tester.pumpAndSettle();
 
-    final voicePicker = find.descendant(
-      of: find.byKey(const Key('kokoro-voice-picker')),
-      matching: find.byType(DropdownButtonFormField<String>),
-    );
-    tester.widget<DropdownButtonFormField<String>>(voicePicker).onChanged!(
-      'zm_041',
-    );
-    await tester.pumpAndSettle();
-
     expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
-    expect(pronunciation.configuredVoiceIds, ['zm_041']);
+    expect(pronunciation.configuredVoiceIds, ['zf_001', 'zm_041']);
 
     final save = find.text('Save preferences');
     await tester.ensureVisible(save);
@@ -2661,7 +2682,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.settings.pronunciationEngine, PronunciationEngine.kokoro);
-    expect(repository.settings.kokoroVoiceIds, ['zm_041']);
+    expect(repository.settings.kokoroVoiceIds, ['zf_001', 'zm_041']);
   });
 
   testWidgets('settings restores a saved Kokoro voice once installed', (
@@ -2700,6 +2721,55 @@ void main() {
 
     expect(find.byKey(const Key('kokoro-voice-picker')), findsOneWidget);
     expect(find.text('Male 041'), findsOneWidget);
+  });
+
+  testWidgets('cancelling the Kokoro voice picker keeps the current pool', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _ManagedFakePronunciationService(
+      kokoroStatus: const OfflineVoiceStatus.ready(
+        engine: PronunciationEngine.kokoro,
+      ),
+    );
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsPage(
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            developmentRepository: _MemoryDevelopmentRepository(),
+            settingsRepository: _MemorySettingsRepository(
+              const LearnerSettings(
+                pronunciationEngine: PronunciationEngine.kokoro,
+                kokoroVoiceIds: ['zf_001', 'zm_041'],
+              ),
+            ),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 voices (random)'), findsOneWidget);
+    final picker = find.byKey(const Key('kokoro-voice-picker'));
+    await tester.ensureVisible(picker);
+    await tester.pumpAndSettle();
+    await tester.tap(picker);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('kokoro-voice-clear-all')));
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('kokoro-voice-dialog')), findsNothing);
+    expect(find.text('2 voices (random)'), findsOneWidget);
+    expect(pronunciation.configuredVoiceIds, isEmpty);
   });
 
   testWidgets('settings preference load error is friendly and retryable', (
