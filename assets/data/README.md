@@ -2,15 +2,28 @@
 
 `hsk_vocabulary.json` is generated from the `complete.json` file in
 [`drkameleon/complete-hsk-vocabulary`](https://github.com/drkameleon/complete-hsk-vocabulary).
-It contains the HSK 2.0 levels 1–6 used by Vocab Rush.
+It contains the HSK 2.0 levels 1–6 used by lessons, Vocab Rush, and the
+vocabulary browser.
+
+The importer cross-checks ambiguous readings against the original HSK 2.0
+lists from [`clem109/hsk-vocabulary`](https://github.com/clem109/hsk-vocabulary)
+and builds concise `studyMeaning` values from the "HSK Official With
+Definitions 2012" files in
+[`glxxyz/hskhsk.com`](https://github.com/glxxyz/hskhsk.com). This avoids
+selecting surnames, archaic readings, variants, and other dictionary senses
+that are not the intended HSK vocabulary.
 
 Regenerate it with:
 
 ```sh
-dart run tool/import_hsk_vocabulary.dart path/to/complete.json assets/data/hsk_vocabulary.json
+dart run tool/import_hsk_vocabulary.dart \
+  path/to/complete.json \
+  path/to/hskhsk.com/data/lists \
+  assets/data/hsk_vocabulary.json
 ```
 
-The upstream dataset is MIT licensed. Copyright (c) 2026 Yanis Zafirópulos.
+Both upstream datasets are MIT licensed. The complete vocabulary dataset is
+copyright (c) 2026 Yanis Zafirópulos.
 
 ## Tatoeba sentence pairs
 
