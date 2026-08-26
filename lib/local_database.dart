@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'database/flashcard_seed.dart';
 import 'database/migrations.dart';
+import 'database/vocabulary_content.dart';
 
 class DatabaseResetInProgressException implements Exception {
   const DatabaseResetInProgressException();
@@ -125,6 +126,7 @@ class LocalDatabase {
       );
 
       await _maybeSeedDefaultLessons(openedDatabase);
+      await _applyVocabularyContentV2(openedDatabase);
       await _applyTatoebaExamples(openedDatabase);
       _database = openedDatabase;
       _openedDatabasePath = openedDatabase.path;
@@ -279,6 +281,93 @@ class LocalDatabase {
     });
   }
 
+  static Future<void> _applyVocabularyContentV2(Database db) async {
+    const marker = 'hsk_vocabulary_content_v2';
+    final applied = await db.query(
+      'content_migrations',
+      columns: ['key'],
+      where: 'key = ?',
+      whereArgs: [marker],
+      limit: 1,
+    );
+    if (applied.isNotEmpty) return;
+
+    final vocabulary =
+        (jsonDecode(
+                  await rootBundle.loadString(
+                    'assets/data/hsk_vocabulary.json',
+                  ),
+                )
+                as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+    final vocabularyByWord = {
+      for (final entry in vocabulary) entry['simplified'] as String: entry,
+    };
+    final bundledTitles = flashcardLessons
+        .map((lesson) => lesson['lesson_title'] as String)
+        .toList(growable: false);
+    final placeholders = List.filled(bundledTitles.length, '?').join(',');
+
+    await db.transaction((txn) async {
+      final cards = await txn.rawQuery('''
+        SELECT cards.*
+        FROM cards
+        INNER JOIN lessons ON lessons.id = cards.lesson_id
+        WHERE lessons.lesson_title NOT IN ($placeholders)
+        ''', bundledTitles);
+
+      for (final card in cards) {
+        final entry = vocabularyByWord[card['chinese']];
+        if (entry == null) continue;
+        final pinyin = entry['pinyin'] as String;
+        final meaning = vocabularyStudyMeaning(entry);
+        final partOfSpeech =
+            (entry['partOfSpeech'] as List<dynamic>? ?? const []).join(', ');
+        final oldPinyin = card['pinyin'] as String;
+        final oldMeaning = card['english_meaning'] as String;
+        final oldPartOfSpeech = card['part_of_speech'] as String;
+        if (oldPinyin == pinyin &&
+            oldMeaning == meaning &&
+            oldPartOfSpeech == partOfSpeech) {
+          continue;
+        }
+
+        final values = <String, Object?>{
+          'pinyin': pinyin,
+          'english_meaning': meaning,
+          'part_of_speech': partOfSpeech,
+          'quiz_options': _replaceQuizMeaning(
+            card['quiz_options'] as String,
+            oldMeaning: oldMeaning,
+            newMeaning: meaning,
+          ),
+          'correct_answer': meaning,
+        };
+        if (oldPinyin != pinyin || !_meaningsOverlap(oldMeaning, meaning)) {
+          values.addAll({
+            'example_sentence_chinese': '',
+            'example_sentence_pinyin': '',
+            'example_sentence_english': '',
+            'example_source': '',
+            'example_source_id': '',
+            'example_translation_id': '',
+          });
+        }
+        await txn.update(
+          _cardTable,
+          values,
+          where: 'id = ?',
+          whereArgs: [card['id']],
+        );
+      }
+
+      await txn.insert('content_migrations', {
+        'key': marker,
+        'applied_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    });
+  }
+
   static Future<void> resetAllData() {
     if (_resetOperation case final reset?) return reset;
     if (_closeOperation case final close?) {
@@ -398,4 +487,35 @@ class LocalDatabase {
       );
     }
   }
+}
+
+String _replaceQuizMeaning(
+  String encodedOptions, {
+  required String oldMeaning,
+  required String newMeaning,
+}) {
+  try {
+    final rawOptions = jsonDecode(encodedOptions) as List<dynamic>;
+    final options = <String>[];
+    final seen = <String>{};
+    for (final raw in rawOptions) {
+      if (raw is! String) continue;
+      final option = raw.toLowerCase() == oldMeaning.toLowerCase()
+          ? newMeaning
+          : raw;
+      if (seen.add(option.toLowerCase())) options.add(option);
+    }
+    return jsonEncode(options);
+  } on FormatException {
+    return encodedOptions;
+  } on TypeError {
+    return encodedOptions;
+  }
+}
+
+bool _meaningsOverlap(String first, String second) {
+  final normalizedFirst = first.trim().toLowerCase();
+  final normalizedSecond = second.trim().toLowerCase();
+  return normalizedFirst.contains(normalizedSecond) ||
+      normalizedSecond.contains(normalizedFirst);
 }

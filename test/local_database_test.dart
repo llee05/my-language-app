@@ -1133,6 +1133,137 @@ void main() {
     );
   });
 
+  test(
+    'vocabulary content repair preserves card identity and learning history',
+    () async {
+      await LocalDatabase.resetForTesting();
+      final db = await LocalDatabase.ensureInitialized();
+      await learners.save(
+        const LearnerProfile(
+          name: 'Migration learner',
+          hskLevel: 2,
+          dailyWordTarget: 10,
+        ),
+      );
+      final lessonId = await db.insert('lessons', {
+        'lesson_title': 'Numbers · HSK 1',
+        'theme': 'Numbers',
+        'hsk_level': 1,
+        'is_listed': 1,
+      });
+      final cardId = await db.insert('cards', {
+        'lesson_id': lessonId,
+        'chinese': '三',
+        'pinyin': 'Sān',
+        'english_meaning': 'surname San',
+        'part_of_speech': 'm, t',
+        'hsk_level': 1,
+        'example_sentence_chinese': '三先生来了。',
+        'example_sentence_pinyin': 'Sān xiānsheng lái le.',
+        'example_sentence_english': 'Mr San has arrived.',
+        'example_source': 'Generated',
+        'example_source_id': 'old-source',
+        'example_translation_id': 'old-translation',
+        'quiz_options': jsonEncode(['surname San', 'two', 'four', 'five']),
+        'correct_answer': 'surname San',
+      });
+      final sameReadingCardId = await db.insert('cards', {
+        'lesson_id': lessonId,
+        'chinese': '本',
+        'pinyin': 'běn',
+        'english_meaning': 'root',
+        'part_of_speech': 'm, r',
+        'hsk_level': 1,
+        'example_sentence_chinese': '这是植物的根本。',
+        'example_sentence_pinyin': 'Zhè shì zhíwù de gēnběn.',
+        'example_sentence_english': 'This is the root of the plant.',
+        'quiz_options': jsonEncode(['root', 'book', 'pen', 'paper']),
+        'correct_answer': 'root',
+      });
+      final reviewedAt = DateTime.utc(2026, 8, 20, 9);
+      await progress.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: cardId,
+          submissionKey: 'content-repair-review',
+          reviewedAt: reviewedAt,
+          rating: ReviewRating.good,
+          wasCorrect: true,
+        ),
+        progress: CardProgress(
+          cardId: cardId,
+          repetitions: 1,
+          reviewInterval: 2,
+          nextReview: reviewedAt.add(const Duration(days: 2)),
+          lastReview: reviewedAt,
+        ),
+      );
+      final queueDate = DateTime(2026, 8, 20);
+      await dailyReviews.create(date: queueDate, queuedCardIds: [cardId]);
+      await db.delete(
+        'content_migrations',
+        where: 'key = ?',
+        whereArgs: ['hsk_vocabulary_content_v2'],
+      );
+
+      await LocalDatabase.close();
+      final migrated = await LocalDatabase.ensureInitialized();
+      final card = (await migrated.query(
+        'cards',
+        where: 'id = ?',
+        whereArgs: [cardId],
+      )).single;
+
+      expect(card['pinyin'], 'sān');
+      expect(card['english_meaning'], 'three');
+      expect(card['correct_answer'], 'three');
+      expect(jsonDecode(card['quiz_options'] as String), [
+        'three',
+        'two',
+        'four',
+        'five',
+      ]);
+      expect(card['example_sentence_chinese'], isEmpty);
+      expect(card['example_sentence_pinyin'], isEmpty);
+      expect(card['example_sentence_english'], isEmpty);
+      expect(card['example_source'], isEmpty);
+      expect(card['example_source_id'], isEmpty);
+      expect(card['example_translation_id'], isEmpty);
+      final sameReadingCard = (await migrated.query(
+        'cards',
+        where: 'id = ?',
+        whereArgs: [sameReadingCardId],
+      )).single;
+      expect(sameReadingCard['pinyin'], 'běn');
+      expect(sameReadingCard['english_meaning'], 'measure word for books');
+      expect(sameReadingCard['example_sentence_chinese'], isEmpty);
+      expect(sameReadingCard['example_sentence_pinyin'], isEmpty);
+      expect(sameReadingCard['example_sentence_english'], isEmpty);
+      expect(await progress.reviewHistory(cardId: cardId), hasLength(1));
+      expect((await progress.progressForCard(cardId))?.timesSeen, 1);
+      expect((await dailyReviews.load(queueDate))?.queuedCardIds, [cardId]);
+      expect(
+        await migrated.query(
+          'content_migrations',
+          where: 'key = ?',
+          whereArgs: ['hsk_vocabulary_content_v2'],
+        ),
+        hasLength(1),
+      );
+
+      await LocalDatabase.close();
+      final reopened = await LocalDatabase.ensureInitialized();
+      final reopenedCard = (await reopened.query(
+        'cards',
+        where: 'id = ?',
+        whereArgs: [cardId],
+      )).single;
+      expect(reopenedCard['pinyin'], 'sān');
+      expect(reopenedCard['english_meaning'], 'three');
+      expect(await progress.reviewHistory(cardId: cardId), hasLength(1));
+    },
+  );
+
   test('bundled cards use packaged Tatoeba examples', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();
