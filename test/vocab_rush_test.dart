@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/database/vocabulary_content.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
@@ -65,7 +66,7 @@ void main() {
     final card = vocabulary.firstWhere(
       (entry) => visibleText.contains(entry['simplified']),
     );
-    final correctAnswer = (card['meanings'] as List<dynamic>).first as String;
+    final correctAnswer = vocabularyStudyMeaning(card);
 
     await tester.tap(find.widgetWithText(OutlinedButton, correctAnswer));
     await tester.pump();
@@ -83,7 +84,7 @@ void main() {
       final card = vocabulary.firstWhere(
         (entry) => visibleText.contains(entry['simplified']),
       );
-      final correctAnswer = (card['meanings'] as List<dynamic>).first as String;
+      final correctAnswer = vocabularyStudyMeaning(card);
       final wrongButton = tester
           .widgetList<OutlinedButton>(find.byType(OutlinedButton))
           .firstWhere(
@@ -218,8 +219,7 @@ void main() {
     final visibleCard = vocabulary.firstWhere(
       (card) => card['simplified'] == visibleHanzi,
     );
-    final correctMeaning =
-        (visibleCard['meanings'] as List<dynamic>).first as String;
+    final correctMeaning = vocabularyStudyMeaning(visibleCard);
     final wrongButton = tester
         .widgetList<OutlinedButton>(find.byType(OutlinedButton))
         .firstWhere((button) => (button.child as Text).data != correctMeaning);
@@ -302,8 +302,7 @@ void main() {
       final originalCard = vocabulary.firstWhere(
         (card) => card['simplified'] == originalHanzi,
       );
-      final correctMeaning =
-          (originalCard['meanings'] as List<dynamic>).first as String;
+      final correctMeaning = vocabularyStudyMeaning(originalCard);
       final wrongButton = tester
           .widgetList<OutlinedButton>(find.byType(OutlinedButton))
           .firstWhere(
