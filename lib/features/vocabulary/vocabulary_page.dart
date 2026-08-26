@@ -380,7 +380,7 @@ class _VocabularyEntry {
       simplified: simplified,
       traditional: json['traditional'] as String,
       pinyin: json['pinyin'] as String,
-      meanings: (json['meanings'] as List<dynamic>).cast<String>(),
+      meanings: vocabularyDisplayMeanings(json),
       hskLevel: json['hskLevel'] as int,
       partOfSpeech: (json['partOfSpeech'] as List<dynamic>? ?? const [])
           .cast<String>(),

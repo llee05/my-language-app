@@ -8,6 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'local_database.dart';
 import 'database/flashcard_seed.dart';
+import 'database/vocabulary_content.dart';
 import 'ai/ollama_service.dart';
 import 'models/learner_profile.dart';
 import 'models/learning_progress.dart';

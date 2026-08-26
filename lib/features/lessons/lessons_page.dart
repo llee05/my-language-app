@@ -456,7 +456,7 @@ class _LessonsPageState extends State<LessonsPage> {
           'index': i,
           'hanzi': candidates[i]['simplified'],
           'pinyin': candidates[i]['pinyin'],
-          'meaning': (candidates[i]['meanings'] as List).first,
+          'meaning': vocabularyStudyMeaning(candidates[i]),
         },
     ];
     final response = await OllamaService.instance.chatText(
@@ -500,7 +500,7 @@ class _LessonsPageState extends State<LessonsPage> {
   Flashcard _fallbackCard(Map<String, dynamic> word) => Flashcard(
     chinese: word['simplified'] as String,
     pinyin: word['pinyin'] as String,
-    englishMeaning: (word['meanings'] as List).first as String,
+    englishMeaning: vocabularyStudyMeaning(word),
     partOfSpeech: (word['partOfSpeech'] as List).join(', '),
   );
 

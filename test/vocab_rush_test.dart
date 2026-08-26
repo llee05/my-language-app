@@ -100,6 +100,64 @@ void main() {
     expect(find.text('再玩一次 — Play Again'), findsOneWidget);
   });
 
+  testWidgets('uses curated study meanings instead of raw surname senses', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const vocabulary = [
+      {
+        'simplified': '三',
+        'pinyin': 'sān',
+        'studyMeaning': 'three',
+        'meanings': ['surname San'],
+        'partOfSpeech': ['numeral'],
+        'hskLevel': 1,
+      },
+      {
+        'simplified': '冷',
+        'pinyin': 'lěng',
+        'studyMeaning': 'cold',
+        'meanings': ['surname Leng'],
+        'partOfSpeech': ['adjective'],
+        'hskLevel': 1,
+      },
+      {
+        'simplified': '坐',
+        'pinyin': 'zuò',
+        'studyMeaning': 'to sit',
+        'meanings': ['surname Zuo'],
+        'partOfSpeech': ['verb'],
+        'hskLevel': 1,
+      },
+      {
+        'simplified': '钱',
+        'pinyin': 'qián',
+        'studyMeaning': 'money',
+        'meanings': ['surname Qian'],
+        'partOfSpeech': ['noun'],
+        'hskLevel': 2,
+      },
+    ];
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: _RushSettingsRepository(),
+            initialVocabulary: vocabulary,
+          ),
+        ),
+      ),
+    );
+
+    await startGame(tester);
+
+    for (final meaning in ['three', 'cold', 'to sit', 'money']) {
+      expect(find.widgetWithText(OutlinedButton, meaning), findsOneWidget);
+    }
+    expect(find.textContaining('surname'), findsNothing);
+  });
+
   testWidgets('incorrect answers are saved for daily review', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1000, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));

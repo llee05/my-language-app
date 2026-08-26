@@ -147,7 +147,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
           (card) => {
             'chinese': card['simplified'],
             'pinyin': card['pinyin'],
-            'english_meaning': (card['meanings'] as List<dynamic>).first,
+            'english_meaning': vocabularyStudyMeaning(card),
             'hsk_level': card['hskLevel'],
             'part_of_speech':
                 (card['partOfSpeech'] as List<dynamic>? ?? const []).join(', '),
