@@ -2230,7 +2230,12 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Lin');
     await tester.tap(find.text('HSK 4'));
     await tester.tap(find.text('20 words'));
-    await tester.tap(find.text('Save changes'));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-save')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('settings-save')));
     await tester.pump();
 
     expect(updatedProfile?.name, 'Lin');
@@ -2248,7 +2253,7 @@ void main() {
   });
 
   testWidgets(
-    'settings shows progress and confirms a successful profile save',
+    'settings shows one save action with progress and success feedback',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1000, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -2273,19 +2278,26 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Save changes'));
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings-save')),
+        400,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const Key('settings-save')));
       await tester.pump();
 
       expect(find.text('Saving…'), findsOneWidget);
-      expect(find.text('Save preferences'), findsOneWidget);
-      expect(find.text('Profile changes saved.'), findsNothing);
+      expect(find.byKey(const Key('settings-save')), findsOneWidget);
+      expect(find.text('Save changes'), findsNothing);
+      expect(find.text('Save preferences'), findsNothing);
+      expect(find.text('Settings saved.'), findsNothing);
 
       saveGate.complete();
       await tester.pumpAndSettle();
 
       expect(find.text('Saving…'), findsNothing);
-      expect(find.text('Save changes'), findsOneWidget);
-      expect(find.text('Profile changes saved.'), findsOneWidget);
+      expect(find.text('Save settings'), findsOneWidget);
+      expect(find.text('Settings saved.'), findsOneWidget);
     },
   );
 
@@ -2554,12 +2566,17 @@ void main() {
     );
     expect(pinyinSwitch.value, isFalse);
     await tester.tap(find.text('Show pinyin'));
-    await tester.tap(find.text('Save preferences'));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-save')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('settings-save')));
     await tester.pumpAndSettle();
 
     expect(repository.settings.showPinyin, isTrue);
     expect(repository.settings.soundEnabled, isFalse);
-    expect(find.text('Preferences saved.'), findsOneWidget);
+    expect(find.text('Settings saved.'), findsOneWidget);
   });
 
   testWidgets('settings installs the offline voice without manual files', (
@@ -2675,9 +2692,12 @@ void main() {
     expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
     expect(pronunciation.configuredVoiceIds, ['zf_001', 'zm_041']);
 
-    final save = find.text('Save preferences');
-    await tester.ensureVisible(save);
-    await tester.pumpAndSettle();
+    final save = find.byKey(const Key('settings-save'));
+    await tester.scrollUntilVisible(
+      save,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(save);
     await tester.pumpAndSettle();
 
@@ -2818,7 +2838,14 @@ void main() {
           .value,
       isFalse,
     );
-    expect(find.text('Save preferences'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-save')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Save settings'), findsOneWidget);
+    expect(find.text('Save changes'), findsNothing);
+    expect(find.text('Save preferences'), findsNothing);
   });
 
   testWidgets('settings preference save can retry the exact changes', (
@@ -2856,17 +2883,19 @@ void main() {
     final pinyinToggle = find.text('Show pinyin');
     await tester.ensureVisible(pinyinToggle);
     await tester.tap(pinyinToggle);
-    await tester.tap(find.text('Save preferences'));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-save')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('settings-save')));
     await tester.pumpAndSettle();
 
     expect(repository.saveAttempts, hasLength(1));
-    expect(find.text('Preferences saved.'), findsNothing);
-    expect(
-      find.byKey(const Key('settings-preferences-save-error')),
-      findsOneWidget,
-    );
+    expect(find.text('Settings saved.'), findsNothing);
+    expect(find.byKey(const Key('settings-save-error')), findsOneWidget);
 
-    final retry = find.byKey(const Key('settings-preferences-save-retry'));
+    final retry = find.byKey(const Key('settings-save-retry'));
     await tester.ensureVisible(retry);
     await tester.tap(retry);
     await tester.pumpAndSettle();
@@ -2881,11 +2910,8 @@ void main() {
     expect(retryAttempt.reminderHour, firstAttempt.reminderHour);
     expect(retryAttempt.pronunciationEngine, firstAttempt.pronunciationEngine);
     expect(retryAttempt.kokoroVoiceIds, firstAttempt.kokoroVoiceIds);
-    expect(
-      find.byKey(const Key('settings-preferences-save-error')),
-      findsNothing,
-    );
-    expect(find.text('Preferences saved.'), findsOneWidget);
+    expect(find.byKey(const Key('settings-save-error')), findsNothing);
+    expect(find.text('Settings saved.'), findsOneWidget);
   });
 
   testWidgets('locked lesson tile renders with reduced opacity', (

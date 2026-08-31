@@ -98,7 +98,7 @@ the app's private support directory; no manual model-file setup is needed:
 After installing Kokoro, its default voice pool includes all 100 voices and
 chooses one randomly for each phrase without immediately repeating a voice.
 The searchable voice picker can limit that pool to any subset; selecting one
-voice keeps pronunciation consistent. Save preferences to keep the engine and
+voice keeps pronunciation consistent. Save settings to keep the engine and
 pool for future launches. Synthesis runs locally through sherpa-onnx, including
 on Linux. Until the selected pack is ready, the app falls back to a compatible
 Simplified Chinese (`zh-CN`) system voice where one is available.

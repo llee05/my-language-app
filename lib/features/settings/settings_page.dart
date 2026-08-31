@@ -1,7 +1,5 @@
 part of '../../main.dart';
 
-enum _SettingsSaveTarget { profile, preferences }
-
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
     super.key,
@@ -30,10 +28,10 @@ class _SettingsPageState extends State<SettingsPage> {
   late final TextEditingController _nameController;
   late int _hskLevel;
   late int _dailyTarget;
-  _SettingsSaveTarget? _savingTarget;
+  bool _saving = false;
   bool _loadingPreferences = true;
   bool _preferencesLoadFailed = false;
-  _SettingsSaveTarget? _saveFailureTarget;
+  bool _saveFailed = false;
   bool _resetting = false;
   bool _showPinyin = true;
   bool _soundEnabled = true;
@@ -217,12 +215,12 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  Future<void> _save(_SettingsSaveTarget target) async {
+  Future<void> _save() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _savingTarget != null) return;
+    if (name.isEmpty || _saving) return;
     setState(() {
-      _savingTarget = target;
-      if (_saveFailureTarget == target) _saveFailureTarget = null;
+      _saving = true;
+      _saveFailed = false;
     });
     try {
       await widget.onProfileChanged(
@@ -243,12 +241,12 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       );
       await _applyPronunciationSelection();
-      if (mounted) _showSaveSuccess(target);
+      if (mounted) _showSaveSuccess();
     } catch (error) {
       debugPrint('Settings save failed: $error');
-      if (mounted) setState(() => _saveFailureTarget = target);
+      if (mounted) setState(() => _saveFailed = true);
     } finally {
-      if (mounted) setState(() => _savingTarget = null);
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -265,19 +263,12 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  void _showSaveSuccess(_SettingsSaveTarget target) {
+  void _showSaveSuccess() {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(switch (target) {
-            _SettingsSaveTarget.profile => 'Profile changes saved.',
-            _SettingsSaveTarget.preferences => 'Preferences saved.',
-          }),
-        ),
-      );
+      ..showSnackBar(const SnackBar(content: Text('Settings saved.')));
   }
 
   Future<bool> _confirm({
@@ -450,31 +441,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                 ],
               ),
-              const SizedBox(height: 22),
-              if (_saveFailureTarget == _SettingsSaveTarget.profile)
-                _AppInlineError(
-                  key: const Key('settings-profile-save-error'),
-                  message: _AppErrorCopy.saveChanges,
-                  onRetry: () => _save(_SettingsSaveTarget.profile),
-                  retryKey: const Key('settings-profile-save-retry'),
-                )
-              else
-                FilledButton.icon(
-                  onPressed: _savingTarget != null
-                      ? null
-                      : () => _save(_SettingsSaveTarget.profile),
-                  icon: _savingTarget == _SettingsSaveTarget.profile
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save_outlined),
-                  label: Text(
-                    _savingTarget == _SettingsSaveTarget.profile
-                        ? 'Saving…'
-                        : 'Save changes',
-                  ),
-                ),
             ],
           ),
         ),
@@ -515,36 +481,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             setState(() => _soundEnabled = value),
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    if (_saveFailureTarget == _SettingsSaveTarget.preferences)
-                      _AppInlineError(
-                        key: const Key('settings-preferences-save-error'),
-                        message: _AppErrorCopy.saveChanges,
-                        onRetry: () => _save(_SettingsSaveTarget.preferences),
-                        retryKey: const Key('settings-preferences-save-retry'),
-                      )
-                    else
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: FilledButton.icon(
-                          onPressed: _savingTarget != null
-                              ? null
-                              : () => _save(_SettingsSaveTarget.preferences),
-                          icon: _savingTarget == _SettingsSaveTarget.preferences
-                              ? const SizedBox.square(
-                                  dimension: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: Text(
-                            _savingTarget == _SettingsSaveTarget.preferences
-                                ? 'Saving…'
-                                : 'Save preferences',
-                          ),
-                        ),
-                      ),
                   ],
                 ),
         ),
@@ -616,6 +552,32 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ],
+        const SizedBox(height: 24),
+        if (_saveFailed)
+          _AppInlineError(
+            key: const Key('settings-save-error'),
+            message: _AppErrorCopy.saveChanges,
+            onRetry: _save,
+            retryKey: const Key('settings-save-retry'),
+          )
+        else
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.icon(
+              key: const Key('settings-save'),
+              onPressed:
+                  _saving || _loadingPreferences || _preferencesLoadFailed
+                  ? null
+                  : _save,
+              icon: _saving
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save_outlined),
+              label: Text(_saving ? 'Saving…' : 'Save settings'),
+            ),
+          ),
       ],
     );
   }
@@ -825,7 +787,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         const SizedBox(height: 10),
         const Text(
-          'A voice is chosen for each phrase. Select one voice to keep it consistent. Changes apply immediately; save preferences to keep them after restarting.',
+          'A voice is chosen for each phrase. Select one voice to keep it consistent. Changes apply immediately; save settings to keep them after restarting.',
           style: TextStyle(color: AppColors.muted, fontSize: 12),
         ),
       ],
