@@ -61,8 +61,75 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  build-android:
+    name: Android compile smoke
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.4"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Compile debug APK
+        run: flutter build apk --debug
+
+  build-windows:
+    name: Windows x64 compile smoke
+    needs: validate
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install NuGet
+        uses: NuGet/setup-nuget@v2
+        with:
+          nuget-version: latest
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.4"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Compile Windows x64 release
+        run: flutter build windows --release
+
+      - name: Upload Windows build as workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tingshuo-windows-x64-${{ github.run_id }}
+          path: build/windows/x64/runner/Release/
+          if-no-files-found: error
+          retention-days: 14
+
   release-android:
-    name: Build Android release
+    name: Build signed Android release
     if: startsWith(github.ref, 'refs/tags/v')
     needs: validate
     runs-on: ubuntu-latest
@@ -75,6 +142,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Install Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -85,14 +159,80 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build release APK
-        run: flutter build apk --release
+      - name: Prepare Android signing credentials
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          missing=()
+          for name in \
+            ANDROID_KEYSTORE_BASE64 \
+            ANDROID_KEYSTORE_PASSWORD \
+            ANDROID_KEY_ALIAS \
+            ANDROID_KEY_PASSWORD
+          do
+            if [[ -z "${!name:-}" ]]; then
+              missing+=("$name")
+            fi
+          done
 
-      - name: Upload APK as workflow artifact
+          if (( ${#missing[@]} > 0 )); then
+            echo "::error::Missing required Android signing secrets: ${missing[*]}"
+            exit 1
+          fi
+
+          keystore_path="$RUNNER_TEMP/tingshuo-upload-keystore.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          if [[ ! -s "$keystore_path" ]]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 decoded to an empty file"
+            exit 1
+          fi
+
+          escape_properties_value() {
+            local value="$1"
+            value="${value//\\/\\\\}"
+            value="${value//$'\t'/\\t}"
+            value="${value//$'\n'/\\n}"
+            value="${value//$'\r'/\\r}"
+            value="${value// /\\ }"
+            value="${value//:/\\:}"
+            value="${value//=/\\=}"
+            printf '%s' "$value"
+          }
+
+          {
+            printf 'storeFile=%s\n' "$(escape_properties_value "$keystore_path")"
+            printf 'storePassword=%s\n' "$(escape_properties_value "$ANDROID_KEYSTORE_PASSWORD")"
+            printf 'keyAlias=%s\n' "$(escape_properties_value "$ANDROID_KEY_ALIAS")"
+            printf 'keyPassword=%s\n' "$(escape_properties_value "$ANDROID_KEY_PASSWORD")"
+          } > android/key.properties
+          chmod 600 "$keystore_path" android/key.properties
+
+      - name: Build signed release app bundle
+        run: flutter build appbundle --release
+
+      - name: Verify app bundle signature
+        run: |
+          verification="$(jarsigner -verify build/app/outputs/bundle/release/app-release.aab)"
+          printf '%s\n' "$verification"
+          if [[ "$verification" != *"jar verified."* ]]; then
+            echo "::error::The Android app bundle does not have a valid JAR signature"
+            exit 1
+          fi
+
+      - name: Remove Android signing credentials
+        if: always()
+        run: |
+          rm -f android/key.properties
+          rm -f "$RUNNER_TEMP/tingshuo-upload-keystore.jks"
+
+      - name: Upload app bundle as workflow artifact
         uses: actions/upload-artifact@v7
         with:
-          name: hanzi-path-android-${{ github.ref_name }}
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: tingshuo-android-${{ github.run_id }}
+          path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
 
@@ -101,6 +241,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            build/app/outputs/flutter-apk/app-release.apk \
+            build/app/outputs/bundle/release/app-release.aab \
             --title "${GITHUB_REF_NAME}" \
             --generate-notes
