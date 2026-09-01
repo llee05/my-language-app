@@ -53,4 +53,32 @@ void main() {
       throwsA(isA<OllamaConfigurationException>()),
     );
   });
+
+  test('empty hosts, query strings, and fragments are rejected', () {
+    for (final configuredUrl in [
+      'http://:11434',
+      'https://ollama.example.test?token=value',
+      'https://ollama.example.test#settings',
+    ]) {
+      expect(
+        () => resolveOllamaEndpoint(
+          configuredUrl: configuredUrl,
+          isMobile: true,
+          requireHttps: false,
+        ),
+        throwsA(isA<OllamaConfigurationException>()),
+        reason: configuredUrl,
+      );
+    }
+  });
+
+  test('API paths are appended after an endpoint base path', () {
+    expect(
+      buildOllamaApiUri(
+        Uri.parse('https://ollama.example.test/proxy/'),
+        '/api/tags',
+      ),
+      Uri.parse('https://ollama.example.test/proxy/api/tags'),
+    );
+  });
 }

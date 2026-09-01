@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/ai/ollama_service.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
@@ -2104,6 +2105,36 @@ void main() {
     expect(find.text('Practise this sentence'), findsOneWidget);
     expect(find.text('你好，梅！'), findsOneWidget);
     expect(find.byKey(const Key('ai-tutor-error')), findsNothing);
+  });
+
+  testWidgets('ai tutor configuration errors do not offer a futile retry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AiTutorPage(
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: pronunciation,
+            request: (_) async => throw const OllamaConfigurationException(
+              'Configure OLLAMA_URL for this build.',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Help me practise');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Configure OLLAMA_URL for this build.'), findsOneWidget);
+    expect(find.byKey(const Key('ai-tutor-retry')), findsNothing);
   });
 
   testWidgets('ai tutor speaks assistant Chinese replies only', (tester) async {

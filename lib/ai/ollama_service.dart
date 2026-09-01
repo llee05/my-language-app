@@ -30,6 +30,7 @@ Uri resolveOllamaEndpoint({
   final endpoint = Uri.tryParse(rawUrl);
   if (endpoint == null ||
       !endpoint.hasAuthority ||
+      endpoint.host.isEmpty ||
       (endpoint.scheme != 'http' && endpoint.scheme != 'https')) {
     throw const OllamaConfigurationException(
       'OLLAMA_URL must be a complete HTTP or HTTPS URL.',
@@ -41,12 +42,27 @@ Uri resolveOllamaEndpoint({
       'outside the app instead.',
     );
   }
+  if (endpoint.hasQuery || endpoint.hasFragment) {
+    throw const OllamaConfigurationException(
+      'OLLAMA_URL must not contain a query string or fragment.',
+    );
+  }
   if (requireHttps && endpoint.scheme != 'https') {
     throw const OllamaConfigurationException(
       'Android release builds require an HTTPS Ollama endpoint.',
     );
   }
   return endpoint;
+}
+
+Uri buildOllamaApiUri(Uri endpoint, String apiPath) {
+  if (!apiPath.startsWith('/')) {
+    throw ArgumentError.value(apiPath, 'apiPath', 'must start with /');
+  }
+  final basePath = endpoint.path.endsWith('/')
+      ? endpoint.path.substring(0, endpoint.path.length - 1)
+      : endpoint.path;
+  return endpoint.replace(path: '$basePath$apiPath');
 }
 
 /// Client for an Ollama server running on the local machine.
@@ -67,8 +83,7 @@ class OllamaService {
   );
 
   Uri _uri(String path) {
-    final base = _endpoint.toString().replaceFirst(RegExp(r'/$'), '');
-    return Uri.parse('$base$path');
+    return buildOllamaApiUri(_endpoint, path);
   }
 
   /// Starts the local Ollama server when running as a desktop app.

@@ -130,11 +130,12 @@ reachable endpoint explicitly when developing against the Android emulator:
 flutter run --dart-define=OLLAMA_URL=http://10.0.2.2:11434
 ```
 
-The Android debug manifest permits cleartext traffic only to emulator and
-loopback addresses. Android release builds require an HTTPS endpoint. Use a
-trusted HTTPS proxy for a physical device; do not expose an unauthenticated
-Ollama server to the public network. Dart defines are embedded in the app, so
-`OLLAMA_URL` must not contain credentials.
+The Android debug and profile manifests permit cleartext traffic only to
+emulator and loopback addresses. Android release builds require an HTTPS
+endpoint. Use a trusted HTTPS proxy for a physical device; do not expose an
+unauthenticated Ollama server to the public network. Dart defines are embedded
+in the app, so `OLLAMA_URL` must not contain credentials, a query string, or a
+fragment.
 
 If Ollama is missing or unavailable, the rest of the app remains usable.
 
@@ -147,7 +148,8 @@ If Ollama is missing or unavailable, the rest of the app remains usable.
   system notification.
 - There are no accounts, cloud sync, or cross-device backup. Resetting all
   local data is permanent.
-- AI responses require a locally running Ollama model and may vary in quality.
+- AI responses require a reachable Ollama server with an installed model and
+  may vary in quality.
 - Speech recognition, pronunciation grading, and handwriting recognition are
   outside this beta's scope.
 
@@ -231,14 +233,17 @@ error when the file, a property, or the configured keystore is missing.
 Build the Play Store artifact with:
 
 ```sh
-flutter build appbundle --release
+flutter build appbundle --release \
+  --dart-define=OLLAMA_URL=https://ollama.example.com
 ```
 
 The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
 
 Version tags matching `v*` use the same signing configuration in GitHub
-Actions. Configure these repository secrets before creating a release tag:
+Actions. Configure an `OLLAMA_URL` repository variable with the trusted HTTPS
+endpoint to embed in Android releases. Also configure these repository secrets
+before creating a release tag:
 
 | Secret | Value |
 | --- | --- |

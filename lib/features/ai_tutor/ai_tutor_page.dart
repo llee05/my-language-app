@@ -58,6 +58,7 @@ Use an empty string for any field that is not needed.
   LearnerSettings _learnerSettings = const LearnerSettings();
   String? _sendError;
   String? _failedPrompt;
+  var _sendErrorIsRetryable = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
 
@@ -156,6 +157,7 @@ Use an empty string for any field that is not needed.
       }
       _controller.clear();
       _sendError = null;
+      _sendErrorIsRetryable = false;
     });
     _scrollToEnd();
 
@@ -190,7 +192,8 @@ Use an empty string for any field that is not needed.
       }
       setState(() {
         _sendError = _friendlyError(error);
-        _failedPrompt = text;
+        _sendErrorIsRetryable = error is! OllamaConfigurationException;
+        _failedPrompt = _sendErrorIsRetryable ? text : null;
         _sending = false;
       });
       _scrollToEnd();
@@ -204,6 +207,7 @@ Use an empty string for any field that is not needed.
       _sending = false;
       _sendError = null;
       _failedPrompt = null;
+      _sendErrorIsRetryable = false;
       _controller.clear();
     });
     _scrollToEnd();
@@ -307,7 +311,7 @@ Use an empty string for any field that is not needed.
           sending: _sending,
           error: _sendError,
           onSend: _send,
-          onRetry: _retrySend,
+          onRetry: _sendErrorIsRetryable ? _retrySend : null,
           onPromptSelected: _send,
         ),
       ],
@@ -531,7 +535,7 @@ class _TutorComposer extends StatelessWidget {
   final bool sending;
   final String? error;
   final VoidCallback onSend;
-  final VoidCallback onRetry;
+  final VoidCallback? onRetry;
   final ValueChanged<String> onPromptSelected;
 
   @override

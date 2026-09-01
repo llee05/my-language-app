@@ -211,7 +211,26 @@ jobs:
           chmod 600 "$keystore_path" android/key.properties
 
       - name: Build signed release app bundle
-        run: flutter build appbundle --release
+        env:
+          OLLAMA_URL: ${{ vars.OLLAMA_URL }}
+        run: |
+          if [[ -z "${OLLAMA_URL:-}" ]]; then
+            echo "::error::Missing required OLLAMA_URL repository variable"
+            exit 1
+          fi
+          node --eval '
+            const raw = process.env.OLLAMA_URL;
+            const endpoint = new URL(raw);
+            if (endpoint.protocol !== "https:" || !endpoint.hostname ||
+                endpoint.username || endpoint.password ||
+                raw.includes("?") || raw.includes("#")) {
+              throw new Error(
+                "OLLAMA_URL must be a credential-free HTTPS URL without a query or fragment",
+              );
+            }
+          '
+          flutter build appbundle --release \
+            --dart-define=OLLAMA_URL="$OLLAMA_URL"
 
       - name: Verify app bundle signature
         run: |
