@@ -39,6 +39,9 @@ migrate_working_dir/
 *.sqlite
 *.sqlite3
 *.db-journal
+*-wal
+*-shm
+*-journal
 local_app.db
 
 # Environment files

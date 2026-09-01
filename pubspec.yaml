@@ -39,6 +39,7 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.0.0
   sqflite_common_ffi: ^2.1.0
+  sqlite3: ^3.3.4
   http: ^1.6.0
   flutter_tts: ^4.2.5
   flutter_soloud: ^4.1.7

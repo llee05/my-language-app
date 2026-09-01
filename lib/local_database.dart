@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'database/flashcard_seed.dart';
@@ -469,7 +470,18 @@ class LocalDatabase {
       databasePath,
       followLinks: false,
     );
-    if (databaseType == FileSystemEntityType.file) return databasePath;
+    if (databaseType == FileSystemEntityType.file) {
+      if (await _legacyCleanupIsPending(databasePath)) {
+        final documentsDirectory =
+            await (_documentsDirectoryProviderOverride ??
+                getApplicationDocumentsDirectory)();
+        await _finishLegacyDatabaseCleanup(
+          sourcePath: p.join(documentsDirectory.path, _dbName),
+          destinationPath: databasePath,
+        );
+      }
+      return databasePath;
+    }
     if (databaseType != FileSystemEntityType.notFound) {
       throw FileSystemException(
         'The database destination is not a regular file.',
@@ -518,70 +530,88 @@ class LocalDatabase {
       );
     }
 
+    // A previous attempt may have stopped after creating the marker but before
+    // activating its staged snapshot. No cleanup is safe until the destination
+    // exists, so discard that stale marker and create a fresh one below.
+    await _deleteFileIfPresent(_legacyCleanupMarkerPath(destinationPath));
+
     final stagingDirectory = Directory('$destinationPath.migration');
     await _removeMigrationStagingDirectory(stagingDirectory);
     await stagingDirectory.create(recursive: true);
 
-    final copiedArtifacts = <({String source, String destination})>[];
+    final stagedDatabasePath = p.join(stagingDirectory.path, _dbName);
+    sqlite.Database? sourceDatabase;
+    sqlite.Database? stagedDatabase;
     try {
-      for (final sourceArtifact in _databaseArtifactPaths(sourcePath)) {
-        final type = await FileSystemEntity.type(
-          sourceArtifact,
-          followLinks: false,
-        );
-        if (type == FileSystemEntityType.notFound) continue;
-        if (type != FileSystemEntityType.file) {
-          throw FileSystemException(
-            'A legacy database artifact is not a regular file.',
-            sourceArtifact,
-          );
-        }
-
-        final destinationArtifact = _destinationArtifactPath(
-          sourcePath: sourcePath,
-          sourceArtifact: sourceArtifact,
-          destinationPath: destinationPath,
-        );
-        final stagedArtifact = p.join(
-          stagingDirectory.path,
-          p.basename(destinationArtifact),
-        );
-        await File(sourceArtifact).copy(stagedArtifact);
-        if (await File(sourceArtifact).length() !=
-            await File(stagedArtifact).length()) {
-          throw FileSystemException(
-            'A legacy database artifact was not copied completely.',
-            sourceArtifact,
-          );
-        }
-        copiedArtifacts.add((
-          source: stagedArtifact,
-          destination: destinationArtifact,
-        ));
-      }
-
-      for (final artifact in copiedArtifacts) {
-        if (artifact.destination == destinationPath) continue;
-        await _deleteFileIfPresent(artifact.destination);
-        await File(artifact.source).rename(artifact.destination);
-      }
-
-      final stagedDatabase = copiedArtifacts.singleWhere(
-        (artifact) => artifact.destination == destinationPath,
+      sourceDatabase = sqlite.sqlite3.open(
+        sourcePath,
+        mode: sqlite.OpenMode.readOnly,
       );
-      await File(stagedDatabase.source).rename(destinationPath);
-      await _deleteDatabaseArtifacts(sourcePath);
+      stagedDatabase = sqlite.sqlite3.open(stagedDatabasePath);
+      await sourceDatabase.backup(stagedDatabase, nPage: -1).drain<void>();
+
+      final integrityResult = stagedDatabase.select('PRAGMA integrity_check');
+      final isValid =
+          integrityResult.length == 1 &&
+          integrityResult.single.columnAt(0) == 'ok';
+      if (!isValid) {
+        throw FileSystemException(
+          'The migrated database failed its integrity check.',
+          stagedDatabasePath,
+        );
+      }
+
+      stagedDatabase.close();
+      stagedDatabase = null;
+      sourceDatabase.close();
+      sourceDatabase = null;
+
+      await File(
+        _legacyCleanupMarkerPath(destinationPath),
+      ).writeAsString('pending\n', flush: true);
+      await File(stagedDatabasePath).rename(destinationPath);
+      await _finishLegacyDatabaseCleanup(
+        sourcePath: sourcePath,
+        destinationPath: destinationPath,
+      );
     } finally {
+      stagedDatabase?.close();
+      sourceDatabase?.close();
       await _removeMigrationStagingDirectory(stagingDirectory);
     }
   }
 
-  static String _destinationArtifactPath({
+  static String _legacyCleanupMarkerPath(String destinationPath) {
+    return '$destinationPath.legacy-cleanup';
+  }
+
+  static Future<bool> _legacyCleanupIsPending(String destinationPath) async {
+    final markerPath = _legacyCleanupMarkerPath(destinationPath);
+    final markerType = await FileSystemEntity.type(
+      markerPath,
+      followLinks: false,
+    );
+    if (markerType == FileSystemEntityType.notFound) return false;
+    if (markerType != FileSystemEntityType.file) {
+      throw FileSystemException(
+        'The legacy cleanup marker is not a regular file.',
+        markerPath,
+      );
+    }
+    return true;
+  }
+
+  static Future<void> _finishLegacyDatabaseCleanup({
     required String sourcePath,
-    required String sourceArtifact,
     required String destinationPath,
-  }) {
-    return '$destinationPath${sourceArtifact.substring(sourcePath.length)}';
+  }) async {
+    try {
+      await _deleteDatabaseArtifacts(sourcePath);
+      await _deleteFileIfPresent(_legacyCleanupMarkerPath(destinationPath));
+    } on FileSystemException {
+      // The destination is already a validated, complete database. Keep the
+      // marker so cleanup is retried after an old process releases its files.
+    }
   }
 
   static Future<void> _deleteFileIfPresent(String path) async {
