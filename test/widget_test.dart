@@ -21,6 +21,20 @@ const testProfile = LearnerProfile(
   dailyWordTarget: 10,
 );
 
+Future<void> _waitForWidget(
+  WidgetTester tester,
+  Finder finder, {
+  int maxAttempts = 100,
+}) async {
+  for (var attempt = 0; attempt < maxAttempts; attempt++) {
+    await tester.pump();
+    if (finder.evaluate().isNotEmpty) return;
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+  }
+}
+
 Future<void> _pumpResetSettings(
   WidgetTester tester,
   _MemoryDevelopmentRepository developmentRepository, {
@@ -575,11 +589,9 @@ void main() {
     expect(find.text('开始游戏 — Start Game'), findsOneWidget);
 
     await tester.tap(find.text('开始游戏 — Start Game'));
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('PICK THE CORRECT MEANING'), findsOneWidget);
+    final gamePrompt = find.text('PICK THE CORRECT MEANING');
+    await _waitForWidget(tester, gamePrompt);
+    expect(gamePrompt, findsOneWidget);
     expect(find.text('180s'), findsOneWidget);
   });
 
