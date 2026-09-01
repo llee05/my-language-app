@@ -19,6 +19,7 @@ class DatabaseResetInProgressException implements Exception {
 }
 
 typedef DatabaseArtifactDeleter = Future<void> Function(String path);
+typedef DatabaseDirectoryProvider = Future<Directory> Function();
 
 class LocalDatabase {
   LocalDatabase._();
@@ -37,6 +38,8 @@ class LocalDatabase {
   static String? _databasePathOverride;
   static String? _openedDatabasePath;
   static DatabaseArtifactDeleter? _artifactDeleterOverride;
+  static DatabaseDirectoryProvider? _supportDirectoryProviderOverride;
+  static DatabaseDirectoryProvider? _documentsDirectoryProviderOverride;
 
   static void useDatabasePathForTesting(String? path) {
     _databasePathOverride = path;
@@ -49,6 +52,17 @@ class LocalDatabase {
     DatabaseArtifactDeleter? deleter,
   ) {
     _artifactDeleterOverride = deleter;
+  }
+
+  static void useDatabaseDirectoryProvidersForTesting({
+    DatabaseDirectoryProvider? support,
+    DatabaseDirectoryProvider? documents,
+  }) {
+    _supportDirectoryProviderOverride = support;
+    _documentsDirectoryProviderOverride = documents;
+    if (_database == null && _initialization == null) {
+      _openedDatabasePath = null;
+    }
   }
 
   static Future<String> databasePath() async {
@@ -445,13 +459,158 @@ class LocalDatabase {
   static Future<String> _resolveDatabasePath() async {
     if (_databasePathOverride case final path?) return path;
 
-    Directory documentsDirectory;
-    try {
-      documentsDirectory = await getApplicationDocumentsDirectory();
-    } catch (_) {
-      documentsDirectory = Directory.current;
+    final supportDirectory =
+        await (_supportDirectoryProviderOverride ??
+            getApplicationSupportDirectory)();
+    final databasePath = p.join(supportDirectory.path, _dbName);
+    await Directory(p.dirname(databasePath)).create(recursive: true);
+
+    final databaseType = await FileSystemEntity.type(
+      databasePath,
+      followLinks: false,
+    );
+    if (databaseType == FileSystemEntityType.file) return databasePath;
+    if (databaseType != FileSystemEntityType.notFound) {
+      throw FileSystemException(
+        'The database destination is not a regular file.',
+        databasePath,
+      );
     }
-    return p.join(documentsDirectory.path, _dbName);
+
+    final documentsDirectory =
+        await (_documentsDirectoryProviderOverride ??
+            getApplicationDocumentsDirectory)();
+    final legacyDatabasePath = p.join(documentsDirectory.path, _dbName);
+    if (!p.equals(p.normalize(databasePath), p.normalize(legacyDatabasePath))) {
+      await _migrateLegacyDatabase(
+        sourcePath: legacyDatabasePath,
+        destinationPath: databasePath,
+      );
+    }
+    return databasePath;
+  }
+
+  static Future<void> _migrateLegacyDatabase({
+    required String sourcePath,
+    required String destinationPath,
+  }) async {
+    final destinationType = await FileSystemEntity.type(
+      destinationPath,
+      followLinks: false,
+    );
+    if (destinationType == FileSystemEntityType.file) return;
+    if (destinationType != FileSystemEntityType.notFound) {
+      throw FileSystemException(
+        'The database destination is not a regular file.',
+        destinationPath,
+      );
+    }
+
+    final sourceType = await FileSystemEntity.type(
+      sourcePath,
+      followLinks: false,
+    );
+    if (sourceType == FileSystemEntityType.notFound) return;
+    if (sourceType != FileSystemEntityType.file) {
+      throw FileSystemException(
+        'The legacy database is not a regular file.',
+        sourcePath,
+      );
+    }
+
+    final stagingDirectory = Directory('$destinationPath.migration');
+    await _removeMigrationStagingDirectory(stagingDirectory);
+    await stagingDirectory.create(recursive: true);
+
+    final copiedArtifacts = <({String source, String destination})>[];
+    try {
+      for (final sourceArtifact in _databaseArtifactPaths(sourcePath)) {
+        final type = await FileSystemEntity.type(
+          sourceArtifact,
+          followLinks: false,
+        );
+        if (type == FileSystemEntityType.notFound) continue;
+        if (type != FileSystemEntityType.file) {
+          throw FileSystemException(
+            'A legacy database artifact is not a regular file.',
+            sourceArtifact,
+          );
+        }
+
+        final destinationArtifact = _destinationArtifactPath(
+          sourcePath: sourcePath,
+          sourceArtifact: sourceArtifact,
+          destinationPath: destinationPath,
+        );
+        final stagedArtifact = p.join(
+          stagingDirectory.path,
+          p.basename(destinationArtifact),
+        );
+        await File(sourceArtifact).copy(stagedArtifact);
+        if (await File(sourceArtifact).length() !=
+            await File(stagedArtifact).length()) {
+          throw FileSystemException(
+            'A legacy database artifact was not copied completely.',
+            sourceArtifact,
+          );
+        }
+        copiedArtifacts.add((
+          source: stagedArtifact,
+          destination: destinationArtifact,
+        ));
+      }
+
+      for (final artifact in copiedArtifacts) {
+        if (artifact.destination == destinationPath) continue;
+        await _deleteFileIfPresent(artifact.destination);
+        await File(artifact.source).rename(artifact.destination);
+      }
+
+      final stagedDatabase = copiedArtifacts.singleWhere(
+        (artifact) => artifact.destination == destinationPath,
+      );
+      await File(stagedDatabase.source).rename(destinationPath);
+      await _deleteDatabaseArtifacts(sourcePath);
+    } finally {
+      await _removeMigrationStagingDirectory(stagingDirectory);
+    }
+  }
+
+  static String _destinationArtifactPath({
+    required String sourcePath,
+    required String sourceArtifact,
+    required String destinationPath,
+  }) {
+    return '$destinationPath${sourceArtifact.substring(sourcePath.length)}';
+  }
+
+  static Future<void> _deleteFileIfPresent(String path) async {
+    final type = await FileSystemEntity.type(path, followLinks: false);
+    if (type == FileSystemEntityType.notFound) return;
+    if (type != FileSystemEntityType.file) {
+      throw FileSystemException(
+        'A database destination artifact is not a regular file.',
+        path,
+      );
+    }
+    await File(path).delete();
+  }
+
+  static Future<void> _removeMigrationStagingDirectory(
+    Directory directory,
+  ) async {
+    final type = await FileSystemEntity.type(
+      directory.path,
+      followLinks: false,
+    );
+    if (type == FileSystemEntityType.notFound) return;
+    if (type != FileSystemEntityType.directory) {
+      throw FileSystemException(
+        'The database migration staging path is not a directory.',
+        directory.path,
+      );
+    }
+    await directory.delete(recursive: true);
   }
 
   static List<String> _databaseArtifactPaths(String path) {
