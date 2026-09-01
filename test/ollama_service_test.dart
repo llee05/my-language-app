@@ -1,0 +1,56 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/ai/ollama_service.dart';
+
+void main() {
+  test('desktop uses local Ollama when no endpoint is configured', () {
+    expect(
+      resolveOllamaEndpoint(
+        configuredUrl: '',
+        isMobile: false,
+        requireHttps: false,
+      ),
+      Uri.parse('http://127.0.0.1:11434'),
+    );
+  });
+
+  test('mobile requires an explicit endpoint', () {
+    expect(
+      () => resolveOllamaEndpoint(
+        configuredUrl: '',
+        isMobile: true,
+        requireHttps: false,
+      ),
+      throwsA(isA<OllamaConfigurationException>()),
+    );
+  });
+
+  test('Android release endpoints must use HTTPS', () {
+    expect(
+      () => resolveOllamaEndpoint(
+        configuredUrl: 'http://10.0.2.2:11434',
+        isMobile: true,
+        requireHttps: true,
+      ),
+      throwsA(isA<OllamaConfigurationException>()),
+    );
+    expect(
+      resolveOllamaEndpoint(
+        configuredUrl: 'https://ollama.example.test',
+        isMobile: true,
+        requireHttps: true,
+      ),
+      Uri.parse('https://ollama.example.test'),
+    );
+  });
+
+  test('embedded endpoint credentials are rejected', () {
+    expect(
+      () => resolveOllamaEndpoint(
+        configuredUrl: 'https://user:secret@ollama.example.test',
+        isMobile: true,
+        requireHttps: true,
+      ),
+      throwsA(isA<OllamaConfigurationException>()),
+    );
+  });
+}

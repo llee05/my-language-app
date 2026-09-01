@@ -1,7 +1,53 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
+class OllamaConfigurationException implements Exception {
+  const OllamaConfigurationException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+Uri resolveOllamaEndpoint({
+  required String configuredUrl,
+  required bool isMobile,
+  required bool requireHttps,
+}) {
+  final value = configuredUrl.trim();
+  if (value.isEmpty && isMobile) {
+    throw const OllamaConfigurationException(
+      'Long Laoshi needs a mobile Ollama endpoint. Configure OLLAMA_URL '
+      'for this build, or use the tutor on desktop.',
+    );
+  }
+
+  final rawUrl = value.isEmpty ? 'http://127.0.0.1:11434' : value;
+  final endpoint = Uri.tryParse(rawUrl);
+  if (endpoint == null ||
+      !endpoint.hasAuthority ||
+      (endpoint.scheme != 'http' && endpoint.scheme != 'https')) {
+    throw const OllamaConfigurationException(
+      'OLLAMA_URL must be a complete HTTP or HTTPS URL.',
+    );
+  }
+  if (endpoint.userInfo.isNotEmpty) {
+    throw const OllamaConfigurationException(
+      'OLLAMA_URL must not contain credentials. Configure authentication '
+      'outside the app instead.',
+    );
+  }
+  if (requireHttps && endpoint.scheme != 'https') {
+    throw const OllamaConfigurationException(
+      'Android release builds require an HTTPS Ollama endpoint.',
+    );
+  }
+  return endpoint;
+}
 
 /// Client for an Ollama server running on the local machine.
 class OllamaService {
@@ -9,15 +55,21 @@ class OllamaService {
 
   static final OllamaService instance = OllamaService._();
 
-  static const _configuredUrl = String.fromEnvironment(
-    'OLLAMA_URL',
-    defaultValue: 'http://127.0.0.1:11434',
-  );
+  static const _configuredUrl = String.fromEnvironment('OLLAMA_URL');
   static const _configuredModel = String.fromEnvironment('OLLAMA_MODEL');
 
   String? _detectedModel;
 
-  Uri _uri(String path) => Uri.parse('$_configuredUrl$path');
+  Uri get _endpoint => resolveOllamaEndpoint(
+    configuredUrl: _configuredUrl,
+    isMobile: Platform.isAndroid || Platform.isIOS,
+    requireHttps: Platform.isAndroid && kReleaseMode,
+  );
+
+  Uri _uri(String path) {
+    final base = _endpoint.toString().replaceFirst(RegExp(r'/$'), '');
+    return Uri.parse('$base$path');
+  }
 
   /// Starts the local Ollama server when running as a desktop app.
   ///
@@ -25,7 +77,7 @@ class OllamaService {
   Future<void> ensureRunning() async {
     if (await _isRunning()) return;
 
-    final host = Uri.parse(_configuredUrl).host;
+    final host = _endpoint.host;
     final isLocalHost = host == '127.0.0.1' || host == 'localhost';
     final isDesktop =
         Platform.isLinux || Platform.isMacOS || Platform.isWindows;

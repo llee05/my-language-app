@@ -223,6 +223,9 @@ Use an empty string for any field that is not needed.
   }
 
   String _friendlyError(Object error) {
+    if (error is OllamaConfigurationException) {
+      return error.message;
+    }
     final text = error.toString();
     if (text.contains('no models are installed')) {
       return 'Ollama is running, but no model is installed. Add a model before retrying.';
@@ -266,7 +269,7 @@ Use an empty string for any field that is not needed.
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'AI Mandarin Tutor · always available',
+                      'Optional AI tutor · powered by Ollama',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 10, color: AppColors.teal),
