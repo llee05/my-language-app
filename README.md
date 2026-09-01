@@ -123,6 +123,19 @@ model is used by default; select another model at launch with:
 flutter run --dart-define=OLLAMA_MODEL=model-name
 ```
 
+Android does not assume that Ollama is running on the device. Configure a
+reachable endpoint explicitly when developing against the Android emulator:
+
+```sh
+flutter run --dart-define=OLLAMA_URL=http://10.0.2.2:11434
+```
+
+The Android debug manifest permits cleartext traffic only to emulator and
+loopback addresses. Android release builds require an HTTPS endpoint. Use a
+trusted HTTPS proxy for a physical device; do not expose an unauthenticated
+Ollama server to the public network. Dart defines are embedded in the app, so
+`OLLAMA_URL` must not contain credentials.
+
 If Ollama is missing or unavailable, the rest of the app remains usable.
 
 ## Beta Limitations
@@ -154,6 +167,17 @@ The suite covers startup and onboarding, database migrations and persistence,
 lesson and daily-review flows, spaced scheduling, vocabulary data and search,
 and Vocab Rush review integration.
 
+### Platform builds
+
+Android development requires Android SDK 36, Java 17, and the SDK tools shown
+by `flutter doctor -v`. Windows x64 builds must run on Windows with Visual
+Studio's **Desktop development with C++** workload. Keep `nuget.exe` on
+`PATH`; the Windows text-to-speech plugin downloads its C++/WinRT dependency
+during the first build.
+
+Pull requests compile an Android debug APK and a Windows x64 release bundle in
+GitHub Actions, in addition to running the analyzer and tests.
+
 ### Technical snapshot
 
 - **Framework:** Flutter
@@ -180,6 +204,51 @@ lib/
 ## Release
 
 Current version: **1.0.0-beta.1+1**
+
+### Android signing
+
+Android release builds must be signed with the project's upload key. Generate
+the key once and keep both the keystore and its passwords in a secure backup:
+
+```sh
+keytool -genkeypair -v \
+  -keystore /secure/path/tingshuo-upload-keystore.jks \
+  -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias upload
+```
+
+Copy the versioned template, then replace all four placeholder values:
+
+```sh
+cp android/key.properties.example android/key.properties
+```
+
+`storeFile` must be the absolute path to the keystore. On Windows, use `/` as
+the path separator. Both `android/key.properties` and keystore files are
+ignored by Git; never commit either one. A release build fails with a clear
+error when the file, a property, or the configured keystore is missing.
+
+Build the Play Store artifact with:
+
+```sh
+flutter build appbundle --release
+```
+
+The signed bundle is written to
+`build/app/outputs/bundle/release/app-release.aab`.
+
+Version tags matching `v*` use the same signing configuration in GitHub
+Actions. Configure these repository secrets before creating a release tag:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | The complete upload keystore, base64-encoded as one line |
+| `ANDROID_KEYSTORE_PASSWORD` | The keystore password |
+| `ANDROID_KEY_ALIAS` | The upload-key alias, normally `upload` |
+| `ANDROID_KEY_PASSWORD` | The upload-key password |
+
+The workflow fails rather than publishing an unsigned or debug-signed bundle
+when any signing secret is missing.
 
 The beta milestone delivers a complete local loop:
 
