@@ -152,9 +152,10 @@ class OllamaService {
   }
 
   Future<String> _model() async {
-    if (_modelOverride != null) return _modelOverride!;
+    if (_modelOverride != null) return _modelOverride;
     if (_configuredModel.isNotEmpty) return _configuredModel;
-    if (_detectedModel != null) return _detectedModel!;
+    final detected = _detectedModel;
+    if (detected != null) return detected;
 
     final url = _uri('/api/tags');
     final response = await _useClient(
