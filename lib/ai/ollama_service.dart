@@ -67,23 +67,52 @@ Uri buildOllamaApiUri(Uri endpoint, String apiPath) {
 
 /// Client for an Ollama server running on the local machine.
 class OllamaService {
-  OllamaService._();
+  OllamaService._()
+    : _clientOverride = null,
+      _endpointOverride = null,
+      _modelOverride = null;
+
+  /// Test-only instance with injected HTTP client, endpoint, and model.
+  @visibleForTesting
+  OllamaService.test({http.Client? client, Uri? endpoint, String? model})
+    : _clientOverride = client,
+      _endpointOverride = endpoint,
+      _modelOverride = model;
 
   static final OllamaService instance = OllamaService._();
 
   static const _configuredUrl = String.fromEnvironment('OLLAMA_URL');
   static const _configuredModel = String.fromEnvironment('OLLAMA_MODEL');
 
+  final http.Client? _clientOverride;
+  final Uri? _endpointOverride;
+  final String? _modelOverride;
+
   String? _detectedModel;
 
-  Uri get _endpoint => resolveOllamaEndpoint(
-    configuredUrl: _configuredUrl,
-    isMobile: Platform.isAndroid || Platform.isIOS,
-    requireHttps: Platform.isAndroid && kReleaseMode,
-  );
+  Uri get _endpoint =>
+      _endpointOverride ??
+      resolveOllamaEndpoint(
+        configuredUrl: _configuredUrl,
+        isMobile: Platform.isAndroid || Platform.isIOS,
+        requireHttps: Platform.isAndroid && kReleaseMode,
+      );
 
   Uri _uri(String path) {
     return buildOllamaApiUri(_endpoint, path);
+  }
+
+  Future<T> _useClient<T>(
+    Future<T> Function(http.Client client) action,
+  ) async {
+    final override = _clientOverride;
+    if (override != null) return action(override);
+    final client = http.Client();
+    try {
+      return await action(client);
+    } finally {
+      client.close();
+    }
   }
 
   /// Starts the local Ollama server when running as a desktop app.
@@ -111,9 +140,11 @@ class OllamaService {
 
   Future<bool> _isRunning() async {
     try {
-      final response = await http
-          .get(_uri('/api/tags'))
-          .timeout(const Duration(milliseconds: 500));
+      final response = await _useClient(
+        (client) => client
+            .get(_uri('/api/tags'))
+            .timeout(const Duration(milliseconds: 500)),
+      );
       return response.statusCode < 500;
     } catch (_) {
       return false;
@@ -121,11 +152,14 @@ class OllamaService {
   }
 
   Future<String> _model() async {
+    if (_modelOverride != null) return _modelOverride!;
     if (_configuredModel.isNotEmpty) return _configuredModel;
     if (_detectedModel != null) return _detectedModel!;
 
     final url = _uri('/api/tags');
-    final response = await http.get(url).timeout(const Duration(seconds: 10));
+    final response = await _useClient(
+      (client) => client.get(url).timeout(const Duration(seconds: 10)),
+    );
     if (response.statusCode >= 400) {
       throw http.ClientException(
         'Ollama returned ${response.statusCode}: ${response.body}',
@@ -152,20 +186,23 @@ class OllamaService {
     double temperature = 0.7,
   }) async {
     final url = _uri('/api/chat');
-    final response = await http
-        .post(
-          url,
-          headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'model': await _model(),
-            'messages': messages,
-            'stream': false,
-            // Avoid paying the model-loading cost again for subsequent lessons.
-            'keep_alive': '30m',
-            'options': {'num_predict': maxTokens, 'temperature': temperature},
-          }),
-        )
-        .timeout(const Duration(minutes: 2));
+    final model = await _model();
+    final response = await _useClient(
+      (client) => client
+          .post(
+            url,
+            headers: const {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'model': model,
+              'messages': messages,
+              'stream': false,
+              // Avoid paying the model-loading cost again for subsequent lessons.
+              'keep_alive': '30m',
+              'options': {'num_predict': maxTokens, 'temperature': temperature},
+            }),
+          )
+          .timeout(const Duration(minutes: 2)),
+    );
 
     if (response.statusCode >= 400) {
       throw http.ClientException(
