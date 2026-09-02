@@ -97,6 +97,137 @@ void main() {
     await subscription.cancel();
     await installer.dispose();
   });
+
+  test('reports not-installed before any download', () async {
+    final installer = KokoroVoicePackInstaller(
+      supportDirectoryProvider: () async => supportDirectory,
+      clientFactory: () => fail('No network is expected before an install.'),
+    );
+
+    final status = await installer.check();
+
+    expect(status.engine, PronunciationEngine.kokoro);
+    expect(status.state, OfflineVoiceState.notInstalled);
+    expect(status.totalBytes, kokoroArchiveBytes);
+    expect(await installer.installedDirectory(), isNull);
+
+    await installer.dispose();
+  });
+
+  test('reports connection failures with a friendly message', () async {
+    final installer = KokoroVoicePackInstaller(
+      supportDirectoryProvider: () async => supportDirectory,
+      clientFactory: () => MockClient(
+        (_) async => throw const SocketException('offline'),
+      ),
+      archiveUri: Uri.parse('https://example.test/kokoro.tar.bz2'),
+    );
+    final updates = <OfflineVoiceStatus>[];
+    final subscription = installer.updates.listen(updates.add);
+
+    await expectLater(installer.install(), throwsA(isA<SocketException>()));
+
+    expect(updates.last.state, OfflineVoiceState.failed);
+    expect(updates.last.message, contains('could not connect'));
+    expect(await installer.installedDirectory(), isNull);
+
+    await subscription.cancel();
+    await installer.dispose();
+  });
+
+  test('rejects an archive missing required files', () async {
+    final archiveBytes = <int>[9, 9];
+    String? stagingPath;
+    final installer = KokoroVoicePackInstaller(
+      supportDirectoryProvider: () async => supportDirectory,
+      clientFactory: () => MockClient(
+        (_) async => http.Response.bytes(archiveBytes, HttpStatus.ok),
+      ),
+      archiveExtractor: (archivePath, outputPath) async {
+        stagingPath = outputPath;
+        final root = Directory(p.join(outputPath, kokoroVoicePackDirectoryName));
+        await root.create(recursive: true);
+        // Write only the first required file; the rest stay missing.
+        final entry = kokoroRequiredFileSizes.entries.first;
+        final file = File(p.join(root.path, entry.key));
+        final handle = await file.open(mode: FileMode.write);
+        try {
+          await handle.truncate(entry.value);
+        } finally {
+          await handle.close();
+        }
+      },
+      archiveUri: Uri.parse('https://example.test/kokoro.tar.bz2'),
+      archiveBytes: archiveBytes.length,
+      archiveSha256: sha256.convert(archiveBytes).toString(),
+    );
+    final updates = <OfflineVoiceStatus>[];
+    final subscription = installer.updates.listen(updates.add);
+
+    await expectLater(installer.install(), throwsFormatException);
+
+    expect(updates.last.state, OfflineVoiceState.failed);
+    expect(
+      updates.last.message,
+      'The Kokoro download was incomplete or corrupted. Please try again.',
+    );
+    expect(await Directory(stagingPath!).exists(), isFalse);
+    expect(await installer.installedDirectory(), isNull);
+
+    await subscription.cancel();
+    await installer.dispose();
+  });
+
+  test('emits progress while streaming, verifying, and installing', () async {
+    final archiveBytes = List<int>.generate(96, (index) => index & 0xFF);
+    final installer = KokoroVoicePackInstaller(
+      supportDirectoryProvider: () async => supportDirectory,
+      clientFactory: () => MockClient.streaming(
+        (_, _) async => http.StreamedResponse(
+          Stream.fromIterable([
+            archiveBytes.sublist(0, 48),
+            archiveBytes.sublist(48),
+          ]),
+          HttpStatus.ok,
+        ),
+      ),
+      archiveExtractor: (archivePath, outputPath) async =>
+          _createRequiredPack(outputPath),
+      archiveUri: Uri.parse('https://example.test/kokoro.tar.bz2'),
+      archiveBytes: archiveBytes.length,
+      archiveSha256: sha256.convert(archiveBytes).toString(),
+    );
+    final updates = <OfflineVoiceStatus>[];
+    final subscription = installer.updates.listen(updates.add);
+
+    await installer.install();
+
+    final progress = updates
+        .where((status) => status.state == OfflineVoiceState.downloading)
+        .toList();
+    expect(progress.first.downloadedBytes, 0);
+    expect(progress.map((status) => status.downloadedBytes), containsAllInOrder([
+      0,
+      48,
+      96,
+    ]));
+    expect(
+      updates.map((status) => status.message),
+      containsAllInOrder([
+        'Downloading Kokoro…',
+        'Verifying Kokoro…',
+        'Installing Kokoro…',
+      ]),
+    );
+    expect(updates.last.state, OfflineVoiceState.ready);
+    expect(
+      (await installer.installedDirectory())?.path,
+      endsWith(kokoroVoicePackDirectoryName),
+    );
+
+    await subscription.cancel();
+    await installer.dispose();
+  });
 }
 
 Future<void> _createRequiredPack(String outputPath) async {

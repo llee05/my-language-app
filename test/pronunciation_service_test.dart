@@ -222,6 +222,68 @@ void main() {
     expect(service.configuredEngine, PronunciationEngine.kokoro);
     expect(service.configuredVoiceIds, ['zm_041']);
   });
+
+  test('forwards voice-pack management to a managed primary', () async {
+    final primary = _FakeManagedPronunciationService();
+    final fallback = _FakePronunciationService();
+    final service = FallbackPronunciationService(primary, fallback);
+
+    await service.checkVoicePack(PronunciationEngine.kokoro);
+    await service.installVoicePack(PronunciationEngine.kokoro);
+    expect(service.voicesFor(PronunciationEngine.kokoro), kokoroMandarinVoices);
+    await service.configurePronunciation(
+      engine: PronunciationEngine.kokoro,
+      voiceIds: ['zm_041'],
+    );
+
+    expect(primary.checkedEngines, [PronunciationEngine.kokoro]);
+    expect(primary.installedEngines, [PronunciationEngine.kokoro]);
+    expect(primary.configuredEngine, PronunciationEngine.kokoro);
+    expect(primary.configuredVoiceIds, ['zm_041']);
+    expect(service.voicePackUpdates, same(primary.voicePackUpdates));
+  });
+
+  test('unmanaged primaries cannot manage voice packs', () async {
+    final service = FallbackPronunciationService(
+      _FakePronunciationService(),
+      _FakePronunciationService(),
+    );
+
+    await expectLater(service.voicePackUpdates, emitsDone);
+    expect(
+      () => service.checkVoicePack(PronunciationEngine.kokoro),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => service.installVoicePack(PronunciationEngine.kokoro),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => service.configurePronunciation(engine: PronunciationEngine.kokoro),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => service.voicesFor(PronunciationEngine.kokoro),
+      throwsUnsupportedError,
+    );
+  });
+
+  test('ignores blank speech and speech after dispose', () async {
+    final primary = _FakePronunciationService();
+    final fallback = _FakePronunciationService();
+    final service = FallbackPronunciationService(primary, fallback);
+
+    await service.speakMandarin('   ');
+    expect(primary.spokenTexts, isEmpty);
+    expect(fallback.spokenTexts, isEmpty);
+
+    await service.dispose();
+    await service.speakMandarin('你好');
+    expect(primary.spokenTexts, isEmpty);
+    expect(fallback.spokenTexts, isEmpty);
+    expect(primary.disposeCalls, 1);
+    expect(fallback.disposeCalls, 1);
+  });
 }
 
 class _FakeManagedPronunciationService extends _FakePronunciationService

@@ -66,4 +66,78 @@ void main() {
     expect(schedule(ReviewRating.easy).intervalDays, 33);
     expect(schedule(ReviewRating.easy).easeFactor, closeTo(2.65, .0001));
   });
+
+  test('ease bottoms out at 1.3 after repeated lapses', () {
+    final lapsing = scheduleCardReview(
+      cardId: 2,
+      rating: ReviewRating.again,
+      reviewedAt: reviewedAt,
+      previous: CardProgress(
+        cardId: 2,
+        repetitions: 1,
+        lapses: 4,
+        intervalDays: 10,
+        easeFactor: 1.4,
+        dueAt: reviewedAt,
+      ),
+    );
+    expect(lapsing.easeFactor, 1.3);
+    expect(lapsing.repetitions, 0);
+    expect(lapsing.lapses, 5);
+    expect(lapsing.intervalDays, 1);
+
+    final recovering = scheduleCardReview(
+      cardId: 2,
+      rating: ReviewRating.good,
+      reviewedAt: reviewedAt,
+      previous: CardProgress(
+        cardId: 2,
+        repetitions: 1,
+        lapses: 5,
+        intervalDays: 10,
+        easeFactor: 1.3,
+        dueAt: reviewedAt,
+      ),
+    );
+    expect(recovering.easeFactor, 1.3);
+    expect(recovering.intervalDays, 13);
+    expect(recovering.repetitions, 2);
+  });
+
+  test('hard reviews keep at least a one-day interval', () {
+    final hard = scheduleCardReview(
+      cardId: 3,
+      rating: ReviewRating.hard,
+      reviewedAt: reviewedAt,
+      previous: CardProgress(
+        cardId: 3,
+        repetitions: 1,
+        intervalDays: 1,
+        easeFactor: 2.5,
+        dueAt: reviewedAt,
+      ),
+    );
+
+    expect(hard.intervalDays, 1);
+    expect(hard.easeFactor, closeTo(2.35, .0001));
+  });
+
+  test('easy reviews grow at least two days after a lapse', () {
+    final easy = scheduleCardReview(
+      cardId: 4,
+      rating: ReviewRating.easy,
+      reviewedAt: reviewedAt,
+      previous: CardProgress(
+        cardId: 4,
+        repetitions: 1,
+        lapses: 1,
+        intervalDays: 1,
+        easeFactor: 1.3,
+        dueAt: reviewedAt,
+      ),
+    );
+
+    expect(easy.intervalDays, 2);
+    expect(easy.easeFactor, closeTo(1.45, .0001));
+  });
 }
