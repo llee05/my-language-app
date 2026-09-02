@@ -96,10 +96,7 @@ class SqliteSettingsRepository implements SettingsRepository {
       soundEnabled: row['sound_enabled'] == 1,
       reminderEnabled: row['reminder_enabled'] == 1,
       reminderHour: row['reminder_hour'] as int,
-      pronunciationEngine: switch (row['pronunciation_engine']) {
-        'kokoro' => PronunciationEngine.kokoro,
-        _ => PronunciationEngine.melo,
-      },
+      pronunciationEngine: PronunciationEngine.kokoro,
       kokoroVoiceIds: _decodeKokoroVoiceIds(row['kokoro_voice_ids']),
     );
   });

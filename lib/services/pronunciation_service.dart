@@ -4,13 +4,12 @@ import '../models/learning_progress.dart';
 
 enum OfflineVoiceState { unavailable, notInstalled, downloading, ready, failed }
 
-const meloOfflineVoiceDownloadBytes = 60480445;
 const kokoroOfflineVoiceDownloadBytes = 147031220;
 
 class OfflineVoiceStatus {
   const OfflineVoiceStatus({
     required this.state,
-    this.engine = PronunciationEngine.melo,
+    this.engine = PronunciationEngine.kokoro,
     this.downloadedBytes = 0,
     this.totalBytes = 0,
     this.currentFile,
@@ -19,7 +18,7 @@ class OfflineVoiceStatus {
 
   const OfflineVoiceStatus.unavailable([
     String? message,
-    PronunciationEngine engine = PronunciationEngine.melo,
+    PronunciationEngine engine = PronunciationEngine.kokoro,
   ]) : this(
          state: OfflineVoiceState.unavailable,
          engine: engine,
@@ -27,7 +26,7 @@ class OfflineVoiceStatus {
        );
 
   const OfflineVoiceStatus.notInstalled({
-    PronunciationEngine engine = PronunciationEngine.melo,
+    PronunciationEngine engine = PronunciationEngine.kokoro,
     int totalBytes = 0,
   }) : this(
          state: OfflineVoiceState.notInstalled,
@@ -36,7 +35,7 @@ class OfflineVoiceStatus {
        );
 
   const OfflineVoiceStatus.ready({
-    PronunciationEngine engine = PronunciationEngine.melo,
+    PronunciationEngine engine = PronunciationEngine.kokoro,
   }) : this(state: OfflineVoiceState.ready, engine: engine);
 
   final OfflineVoiceState state;
@@ -65,13 +64,6 @@ class PronunciationVoice {
   final int speakerId;
   final String label;
 }
-
-const meloPronunciationVoice = PronunciationVoice(
-  engine: PronunciationEngine.melo,
-  id: 'melo',
-  speakerId: 0,
-  label: 'Melo',
-);
 
 const _kokoroFemaleVoiceIds = <String>[
   'zf_001',
@@ -210,9 +202,6 @@ List<PronunciationVoice> resolvePronunciationVoices(
   PronunciationEngine engine,
   Iterable<String> voiceIds,
 ) {
-  if (engine == PronunciationEngine.melo) {
-    return const [meloPronunciationVoice];
-  }
   final requestedIds = {
     for (final voiceId in voiceIds)
       if (voiceId.trim().isNotEmpty) voiceId.trim(),

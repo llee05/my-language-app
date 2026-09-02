@@ -2647,14 +2647,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final download = find.byKey(const Key('offline-voice-download'));
+    final download = find.byKey(const Key('kokoro-voice-download'));
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pumpAndSettle();
 
     expect(pronunciation.installCalls, 1);
-    expect(find.byKey(const Key('offline-voice-ready')), findsOneWidget);
+    expect(find.byKey(const Key('kokoro-voice-ready')), findsOneWidget);
   });
 
   testWidgets('settings downloads Kokoro and saves a random voice pool', (
@@ -2723,14 +2723,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('2 voices (random)'), findsOneWidget);
-
-    final enginePicker = find.byKey(const Key('pronunciation-engine-picker'));
-    await tester.ensureVisible(enginePicker);
-    await tester.pumpAndSettle();
-    tester
-        .widget<DropdownButtonFormField<PronunciationEngine>>(enginePicker)
-        .onChanged!(PronunciationEngine.kokoro);
-    await tester.pumpAndSettle();
 
     expect(pronunciation.configuredEngine, PronunciationEngine.kokoro);
     expect(pronunciation.configuredVoiceIds, ['zf_001', 'zm_041']);
@@ -3029,19 +3021,17 @@ class _FakePronunciationService implements PronunciationService {
 class _ManagedFakePronunciationService extends _FakePronunciationService
     implements OfflinePronunciationManager {
   _ManagedFakePronunciationService({
-    OfflineVoiceStatus meloStatus = const OfflineVoiceStatus.ready(),
     OfflineVoiceStatus kokoroStatus = const OfflineVoiceStatus.notInstalled(
       engine: PronunciationEngine.kokoro,
       totalBytes: kokoroOfflineVoiceDownloadBytes,
     ),
-  }) : statuses = {
-         PronunciationEngine.melo: meloStatus,
-         PronunciationEngine.kokoro: kokoroStatus,
-       };
+  }) {
+    _kokoroStatus = kokoroStatus;
+  }
 
   final StreamController<OfflineVoiceStatus> _voicePackUpdates =
       StreamController<OfflineVoiceStatus>.broadcast();
-  final Map<PronunciationEngine, OfflineVoiceStatus> statuses;
+  late OfflineVoiceStatus _kokoroStatus;
   final List<PronunciationEngine> installedEngines = [];
   PronunciationEngine? configuredEngine;
   List<String> configuredVoiceIds = const [];
@@ -3051,21 +3041,19 @@ class _ManagedFakePronunciationService extends _FakePronunciationService
 
   @override
   Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) async =>
-      statuses[engine]!;
+      _kokoroStatus;
 
   @override
   Future<void> installVoicePack(PronunciationEngine engine) async {
     installedEngines.add(engine);
     final ready = OfflineVoiceStatus.ready(engine: engine);
-    statuses[engine] = ready;
+    _kokoroStatus = ready;
     _voicePackUpdates.add(ready);
   }
 
   @override
   List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
-      engine == PronunciationEngine.kokoro
-      ? kokoroMandarinVoices
-      : const [meloPronunciationVoice];
+      kokoroMandarinVoices;
 
   @override
   Future<void> configurePronunciation({

@@ -4,11 +4,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import '../models/learning_progress.dart';
@@ -20,249 +16,19 @@ import 'sherpa_voice_config.dart';
 
 PronunciationService createPlatformPronunciationService() {
   return FallbackPronunciationService(
-    _SherpaPronunciationService(
-      meloVoicePack: _MeloVoicePack(),
-      kokoroVoicePack: KokoroVoicePackInstaller(),
-    ),
+    _SherpaPronunciationService(KokoroVoicePackInstaller()),
     SystemPronunciationService(),
   );
 }
 
-const _modelRevision = 'a0d5c6a264c0ef92d70d8661d8cc502d79627cd6';
-const _modelSha256 =
-    'f085f5079e05f039b800aeb542f5253c26a303211b0c6465d0d9387977855a63';
-const _voicePackDirectoryName = 'vits-melo-tts-zh_en-int8-v1';
-const _completeMarkerName = '.complete';
-
-const _voiceFiles = <_VoiceFile>[
-  _VoiceFile('model.int8.onnx', 53517430),
-  _VoiceFile('lexicon.txt', 6837671),
-  _VoiceFile('tokens.txt', 655),
-  _VoiceFile('date.fst', 59154),
-  _VoiceFile('number.fst', 64482),
-  _VoiceFile('LICENSE', 1053),
-];
-
-const _voicePackBytes = 60480445;
-
-class _VoiceFile {
-  const _VoiceFile(this.name, this.size);
-
-  final String name;
-  final int size;
-}
-
-class _MeloVoicePack {
-  final StreamController<OfflineVoiceStatus> _updates =
-      StreamController<OfflineVoiceStatus>.broadcast(sync: true);
-  Future<void>? _installFuture;
-  OfflineVoiceStatus _lastStatus = const OfflineVoiceStatus.notInstalled(
-    totalBytes: _voicePackBytes,
-  );
-  bool _disposed = false;
-
-  Stream<OfflineVoiceStatus> get updates => _updates.stream;
-
-  Future<Directory> _voiceDirectory() async {
-    final support = await getApplicationSupportDirectory();
-    return Directory(
-      p.join(support.path, 'ting_shuo', 'tts', _voicePackDirectoryName),
-    );
-  }
-
-  Future<OfflineVoiceStatus> check() async {
-    if (_installFuture != null) return _lastStatus;
-    try {
-      final directory = await _voiceDirectory();
-      final installed = await _isComplete(directory);
-      final status = installed
-          ? const OfflineVoiceStatus.ready()
-          : const OfflineVoiceStatus.notInstalled(totalBytes: _voicePackBytes);
-      _emit(status);
-      return status;
-    } catch (_) {
-      final status = OfflineVoiceStatus(
-        state: OfflineVoiceState.failed,
-        message: 'The offline voice status could not be checked.',
-      );
-      _emit(status);
-      return status;
-    }
-  }
-
-  Future<Directory?> installedDirectory() async {
-    final directory = await _voiceDirectory();
-    return await _isComplete(directory) ? directory : null;
-  }
-
-  Future<void> install() {
-    if (_disposed) {
-      return Future.error(StateError('The pronunciation service is closed.'));
-    }
-    final pending = _installFuture;
-    if (pending != null) return pending;
-
-    late final Future<void> installFuture;
-    installFuture = _install().whenComplete(() {
-      if (identical(_installFuture, installFuture)) _installFuture = null;
-    });
-    _installFuture = installFuture;
-    return installFuture;
-  }
-
-  Future<void> _install() async {
-    final target = await _voiceDirectory();
-    if (await _isComplete(target)) {
-      _emit(const OfflineVoiceStatus.ready());
-      return;
-    }
-
-    final staging = Directory('${target.path}.installing');
-    if (await staging.exists()) await staging.delete(recursive: true);
-    await staging.create(recursive: true);
-
-    final client = http.Client();
-    var downloadedBytes = 0;
-    try {
-      for (final voiceFile in _voiceFiles) {
-        _emit(
-          OfflineVoiceStatus(
-            state: OfflineVoiceState.downloading,
-            downloadedBytes: downloadedBytes,
-            totalBytes: _voicePackBytes,
-            currentFile: voiceFile.name,
-          ),
-        );
-        final destination = File(p.join(staging.path, voiceFile.name));
-        final request = http.Request(
-          'GET',
-          Uri.parse(
-            'https://huggingface.co/csukuangfj/'
-            'vits-melo-tts-zh_en/resolve/$_modelRevision/'
-            '${voiceFile.name}?download=true',
-          ),
-        );
-        final response = await client.send(request);
-        if (response.statusCode != HttpStatus.ok) {
-          throw HttpException(
-            'Voice download failed with HTTP ${response.statusCode}.',
-            uri: request.url,
-          );
-        }
-
-        final sink = destination.openWrite();
-        var fileBytes = 0;
-        try {
-          await for (final chunk in response.stream) {
-            sink.add(chunk);
-            fileBytes += chunk.length;
-            _emit(
-              OfflineVoiceStatus(
-                state: OfflineVoiceState.downloading,
-                downloadedBytes: downloadedBytes + fileBytes,
-                totalBytes: _voicePackBytes,
-                currentFile: voiceFile.name,
-              ),
-            );
-          }
-        } finally {
-          await sink.close();
-        }
-        if (fileBytes != voiceFile.size) {
-          throw FileSystemException(
-            'The downloaded voice file has an unexpected size.',
-            destination.path,
-          );
-        }
-        downloadedBytes += fileBytes;
-      }
-
-      final model = File(p.join(staging.path, 'model.int8.onnx'));
-      final digest = await sha256.bind(model.openRead()).first;
-      if (digest.toString() != _modelSha256) {
-        throw const FormatException(
-          'The downloaded voice model failed its integrity check.',
-        );
-      }
-      await File(p.join(staging.path, _completeMarkerName)).writeAsString(
-        'revision=$_modelRevision\nsha256=$_modelSha256\n',
-        flush: true,
-      );
-
-      if (await target.exists()) await target.delete(recursive: true);
-      await staging.rename(target.path);
-      _emit(const OfflineVoiceStatus.ready());
-    } catch (error) {
-      if (await staging.exists()) await staging.delete(recursive: true);
-      _emit(
-        OfflineVoiceStatus(
-          state: OfflineVoiceState.failed,
-          message: _friendlyDownloadError(error),
-        ),
-      );
-      rethrow;
-    } finally {
-      client.close();
-    }
-  }
-
-  Future<bool> _isComplete(Directory directory) async {
-    final marker = File(p.join(directory.path, _completeMarkerName));
-    if (!await marker.exists()) return false;
-    final markerContents = await marker.readAsString();
-    if (!markerContents.contains(_modelRevision) ||
-        !markerContents.contains(_modelSha256)) {
-      return false;
-    }
-    for (final voiceFile in _voiceFiles) {
-      final file = File(p.join(directory.path, voiceFile.name));
-      if (!await file.exists() || await file.length() != voiceFile.size) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  String _friendlyDownloadError(Object error) {
-    if (error is SocketException ||
-        error is HttpException ||
-        error is http.ClientException) {
-      return 'The voice download could not connect. Check your internet and try again.';
-    }
-    if (error is FileSystemException) {
-      return 'The voice pack could not be saved. Check available storage and try again.';
-    }
-    if (error is FormatException) {
-      return 'The voice download was incomplete or corrupted. Please try again.';
-    }
-    return 'The offline voice could not be installed. Please try again.';
-  }
-
-  void _emit(OfflineVoiceStatus status) {
-    _lastStatus = status;
-    if (!_disposed && !_updates.isClosed) _updates.add(status);
-  }
-
-  Future<void> dispose() async {
-    if (_disposed) return;
-    _disposed = true;
-    await _updates.close();
-  }
-}
-
 class _SherpaPronunciationService
     implements PronunciationService, OfflinePronunciationManager {
-  _SherpaPronunciationService({
-    required this._meloVoicePack,
-    required this._kokoroVoicePack,
-  }) {
+  _SherpaPronunciationService(this._kokoroVoicePack) {
     _voicePackSubscriptions = [
-      _meloVoicePack.updates.listen(_voicePackUpdates.add),
       _kokoroVoicePack.updates.listen(_voicePackUpdates.add),
     ];
   }
 
-  final _MeloVoicePack _meloVoicePack;
   final KokoroVoicePackInstaller _kokoroVoicePack;
   final StreamController<OfflineVoiceStatus> _voicePackUpdates =
       StreamController<OfflineVoiceStatus>.broadcast(sync: true);
@@ -271,43 +37,34 @@ class _SherpaPronunciationService
   final _SherpaWorker _worker = _SherpaWorker();
   final math.Random _random = math.Random();
   AudioSource? _audioSource;
-  PronunciationEngine _configuredEngine = PronunciationEngine.melo;
-  List<PronunciationVoice> _configuredVoices = const [meloPronunciationVoice];
+  List<PronunciationVoice> _configuredVoices = kokoroMandarinVoices;
   String? _previousKokoroVoiceId;
   int _requestId = 0;
   bool _disposed = false;
 
   @override
-  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => _meloVoicePack.updates;
+  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => _kokoroVoicePack.updates;
 
   @override
   Stream<OfflineVoiceStatus> get voicePackUpdates => _voicePackUpdates.stream;
 
   @override
-  Future<OfflineVoiceStatus> checkOfflineVoice() => _meloVoicePack.check();
+  Future<OfflineVoiceStatus> checkOfflineVoice() => _kokoroVoicePack.check();
 
   @override
-  Future<void> installOfflineVoice() => _meloVoicePack.install();
+  Future<void> installOfflineVoice() => _kokoroVoicePack.install();
 
   @override
   Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) =>
-      switch (engine) {
-        PronunciationEngine.melo => _meloVoicePack.check(),
-        PronunciationEngine.kokoro => _kokoroVoicePack.check(),
-      };
+      _kokoroVoicePack.check();
 
   @override
-  Future<void> installVoicePack(PronunciationEngine engine) => switch (engine) {
-    PronunciationEngine.melo => _meloVoicePack.install(),
-    PronunciationEngine.kokoro => _kokoroVoicePack.install(),
-  };
+  Future<void> installVoicePack(PronunciationEngine engine) =>
+      _kokoroVoicePack.install();
 
   @override
   List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
-      switch (engine) {
-        PronunciationEngine.melo => const [meloPronunciationVoice],
-        PronunciationEngine.kokoro => kokoroMandarinVoices,
-      };
+      kokoroMandarinVoices;
 
   @override
   Future<void> configurePronunciation({
@@ -316,12 +73,10 @@ class _SherpaPronunciationService
   }) async {
     if (_disposed) return;
     final voices = resolvePronunciationVoices(engine, voiceIds);
-    if (_configuredEngine == engine &&
-        _sameVoicePool(_configuredVoices, voices)) {
+    if (_sameVoicePool(_configuredVoices, voices)) {
       return;
     }
     await stop();
-    _configuredEngine = engine;
     _configuredVoices = voices;
     if (!voices.any((voice) => voice.id == _previousKokoroVoiceId)) {
       _previousKokoroVoiceId = null;
@@ -337,19 +92,13 @@ class _SherpaPronunciationService
     final voice = pickPronunciationVoice(
       _configuredVoices,
       randomIndex: _random.nextInt,
-      previousVoiceId: _configuredEngine == PronunciationEngine.kokoro
-          ? _previousKokoroVoiceId
-          : null,
+      previousVoiceId: _previousKokoroVoiceId,
     );
-    final directory = await switch (voice.engine) {
-      PronunciationEngine.melo => _meloVoicePack.installedDirectory(),
-      PronunciationEngine.kokoro => _kokoroVoicePack.installedDirectory(),
-    };
+    final directory = await _kokoroVoicePack.installedDirectory();
     if (directory == null) throw const OfflineVoiceNotInstalledException();
     if (_disposed || requestId != _requestId) return;
 
     final audio = await _worker.generate(
-      engine: voice.engine,
       modelDirectory: directory.path,
       speakerId: voice.speakerId,
       text: text,
@@ -358,9 +107,7 @@ class _SherpaPronunciationService
     if (audio.samples.isEmpty || audio.sampleRate <= 0) {
       throw StateError('Sherpa produced no audio.');
     }
-    if (voice.engine == PronunciationEngine.kokoro) {
-      _previousKokoroVoiceId = voice.id;
-    }
+    _previousKokoroVoiceId = voice.id;
 
     final soLoud = SoLoud.instance;
     if (!soLoud.isInitialized) {
@@ -408,7 +155,6 @@ class _SherpaPronunciationService
     for (final subscription in _voicePackSubscriptions) {
       await subscription.cancel();
     }
-    await _meloVoicePack.dispose();
     await _kokoroVoicePack.dispose();
     await _voicePackUpdates.close();
   }
@@ -445,7 +191,6 @@ class _SherpaWorker {
   bool _disposed = false;
 
   Future<_SherpaAudio> generate({
-    required PronunciationEngine engine,
     required String modelDirectory,
     required int speakerId,
     required String text,
@@ -463,7 +208,6 @@ class _SherpaWorker {
     _commands!.send({
       'type': 'generate',
       'id': requestId,
-      'engine': engine.name,
       'modelDirectory': modelDirectory,
       'speakerId': speakerId,
       'text': text,
@@ -578,24 +322,19 @@ void _sherpaWorkerMain(Map<String, Object> setup) {
       if (message['type'] != 'generate') return;
       final id = message['id'] as int;
       try {
-        final engine = PronunciationEngine.values.byName(
-          message['engine'] as String,
-        );
         final modelDirectory = message['modelDirectory'] as String;
-        final modelKey = '${engine.name}:$modelDirectory';
-        if (loadedModelKey != modelKey) {
+        if (loadedModelKey != modelDirectory) {
           tts?.free();
           tts = null;
           loadedModelKey = null;
           final nextTts = sherpa_onnx.OfflineTts(
             createSherpaVoiceConfig(
-              engine: engine,
               modelDirectory: modelDirectory,
               numThreads: setup['numThreads']! as int,
             ),
           );
           tts = nextTts;
-          loadedModelKey = modelKey;
+          loadedModelKey = modelDirectory;
         }
         final speakerId = message['speakerId'] as int;
         if (speakerId < 0 || speakerId >= tts!.numSpeakers) {

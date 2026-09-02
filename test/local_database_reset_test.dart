@@ -140,7 +140,7 @@ void main() {
       expect(restoredSettings.soundEnabled, isTrue);
       expect(restoredSettings.reminderEnabled, isFalse);
       expect(restoredSettings.reminderHour, 18);
-      expect(restoredSettings.pronunciationEngine, PronunciationEngine.melo);
+      expect(restoredSettings.pronunciationEngine, PronunciationEngine.kokoro);
       expect(restoredSettings.kokoroVoiceIds, isEmpty);
       expect(
         await lessons.findGenerated(theme: generatedTheme, hskLevel: 3),

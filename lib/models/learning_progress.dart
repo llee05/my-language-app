@@ -1,6 +1,6 @@
 import 'lesson.dart';
 
-enum PronunciationEngine { melo, kokoro }
+enum PronunciationEngine { kokoro }
 
 class LearnerSettings {
   const LearnerSettings({
@@ -8,7 +8,7 @@ class LearnerSettings {
     this.soundEnabled = true,
     this.reminderEnabled = false,
     this.reminderHour = 18,
-    this.pronunciationEngine = PronunciationEngine.melo,
+    this.pronunciationEngine = PronunciationEngine.kokoro,
     this.kokoroVoiceIds = const [],
   });
 

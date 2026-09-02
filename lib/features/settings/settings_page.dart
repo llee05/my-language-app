@@ -37,16 +37,13 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
   int _reminderHour = 18;
-  PronunciationEngine _pronunciationEngine = PronunciationEngine.melo;
   List<String> _kokoroVoiceIds = const [];
   late final Future<String> _databasePath;
   late final PronunciationService _pronunciationService;
   late final OfflinePronunciationManager? _offlineVoiceManager;
   late final bool _ownsPronunciationService;
   StreamSubscription<OfflineVoiceStatus>? _offlineVoiceSubscription;
-  OfflineVoiceStatus? _offlineVoiceStatus;
   OfflineVoiceStatus? _kokoroVoiceStatus;
-  bool _checkingOfflineVoice = true;
   bool _checkingKokoroVoice = false;
 
   static const _targets = [5, 10, 15, 20, 30];
@@ -70,64 +67,50 @@ class _SettingsPageState extends State<SettingsPage> {
                 _pronunciationService.offlineVoiceUpdates)
             .listen(_handleOfflineVoiceUpdate);
     _loadPreferences();
-    unawaited(_loadVoicePackStatus(PronunciationEngine.melo));
-    if (_offlineVoiceManager != null) {
-      unawaited(_loadVoicePackStatus(PronunciationEngine.kokoro));
-    }
+    unawaited(_loadVoicePackStatus());
   }
 
   void _handleOfflineVoiceUpdate(OfflineVoiceStatus status) {
     if (!mounted) return;
     setState(() {
-      switch (status.engine) {
-        case PronunciationEngine.melo:
-          _offlineVoiceStatus = status;
-          _checkingOfflineVoice = false;
-        case PronunciationEngine.kokoro:
-          _kokoroVoiceStatus = status;
-          _checkingKokoroVoice = false;
-      }
+      _kokoroVoiceStatus = status;
+      _checkingKokoroVoice = false;
     });
   }
 
-  Future<void> _loadVoicePackStatus(PronunciationEngine engine) async {
+  Future<void> _loadVoicePackStatus() async {
     if (mounted) {
       setState(() {
-        switch (engine) {
-          case PronunciationEngine.melo:
-            _checkingOfflineVoice = true;
-          case PronunciationEngine.kokoro:
-            _checkingKokoroVoice = true;
-        }
+        _checkingKokoroVoice = true;
       });
     }
     try {
       final manager = _offlineVoiceManager;
       final status = manager == null
           ? await _pronunciationService.checkOfflineVoice()
-          : await manager.checkVoicePack(engine);
+          : await manager.checkVoicePack(PronunciationEngine.kokoro);
       if (!mounted) return;
       _handleOfflineVoiceUpdate(status);
     } catch (error) {
-      debugPrint('${engine.name} voice status check failed: $error');
+      debugPrint('${PronunciationEngine.kokoro.name} voice status check failed: $error');
       if (!mounted) return;
       _handleOfflineVoiceUpdate(
         OfflineVoiceStatus(
           state: OfflineVoiceState.failed,
-          engine: engine,
-          message: 'The ${_engineName(engine)} status could not be checked.',
+          engine: PronunciationEngine.kokoro,
+          message: 'The Kokoro status could not be checked.',
         ),
       );
     }
   }
 
-  Future<void> _installVoicePack(PronunciationEngine engine) async {
-    if (_voiceStatus(engine)?.state == OfflineVoiceState.downloading) return;
+  Future<void> _installVoicePack() async {
+    if (_kokoroVoiceStatus?.state == OfflineVoiceState.downloading) return;
     _handleOfflineVoiceUpdate(
       OfflineVoiceStatus(
         state: OfflineVoiceState.downloading,
-        engine: engine,
-        totalBytes: _downloadBytes(engine),
+        engine: PronunciationEngine.kokoro,
+        totalBytes: kokoroOfflineVoiceDownloadBytes,
       ),
     );
     try {
@@ -135,44 +118,23 @@ class _SettingsPageState extends State<SettingsPage> {
       if (manager == null) {
         await _pronunciationService.installOfflineVoice();
       } else {
-        await manager.installVoicePack(engine);
+        await manager.installVoicePack(PronunciationEngine.kokoro);
       }
-      await _loadVoicePackStatus(engine);
+      await _loadVoicePackStatus();
     } catch (error) {
-      debugPrint('${engine.name} voice installation failed: $error');
-      if (!mounted || _voiceStatus(engine)?.state == OfflineVoiceState.failed) {
+      debugPrint('${PronunciationEngine.kokoro.name} voice installation failed: $error');
+      if (!mounted || _kokoroVoiceStatus?.state == OfflineVoiceState.failed) {
         return;
       }
       _handleOfflineVoiceUpdate(
         OfflineVoiceStatus(
           state: OfflineVoiceState.failed,
-          engine: engine,
-          message: '${_engineName(engine)} could not be installed. Try again.',
+          engine: PronunciationEngine.kokoro,
+          message: 'Kokoro could not be installed. Try again.',
         ),
       );
     }
   }
-
-  OfflineVoiceStatus? _voiceStatus(PronunciationEngine engine) =>
-      switch (engine) {
-        PronunciationEngine.melo => _offlineVoiceStatus,
-        PronunciationEngine.kokoro => _kokoroVoiceStatus,
-      };
-
-  bool _checkingVoiceStatus(PronunciationEngine engine) => switch (engine) {
-    PronunciationEngine.melo => _checkingOfflineVoice,
-    PronunciationEngine.kokoro => _checkingKokoroVoice,
-  };
-
-  int _downloadBytes(PronunciationEngine engine) => switch (engine) {
-    PronunciationEngine.melo => meloOfflineVoiceDownloadBytes,
-    PronunciationEngine.kokoro => kokoroOfflineVoiceDownloadBytes,
-  };
-
-  String _engineName(PronunciationEngine engine) => switch (engine) {
-    PronunciationEngine.melo => 'MeloTTS',
-    PronunciationEngine.kokoro => 'Kokoro',
-  };
 
   Future<void> _loadPreferences() async {
     if (!_loadingPreferences && mounted) {
@@ -190,7 +152,6 @@ class _SettingsPageState extends State<SettingsPage> {
         _soundEnabled = settings.soundEnabled;
         _reminderEnabled = settings.reminderEnabled;
         _reminderHour = settings.reminderHour;
-        _pronunciationEngine = settings.pronunciationEngine;
         _kokoroVoiceIds = kokoroVoiceIds;
         _loadingPreferences = false;
         _preferencesLoadFailed = false;
@@ -236,7 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
           soundEnabled: _soundEnabled,
           reminderEnabled: _reminderEnabled,
           reminderHour: _reminderHour,
-          pronunciationEngine: _pronunciationEngine,
+          pronunciationEngine: PronunciationEngine.kokoro,
           kokoroVoiceIds: _kokoroVoiceIds,
         ),
       );
@@ -255,7 +216,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (manager == null) return;
     try {
       await manager.configurePronunciation(
-        engine: _pronunciationEngine,
+        engine: PronunciationEngine.kokoro,
         voiceIds: _kokoroVoiceIds,
       );
     } catch (error) {
@@ -489,22 +450,18 @@ class _SettingsPageState extends State<SettingsPage> {
           _SettingsCard(
             title: 'Offline Mandarin voices',
             subtitle:
-                'Download either local engine. Lessons use the system Mandarin voice whenever the selected pack is unavailable.',
+                'Download the local Kokoro engine. Lessons use the system Mandarin voice whenever the pack is unavailable.',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildVoicePackSection(PronunciationEngine.melo),
-                if (_offlineVoiceManager != null) ...[
+                _buildVoicePackSection(),
+                if (_offlineVoiceManager != null &&
+                    _kokoroVoiceStatus?.state ==
+                        OfflineVoiceState.ready) ...[
                   const SizedBox(height: 22),
                   const Divider(),
                   const SizedBox(height: 22),
-                  _buildVoicePackSection(PronunciationEngine.kokoro),
-                  if (_kokoroVoiceStatus?.state == OfflineVoiceState.ready) ...[
-                    const SizedBox(height: 22),
-                    const Divider(),
-                    const SizedBox(height: 22),
-                    _buildPronunciationSelectors(),
-                  ],
+                  _buildPronunciationSelectors(),
                 ],
               ],
             ),
@@ -583,46 +540,36 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   bool get _shouldShowOfflineVoiceCard {
-    if (_offlineVoiceManager != null) {
-      final meloStatus = _offlineVoiceStatus;
-      final kokoroStatus = _kokoroVoiceStatus;
-      if (meloStatus == null || kokoroStatus == null) return false;
-      return meloStatus.state != OfflineVoiceState.unavailable ||
-          kokoroStatus.state != OfflineVoiceState.unavailable;
-    }
-    final status = _offlineVoiceStatus;
+    final status = _kokoroVoiceStatus;
     return status != null && status.state != OfflineVoiceState.unavailable;
   }
 
-  Widget _buildVoicePackSection(PronunciationEngine engine) {
-    final isKokoro = engine == PronunciationEngine.kokoro;
+  Widget _buildVoicePackSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          _engineName(engine),
-          style: const TextStyle(
+        const Text(
+          'Kokoro',
+          style: TextStyle(
             color: AppColors.text,
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),
         ),
         const SizedBox(height: 5),
-        Text(
-          isKokoro
-              ? 'Higher-quality int8 speech with 100 Mandarin voices.'
-              : 'Compact, fast Mandarin and English speech.',
-          style: const TextStyle(color: AppColors.muted),
+        const Text(
+          'Higher-quality int8 speech with 100 Mandarin voices.',
+          style: TextStyle(color: AppColors.muted),
         ),
         const SizedBox(height: 14),
-        _buildOfflineVoiceControl(engine),
+        _buildOfflineVoiceControl(),
       ],
     );
   }
 
-  Widget _buildOfflineVoiceControl(PronunciationEngine engine) {
-    final status = _voiceStatus(engine);
-    if (_checkingVoiceStatus(engine) || status == null) {
+  Widget _buildOfflineVoiceControl() {
+    final status = _kokoroVoiceStatus;
+    if (_checkingKokoroVoice || status == null) {
       return const Row(
         children: [
           SizedBox.square(
@@ -638,7 +585,7 @@ class _SettingsPageState extends State<SettingsPage> {
     switch (status.state) {
       case OfflineVoiceState.ready:
         return Row(
-          key: _voiceControlKey(engine, 'ready'),
+          key: _voiceControlKey('ready'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(
@@ -647,8 +594,8 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                '${_engineName(engine)} is installed and ready offline.',
+              child: const Text(
+                'Kokoro is installed and ready offline.',
               ),
             ),
           ],
@@ -657,7 +604,7 @@ class _SettingsPageState extends State<SettingsPage> {
         final progress = status.progress;
         final percent = progress == null ? null : (progress * 100).round();
         return Column(
-          key: _voiceControlKey(engine, 'downloading'),
+          key: _voiceControlKey('downloading'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             LinearProgressIndicator(value: progress),
@@ -683,30 +630,27 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              key: _voiceControlKey(engine, 'retry'),
-              onPressed: () => _installVoicePack(engine),
+              key: _voiceControlKey('retry'),
+              onPressed: () => _installVoicePack(),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Try download again'),
             ),
           ],
         );
       case OfflineVoiceState.notInstalled:
-        final isKokoro = engine == PronunciationEngine.kokoro;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              isKokoro
-                  ? 'Optional one-time download: 147 MB, about 215 MB installed. Installation needs about 600 MB of temporary free space.'
-                  : 'Optional one-time download: about 61 MB. No manual file setup is needed.',
-              style: const TextStyle(color: AppColors.muted),
+            const Text(
+              'Optional one-time download: 147 MB, about 215 MB installed. Installation needs about 600 MB of temporary free space.',
+              style: TextStyle(color: AppColors.muted),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              key: _voiceControlKey(engine, 'download'),
-              onPressed: () => _installVoicePack(engine),
+              key: _voiceControlKey('download'),
+              onPressed: () => _installVoicePack(),
               icon: const Icon(Icons.download_rounded),
-              label: Text('Download ${_engineName(engine)}'),
+              label: const Text('Download Kokoro'),
             ),
           ],
         );
@@ -715,40 +659,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Key _voiceControlKey(PronunciationEngine engine, String suffix) => Key(
-    '${engine == PronunciationEngine.melo ? 'offline' : 'kokoro'}-voice-$suffix',
-  );
+  Key _voiceControlKey(String suffix) => Key('kokoro-voice-$suffix');
 
   Widget _buildPronunciationSelectors() {
     final voices = _availableKokoroVoices();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<PronunciationEngine>(
-          key: const Key('pronunciation-engine-picker'),
-          initialValue: _pronunciationEngine,
-          isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'Speech engine',
-            border: OutlineInputBorder(),
-          ),
-          items: const [
-            DropdownMenuItem(
-              value: PronunciationEngine.melo,
-              child: Text('MeloTTS'),
-            ),
-            DropdownMenuItem(
-              value: PronunciationEngine.kokoro,
-              child: Text('Kokoro'),
-            ),
-          ],
-          onChanged: (engine) {
-            if (engine == null) return;
-            setState(() => _pronunciationEngine = engine);
-            unawaited(_applyPronunciationSelection());
-          },
-        ),
-        const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
           key: const Key('kokoro-voice-picker'),

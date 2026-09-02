@@ -88,23 +88,20 @@ The speaker button on lesson cards does not require Ollama. Sound can be
 enabled or disabled under **Settings → Sound**.
 
 For consistent mobile and desktop pronunciation, open **Settings → Offline
-Mandarin voices**. TingShuo can download and verify either of these packs into
-the app's private support directory; no manual model-file setup is needed:
+Mandarin voices**. TingShuo can download and verify this pack into the app's
+private support directory; no manual model-file setup is needed:
 
-- **MeloTTS:** an approximately 61 MB download with one compact, fast voice.
 - **Kokoro int8 v1.1:** a 147 MB download (about 215 MB installed) with 100
   Mandarin voices. Extraction needs about 600 MB of temporary free space.
 
-After installing Kokoro, its default voice pool includes all 100 voices and
-chooses one randomly for each phrase without immediately repeating a voice.
-The searchable voice picker can limit that pool to any subset; selecting one
-voice keeps pronunciation consistent. Save settings to keep the engine and
-pool for future launches. Synthesis runs locally through sherpa-onnx, including
-on Linux. Until the selected pack is ready, the app falls back to a compatible
-Simplified Chinese (`zh-CN`) system voice where one is available.
-Melo uses the MIT-licensed
-[MeloTTS Chinese/English model](https://huggingface.co/csukuangfj/vits-melo-tts-zh_en);
-Kokoro uses the Apache-2.0-licensed
+Kokoro is the default pronunciation engine. After installing it, the default
+voice pool includes all 100 voices and chooses one randomly for each phrase
+without immediately repeating a voice. The searchable voice picker can limit
+that pool to any subset; selecting one voice keeps pronunciation consistent.
+Save settings to keep the voice pool for future launches. Synthesis runs
+locally through sherpa-onnx, including on Linux. Until the pack is ready, the
+app falls back to a compatible Simplified Chinese (`zh-CN`) system voice where
+one is available. Kokoro uses the Apache-2.0-licensed
 [Kokoro int8 multilingual v1.1 model](https://huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1).
 
 ### Optional AI tutor
@@ -186,8 +183,8 @@ GitHub Actions, in addition to running the analyzer and tests.
 - **Language:** Dart
 - **Storage:** SQLite via `sqflite_common_ffi`
 - **AI:** Ollama's local chat API through a lightweight HTTP client
-- **Audio:** selectable offline MeloTTS or Kokoro via `sherpa_onnx` and
-  `flutter_soloud`, with a `flutter_tts` system-voice fallback
+- **Audio:** offline Kokoro via `sherpa_onnx` and `flutter_soloud`, with a
+  `flutter_tts` system-voice fallback
 - **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
 
 ### Project structure

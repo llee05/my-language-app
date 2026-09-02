@@ -247,9 +247,7 @@ class _FakeManagedPronunciationService extends _FakePronunciationService
 
   @override
   List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
-      engine == PronunciationEngine.kokoro
-      ? kokoroMandarinVoices
-      : const [meloPronunciationVoice];
+      kokoroMandarinVoices;
 
   @override
   Future<void> configurePronunciation({

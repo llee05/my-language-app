@@ -153,12 +153,12 @@ void main() {
       expect(migratedProfile?.hskLevel, 2);
       expect(migratedProfile?.dailyWordTarget, 15);
       final migratedSettings = await settings.load();
-      expect(migratedSettings.pronunciationEngine, PronunciationEngine.melo);
+      expect(migratedSettings.pronunciationEngine, PronunciationEngine.kokoro);
       expect(migratedSettings.kokoroVoiceIds, isEmpty);
     },
   );
 
-  test('version 8 settings migrate to Melo without data loss', () async {
+  test('version 8 settings migrate to Kokoro without data loss', () async {
     await LocalDatabase.resetForTesting();
     final path = await LocalDatabase.databasePath();
     final versionEight = await openDatabase(
@@ -194,7 +194,7 @@ void main() {
     expect(restored.soundEnabled, isTrue);
     expect(restored.reminderEnabled, isTrue);
     expect(restored.reminderHour, 8);
-    expect(restored.pronunciationEngine, PronunciationEngine.melo);
+    expect(restored.pronunciationEngine, PronunciationEngine.kokoro);
     expect(restored.kokoroVoiceIds, isEmpty);
   });
 

@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 10;
+const int databaseSchemaVersion = 11;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -305,6 +305,13 @@ final Map<int, MigrationStep> databaseMigrations = {
         whereArgs: [row['learner_id']],
       );
     }
+  },
+  11: (db) async {
+    // MeloTTS was removed; every learner now uses Kokoro.
+    await db.execute(
+      "UPDATE learner_settings SET pronunciation_engine = 'kokoro' "
+      "WHERE pronunciation_engine <> 'kokoro'",
+    );
   },
 };
 
