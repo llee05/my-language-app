@@ -92,7 +92,9 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       _handleOfflineVoiceUpdate(status);
     } catch (error) {
-      debugPrint('${PronunciationEngine.kokoro.name} voice status check failed: $error');
+      debugPrint(
+        '${PronunciationEngine.kokoro.name} voice status check failed: $error',
+      );
       if (!mounted) return;
       _handleOfflineVoiceUpdate(
         OfflineVoiceStatus(
@@ -122,7 +124,9 @@ class _SettingsPageState extends State<SettingsPage> {
       }
       await _loadVoicePackStatus();
     } catch (error) {
-      debugPrint('${PronunciationEngine.kokoro.name} voice installation failed: $error');
+      debugPrint(
+        '${PronunciationEngine.kokoro.name} voice installation failed: $error',
+      );
       if (!mounted || _kokoroVoiceStatus?.state == OfflineVoiceState.failed) {
         return;
       }
@@ -456,8 +460,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 _buildVoicePackSection(),
                 if (_offlineVoiceManager != null &&
-                    _kokoroVoiceStatus?.state ==
-                        OfflineVoiceState.ready) ...[
+                    _kokoroVoiceStatus?.state == OfflineVoiceState.ready) ...[
                   const SizedBox(height: 22),
                   const Divider(),
                   const SizedBox(height: 22),
@@ -594,9 +597,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: const Text(
-                'Kokoro is installed and ready offline.',
-              ),
+              child: const Text('Kokoro is installed and ready offline.'),
             ),
           ],
         );

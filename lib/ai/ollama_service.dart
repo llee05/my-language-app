@@ -102,9 +102,7 @@ class OllamaService {
     return buildOllamaApiUri(_endpoint, path);
   }
 
-  Future<T> _useClient<T>(
-    Future<T> Function(http.Client client) action,
-  ) async {
+  Future<T> _useClient<T>(Future<T> Function(http.Client client) action) async {
     final override = _clientOverride;
     if (override != null) return action(override);
     final client = http.Client();

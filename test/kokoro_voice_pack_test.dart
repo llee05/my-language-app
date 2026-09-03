@@ -117,9 +117,8 @@ void main() {
   test('reports connection failures with a friendly message', () async {
     final installer = KokoroVoicePackInstaller(
       supportDirectoryProvider: () async => supportDirectory,
-      clientFactory: () => MockClient(
-        (_) async => throw const SocketException('offline'),
-      ),
+      clientFactory: () =>
+          MockClient((_) async => throw const SocketException('offline')),
       archiveUri: Uri.parse('https://example.test/kokoro.tar.bz2'),
     );
     final updates = <OfflineVoiceStatus>[];
@@ -145,7 +144,9 @@ void main() {
       ),
       archiveExtractor: (archivePath, outputPath) async {
         stagingPath = outputPath;
-        final root = Directory(p.join(outputPath, kokoroVoicePackDirectoryName));
+        final root = Directory(
+          p.join(outputPath, kokoroVoicePackDirectoryName),
+        );
         await root.create(recursive: true);
         // Write only the first required file; the rest stay missing.
         final entry = kokoroRequiredFileSizes.entries.first;
@@ -206,11 +207,10 @@ void main() {
         .where((status) => status.state == OfflineVoiceState.downloading)
         .toList();
     expect(progress.first.downloadedBytes, 0);
-    expect(progress.map((status) => status.downloadedBytes), containsAllInOrder([
-      0,
-      48,
-      96,
-    ]));
+    expect(
+      progress.map((status) => status.downloadedBytes),
+      containsAllInOrder([0, 48, 96]),
+    );
     expect(
       updates.map((status) => status.message),
       containsAllInOrder([

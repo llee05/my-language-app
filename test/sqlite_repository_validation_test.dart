@@ -58,23 +58,26 @@ void main() {
       );
     });
 
-    test('rejects lesson submission keys that mismatch their session', () async {
-      await expectLater(
-        progress.recordReview(
-          review: ReviewRecord(
-            id: 0,
-            cardId: 1,
-            sessionId: 5,
-            submissionKey: 'custom:key',
-            reviewedAt: DateTime.utc(2026, 9, 1),
-            rating: ReviewRating.good,
-            wasCorrect: true,
+    test(
+      'rejects lesson submission keys that mismatch their session',
+      () async {
+        await expectLater(
+          progress.recordReview(
+            review: ReviewRecord(
+              id: 0,
+              cardId: 1,
+              sessionId: 5,
+              submissionKey: 'custom:key',
+              reviewedAt: DateTime.utc(2026, 9, 1),
+              rating: ReviewRating.good,
+              wasCorrect: true,
+            ),
+            progress: CardProgress(cardId: 1, dueAt: DateTime.utc(2026, 9, 2)),
           ),
-          progress: CardProgress(cardId: 1, dueAt: DateTime.utc(2026, 9, 2)),
-        ),
-        throwsArgumentError,
-      );
-    });
+          throwsArgumentError,
+        );
+      },
+    );
   });
 
   group('settings decoding robustness', () {

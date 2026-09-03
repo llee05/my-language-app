@@ -43,7 +43,8 @@ class _SherpaPronunciationService
   bool _disposed = false;
 
   @override
-  Stream<OfflineVoiceStatus> get offlineVoiceUpdates => _kokoroVoicePack.updates;
+  Stream<OfflineVoiceStatus> get offlineVoiceUpdates =>
+      _kokoroVoicePack.updates;
 
   @override
   Stream<OfflineVoiceStatus> get voicePackUpdates => _voicePackUpdates.stream;
