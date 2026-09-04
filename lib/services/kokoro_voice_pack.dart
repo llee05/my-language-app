@@ -88,11 +88,18 @@ class KokoroVoicePackInstaller {
     try {
       final directory = await voiceDirectory();
       final installed = await _isComplete(directory);
+      final resumableBytes = installed ? 0 : await _resumableArchiveBytes();
       final status = installed
           ? const OfflineVoiceStatus.ready(engine: PronunciationEngine.kokoro)
           : OfflineVoiceStatus.notInstalled(
               engine: PronunciationEngine.kokoro,
+              downloadedBytes: resumableBytes,
               totalBytes: archiveBytes,
+              message: resumableBytes > 0
+                  ? 'The last download was interrupted; '
+                      '${(resumableBytes / (1000 * 1000)).toStringAsFixed(1)} '
+                      'MB can be reused.'
+                  : null,
             );
       _emit(status);
       return status;
@@ -137,42 +144,14 @@ class KokoroVoicePackInstaller {
     final staging = Directory('${target.path}.installing');
     final archive = File('${target.path}.download.tar.bz2');
     if (await staging.exists()) await staging.delete(recursive: true);
-    if (await archive.exists()) await archive.delete();
+    // A partial archive from an interrupted attempt is deliberately kept so
+    // the download can resume; _downloadArchive decides how to reuse it.
     await staging.create(recursive: true);
 
     final client = _clientFactory();
     _activeClient = client;
     try {
-      _emitProgress(downloadedBytes: 0, message: 'Downloading Kokoro…');
-      final request = http.Request('GET', _archiveUri);
-      final response = await client.send(request);
-      if (response.statusCode != HttpStatus.ok) {
-        throw HttpException(
-          'Voice download failed with HTTP ${response.statusCode}.',
-          uri: request.url,
-        );
-      }
-
-      final sink = archive.openWrite();
-      var downloadedBytes = 0;
-      try {
-        await for (final chunk in response.stream) {
-          sink.add(chunk);
-          downloadedBytes += chunk.length;
-          _emitProgress(
-            downloadedBytes: downloadedBytes,
-            message: 'Downloading Kokoro…',
-          );
-        }
-      } finally {
-        await sink.close();
-      }
-      if (downloadedBytes != archiveBytes) {
-        throw FileSystemException(
-          'The downloaded Kokoro archive has an unexpected size.',
-          archive.path,
-        );
-      }
+      final downloadedBytes = await _downloadArchive(client, archive);
 
       _emitProgress(
         downloadedBytes: downloadedBytes,
@@ -210,11 +189,18 @@ class KokoroVoicePackInstaller {
       _emit(const OfflineVoiceStatus.ready(engine: PronunciationEngine.kokoro));
     } catch (error) {
       if (await staging.exists()) await staging.delete(recursive: true);
-      if (await archive.exists()) await archive.delete();
+      final resumableBytes = await _resumableArchiveBytes();
+      if (error is FormatException || resumableBytes == 0) {
+        // A failed integrity check means the bytes on disk are unusable, but a
+        // truncated archive from a dropped connection is kept so the next
+        // attempt can resume instead of restarting the 147 MB download.
+        if (await archive.exists()) await archive.delete();
+      }
       _emit(
         OfflineVoiceStatus(
           state: OfflineVoiceState.failed,
           engine: PronunciationEngine.kokoro,
+          downloadedBytes: resumableBytes,
           totalBytes: archiveBytes,
           message: _friendlyDownloadError(error),
         ),
@@ -223,6 +209,98 @@ class KokoroVoicePackInstaller {
     } finally {
       if (identical(_activeClient, client)) _activeClient = null;
       client.close();
+    }
+  }
+
+  /// Downloads the archive, resuming a previous partial attempt with an HTTP
+  /// Range request so an interrupted mobile connection does not restart the
+  /// 147 MB download from scratch.
+  Future<int> _downloadArchive(http.Client client, File archive) async {
+    var resumeFrom = 0;
+    if (await archive.exists()) {
+      final existingBytes = await archive.length();
+      if (existingBytes >= archiveBytes) {
+        // A previous attempt may have finished downloading before failing;
+        // let the integrity check decide whether the bytes are usable.
+        return existingBytes;
+      }
+      resumeFrom = existingBytes;
+    }
+
+    final resuming = resumeFrom > 0;
+    _emitProgress(downloadedBytes: resumeFrom, message: 'Downloading Kokoro…');
+    final request = http.Request('GET', _archiveUri);
+    if (resuming) request.headers['range'] = 'bytes=$resumeFrom-';
+    final response = await client.send(request);
+
+    if (resuming &&
+        response.statusCode == HttpStatus.requestedRangeNotSatisfiable) {
+      // The partial file no longer matches the upstream resource; start over.
+      await archive.delete();
+      return _downloadArchive(client, archive);
+    }
+    if (response.statusCode != HttpStatus.ok &&
+        response.statusCode != HttpStatus.partialContent) {
+      throw HttpException(
+        'Voice download failed with HTTP ${response.statusCode}.',
+        uri: request.url,
+      );
+    }
+    final append =
+        resuming && response.statusCode == HttpStatus.partialContent;
+    if (append) {
+      final declaredStart = _rangeStart(response.headers['content-range']);
+      if (declaredStart != resumeFrom) {
+        // The server cannot continue from our offset; start over.
+        await archive.delete();
+        return _downloadArchive(client, archive);
+      }
+    }
+
+    final sink = archive.openWrite(
+      mode: append ? FileMode.append : FileMode.write,
+    );
+    // A non-resumed response rewrites the file from scratch, so the counter
+    // restarts at zero unless we are appending to the partial archive.
+    var downloadedBytes = append ? resumeFrom : 0;
+    try {
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        downloadedBytes += chunk.length;
+        _emitProgress(
+          downloadedBytes: downloadedBytes,
+          message: 'Downloading Kokoro…',
+        );
+      }
+    } finally {
+      await sink.close();
+    }
+    if (downloadedBytes != archiveBytes) {
+      throw FileSystemException(
+        'The downloaded Kokoro archive has an unexpected size.',
+        archive.path,
+      );
+    }
+    return downloadedBytes;
+  }
+
+  int? _rangeStart(String? contentRange) {
+    if (contentRange == null) return null;
+    final match = RegExp(
+      r'^bytes (\d+)-\d+/\d+$',
+    ).firstMatch(contentRange.trim());
+    return match == null ? null : int.tryParse(match.group(1)!);
+  }
+
+  /// Bytes of a partial archive that a retry can continue from.
+  Future<int> _resumableArchiveBytes() async {
+    try {
+      final archive = File('${(await voiceDirectory()).path}.download.tar.bz2');
+      if (!await archive.exists()) return 0;
+      final length = await archive.length();
+      return length > 0 && length < archiveBytes ? length : 0;
+    } catch (_) {
+      return 0;
     }
   }
 

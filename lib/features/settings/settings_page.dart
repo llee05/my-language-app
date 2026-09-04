@@ -629,6 +629,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   'The offline voice could not be installed. Please try again.',
               style: const TextStyle(color: AppColors.red),
             ),
+            if (status.downloadedBytes > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${_formatMegabytes(status.downloadedBytes)} of '
+                '${_formatMegabytes(status.totalBytes)} MB is already '
+                'downloaded and will be reused next attempt.',
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+            ],
             const SizedBox(height: 12),
             OutlinedButton.icon(
               key: _voiceControlKey('retry'),
@@ -639,19 +648,38 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         );
       case OfflineVoiceState.notInstalled:
+        final resumableBytes = status.downloadedBytes;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Optional one-time download: 147 MB, about 215 MB installed. Installation needs about 600 MB of temporary free space.',
-              style: TextStyle(color: AppColors.muted),
-            ),
+            if (resumableBytes > 0)
+              Text(
+                'The previous download was interrupted. '
+                '${_formatMegabytes(resumableBytes)} of '
+                '${_formatMegabytes(status.totalBytes)} MB is already on your '
+                'device and will be reused.',
+                style: const TextStyle(color: AppColors.muted),
+              )
+            else
+              const Text(
+                'Optional one-time download: 147 MB, about 215 MB installed. '
+                'Installation needs about 600 MB of temporary free space.',
+                style: TextStyle(color: AppColors.muted),
+              ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              key: _voiceControlKey('download'),
+              key: _voiceControlKey(
+                resumableBytes > 0 ? 'resume' : 'download',
+              ),
               onPressed: () => _installVoicePack(),
-              icon: const Icon(Icons.download_rounded),
-              label: const Text('Download Kokoro'),
+              icon: Icon(
+                resumableBytes > 0
+                    ? Icons.play_arrow_rounded
+                    : Icons.download_rounded,
+              ),
+              label: Text(
+                resumableBytes > 0 ? 'Resume download' : 'Download Kokoro',
+              ),
             ),
           ],
         );

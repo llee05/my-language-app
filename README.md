@@ -94,6 +94,12 @@ private support directory; no manual model-file setup is needed:
 - **Kokoro int8 v1.1:** a 147 MB download (about 215 MB installed) with 100
   Mandarin voices. Extraction needs about 600 MB of temporary free space.
 
+The download is resilient on mobile networks: if the connection drops, the
+partial archive is kept and the next attempt resumes where it stopped instead
+of restarting the 147 MB (via HTTP Range requests). Settings surfaces the
+progress with a **Resume download** button and shows how much is already on
+the device after an interruption.
+
 Kokoro is the default pronunciation engine. After installing it, the default
 voice pool includes all 100 voices and chooses one randomly for each phrase
 without immediately repeating a voice. The searchable voice picker can limit

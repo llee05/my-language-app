@@ -28,10 +28,14 @@ class OfflineVoiceStatus {
   const OfflineVoiceStatus.notInstalled({
     PronunciationEngine engine = PronunciationEngine.kokoro,
     int totalBytes = 0,
+    int downloadedBytes = 0,
+    String? message,
   }) : this(
          state: OfflineVoiceState.notInstalled,
          engine: engine,
+         downloadedBytes: downloadedBytes,
          totalBytes: totalBytes,
+         message: message,
        );
 
   const OfflineVoiceStatus.ready({
