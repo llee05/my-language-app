@@ -251,69 +251,71 @@ class _DashboardPageState extends State<DashboardPage> {
                     onSelected: _selectNavigation,
                   ),
                 ),
-          body: Row(
-            children: [
-              if (showSidebar)
-                SizedBox(
-                  width: 210,
-                  child: AppSidebar(
-                    selectedIndex: selectedNav,
-                    hskLevel: widget.profile.hskLevel,
-                    streakDays: _learningStats.streakDays,
-                    onSelected: _selectNavigation,
+          body: SafeArea(
+            child: Row(
+              children: [
+                if (showSidebar)
+                  SizedBox(
+                    width: 210,
+                    child: AppSidebar(
+                      selectedIndex: selectedNav,
+                      hskLevel: widget.profile.hskLevel,
+                      streakDays: _learningStats.streakDays,
+                      onSelected: _selectNavigation,
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      DashboardHeader(
+                        showMenu: !showSidebar,
+                        profile: widget.profile,
+                        totalXp: _learningStats.totalXp,
+                      ),
+                      Expanded(
+                        child: _DashboardBody(
+                          selectedNav: selectedNav,
+                          resumeLatestLesson: _resumeLatestLesson,
+                          startDailyReview: _startDailyReview,
+                          onResumeLesson: _resumeLesson,
+                          onOpenLessons: _openLessons,
+                          onStartDailyReview: _openDailyReview,
+                          onRetryDailyReview: _loadDailyReviewPrompt,
+                          onRetryAvailableLessons: _loadAvailableLessons,
+                          onDailyReviewCompleted: _loadDailyReviewPrompt,
+                          onLearningProgressChanged: _loadLearningStats,
+                          onLessonProgressChanged: _refreshDashboardData,
+                          loadingDailyReview: _loadingDailyReview,
+                          dailyReviewLoadError: _dailyReviewLoadError,
+                          pendingReviewCount: _pendingReviewCount,
+                          dailyReviewComplete: _dailyReviewComplete,
+                          resumeDailyReview: _resumeDailyReview,
+                          activeLesson: _activeLesson,
+                          activeLessonSession: _activeLessonSession,
+                          learningStats: _learningStats,
+                          loadingLearningStats: _loadingLearningStats,
+                          availableLessons: _availableLessons,
+                          loadingAvailableLessons: _loadingAvailableLessons,
+                          availableLessonsLoadError: _availableLessonsLoadError,
+                          profile: widget.profile,
+                          onProfileChanged: widget.onProfileChanged,
+                          onResetOnboarding: widget.onResetOnboarding,
+                          onResetAllData: widget.onResetAllData,
+                          lessonRepository: widget.lessonRepository,
+                          progressRepository: widget.progressRepository,
+                          dailyReviewSessionRepository:
+                              widget.dailyReviewSessionRepository,
+                          settingsRepository: widget.settingsRepository,
+                          developmentRepository: widget.developmentRepository,
+                          pronunciationService: _pronunciationService,
+                          clock: widget.clock,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              Expanded(
-                child: Column(
-                  children: [
-                    DashboardHeader(
-                      showMenu: !showSidebar,
-                      profile: widget.profile,
-                      totalXp: _learningStats.totalXp,
-                    ),
-                    Expanded(
-                      child: _DashboardBody(
-                        selectedNav: selectedNav,
-                        resumeLatestLesson: _resumeLatestLesson,
-                        startDailyReview: _startDailyReview,
-                        onResumeLesson: _resumeLesson,
-                        onOpenLessons: _openLessons,
-                        onStartDailyReview: _openDailyReview,
-                        onRetryDailyReview: _loadDailyReviewPrompt,
-                        onRetryAvailableLessons: _loadAvailableLessons,
-                        onDailyReviewCompleted: _loadDailyReviewPrompt,
-                        onLearningProgressChanged: _loadLearningStats,
-                        onLessonProgressChanged: _refreshDashboardData,
-                        loadingDailyReview: _loadingDailyReview,
-                        dailyReviewLoadError: _dailyReviewLoadError,
-                        pendingReviewCount: _pendingReviewCount,
-                        dailyReviewComplete: _dailyReviewComplete,
-                        resumeDailyReview: _resumeDailyReview,
-                        activeLesson: _activeLesson,
-                        activeLessonSession: _activeLessonSession,
-                        learningStats: _learningStats,
-                        loadingLearningStats: _loadingLearningStats,
-                        availableLessons: _availableLessons,
-                        loadingAvailableLessons: _loadingAvailableLessons,
-                        availableLessonsLoadError: _availableLessonsLoadError,
-                        profile: widget.profile,
-                        onProfileChanged: widget.onProfileChanged,
-                        onResetOnboarding: widget.onResetOnboarding,
-                        onResetAllData: widget.onResetAllData,
-                        lessonRepository: widget.lessonRepository,
-                        progressRepository: widget.progressRepository,
-                        dailyReviewSessionRepository:
-                            widget.dailyReviewSessionRepository,
-                        settingsRepository: widget.settingsRepository,
-                        developmentRepository: widget.developmentRepository,
-                        pronunciationService: _pronunciationService,
-                        clock: widget.clock,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
