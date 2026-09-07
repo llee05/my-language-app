@@ -1835,6 +1835,9 @@ void main() {
     await tester.tap(find.text('Resume'));
     await tester.pumpAndSettle();
 
+    expect(pronunciation.prepared, contains('学'));
+    expect(pronunciation.spoken, isEmpty);
+
     final speaker = find.byTooltip('Hear Mandarin pronunciation').hitTestable();
     expect(speaker, findsOneWidget);
     await tester.tap(speaker);
@@ -2982,7 +2985,15 @@ void main() {
   });
 }
 
-class _FakePronunciationService implements PronunciationService {
+class _FakePronunciationService
+    implements PronunciationService, PreparedPronunciationService {
+  final List<String> prepared = [];
+
+  @override
+  Future<void> prepareMandarin(String text) async {
+    prepared.add(text);
+  }
+
   final StreamController<OfflineVoiceStatus> _updates =
       StreamController<OfflineVoiceStatus>.broadcast();
   final List<String> spoken = [];

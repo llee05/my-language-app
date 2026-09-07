@@ -256,6 +256,11 @@ abstract interface class PronunciationService {
   Future<void> dispose();
 }
 
+/// Optional silent preparation for audio that will likely be requested soon.
+abstract interface class PreparedPronunciationService {
+  Future<void> prepareMandarin(String text);
+}
+
 abstract interface class OfflinePronunciationManager {
   Stream<OfflineVoiceStatus> get voicePackUpdates;
 

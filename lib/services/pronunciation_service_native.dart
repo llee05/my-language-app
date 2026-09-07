@@ -22,7 +22,10 @@ PronunciationService createPlatformPronunciationService() {
 }
 
 class _SherpaPronunciationService
-    implements PronunciationService, OfflinePronunciationManager {
+    implements
+        PronunciationService,
+        OfflinePronunciationManager,
+        PreparedPronunciationService {
   _SherpaPronunciationService(this._kokoroVoicePack) {
     _voicePackSubscriptions = [
       _kokoroVoicePack.updates.listen(_voicePackUpdates.add),
@@ -37,6 +40,10 @@ class _SherpaPronunciationService
   final _SherpaWorker _worker = _SherpaWorker();
   final math.Random _random = math.Random();
   AudioSource? _audioSource;
+  String? _preparedText;
+  PronunciationVoice? _preparedVoice;
+  Future<_SherpaAudio>? _preparedAudio;
+
   List<PronunciationVoice> _configuredVoices = kokoroMandarinVoices;
   String? _previousKokoroVoiceId;
   int _requestId = 0;
@@ -78,10 +85,55 @@ class _SherpaPronunciationService
       return;
     }
     await stop();
+    _preparedText = null;
+    _preparedVoice = null;
+    _preparedAudio = null;
     _configuredVoices = voices;
     if (!voices.any((voice) => voice.id == _previousKokoroVoiceId)) {
       _previousKokoroVoiceId = null;
     }
+  }
+
+  @override
+  Future<void> prepareMandarin(String text) async {
+    if (_disposed || text.trim().isEmpty) return;
+    if (_preparedText == text && _preparedAudio != null) {
+      await _preparedAudio;
+      return;
+    }
+    final voice = pickPronunciationVoice(
+      _configuredVoices,
+      randomIndex: _random.nextInt,
+      previousVoiceId: _previousKokoroVoiceId,
+    );
+    _preparedText = text;
+    _preparedVoice = voice;
+    final audio = _generateAudio(text, voice);
+    _preparedAudio = audio;
+    try {
+      await audio;
+    } catch (_) {
+      if (identical(_preparedAudio, audio)) {
+        _preparedText = null;
+        _preparedVoice = null;
+        _preparedAudio = null;
+      }
+      rethrow;
+    }
+  }
+
+  Future<_SherpaAudio> _generateAudio(
+    String text,
+    PronunciationVoice voice,
+  ) async {
+    final directory = await _kokoroVoicePack.installedDirectory();
+    if (directory == null) throw const OfflineVoiceNotInstalledException();
+    if (_disposed) throw StateError('The pronunciation service is closed.');
+    return _worker.generate(
+      modelDirectory: directory.path,
+      speakerId: voice.speakerId,
+      text: text,
+    );
   }
 
   @override
@@ -90,20 +142,13 @@ class _SherpaPronunciationService
     final requestId = ++_requestId;
     await _stopPlayback();
     if (_disposed || requestId != _requestId) return;
-    final voice = pickPronunciationVoice(
-      _configuredVoices,
-      randomIndex: _random.nextInt,
-      previousVoiceId: _previousKokoroVoiceId,
-    );
-    final directory = await _kokoroVoicePack.installedDirectory();
-    if (directory == null) throw const OfflineVoiceNotInstalledException();
+    final preparation = prepareMandarin(text);
+    final voice = _preparedVoice;
+    final pendingAudio = _preparedAudio;
+    await preparation;
     if (_disposed || requestId != _requestId) return;
-
-    final audio = await _worker.generate(
-      modelDirectory: directory.path,
-      speakerId: voice.speakerId,
-      text: text,
-    );
+    if (voice == null || pendingAudio == null) return;
+    final audio = await pendingAudio;
     if (_disposed || requestId != _requestId) return;
     if (audio.samples.isEmpty || audio.sampleRate <= 0) {
       throw StateError('Sherpa produced no audio.');
@@ -150,6 +195,9 @@ class _SherpaPronunciationService
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
+    _preparedAudio = null;
+    _preparedText = null;
+    _preparedVoice = null;
     _requestId++;
     await _stopPlayback();
     await _worker.dispose();

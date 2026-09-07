@@ -5,6 +5,24 @@ import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 void main() {
   group('FallbackPronunciationService', () {
+    test(
+      'prepares silently and leaves fallback available after failure',
+      () async {
+        final primary = _PreparingPronunciationService();
+        final fallback = _FakePronunciationService();
+        final service = FallbackPronunciationService(primary, fallback);
+        await service.prepareMandarin('学');
+        expect(primary.prepared, ['学']);
+        expect(primary.spokenTexts, isEmpty);
+        expect(fallback.spokenTexts, isEmpty);
+        await service.speakMandarin('学');
+        expect(fallback.spokenTexts, ['学']);
+        await service.dispose();
+        await service.prepareMandarin('你好');
+        expect(primary.prepared, ['学']);
+      },
+    );
+
     test('uses the primary service when it succeeds', () async {
       final primary = _FakePronunciationService();
       final fallback = _FakePronunciationService();
@@ -372,5 +390,18 @@ class _FakePronunciationService implements PronunciationService {
   Future<void> dispose() async {
     disposeCalls++;
     if (disposeError case final error?) throw error;
+  }
+}
+
+class _PreparingPronunciationService extends _FakePronunciationService
+    implements PreparedPronunciationService {
+  _PreparingPronunciationService()
+    : super(speakError: StateError('unavailable'));
+  final List<String> prepared = [];
+
+  @override
+  Future<void> prepareMandarin(String text) async {
+    prepared.add(text);
+    throw StateError('unavailable');
   }
 }

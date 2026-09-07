@@ -110,8 +110,31 @@ class _LessonsPageState extends State<LessonsPage> {
         _learnerSettings = settings;
         _soundEnabled = settings.soundEnabled;
       });
+      unawaited(_prepareCurrentAudio());
     } catch (error) {
       debugPrint('Lesson sound preference load failed: $error');
+    }
+  }
+
+  Future<void> _prepareCurrentAudio() async {
+    final service = _pronunciationService;
+    if (!_soundEnabled ||
+        _cards.isEmpty ||
+        service is! PreparedPronunciationService) {
+      return;
+    }
+    final text = _cards[_currentCard].chinese;
+    try {
+      await applyPronunciationSettings(service, _learnerSettings);
+      if (!mounted ||
+          !_soundEnabled ||
+          _cards.isEmpty ||
+          _cards[_currentCard].chinese != text) {
+        return;
+      }
+      await (service as PreparedPronunciationService).prepareMandarin(text);
+    } catch (_) {
+      // Optional preparation must never interrupt a lesson.
     }
   }
 
@@ -286,6 +309,7 @@ class _LessonsPageState extends State<LessonsPage> {
         _notice = 'Resumed at card ${index + 1}.';
       }
     });
+    unawaited(_prepareCurrentAudio());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_pageController.hasClients) _pageController.jumpToPage(index);
     });
@@ -877,6 +901,7 @@ class _LessonsPageState extends State<LessonsPage> {
                     : null,
                 onPageChanged: (index) {
                   setState(() => _currentCard = index);
+                  unawaited(_prepareCurrentAudio());
                   _savePosition(index);
                 },
                 itemBuilder: (context, index) => _LessonFlashcard(

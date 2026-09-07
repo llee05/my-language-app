@@ -2,7 +2,10 @@ import '../models/learning_progress.dart';
 import 'pronunciation_service.dart';
 
 class FallbackPronunciationService
-    implements PronunciationService, OfflinePronunciationManager {
+    implements
+        PronunciationService,
+        OfflinePronunciationManager,
+        PreparedPronunciationService {
   FallbackPronunciationService(this._primary, this._fallback);
 
   final PronunciationService _primary;
@@ -59,6 +62,18 @@ class FallbackPronunciationService
     engine: engine,
     voiceIds: voiceIds,
   );
+
+  @override
+  Future<void> prepareMandarin(String text) async {
+    if (_disposed || text.trim().isEmpty) return;
+    final primary = _primary;
+    if (primary is! PreparedPronunciationService) return;
+    try {
+      await (primary as PreparedPronunciationService).prepareMandarin(text);
+    } catch (_) {
+      // Preparation is optional. An explicit tap still tries both engines.
+    }
+  }
 
   @override
   Future<void> speakMandarin(String text) async {
