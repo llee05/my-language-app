@@ -6,9 +6,9 @@ spaced daily review, a searchable vocabulary library, Vocab Rush, and an
 optional local AI tutor named Long Laoshi.
 
 > [!IMPORTANT]
-> This is a beta release. Learning data is stored only on the device, and the
-> dashboard's XP, streak, mastery, lesson recommendations, and weekly activity
-> are still presentation data. See [Beta limitations](#beta-limitations).
+> This is a beta release. Learning data is stored only on the device. Dashboard
+> XP, streaks, vocabulary statistics, and weekly XP derive from saved learning
+> data. See [Beta limitations](#beta-limitations) for remaining gaps.
 
 ## Beta Highlights
 
@@ -38,7 +38,7 @@ or Ollama.
 ### Requirements
 
 - A Flutter SDK compatible with Dart `^3.12.2`
-- A supported Flutter desktop, mobile, or web toolchain for the target platform
+- A Flutter desktop or mobile toolchain for the target platform; web is not supported
 - Linux builds: ALSA development headers (`sudo apt install libasound2-dev` on
   Ubuntu/Debian)
 - Optional: [Ollama](https://ollama.com/) for Long Laoshi and AI-assisted
@@ -236,17 +236,18 @@ error when the file, a property, or the configured keystore is missing.
 Build the Play Store artifact with:
 
 ```sh
-flutter build appbundle --release \
-  --dart-define=OLLAMA_URL=https://ollama.example.com
+flutter build appbundle --release
 ```
 
 The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
 
 Version tags matching `v*` use the same signing configuration in GitHub
-Actions. Configure an `OLLAMA_URL` repository variable with the trusted HTTPS
-endpoint to embed in Android releases. Also configure these repository secrets
-before creating a release tag:
+Actions. Optionally configure an `OLLAMA_URL` repository variable with a trusted
+HTTPS endpoint to enable the Android AI tutor. For a local build, pass
+`--dart-define=OLLAMA_URL=https://ollama.example.com`. Without an endpoint, core
+study features remain available and the mobile tutor reports that configuration
+is needed. Configure these repository secrets before creating a release tag:
 
 | Secret | Value |
 | --- | --- |
@@ -262,5 +263,5 @@ The beta milestone delivers a complete local loop:
 
 `Learn → Rate → Save → Schedule review → Return tomorrow`
 
-Work after Beta 1 is focused on live progress analytics, release reliability,
+Work after Beta 1 is focused on expanded progress analytics, release reliability,
 accessibility, learner-data export, and notification support.

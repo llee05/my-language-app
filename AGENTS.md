@@ -83,6 +83,8 @@ below for code changes. Report what changed, checks actually run, and any checks
 blocked by the environment. Documentation-only edits normally need diff and
 content review rather than rebuilding the app.
 
+Make sure to split jobs into reasonably sized commits with a commit message of the form "job type: message", and never add your agent name as co-author.
+
 ### Optional Ollama development
 
 Desktop startup can launch `ollama serve` if Ollama is installed on `PATH`.

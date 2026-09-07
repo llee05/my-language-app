@@ -97,8 +97,8 @@ class KokoroVoicePackInstaller {
               totalBytes: archiveBytes,
               message: resumableBytes > 0
                   ? 'The last download was interrupted; '
-                      '${(resumableBytes / (1000 * 1000)).toStringAsFixed(1)} '
-                      'MB can be reused.'
+                        '${(resumableBytes / (1000 * 1000)).toStringAsFixed(1)} '
+                        'MB can be reused.'
                   : null,
             );
       _emit(status);
@@ -246,8 +246,7 @@ class KokoroVoicePackInstaller {
         uri: request.url,
       );
     }
-    final append =
-        resuming && response.statusCode == HttpStatus.partialContent;
+    final append = resuming && response.statusCode == HttpStatus.partialContent;
     if (append) {
       final declaredStart = _rangeStart(response.headers['content-range']);
       if (declaredStart != resumeFrom) {

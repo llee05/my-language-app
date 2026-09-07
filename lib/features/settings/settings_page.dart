@@ -668,9 +668,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              key: _voiceControlKey(
-                resumableBytes > 0 ? 'resume' : 'download',
-              ),
+              key: _voiceControlKey(resumableBytes > 0 ? 'resume' : 'download'),
               onPressed: () => _installVoicePack(),
               icon: Icon(
                 resumableBytes > 0
