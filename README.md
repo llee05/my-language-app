@@ -190,7 +190,8 @@ GitHub Actions, in addition to running the analyzer and tests.
 - **Storage:** SQLite via `sqflite_common_ffi`
 - **AI:** Ollama's local chat API through a lightweight HTTP client
 - **Audio:** offline Kokoro via `sherpa_onnx` and `flutter_soloud`, with a
-  `flutter_tts` system-voice fallback
+  `flutter_tts` system-voice fallback. Android uses the system `zh-CN` voice
+  only and ships without Kokoro, onnxruntime, and soloud native libraries.
 - **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
 
 ### Project structure

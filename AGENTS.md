@@ -54,6 +54,8 @@ usable without an account, network access, or Ollama.
   data. Preserve this flow across UI changes.
 - Pronunciation uses a platform-selecting factory: native Kokoro synthesis through
   `sherpa_onnx`, playback through `flutter_soloud`, and `flutter_tts` system fallback.
+  Android always uses the system `zh-CN` voice instead: its APK ships no Kokoro,
+  onnxruntime, or soloud native libraries (see `third_party/README.md`).
   Keep optional audio failures from preventing study.
 
 ## Development workflow

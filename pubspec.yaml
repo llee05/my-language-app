@@ -59,6 +59,20 @@ dev_dependencies:
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
+# The Android build uses the system Mandarin TTS voice instead of Kokoro,
+# so the sherpa_onnx Android native library packages (about 105 MB of .so
+# files across all ABIs) are replaced with empty stub plugins. Desktop
+# platforms keep the real packages. See third_party/README.md.
+dependency_overrides:
+  sherpa_onnx_android_arm64:
+    path: third_party/sherpa_onnx_android_stub/arm64
+  sherpa_onnx_android_armeabi:
+    path: third_party/sherpa_onnx_android_stub/armeabi
+  sherpa_onnx_android_x86:
+    path: third_party/sherpa_onnx_android_stub/x86
+  sherpa_onnx_android_x86_64:
+    path: third_party/sherpa_onnx_android_stub/x86_64
+
 # The following section is specific to Flutter packages.
 flutter:
 

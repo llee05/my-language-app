@@ -1,0 +1,27 @@
+name: sherpa_onnx_android_armeabi
+
+description: >
+  Empty stand-in for the sherpa_onnx Android armeabi-v7a native library
+  package. The Android build of TingShuo uses the system Mandarin TTS
+  voice instead of Kokoro, so no onnxruntime or sherpa-onnx native
+  libraries are packaged into the APK. This stub keeps the sherpa_onnx
+  plugin graph resolvable; pubspec.yaml overrides the published package
+  with this path. See third_party/README.md.
+
+publish_to: none
+
+version: 1.13.6
+
+environment:
+  sdk: ^3.0.0
+  flutter: ">=2.8.1"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true

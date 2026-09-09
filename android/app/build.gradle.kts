@@ -104,3 +104,13 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// The Android build relies on the system Mandarin TTS voice instead of
+// Kokoro, so the flutter_soloud playback engine and its bundled codec
+// libraries are never used on this platform. Exclude the plugin's project
+// dependency so its native libraries are not packaged into the APK. This
+// is safe because flutter_soloud is an FFI-only plugin that is never
+// registered with GeneratedPluginRegistrant and never called on Android.
+configurations.all {
+    exclude(mapOf("module" to "flutter_soloud"))
+}

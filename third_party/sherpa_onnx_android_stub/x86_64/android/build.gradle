@@ -1,0 +1,31 @@
+// Empty Android library module. This stub replaces the real
+// sherpa_onnx_android_x86_64 package so that no native libraries are
+// packaged into the Android build.
+group = "com.k2fsa.sherpa.onnx.sherpa_onnx_android_x86_64"
+version = "1.0"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+android {
+    namespace 'com.k2fsa.sherpa.onnx.x86_64.stub'
+
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+    }
+}
