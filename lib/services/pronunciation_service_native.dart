@@ -14,7 +14,15 @@ import 'pronunciation_service.dart';
 import 'pronunciation_service_system.dart';
 import 'sherpa_voice_config.dart';
 
-PronunciationService createPlatformPronunciationService() {
+PronunciationService createPlatformPronunciationService() =>
+    createAndroidAwarePronunciationService(isAndroid: Platform.isAndroid);
+
+/// Android builds do not ship the Kokoro voice engine or its onnxruntime
+/// native libraries, so voice lines always use the system Mandarin voice.
+PronunciationService createAndroidAwarePronunciationService({
+  required bool isAndroid,
+}) {
+  if (isAndroid) return SystemPronunciationService();
   return FallbackPronunciationService(
     _SherpaPronunciationService(KokoroVoicePackInstaller()),
     SystemPronunciationService(),
