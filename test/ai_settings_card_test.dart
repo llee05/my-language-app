@@ -56,6 +56,51 @@ Future<void> _select(WidgetTester tester, AiProvider provider) async {
 }
 
 void main() {
+  testWidgets('a removed preset opens as custom without losing its saved key', (
+    tester,
+  ) async {
+    final repository = MemoryAiConfigurationRepository(
+      AiConfiguration.fromJson({
+        'provider': 'deepseek',
+        'apiKey': 'saved-key',
+        'model': 'saved-model',
+        'customEndpoint': '',
+      }),
+    );
+    await _pump(tester, repository);
+    final dropdown = tester.widget<DropdownButton<AiProvider>>(
+      find.byType(DropdownButton<AiProvider>),
+    );
+    expect(dropdown.items!.map((item) => item.value), [
+      AiProvider.gemini,
+      AiProvider.openai,
+      AiProvider.anthropic,
+      AiProvider.custom,
+    ]);
+    expect(find.byKey(const Key('ai-provider-custom')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('ai-endpoint')))
+          .controller!
+          .text,
+      'https://api.deepseek.com/chat/completions',
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('ai-api-key')))
+          .controller!
+          .text,
+      isEmpty,
+    );
+    await _tap(tester, 'ai-save');
+    expect(repository.configuration!.apiKey, 'saved-key');
+    expect(repository.configuration!.model, 'saved-model');
+    expect(
+      repository.configuration!.endpoint,
+      'https://api.deepseek.com/chat/completions',
+    );
+  });
+
   testWidgets(
     'saving a personal key is local, masked, and restored without displaying it',
     (tester) async {

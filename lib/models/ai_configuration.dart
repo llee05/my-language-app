@@ -10,11 +10,6 @@ enum AiProvider {
     'gpt-4.1-mini',
   ),
   anthropic('Anthropic / Claude', 'https://api.anthropic.com/v1/messages', ''),
-  openrouter('OpenRouter', 'https://openrouter.ai/api/v1/chat/completions', ''),
-  deepseek('DeepSeek', 'https://api.deepseek.com/chat/completions', ''),
-  groq('Groq', 'https://api.groq.com/openai/v1/chat/completions', ''),
-  mistral('Mistral', 'https://api.mistral.ai/v1/chat/completions', ''),
-  xai('xAI / Grok', 'https://api.x.ai/v1/chat/completions', ''),
   custom('Other / OpenAI-compatible', '', '');
 
   const AiProvider(this.label, this.endpoint, this.defaultModel);
@@ -25,6 +20,15 @@ enum AiProvider {
 }
 
 class AiConfiguration {
+  // Removed presets still load with their original destination and credentials.
+  static const _legacyEndpoints = {
+    'openrouter': 'https://openrouter.ai/api/v1/chat/completions',
+    'deepseek': 'https://api.deepseek.com/chat/completions',
+    'groq': 'https://api.groq.com/openai/v1/chat/completions',
+    'mistral': 'https://api.mistral.ai/v1/chat/completions',
+    'xai': 'https://api.x.ai/v1/chat/completions',
+  };
+
   const AiConfiguration({
     required this.provider,
     required this.apiKey,
@@ -83,15 +87,18 @@ class AiConfiguration {
         value['customEndpoint'] is! String) {
       throw const FormatException('Invalid saved AI settings.');
     }
+    final legacyEndpoint = _legacyEndpoints[value['provider']];
     final providers = AiProvider.values.where(
       (p) => p.name == value['provider'],
     );
-    if (providers.isEmpty) throw const FormatException('Invalid AI provider.');
+    if (providers.isEmpty && legacyEndpoint == null) {
+      throw const FormatException('Invalid AI provider.');
+    }
     final configuration = AiConfiguration(
-      provider: providers.single,
+      provider: legacyEndpoint == null ? providers.single : AiProvider.custom,
       apiKey: (value['apiKey'] as String).trim(),
       model: (value['model'] as String).trim(),
-      customEndpoint: value['customEndpoint'] as String,
+      customEndpoint: legacyEndpoint ?? value['customEndpoint'] as String,
     );
     if (configuration.validationError != null) {
       throw const FormatException('Invalid saved AI settings.');

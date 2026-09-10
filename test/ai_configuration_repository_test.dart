@@ -59,6 +59,45 @@ class _Storage extends Fake implements FlutterSecureStorage {
 }
 
 void main() {
+  for (final legacy in {
+    'openrouter': 'https://openrouter.ai/api/v1/chat/completions',
+    'deepseek': 'https://api.deepseek.com/chat/completions',
+    'groq': 'https://api.groq.com/openai/v1/chat/completions',
+    'mistral': 'https://api.mistral.ai/v1/chat/completions',
+    'xai': 'https://api.x.ai/v1/chat/completions',
+  }.entries) {
+    test(
+      'saved ${legacy.key} credentials remain usable as a custom provider',
+      () async {
+        final storage = _Storage();
+        storage.values[SecureAiConfigurationRepository
+            .storageKey] = jsonEncode({
+          'provider': legacy.key,
+          'apiKey': 'saved-personal-key',
+          'model': 'saved-model',
+          // Old presets ignored this field; it must never redirect a saved key.
+          'customEndpoint': 'https://untrusted.example/chat/completions',
+        });
+        final repository = SecureAiConfigurationRepository(storage: storage);
+        final loaded = (await repository.load())!;
+        expect(loaded.provider, AiProvider.custom);
+        expect(loaded.endpoint, legacy.value);
+        expect(loaded.apiKey, 'saved-personal-key');
+        expect(loaded.model, 'saved-model');
+
+        await repository.save(loaded);
+        final restored = (await repository.load())!;
+        expect(restored.toJson(), loaded.toJson());
+        expect(
+          jsonDecode(
+            storage.values[SecureAiConfigurationRepository.storageKey]!,
+          )['provider'],
+          'custom',
+        );
+      },
+    );
+  }
+
   test(
     'credentials round-trip through secure storage and removal deletes only this app record',
     () async {

@@ -128,7 +128,6 @@ Open **Settings → AI provider** to configure AI without rebuilding the app:
 | Google Gemini | Google's [`generateContent`](https://ai.google.dev/api/generate-content) API |
 | OpenAI | [Chat Completions](https://developers.openai.com/api/reference/resources/chat) |
 | Anthropic / Claude | [Messages](https://platform.claude.com/docs/en/api/messages/create) |
-| OpenRouter, DeepSeek, Groq, Mistral, xAI / Grok | Each provider's OpenAI-compatible Chat Completions endpoint |
 | Other / OpenAI-compatible | Your full HTTPS Chat Completions URL, for example `https://provider.example/v1/chat/completions` |
 
 The custom option requires an OpenAI-compatible JSON API with Bearer API-key
@@ -144,6 +143,10 @@ for the same provider and endpoint. **Remove key** deletes the saved configurati
 from this device. Resetting all local data also removes it; resetting learner
 setup preserves it. Removal does not revoke the key at the provider or cancel
 requests already sent.
+
+Previously saved OpenRouter, DeepSeek, Groq, Mistral, and xAI configurations
+appear under **Other / OpenAI-compatible**, retaining their endpoint, model,
+and key.
 
 Keys are stored through the platform's secure storage using
 [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage),
