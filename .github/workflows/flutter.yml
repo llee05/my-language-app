@@ -211,8 +211,8 @@ jobs:
           chmod 600 "$keystore_path" android/key.properties
 
       - name: Build signed release app bundle
-        # Gemini is unconfigured in distributed builds until a backend holds
-        # the API key. Never embed a shared key in release artifacts.
+        # Users configure personal AI keys in Settings. Never embed a shared
+        # key in release artifacts.
         run: flutter build appbundle --release
 
       - name: Verify app bundle signature

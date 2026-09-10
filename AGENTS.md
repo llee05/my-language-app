@@ -19,7 +19,7 @@ required by this document or supplied alongside it.
 TingShuo is a local-first Mandarin learning app built with Flutter and Dart.
 The Dart package is `mylanguageapp`; the root widget retains the historical name
 `HanziPathApp`. Core lessons, vocabulary, ratings, and daily review must remain
-usable without an account, network access, or Gemini.
+usable without an account, network access, or an AI provider.
 
 | Location | Responsibility |
 | --- | --- |
@@ -31,7 +31,7 @@ usable without an account, network access, or Gemini.
 | `lib/local_database.dart` | SQLite lifecycle, application-support database path, legacy path migration, seeding, content updates, and coordinated close/reset operations. |
 | `lib/database/` | Ordered schema migrations, bundled flashcard seeds, and vocabulary helpers. |
 | `lib/services/` | Review scheduling, study streak calculation, pronunciation abstractions, native/system speech, and Kokoro installation/configuration. |
-| `lib/ai/` | Optional Gemini REST API scaffold and HSK flashcard generation support. |
+| `lib/ai/` | Optional Gemini, Anthropic, and OpenAI-compatible REST adapters and HSK flashcard generation support. |
 | `assets/data/` | Bundled HSK vocabulary and Tatoeba sentence candidates, with provenance and regeneration instructions. |
 | `test/` | Unit, widget, persistence, dataset, and service tests. |
 | `tool/` | Vocabulary import and sentence-candidate generation scripts. |
@@ -47,7 +47,8 @@ usable without an account, network access, or Gemini.
   Follow existing patterns rather than introducing a state-management framework
   for a small change.
 - `AppDependencies` supplies repository interfaces and a pronunciation factory,
-  with SQLite defaults. Use these seams for test doubles and feature dependencies.
+  with SQLite defaults and a secure AI configuration repository. Use these seams
+  for test doubles and feature dependencies.
   Keep SQL in persistence code and scheduling logic in services.
 - Ratings feed saved review history and card progress; lesson and daily-review
   sessions persist position for resumption. Vocab Rush mistakes also enter review
@@ -73,9 +74,11 @@ flutter run
 
 For a desktop target, select the installed device explicitly, for example
 `flutter run -d linux`. Linux native audio builds need ALSA development headers
-(`libasound2-dev` on Ubuntu/Debian). Android development needs SDK 36 and Java 17.
-Windows builds run on Windows with Visual Studio's Desktop development with C++
-workload and `nuget.exe` on `PATH`.
+(`libasound2-dev` on Ubuntu/Debian). Secure storage also needs `libsecret-1-dev`,
+plus an unlocked Secret Service keyring at runtime.
+Android development needs SDK 36 and Java 17. Windows builds run on Windows with
+Visual Studio's Desktop development with C++ workload, its C++ ATL component,
+and `nuget.exe` on `PATH`.
 
 Before editing, inspect `git status --short` and the relevant implementation and
 tests. Preserve unrelated changes and keep edits within the requested scope.
@@ -87,10 +90,19 @@ content review rather than rebuilding the app.
 
 Make sure to split jobs into reasonably sized commits with a commit message of the form "job type: message", and never add your agent name as co-author.
 
-### Optional Gemini development
+### Optional AI development
 
-AI requests use `lib/ai/gemini_service.dart`; startup never contacts Gemini.
-Configure a development key using an ignored `.env.gemini.json` file and run:
+AI requests use `lib/ai/ai_service.dart`, which reads the current configuration
+for every request and routes to Gemini, Anthropic, or an OpenAI-compatible API.
+Users select a provider, personal API key, and model in Settings. Keys live in
+`SecureAiConfigurationRepository` through platform secure storage, never SQLite
+or ordinary preferences. Saving does not make a request; the explicit connection
+test does. Full data reset removes the configuration, while onboarding reset
+preserves it. Missing keys and secure-storage failures must fail without network
+requests; generated lessons retain their local vocabulary fallback.
+
+Startup never contacts an AI service. When no personal configuration is saved,
+configure a developer Gemini fallback using an ignored `.env.gemini.json` file:
 
 ```sh
 flutter run --dart-define-from-file=.env.gemini.json
@@ -99,11 +111,10 @@ flutter run --dart-define-from-file=.env.gemini.json
 The file contains `GEMINI_API_KEY` and optionally `GEMINI_MODEL` (default:
 `gemini-2.5-flash`). See README for an example. Dart defines are embedded in the
 app, so never commit keys or distribute builds containing a shared key. A
-production backend that holds the key and authenticates requests is outside
-this scaffold. CI release artifacts leave Gemini unconfigured. Missing keys
-must fail without network requests, and generated lessons retain their local
-vocabulary fallback. Use injected HTTP clients to test the API contract and
-failures without contacting Google.
+production backend that holds a shared developer key and authenticates requests
+is outside this implementation. CI release artifacts contain no shared AI key;
+users may configure their own. Use injected configuration repositories and HTTP
+clients to test API contracts and failures without contacting providers.
 
 ## Testing and build commands
 
@@ -124,16 +135,18 @@ flutter test test/local_database_test.dart test/local_database_path_test.dart te
 flutter test test/kokoro_voice_pack_test.dart test/sherpa_voice_config_test.dart test/pronunciation_service_test.dart
 flutter test test/startup_test.dart test/widget_test.dart
 flutter test test/gemini_service_test.dart test/ai_tutor_page_test.dart
+flutter test test/ai_service_test.dart test/ai_settings_card_test.dart test/ai_configuration_repository_test.dart
 flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart
 ```
 
-- `test/flutter_test_config.dart` defaults the database to in-memory SQLite.
+- `test/flutter_test_config.dart` defaults the database to in-memory SQLite and
+  mocks secure storage so tests never touch the desktop keyring.
   Persistence/path tests use temporary directories and explicit overrides.
   Never run reset tests against a real learner database; close test databases,
   restore overrides, and clean temporary resources in teardown.
 - Use injected repositories, HTTP clients, pronunciation doubles, and explicit
   times where existing tests provide those seams. Tests should not require a
-  Gemini API key or network access, actual speech playback, or a full voice-pack
+  provider API key or network access, actual speech playback, or a full voice-pack
   download.
 - Add regression coverage for changed behavior, especially migrations, resume
   state, ratings, failed downloads, and asynchronous failures. Follow existing

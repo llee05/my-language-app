@@ -3,7 +3,7 @@
 **TingShuo v1.0.0 Beta 1** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
 spaced daily review, a searchable vocabulary library, Vocab Rush, and an
-optional Gemini AI tutor named Long Laoshi.
+optional AI tutor named Long Laoshi, using your own provider and API key.
 
 > [!IMPORTANT]
 > This is a beta release. Learning data is stored only on the device. Dashboard
@@ -26,12 +26,12 @@ optional Gemini AI tutor named Long Laoshi.
   filters plus word detail views.
 - Vocab Rush timed and survival modes; incorrect answers are added to the
   learner's review data.
-- Long Laoshi, an optional AI tutor powered by the Gemini API scaffold.
+- Long Laoshi, an optional AI tutor with personal API keys configured in Settings.
 - Responsive desktop and mobile layouts, local settings, and versioned SQLite
   migrations.
 
 The core study and review flow works without an account, internet connection,
-or a Gemini API key.
+or an AI API key.
 
 ## Getting Started
 
@@ -39,10 +39,11 @@ or a Gemini API key.
 
 - A Flutter SDK compatible with Dart `^3.12.2`
 - A Flutter desktop or mobile toolchain for the target platform; web is not supported
-- Linux builds: ALSA development headers (`sudo apt install libasound2-dev` on
-  Ubuntu/Debian)
-- Optional: a [Gemini API key](https://aistudio.google.com/apikey) for local
-  development of Long Laoshi and AI-assisted lesson content
+- Linux builds: ALSA and libsecret development headers
+  (`sudo apt install libasound2-dev libsecret-1-dev` on Ubuntu/Debian).
+  Saving AI keys also requires a running, unlocked Secret Service keyring, such
+  as GNOME Keyring, in the desktop session.
+- Optional: a personal API key for one of the supported AI providers below
 
 Install dependencies:
 
@@ -84,7 +85,7 @@ return in daily review.
 
 ### Pronunciation audio
 
-The speaker button on lesson cards does not require Gemini. Sound can be
+The speaker button on lesson cards does not require an AI provider. Sound can be
 enabled or disabled under **Settings → Sound**.
 
 For consistent mobile and desktop pronunciation, open **Settings → Offline
@@ -112,13 +113,57 @@ one is available. Kokoro uses the Apache-2.0-licensed
 
 ### Optional AI tutor
 
-The Gemini scaffold calls Google's HTTPS
-[`generateContent` API](https://ai.google.dev/api/generate-content) for tutor
-replies and lesson examples using the existing `http` dependency. No AI service
-is contacted during startup. Without a key, the tutor explains that it is
-unconfigured and lesson generation falls back to bundled vocabulary.
+Open **Settings → AI provider** to configure AI without rebuilding the app:
 
-For local development, create an ignored `.env.gemini.json` file:
+1. Select your provider and paste your personal API key.
+2. Enter a text/chat model ID available to your provider account. Gemini and
+   OpenAI have editable defaults; other providers require a model ID.
+3. Select **Save AI settings**. The next tutor or lesson-generation request uses
+   the saved configuration. Saving itself does not contact the provider.
+4. Optionally select **Test connection** to make a small request with the values
+   in the form. This uses your API allowance and does not save changes.
+
+| Provider option | API used |
+| --- | --- |
+| Google Gemini | Google's [`generateContent`](https://ai.google.dev/api/generate-content) API |
+| OpenAI | [Chat Completions](https://developers.openai.com/api/reference/resources/chat) |
+| Anthropic / Claude | [Messages](https://platform.claude.com/docs/en/api/messages/create) |
+| OpenRouter, DeepSeek, Groq, Mistral, xAI / Grok | Each provider's OpenAI-compatible Chat Completions endpoint |
+| Other / OpenAI-compatible | Your full HTTPS Chat Completions URL, for example `https://provider.example/v1/chat/completions` |
+
+The custom option requires an OpenAI-compatible JSON API with Bearer API-key
+authentication. It does not support every proprietary protocol, extra custom
+headers, or cloud IAM authentication. Use a text/chat model; models with special
+request requirements may not work. The API key alone cannot identify a provider
+or model. Use **Test connection** to check your particular configuration.
+
+One provider configuration is saved at a time. Switching providers requires a
+key for the new provider; saving replaces the previous configuration. To replace
+a key, enter a new one and save. Leave the key field blank to retain a saved key
+for the same provider and endpoint. **Remove key** deletes the saved configuration
+from this device. Resetting all local data also removes it; resetting learner
+setup preserves it. Removal does not revoke the key at the provider or cancel
+requests already sent.
+
+Keys are stored through the platform's secure storage using
+[`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage),
+separately from the learner SQLite database. A saved key is never redisplayed
+in the form. If secure storage is unavailable, Settings reports the failure
+instead of saving a key in ordinary preferences.
+
+Your key, tutor conversation history, and lesson prompts go directly to the
+selected provider when you use AI. Lesson prompts include the topic, HSK level,
+and candidate vocabulary. Your provider's usage limits, charges, and data
+policies apply. Only enter a custom endpoint you trust. Chat history stays in
+memory until reset or navigation; generated lessons are saved locally.
+
+No AI service is contacted during startup. Without a configured key, the tutor
+directs you to Settings and lesson generation falls back to bundled vocabulary.
+
+#### Developer Gemini fallback
+
+For local development, an ignored `.env.gemini.json` file is still supported
+when no personal configuration is saved:
 
 ```json
 {
@@ -133,18 +178,16 @@ Run on your chosen desktop or mobile device:
 flutter run --dart-define-from-file=.env.gemini.json
 ```
 
-`GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash`. Model values use
-bare model IDs, without a `models/` prefix. Requests use JSON responses and
-include conversation history for the tutor; lesson requests send the topic,
-HSK level, and candidate vocabulary. This content goes to Google when AI is
-configured and used. Chat history remains in memory until reset or navigation.
+`GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash`. Gemini model values
+use bare model IDs, without a `models/` prefix. Removing a personal configuration
+in a development build restores this fallback, if one was compiled in.
 
-This is a development scaffold, not production key management. Dart defines
-are compiled into the app even when read from an ignored file. Do not commit
-keys or distribute builds containing a shared key. Before enabling AI in a
-published app, add a backend that holds the key and authenticates client
-requests, following Google's [API key guidance](https://ai.google.dev/gemini-api/docs/api-key).
-The release workflow leaves Gemini unconfigured.
+Dart defines are compiled into the app even when read from an ignored file.
+Never commit keys or distribute a build containing a shared key. If the app
+will pay for AI using a shared developer key, a backend must hold that key and
+authenticate requests; that backend is outside this implementation. See Google's
+[API key guidance](https://ai.google.dev/gemini-api/docs/api-key). Release artifacts
+contain no shared AI key; users can add their own through Settings.
 
 ## Beta Limitations
 
@@ -155,9 +198,11 @@ The release workflow leaves Gemini unconfigured.
   system notification.
 - There are no accounts, cloud sync, or cross-device backup. Resetting all
   local data is permanent.
-- AI responses require internet access and a valid Gemini API configuration,
-  are subject to API usage limits, and may vary in quality. Production backend
-  integration is not included in this scaffold.
+- AI responses require internet access and a valid provider, key, and model,
+  are subject to API usage limits and charges, and may vary in quality. Provider
+  contracts and failures are tested with mocked HTTP responses; live access
+  depends on the user's account and selected model. A backend for a shared
+  app-owned key is not included.
 - Speech recognition, pronunciation grading, and handwriting recognition are
   outside this beta's scope.
 
@@ -175,13 +220,14 @@ flutter test
 
 The suite covers startup and onboarding, database migrations and persistence,
 lesson and daily-review flows, spaced scheduling, vocabulary data and search,
-and Vocab Rush review integration.
+Vocab Rush review integration, AI request contracts, and personal-key settings.
 
 ### Platform builds
 
 Android development requires Android SDK 36, Java 17, and the SDK tools shown
 by `flutter doctor -v`. Windows x64 builds must run on Windows with Visual
-Studio's **Desktop development with C++** workload. Keep `nuget.exe` on
+Studio's **Desktop development with C++** workload and the **C++ ATL** component
+for the selected MSVC toolset (required by secure storage). Keep `nuget.exe` on
 `PATH`; the Windows text-to-speech plugin downloads its C++/WinRT dependency
 during the first build.
 
@@ -192,8 +238,8 @@ GitHub Actions, in addition to running the analyzer and tests.
 
 - **Framework:** Flutter
 - **Language:** Dart
-- **Storage:** SQLite via `sqflite_common_ffi`
-- **AI:** Gemini REST API scaffold through a lightweight HTTP client
+- **Storage:** SQLite via `sqflite_common_ffi`; personal AI keys via `flutter_secure_storage`
+- **AI:** Gemini, Anthropic, and OpenAI-compatible REST APIs through an HTTP client
 - **Audio:** offline Kokoro via `sherpa_onnx` and `flutter_soloud`, with a
   `flutter_tts` system-voice fallback. Android uses the system `zh-CN` voice
   only and ships without Kokoro, onnxruntime, and soloud native libraries.
@@ -203,7 +249,7 @@ GitHub Actions, in addition to running the analyzer and tests.
 
 ```text
 lib/
-├── ai/                 # Gemini API scaffold and AI lesson support
+├── ai/                 # Provider routing, REST adapters, and AI lesson support
 ├── core/               # Theme and shared navigation/widgets
 ├── database/           # Migrations and seeded lessons
 ├── features/           # Dashboard, lessons, review, vocabulary, game, tutor
@@ -249,9 +295,10 @@ The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
 
 Version tags matching `v*` use the same signing configuration in GitHub
-Actions. The Gemini scaffold stays unconfigured in release artifacts; core
-study features remain available offline. Do not add a Gemini key to release
-Dart defines. Configure these repository secrets before creating a release tag:
+Actions. Release artifacts contain no shared AI key; users configure their own
+in Settings, and core study features remain available offline. Do not add AI
+keys to release Dart defines. Configure these repository secrets before creating
+a release tag:
 
 | Secret | Value |
 | --- | --- |
