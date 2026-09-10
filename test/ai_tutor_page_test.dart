@@ -1,10 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:mylanguageapp/ai/ai_service.dart';
 import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/models/ai_configuration.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
+
+import 'ai_test_support.dart';
 
 class _MemorySettingsRepository implements SettingsRepository {
   _MemorySettingsRepository([this.initial = const LearnerSettings()]);
@@ -53,7 +61,8 @@ class _FakePronunciationService implements PronunciationService {
 
 Future<void> _pumpTutor(
   WidgetTester tester, {
-  required AiTutorRequest request,
+  AiTutorRequest? request,
+  AiService aiService = const AiService(),
   SettingsRepository? settingsRepository,
   PronunciationService? pronunciationService,
 }) async {
@@ -64,6 +73,7 @@ Future<void> _pumpTutor(
       home: Scaffold(
         body: AiTutorPage(
           request: request,
+          aiService: aiService,
           settingsRepository: settingsRepository ?? _MemorySettingsRepository(),
           pronunciationService: pronunciationService,
         ),
@@ -74,6 +84,61 @@ Future<void> _pumpTutor(
 }
 
 void main() {
+  testWidgets('tutor uses the saved provider and removal stops later sends', (
+    tester,
+  ) async {
+    final repository = MemoryAiConfigurationRepository(
+      const AiConfiguration(
+        provider: AiProvider.openai,
+        apiKey: 'personal-key',
+        model: 'gpt-4.1-mini',
+      ),
+    );
+    var requests = 0;
+    final client = MockClient((request) async {
+      requests++;
+      expect(request.url.host, 'api.openai.com');
+      expect(request.headers['authorization'], 'Bearer personal-key');
+      return http.Response.bytes(
+        utf8.encode(
+          jsonEncode({
+            'choices': [
+              {
+                'finish_reason': 'stop',
+                'message': {
+                  'content': jsonEncode({
+                    'chinese': '我的书',
+                    'pinyin': 'wǒ de shū',
+                    'english': 'my book',
+                  }),
+                },
+              },
+            ],
+          }),
+        ),
+        200,
+      );
+    });
+    addTearDown(client.close);
+    await _pumpTutor(
+      tester,
+      aiService: AiService(configurationRepository: repository, client: client),
+    );
+    expect(requests, 0);
+    await tester.enterText(find.byType(TextField), 'How do I say my book?');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+    expect(find.text('我的书'), findsOneWidget);
+    expect(find.text('wǒ de shū'), findsOneWidget);
+    expect(find.text('my book'), findsOneWidget);
+    await repository.clear();
+    await tester.enterText(find.byType(TextField), 'Explain more');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+    expect(requests, 1);
+    expect(find.textContaining('add your API key in Settings'), findsOneWidget);
+  });
+
   testWidgets('renders the tutor greeting, prompt chips, and composer', (
     tester,
   ) async {
@@ -83,7 +148,10 @@ void main() {
     );
 
     expect(find.text('龙老师 - Long Laoshi'), findsOneWidget);
-    expect(find.text('Optional AI tutor · powered by Gemini'), findsOneWidget);
+    expect(
+      find.text('Optional AI tutor · your chosen provider'),
+      findsOneWidget,
+    );
     expect(find.textContaining('你想练习什么中文'), findsOneWidget);
     expect(find.text('How do I use 的 correctly?'), findsOneWidget);
     expect(find.text('What are the four tones?'), findsOneWidget);

@@ -9,11 +9,13 @@ class AiTutorPage extends StatelessWidget {
     this.request,
     this.settingsRepository = const SqliteSettingsRepository(),
     this.pronunciationService,
+    this.aiService = const AiService(),
   });
 
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
+  final AiService aiService;
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +23,7 @@ class AiTutorPage extends StatelessWidget {
       request: request,
       settingsRepository: settingsRepository,
       pronunciationService: pronunciationService,
+      aiService: aiService,
     );
   }
 }
@@ -30,11 +33,13 @@ class _TutorChat extends StatefulWidget {
     this.request,
     required this.settingsRepository,
     this.pronunciationService,
+    required this.aiService,
   });
 
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
+  final AiService aiService;
 
   @override
   State<_TutorChat> createState() => _TutorChatState();
@@ -168,7 +173,7 @@ Use an empty string for any field that is not needed.
         for (final message in _messages.skip(1)) message.toAiMessage(),
       ];
       final response = widget.request == null
-          ? await GeminiService.instance.chatText(
+          ? await widget.aiService.chatText(
               messages: messages,
               maxTokens: 2048,
               temperature: 0.45,
@@ -195,8 +200,8 @@ Use an empty string for any field that is not needed.
       setState(() {
         _sendError = _friendlyError(error);
         _sendErrorIsRetryable =
-            error is! GeminiConfigurationException &&
-            (error is! GeminiRequestException || error.isRetryable);
+            error is! AiConfigurationException &&
+            (error is! AiRequestException || error.isRetryable);
         _failedPrompt = _sendErrorIsRetryable ? text : null;
         _sending = false;
       });
@@ -231,10 +236,10 @@ Use an empty string for any field that is not needed.
   }
 
   String _friendlyError(Object error) {
-    if (error is GeminiConfigurationException) {
+    if (error is AiConfigurationException) {
       return error.message;
     }
-    if (error is GeminiRequestException) {
+    if (error is AiRequestException) {
       return error.message;
     }
     return _AppErrorCopy.tutor;
@@ -271,7 +276,7 @@ Use an empty string for any field that is not needed.
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Optional AI tutor · powered by Gemini',
+                      'Optional AI tutor · your chosen provider',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 10, color: AppColors.teal),

@@ -44,6 +44,8 @@ dependencies:
   flutter_tts: ^4.2.5
   flutter_soloud: ^4.1.7
   sherpa_onnx: ^1.13.6
+  # v11 requires Android SDK 37; keep the app's SDK 36 toolchain supported.
+  flutter_secure_storage: ^10.3.2
 
 dev_dependencies:
   flutter_test:

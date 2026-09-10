@@ -42,6 +42,7 @@ class LessonsPage extends StatefulWidget {
     this.pronunciationService,
     this.resumeLatest = false,
     this.onProgressChanged,
+    this.aiService = const AiService(),
   });
 
   final LessonRepository repository;
@@ -50,6 +51,7 @@ class LessonsPage extends StatefulWidget {
   final PronunciationService? pronunciationService;
   final bool resumeLatest;
   final VoidCallback? onProgressChanged;
+  final AiService aiService;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -483,7 +485,7 @@ class _LessonsPageState extends State<LessonsPage> {
           'meaning': vocabularyStudyMeaning(candidates[i]),
         },
     ];
-    final response = await GeminiService.instance.chatText(
+    final response = await widget.aiService.chatText(
       maxTokens: 4096,
       temperature: 0.3,
       jsonResponse: true,

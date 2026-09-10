@@ -10,6 +10,7 @@ class SettingsPage extends StatefulWidget {
     required this.developmentRepository,
     required this.settingsRepository,
     this.pronunciationService,
+    this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
   });
 
   final LearnerProfile profile;
@@ -19,6 +20,7 @@ class SettingsPage extends StatefulWidget {
   final DevelopmentRepository developmentRepository;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
+  final AiConfigurationRepository aiConfigurationRepository;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -470,6 +472,11 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ],
+        const SizedBox(height: 20),
+        AiSettingsCard(
+          repository: widget.aiConfigurationRepository,
+          enabled: !_resetting,
+        ),
         if (kDebugMode) ...[
           const SizedBox(height: 20),
           _SettingsCard(

@@ -3,30 +3,21 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-class GeminiConfigurationException implements Exception {
-  const GeminiConfigurationException(this.message);
+import 'ai_errors.dart';
 
-  final String message;
-
-  @override
-  String toString() => message;
+class GeminiConfigurationException extends AiConfigurationException {
+  const GeminiConfigurationException(super.message);
 }
 
-class GeminiRequestException implements Exception {
-  const GeminiRequestException(this.message, {this.isRetryable = true});
-
-  final String message;
-  final bool isRetryable;
-
-  @override
-  String toString() => message;
+class GeminiRequestException extends AiRequestException {
+  const GeminiRequestException(super.message, {super.isRetryable});
 }
 
-/// Optional Gemini REST scaffold for local development.
+/// Gemini REST adapter used by the optional AI service.
 ///
-/// Dart defines are embedded in the app. Use a backend that holds the API key
-/// before distributing an app with AI enabled. Injected clients remain owned
-/// by their caller; otherwise each request creates and closes its own client.
+/// Users can supply personal keys through Settings. Developer Dart defines are
+/// embedded in the app; never distribute a shared key. Injected clients remain
+/// owned by their caller; otherwise each request creates and closes its client.
 class GeminiService {
   GeminiService({
     String apiKey = const String.fromEnvironment('GEMINI_API_KEY'),
@@ -106,30 +97,30 @@ class GeminiService {
     );
     final client = _clientOverride ?? http.Client();
     try {
-      final response = await client
-          .post(
-            url,
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'x-goog-api-key': _apiKey,
-            },
-            body: jsonEncode({
-              if (systemParts.isNotEmpty)
-                'systemInstruction': {'parts': systemParts},
-              'contents': contents,
-              'generationConfig': {
-                'maxOutputTokens': maxTokens,
-                'temperature': temperature,
-                if (jsonResponse) 'responseMimeType': 'application/json',
-                // Keep short study replies from spending their output budget
-                // on thinking. Other models use their own default settings.
-                if (_model == 'gemini-2.5-flash' ||
-                    _model == 'gemini-2.5-flash-lite')
-                  'thinkingConfig': {'thinkingBudget': 0},
-              },
-            }),
-          )
-          .timeout(_requestTimeout);
+      final request = http.Request('POST', url)
+        ..followRedirects = false
+        ..headers.addAll({
+          'Content-Type': 'application/json; charset=utf-8',
+          'x-goog-api-key': _apiKey,
+        })
+        ..body = jsonEncode({
+          if (systemParts.isNotEmpty)
+            'systemInstruction': {'parts': systemParts},
+          'contents': contents,
+          'generationConfig': {
+            'maxOutputTokens': maxTokens,
+            'temperature': temperature,
+            if (jsonResponse) 'responseMimeType': 'application/json',
+            // Keep short study replies from spending their output budget
+            // on thinking. Other models use their own default settings.
+            if (_model == 'gemini-2.5-flash' ||
+                _model == 'gemini-2.5-flash-lite')
+              'thinkingConfig': {'thinkingBudget': 0},
+          },
+        });
+      final response = await (() async => http.Response.fromStream(
+        await client.send(request),
+      ))().timeout(_requestTimeout);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         // Never surface raw API error bodies: they can echo sensitive input.

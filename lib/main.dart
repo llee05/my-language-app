@@ -9,7 +9,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'local_database.dart';
 import 'database/flashcard_seed.dart';
 import 'database/vocabulary_content.dart';
-import 'ai/gemini_service.dart';
+import 'ai/ai_errors.dart';
+import 'ai/ai_service.dart';
+import 'models/ai_configuration.dart';
+import 'repositories/ai_configuration_repository.dart';
 import 'models/learner_profile.dart';
 import 'models/learning_progress.dart';
 import 'models/lesson.dart';
@@ -39,6 +42,7 @@ part 'features/onboarding/learner_setup_page.dart';
 part 'features/review/daily_queue_page.dart';
 part 'features/review/daily_review_card_screen.dart';
 part 'features/settings/settings_page.dart';
+part 'features/settings/ai_settings_card.dart';
 part 'features/vocab_rush/vocab_rush_page.dart';
 part 'features/vocabulary/vocabulary_page.dart';
 
@@ -132,6 +136,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
   }
 
   Future<void> _resetAllData() async {
+    await widget.dependencies.aiConfiguration.clear();
     await widget.dependencies.development.resetAllData();
     if (!mounted) return;
     setState(() {
@@ -205,6 +210,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             dailyReviewSessionRepository: widget.dependencies.dailyReviews,
             settingsRepository: widget.dependencies.settings,
             developmentRepository: widget.dependencies.development,
+            aiConfigurationRepository: widget.dependencies.aiConfiguration,
             pronunciationService: _pronunciationService,
           );
         },

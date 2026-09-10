@@ -12,6 +12,7 @@ class DashboardPage extends StatefulWidget {
     this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
+    this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
     this.pronunciationService,
     this.clock,
   });
@@ -25,6 +26,7 @@ class DashboardPage extends StatefulWidget {
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
+  final AiConfigurationRepository aiConfigurationRepository;
   final PronunciationService? pronunciationService;
   final DateTime Function()? clock;
 
@@ -307,6 +309,8 @@ class _DashboardPageState extends State<DashboardPage> {
                               widget.dailyReviewSessionRepository,
                           settingsRepository: widget.settingsRepository,
                           developmentRepository: widget.developmentRepository,
+                          aiConfigurationRepository:
+                              widget.aiConfigurationRepository,
                           pronunciationService: _pronunciationService,
                           clock: widget.clock,
                         ),
@@ -357,6 +361,7 @@ class _DashboardBody extends StatelessWidget {
     this.dailyReviewSessionRepository,
     required this.settingsRepository,
     required this.developmentRepository,
+    this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
     required this.pronunciationService,
     this.clock,
   });
@@ -392,6 +397,7 @@ class _DashboardBody extends StatelessWidget {
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
+  final AiConfigurationRepository aiConfigurationRepository;
   final PronunciationService pronunciationService;
   final DateTime Function()? clock;
 
@@ -399,6 +405,9 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
       return LessonsPage(
+        aiService: AiService(
+          configurationRepository: aiConfigurationRepository,
+        ),
         repository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
@@ -438,12 +447,16 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 5) {
       return AiTutorPage(
+        aiService: AiService(
+          configurationRepository: aiConfigurationRepository,
+        ),
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
       );
     }
     if (selectedNav == 6) {
       return SettingsPage(
+        aiConfigurationRepository: aiConfigurationRepository,
         profile: profile,
         onProfileChanged: onProfileChanged,
         onResetOnboarding: onResetOnboarding,

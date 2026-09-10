@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:mylanguageapp/ai/ai_service.dart';
 import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/models/ai_configuration.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
@@ -15,6 +20,8 @@ import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
+
+import 'ai_test_support.dart';
 
 const testProfile = LearnerProfile(
   name: 'Mei',
@@ -64,9 +71,20 @@ Future<void> _openSettingsResetDialog(
   WidgetTester tester,
   Key buttonKey,
 ) async {
-  await tester.drag(find.byType(ListView), const Offset(0, -700));
-  await tester.pumpAndSettle();
   final button = find.byKey(buttonKey);
+  await tester.scrollUntilVisible(
+    button,
+    400,
+    scrollable: find
+        .descendant(
+          of: find.byType(SettingsPage),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(button);
+  await tester.pumpAndSettle();
   await tester.tap(button);
   await tester.pumpAndSettle();
 }
@@ -1711,67 +1729,125 @@ void main() {
     );
   });
 
-  testWidgets(
-    'unconfigured Gemini generates and opens a local vocabulary lesson',
-    (tester) async {
-      // Earlier tests may have cached this future in a different fake clock.
-      const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-      rootBundle.evict(vocabularyAsset);
-      addTearDown(() => rootBundle.evict(vocabularyAsset));
-      await tester.binding.setSurfaceSize(const Size(1000, 1100));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      final lessons = _GeneratedMemoryLessonRepository();
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: LessonsPage(
-              repository: lessons,
-              progressRepository: _MemoryProgressRepository(
-                hasActiveSession: false,
-                activeSession: LessonSession(
-                  id: 3,
-                  lessonId: 7,
-                  startedAt: DateTime.utc(2026, 9, 10),
-                  currentCardIndex: 0,
-                  cardsReviewed: 0,
-                  correctAnswers: 0,
+  for (final useAi in [false, true]) {
+    testWidgets(
+      useAi
+          ? 'saved AI provider generates and opens a lesson with examples'
+          : 'unconfigured AI generates and opens a local vocabulary lesson',
+      (tester) async {
+        // Earlier tests may have cached this future in a different fake clock.
+        const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
+        rootBundle.evict(vocabularyAsset);
+        addTearDown(() => rootBundle.evict(vocabularyAsset));
+        await tester.binding.setSurfaceSize(const Size(1000, 1100));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final lessons = _GeneratedMemoryLessonRepository();
+        var requests = 0;
+        final client = MockClient((request) async {
+          requests++;
+          expect(request.url.host, 'api.openai.com');
+          expect(request.headers['authorization'], 'Bearer personal-key');
+          return http.Response.bytes(
+            utf8.encode(
+              jsonEncode({
+                'choices': [
+                  {
+                    'finish_reason': 'stop',
+                    'message': {
+                      'content': jsonEncode({
+                        'cards': List.generate(
+                          10,
+                          (index) => {
+                            'index': index,
+                            'exampleChinese': '我学习中文。',
+                            'examplePinyin': 'Wǒ xuéxí Zhōngwén.',
+                            'exampleEnglish': 'I study Chinese.',
+                          },
+                        ),
+                      }),
+                    },
+                  },
+                ],
+              }),
+            ),
+            200,
+          );
+        });
+        addTearDown(client.close);
+        final aiRepository = MemoryAiConfigurationRepository(
+          useAi
+              ? const AiConfiguration(
+                  provider: AiProvider.openai,
+                  apiKey: 'personal-key',
+                  model: 'gpt-4.1-mini',
+                )
+              : null,
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LessonsPage(
+                repository: lessons,
+                aiService: AiService(
+                  configurationRepository: aiRepository,
+                  client: client,
                 ),
+                progressRepository: _MemoryProgressRepository(
+                  hasActiveSession: false,
+                  activeSession: LessonSession(
+                    id: 3,
+                    lessonId: 7,
+                    startedAt: DateTime.utc(2026, 9, 10),
+                    currentCardIndex: 0,
+                    cardsReviewed: 0,
+                    correctAnswers: 0,
+                  ),
+                ),
+                settingsRepository: _MemorySettingsRepository(),
               ),
-              settingsRepository: _MemorySettingsRepository(),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final generate = find.text('Generate lesson');
-      await tester.ensureVisible(generate);
-      // Invoke the async action outside the simulated clock so the bundled
-      // vocabulary can be decoded in an isolate.
-      final onGenerate =
-          tester
-                  .widget<FilledButton>(
-                    find.widgetWithText(FilledButton, 'Generate lesson'),
-                  )
-                  .onPressed!
-              as Future<void> Function();
-      await tester.runAsync(onGenerate);
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
+        final generate = find.text('Generate lesson');
+        await tester.ensureVisible(generate);
+        // Invoke the async action outside the simulated clock so the bundled
+        // vocabulary can be decoded in an isolate.
+        final onGenerate =
+            tester
+                    .widget<FilledButton>(
+                      find.widgetWithText(FilledButton, 'Generate lesson'),
+                    )
+                    .onPressed!
+                as Future<void> Function();
+        await tester.runAsync(onGenerate);
+        await tester.pumpAndSettle();
 
-      expect(lessons.generated, isNotNull);
-      expect(lessons.generated!.cards, hasLength(10));
-      expect(
-        lessons.generated!.cards.every(
-          (card) =>
-              card.chinese.isNotEmpty &&
-              card.pinyin.isNotEmpty &&
-              card.englishMeaning.isNotEmpty,
-        ),
-        isTrue,
-      );
-      expect(find.text(lessons.generated!.cards.first.chinese), findsWidgets);
-      expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
-    },
-  );
+        expect(lessons.generated, isNotNull);
+        expect(requests, useAi ? 1 : 0);
+        if (useAi) {
+          expect(
+            lessons.generated!.cards.every(
+              (card) => card.exampleChinese == '我学习中文。',
+            ),
+            isTrue,
+          );
+        }
+        expect(lessons.generated!.cards, hasLength(10));
+        expect(
+          lessons.generated!.cards.every(
+            (card) =>
+                card.chinese.isNotEmpty &&
+                card.pinyin.isNotEmpty &&
+                card.englishMeaning.isNotEmpty,
+          ),
+          isTrue,
+        );
+        expect(find.text(lessons.generated!.cards.first.chinese), findsWidgets);
+        expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
+      },
+    );
+  }
 
   testWidgets('lesson generation error is friendly and retryable', (
     tester,
@@ -2577,6 +2653,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1000, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final developmentRepository = _MemoryDevelopmentRepository();
+    final aiRepository = MemoryAiConfigurationRepository(testAiConfiguration);
 
     await tester.pumpWidget(
       HanziPathApp(
@@ -2584,6 +2661,7 @@ void main() {
         dependencies: AppDependencies(
           lessons: _MemoryLessonRepository(),
           development: developmentRepository,
+          aiConfiguration: aiRepository,
           settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(hasActiveSession: false),
           dailyReviews: _MemoryDailyReviewSessionRepository(null),
@@ -2603,8 +2681,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(developmentRepository.resetAllDataCalls, 1);
+    expect(aiRepository.clearCalls, 1);
+    expect(aiRepository.configuration, isNull);
     expect(find.text('Build your learning path'), findsOneWidget);
     expect(find.text('你好，Mei'), findsNothing);
+  });
+
+  testWidgets('reset-all waits for secure key removal and retries failures', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final development = _MemoryDevelopmentRepository();
+    final aiRepository = MemoryAiConfigurationRepository(testAiConfiguration)
+      ..clearError = StateError('secret key in platform error');
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          development: development,
+          aiConfiguration: aiRepository,
+          settings: _MemorySettingsRepository(),
+          progress: _MemoryProgressRepository(hasActiveSession: false),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+    await tester.tap(find.text('Reset everything'));
+    await tester.pumpAndSettle();
+    expect(development.resetAllDataCalls, 0);
+    expect(aiRepository.configuration, testAiConfiguration);
+    expect(find.text('We couldn’t reset your local data.'), findsOneWidget);
+    expect(find.textContaining('secret key'), findsNothing);
+
+    aiRepository.clearError = null;
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(aiRepository.configuration, isNull);
+    expect(development.resetAllDataCalls, 1);
+    expect(find.text('Build your learning path'), findsOneWidget);
   });
 
   testWidgets('onboarding reset returns the app root to learner setup', (
@@ -2613,11 +2733,13 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1000, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final learnerRepository = _MemoryLearnerRepository(testProfile);
+    final aiRepository = MemoryAiConfigurationRepository(testAiConfiguration);
 
     await tester.pumpWidget(
       HanziPathApp(
         dependencies: AppDependencies(
           learners: learnerRepository,
+          aiConfiguration: aiRepository,
           lessons: _MemoryLessonRepository(),
           development: _MemoryDevelopmentRepository(),
           settings: _MemorySettingsRepository(),
@@ -2642,6 +2764,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(learnerRepository.resetOnboardingCalls, 1);
+    expect(aiRepository.clearCalls, 0);
+    expect(aiRepository.configuration, testAiConfiguration);
     expect(find.text('Build your learning path'), findsOneWidget);
     expect(find.text('你好，Mei'), findsNothing);
   });
