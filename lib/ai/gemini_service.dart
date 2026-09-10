@@ -32,7 +32,7 @@ class GeminiService {
        _clientOverride = client,
        _requestTimeout = timeout;
 
-  static const defaultModel = 'gemini-2.5-flash';
+  static const defaultModel = 'gemini-3.6-flash';
   static final GeminiService instance = GeminiService();
 
   final String _apiKey;

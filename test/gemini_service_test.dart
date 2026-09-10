@@ -73,7 +73,7 @@ void main() {
         expect(
           request.url.toString(),
           'https://generativelanguage.googleapis.com/v1beta/models/'
-          'gemini-2.5-flash:generateContent',
+          'gemini-3.6-flash:generateContent',
         );
         expect(request.url.hasQuery, isFalse);
         expect(request.headers['x-goog-api-key'], 'test-key');
@@ -107,7 +107,6 @@ void main() {
           'maxOutputTokens': 2048,
           'temperature': 0.45,
           'responseMimeType': 'application/json',
-          'thinkingConfig': {'thinkingBudget': 0},
         });
         return _reply(
           _candidate([
@@ -135,6 +134,33 @@ void main() {
       );
     },
   );
+
+  test('retired-default 2.5 models keep their zero thinking budget', () async {
+    final client = MockClient((request) async {
+      expect(
+        request.url.path,
+        '/v1beta/models/gemini-2.5-flash:generateContent',
+      );
+      final body = jsonDecode(utf8.decode(request.bodyBytes));
+      expect(body['generationConfig'], {
+        'maxOutputTokens': 2048,
+        'temperature': 0.7,
+        'thinkingConfig': {'thinkingBudget': 0},
+      });
+      return _reply(
+        _candidate([
+          {'text': '好'},
+        ]),
+      );
+    });
+    addTearDown(client.close);
+    final service = GeminiService(
+      apiKey: 'test-key',
+      model: 'gemini-2.5-flash',
+      client: client,
+    );
+    expect(await service.chatText(messages: _messages), '好');
+  });
 
   test(
     'model override and consecutive user prompts work without discovery',

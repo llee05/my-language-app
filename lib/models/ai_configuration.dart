@@ -2,7 +2,7 @@ enum AiProvider {
   gemini(
     'Google Gemini',
     'https://generativelanguage.googleapis.com/v1beta',
-    'gemini-2.5-flash',
+    'gemini-3.6-flash',
   ),
   openai(
     'OpenAI',

@@ -171,7 +171,7 @@ when no personal configuration is saved:
 ```json
 {
   "GEMINI_API_KEY": "your-development-key",
-  "GEMINI_MODEL": "gemini-2.5-flash"
+  "GEMINI_MODEL": "gemini-3.6-flash"
 }
 ```
 
@@ -181,7 +181,7 @@ Run on your chosen desktop or mobile device:
 flutter run --dart-define-from-file=.env.gemini.json
 ```
 
-`GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash`. Gemini model values
+`GEMINI_MODEL` is optional and defaults to `gemini-3.6-flash`. Gemini model values
 use bare model IDs, without a `models/` prefix. Removing a personal configuration
 in a development build restores this fallback, if one was compiled in.
 

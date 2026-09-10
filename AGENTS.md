@@ -109,7 +109,7 @@ flutter run --dart-define-from-file=.env.gemini.json
 ```
 
 The file contains `GEMINI_API_KEY` and optionally `GEMINI_MODEL` (default:
-`gemini-2.5-flash`). See README for an example. Dart defines are embedded in the
+`gemini-3.6-flash`). See README for an example. Dart defines are embedded in the
 app, so never commit keys or distribute builds containing a shared key. A
 production backend that holds a shared developer key and authenticates requests
 is outside this implementation. CI release artifacts contain no shared AI key;

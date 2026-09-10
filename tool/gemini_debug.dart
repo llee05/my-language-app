@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 
 Future<void> main(List<String> args) async {
   final key = Platform.environment['GEMINI_DEBUG_KEY']?.trim() ?? '';
-  final model = (args.isNotEmpty ? args[0] : 'gemini-2.5-flash').trim();
+  final model = (args.isNotEmpty ? args[0] : 'gemini-3.6-flash').trim();
   if (key.isEmpty) {
     stderr.writeln('Set GEMINI_DEBUG_KEY to the key saved in the app.');
     exitCode = 2;
