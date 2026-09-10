@@ -250,6 +250,63 @@ void main() {
     );
   }
 
+  test(
+    'configuration errors include the provider machine-readable reason',
+    () async {
+      final client = MockClient(
+        (_) async => _reply({
+          'error': {
+            'code': 403,
+            'message': 'API key not valid. Please pass a valid API key.',
+            'status': 'PERMISSION_DENIED',
+            'details': [
+              {
+                '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+                'reason': 'API_KEY_INVALID',
+              },
+            ],
+          },
+        }, status: 403),
+      );
+      addTearDown(client.close);
+      final service = GeminiService(apiKey: 'test-key', client: client);
+
+      await expectLater(
+        service.chatText(messages: _messages),
+        throwsA(
+          isA<GeminiConfigurationException>().having(
+            (error) => error.message,
+            'message',
+            allOf(
+              contains('HTTP 403'),
+              contains('PERMISSION_DENIED'),
+              contains('API_KEY_INVALID'),
+              isNot(contains('Please pass a valid API key')),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  test('non-JSON error bodies still name the HTTP status', () async {
+    final client = MockClient((_) async => http.Response('gateway error', 502));
+    addTearDown(client.close);
+    await expectLater(
+      GeminiService(
+        apiKey: 'test-key',
+        client: client,
+      ).chatText(messages: _messages),
+      throwsA(
+        isA<GeminiRequestException>().having(
+          (error) => error.message,
+          'message',
+          contains('HTTP 502'),
+        ),
+      ),
+    );
+  });
+
   test('network exceptions are sanitized and retryable', () async {
     final client = MockClient(
       (_) async => throw http.ClientException('private detail'),

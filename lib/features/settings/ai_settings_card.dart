@@ -170,9 +170,20 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
     });
     try {
       await action();
-    } catch (_) {
-      // Do not display or log exceptions that could contain credentials.
-      if (mounted) setState(() => _error = error);
+    } catch (failure) {
+      // Configuration and request errors carry user-safe copy plus the
+      // provider's machine-readable reason. Anything else (storage,
+      // unexpected) keeps generic copy so platform errors, which can contain
+      // credentials, are never displayed or logged.
+      final String shown;
+      if (failure is AiConfigurationException) {
+        shown = failure.message;
+      } else if (failure is AiRequestException) {
+        shown = failure.message;
+      } else {
+        shown = error;
+      }
+      if (mounted) setState(() => _error = shown);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -217,6 +217,37 @@ void main() {
     },
   );
 
+  test('HTTP errors include the provider machine-readable reason', () async {
+    final client = MockClient(
+      (_) async => _reply({
+        'error': {
+          'type': 'invalid_request_error',
+          'code': 'invalid_api_key',
+          'message': 'Incorrect API key provided: key-for-custom.',
+        },
+      }, 401),
+    );
+    addTearDown(client.close);
+    await expectLater(
+      AiService(
+        configuration: _configuration(AiProvider.custom),
+        client: client,
+      ).chatText(messages: _messages),
+      throwsA(
+        isA<AiConfigurationException>().having(
+          (e) => e.message,
+          'message',
+          allOf(
+            contains('HTTP 401'),
+            contains('invalid_request_error'),
+            contains('invalid_api_key'),
+            isNot(contains('key-for-custom.')),
+          ),
+        ),
+      ),
+    );
+  });
+
   for (final status in [302, 400, 401, 403, 404, 422, 429, 500]) {
     test('HTTP $status is sanitized and never follows redirects', () async {
       var count = 0;

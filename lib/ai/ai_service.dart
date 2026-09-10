@@ -134,15 +134,21 @@ class AiService {
         await client.send(request),
       ))().timeout(_requestTimeout);
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        // Raw bodies can echo sensitive input; only identifier-like provider
+        // reasons are surfaced, e.g. (HTTP 401: invalid_api_key).
+        final detail = providerStatusDetail(
+          response.statusCode,
+          response.bodyBytes,
+        );
         throw switch (response.statusCode) {
-          400 || 401 || 403 || 404 || 422 => const AiConfigurationException(
-            'The provider could not accept these settings. Check your API key, model, and endpoint.',
+          400 || 401 || 403 || 404 || 422 => AiConfigurationException(
+            'The provider could not accept these settings. Check your API key, model, and endpoint.$detail',
           ),
-          429 => const AiRequestException(
-            'The provider’s usage limit was reached. Try again later.',
+          429 => AiRequestException(
+            'The provider’s usage limit was reached. Try again later.$detail',
           ),
-          _ => const AiRequestException(
-            'The AI provider is unavailable right now. Try again later.',
+          _ => AiRequestException(
+            'The AI provider is unavailable right now. Try again later.$detail',
           ),
         };
       }

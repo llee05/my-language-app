@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/ai/ai_errors.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/ai_configuration.dart';
 
@@ -217,6 +218,31 @@ void main() {
       repository.saveError = null;
       await _tap(tester, 'ai-save');
       expect(repository.configuration?.apiKey, 'draft-key');
+    },
+  );
+
+  testWidgets(
+    'connection test failures show the provider reason and keep the draft',
+    (tester) async {
+      final repository = MemoryAiConfigurationRepository();
+      await _pump(
+        tester,
+        repository,
+        testConnection: (_) async => throw const AiConfigurationException(
+          'Gemini could not accept this configuration. '
+          'Check the API key, model, and API access. (HTTP 403: API_KEY_INVALID)',
+        ),
+      );
+      await tester.enterText(find.byKey(const Key('ai-api-key')), 'draft-key');
+      await _tap(tester, 'ai-test');
+      expect(find.textContaining('HTTP 403: API_KEY_INVALID'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('ai-api-key')))
+            .controller!
+            .text,
+        'draft-key',
+      );
     },
   );
 

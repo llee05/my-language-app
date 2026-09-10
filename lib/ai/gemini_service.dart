@@ -124,16 +124,22 @@ class GeminiService {
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         // Never surface raw API error bodies: they can echo sensitive input.
+        // Identifier-like provider reasons are safe and make the failure
+        // actionable, e.g. (HTTP 403: PERMISSION_DENIED, API_KEY_INVALID).
+        final detail = providerStatusDetail(
+          response.statusCode,
+          response.bodyBytes,
+        );
         throw switch (response.statusCode) {
-          400 || 401 || 403 || 404 => const GeminiConfigurationException(
+          400 || 401 || 403 || 404 => GeminiConfigurationException(
             'Gemini could not accept this configuration. '
-            'Check the API key, model, and API access.',
+            'Check the API key, model, and API access.$detail',
           ),
-          429 => const GeminiRequestException(
-            'Gemini’s usage limit was reached. Please try again later.',
+          429 => GeminiRequestException(
+            'Gemini’s usage limit was reached. Please try again later.$detail',
           ),
-          _ => const GeminiRequestException(
-            'Gemini is unavailable right now. Please try again later.',
+          _ => GeminiRequestException(
+            'Gemini is unavailable right now. Please try again later.$detail',
           ),
         };
       }
