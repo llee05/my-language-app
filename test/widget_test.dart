@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mylanguageapp/ai/ollama_service.dart';
+import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
@@ -1710,6 +1711,68 @@ void main() {
     );
   });
 
+  testWidgets(
+    'unconfigured Gemini generates and opens a local vocabulary lesson',
+    (tester) async {
+      // Earlier tests may have cached this future in a different fake clock.
+      const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
+      rootBundle.evict(vocabularyAsset);
+      addTearDown(() => rootBundle.evict(vocabularyAsset));
+      await tester.binding.setSurfaceSize(const Size(1000, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final lessons = _GeneratedMemoryLessonRepository();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LessonsPage(
+              repository: lessons,
+              progressRepository: _MemoryProgressRepository(
+                hasActiveSession: false,
+                activeSession: LessonSession(
+                  id: 3,
+                  lessonId: 7,
+                  startedAt: DateTime.utc(2026, 9, 10),
+                  currentCardIndex: 0,
+                  cardsReviewed: 0,
+                  correctAnswers: 0,
+                ),
+              ),
+              settingsRepository: _MemorySettingsRepository(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final generate = find.text('Generate lesson');
+      await tester.ensureVisible(generate);
+      // Invoke the async action outside the simulated clock so the bundled
+      // vocabulary can be decoded in an isolate.
+      final onGenerate =
+          tester
+                  .widget<FilledButton>(
+                    find.widgetWithText(FilledButton, 'Generate lesson'),
+                  )
+                  .onPressed!
+              as Future<void> Function();
+      await tester.runAsync(onGenerate);
+      await tester.pumpAndSettle();
+
+      expect(lessons.generated, isNotNull);
+      expect(lessons.generated!.cards, hasLength(10));
+      expect(
+        lessons.generated!.cards.every(
+          (card) =>
+              card.chinese.isNotEmpty &&
+              card.pinyin.isNotEmpty &&
+              card.englishMeaning.isNotEmpty,
+        ),
+        isTrue,
+      );
+      expect(find.text(lessons.generated!.cards.first.chinese), findsWidgets);
+      expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
+    },
+  );
+
   testWidgets('lesson generation error is friendly and retryable', (
     tester,
   ) async {
@@ -2136,8 +2199,8 @@ void main() {
           body: AiTutorPage(
             settingsRepository: _MemorySettingsRepository(),
             pronunciationService: pronunciation,
-            request: (_) async => throw const OllamaConfigurationException(
-              'Configure OLLAMA_URL for this build.',
+            request: (_) async => throw const GeminiConfigurationException(
+              'Gemini is not configured for this build.',
             ),
           ),
         ),
@@ -2148,7 +2211,10 @@ void main() {
     await tester.tap(find.byTooltip('Send'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Configure OLLAMA_URL for this build.'), findsOneWidget);
+    expect(
+      find.text('Gemini is not configured for this build.'),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('ai-tutor-retry')), findsNothing);
   });
 
@@ -3248,6 +3314,21 @@ class _MemoryLessonRepository implements LessonRepository {
 
   @override
   Future<List<LessonSummary>> topics() async => [lesson.summary];
+}
+
+class _GeneratedMemoryLessonRepository extends _MemoryLessonRepository {
+  Lesson? generated;
+
+  @override
+  Future<Lesson?> findGenerated({
+    required String theme,
+    required int hskLevel,
+  }) async => generated;
+
+  @override
+  Future<void> saveGenerated(Lesson lesson) async {
+    generated = lesson;
+  }
 }
 
 class _LessonStateRepository implements LessonRepository {

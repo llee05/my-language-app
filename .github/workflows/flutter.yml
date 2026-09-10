@@ -211,24 +211,9 @@ jobs:
           chmod 600 "$keystore_path" android/key.properties
 
       - name: Build signed release app bundle
-        env:
-          OLLAMA_URL: ${{ vars.OLLAMA_URL }}
-        run: |
-          if [[ -n "${OLLAMA_URL:-}" ]]; then
-            node --eval '
-              const raw = process.env.OLLAMA_URL;
-              const endpoint = new URL(raw);
-              if (endpoint.protocol !== "https:" || !endpoint.hostname ||
-                  endpoint.username || endpoint.password ||
-                  raw.includes("?") || raw.includes("#")) {
-                throw new Error(
-                  "OLLAMA_URL must be a credential-free HTTPS URL without a query or fragment",
-                );
-              }
-            '
-          fi
-          flutter build appbundle --release \
-            --dart-define=OLLAMA_URL="${OLLAMA_URL:-}"
+        # Gemini is unconfigured in distributed builds until a backend holds
+        # the API key. Never embed a shared key in release artifacts.
+        run: flutter build appbundle --release
 
       - name: Verify app bundle signature
         run: |

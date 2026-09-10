@@ -483,9 +483,10 @@ class _LessonsPageState extends State<LessonsPage> {
           'meaning': vocabularyStudyMeaning(candidates[i]),
         },
     ];
-    final response = await OllamaService.instance.chatText(
-      maxTokens: 800,
+    final response = await GeminiService.instance.chatText(
+      maxTokens: 4096,
       temperature: 0.3,
+      jsonResponse: true,
       messages: [
         {
           'role': 'system',

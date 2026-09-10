@@ -9,7 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'local_database.dart';
 import 'database/flashcard_seed.dart';
 import 'database/vocabulary_content.dart';
-import 'ai/ollama_service.dart';
+import 'ai/gemini_service.dart';
 import 'models/learner_profile.dart';
 import 'models/learning_progress.dart';
 import 'models/lesson.dart';
@@ -44,13 +44,6 @@ part 'features/vocabulary/vocabulary_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Start Ollama automatically on desktop if it is not already running.
-  try {
-    await OllamaService.instance.ensureRunning();
-  } catch (_) {
-    // Keep the rest of the app usable if Ollama is not installed or on PATH.
-  }
-
   // Initialize local services
   await LocalDatabase.initialize();
   runApp(const HanziPathApp());

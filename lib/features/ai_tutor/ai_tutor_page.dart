@@ -164,13 +164,15 @@ Use an empty string for any field that is not needed.
     try {
       final messages = <Map<String, String>>[
         {'role': 'system', 'content': _systemPrompt},
-        for (final message in _messages) message.toAiMessage(),
+        // The static greeting is display copy, not a generated model turn.
+        for (final message in _messages.skip(1)) message.toAiMessage(),
       ];
       final response = widget.request == null
-          ? await OllamaService.instance.chatText(
+          ? await GeminiService.instance.chatText(
               messages: messages,
-              maxTokens: 420,
+              maxTokens: 2048,
               temperature: 0.45,
+              jsonResponse: true,
             )
           : await widget.request!(messages);
       if (!mounted) {
@@ -192,7 +194,9 @@ Use an empty string for any field that is not needed.
       }
       setState(() {
         _sendError = _friendlyError(error);
-        _sendErrorIsRetryable = error is! OllamaConfigurationException;
+        _sendErrorIsRetryable =
+            error is! GeminiConfigurationException &&
+            (error is! GeminiRequestException || error.isRetryable);
         _failedPrompt = _sendErrorIsRetryable ? text : null;
         _sending = false;
       });
@@ -227,17 +231,11 @@ Use an empty string for any field that is not needed.
   }
 
   String _friendlyError(Object error) {
-    if (error is OllamaConfigurationException) {
+    if (error is GeminiConfigurationException) {
       return error.message;
     }
-    final text = error.toString();
-    if (text.contains('no models are installed')) {
-      return 'Ollama is running, but no model is installed. Add a model before retrying.';
-    }
-    if (text.contains('Connection refused') ||
-        text.contains('Failed host lookup') ||
-        text.contains('Connection failed')) {
-      return 'We couldn’t connect to Ollama. Start Ollama before retrying.';
+    if (error is GeminiRequestException) {
+      return error.message;
     }
     return _AppErrorCopy.tutor;
   }
@@ -273,7 +271,7 @@ Use an empty string for any field that is not needed.
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Optional AI tutor · powered by Ollama',
+                      'Optional AI tutor · powered by Gemini',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 10, color: AppColors.teal),

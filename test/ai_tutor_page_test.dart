@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mylanguageapp/ai/ollama_service.dart';
+import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
@@ -83,7 +83,7 @@ void main() {
     );
 
     expect(find.text('龙老师 - Long Laoshi'), findsOneWidget);
-    expect(find.text('Optional AI tutor · powered by Ollama'), findsOneWidget);
+    expect(find.text('Optional AI tutor · powered by Gemini'), findsOneWidget);
     expect(find.textContaining('你想练习什么中文'), findsOneWidget);
     expect(find.text('How do I use 的 correctly?'), findsOneWidget);
     expect(find.text('What are the four tones?'), findsOneWidget);
@@ -108,6 +108,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(requests, hasLength(1));
+    expect(requests.single, hasLength(2));
     expect(requests.single.first['role'], 'system');
     expect(requests.single.last, {
       'role': 'user',
@@ -178,7 +179,9 @@ void main() {
       request: (messages) async {
         attempts++;
         if (attempts == 1) {
-          throw StateError('Connection refused');
+          throw const GeminiRequestException(
+            'We couldn’t connect to Gemini. Check your internet connection and try again.',
+          );
         }
         return '{"chinese":"再见","pinyin":"zài jiàn","english":"goodbye"}';
       },
@@ -190,7 +193,9 @@ void main() {
 
     expect(find.byKey(const Key('ai-tutor-error')), findsOneWidget);
     expect(
-      find.text('We couldn’t connect to Ollama. Start Ollama before retrying.'),
+      find.text(
+        'We couldn’t connect to Gemini. Check your internet connection and try again.',
+      ),
       findsOneWidget,
     );
     expect(find.text('One more time'), findsOneWidget);
@@ -209,9 +214,8 @@ void main() {
   ) async {
     await _pumpTutor(
       tester,
-      request: (_) async => throw const OllamaConfigurationException(
-        'Long Laoshi needs a mobile Ollama endpoint. Configure OLLAMA_URL '
-        'for this build, or use the tutor on desktop.',
+      request: (_) async => throw const GeminiConfigurationException(
+        'Gemini is not configured for this build.',
       ),
     );
 
@@ -220,10 +224,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.textContaining('needs a mobile Ollama endpoint'),
+      find.textContaining('Gemini is not configured for this build.'),
       findsOneWidget,
     );
     expect(find.byKey(const Key('ai-tutor-retry')), findsNothing);
+  });
+
+  testWidgets('Gemini refusals invite a new prompt without retrying', (
+    tester,
+  ) async {
+    await _pumpTutor(
+      tester,
+      request: (_) async => throw const GeminiRequestException(
+        'Gemini couldn’t answer that prompt. Try rephrasing it.',
+        isRetryable: false,
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'Help me practise');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Gemini couldn’t answer that prompt. Try rephrasing it.'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('ai-tutor-retry')), findsNothing);
+    expect(find.byTooltip('Send'), findsOneWidget);
   });
 
   testWidgets('empty prompts and repeated sends are ignored', (tester) async {

@@ -19,11 +19,11 @@ required by this document or supplied alongside it.
 TingShuo is a local-first Mandarin learning app built with Flutter and Dart.
 The Dart package is `mylanguageapp`; the root widget retains the historical name
 `HanziPathApp`. Core lessons, vocabulary, ratings, and daily review must remain
-usable without an account, network access, or Ollama.
+usable without an account, network access, or Gemini.
 
 | Location | Responsibility |
 | --- | --- |
-| `lib/main.dart` | Entry point, optional Ollama startup, database initialization, app theme, onboarding, navigation, and shared UI library. |
+| `lib/main.dart` | Entry point, database initialization, app theme, onboarding, navigation, and shared UI library. |
 | `lib/features/` | Dashboard, lessons, daily review, vocabulary, Vocab Rush, settings, onboarding, and Long Laoshi AI tutor screens. |
 | `lib/core/` | Shared colors, sidebar, and reusable widgets. |
 | `lib/models/` | Learner, lesson, settings, review, and progress data types. |
@@ -31,7 +31,7 @@ usable without an account, network access, or Ollama.
 | `lib/local_database.dart` | SQLite lifecycle, application-support database path, legacy path migration, seeding, content updates, and coordinated close/reset operations. |
 | `lib/database/` | Ordered schema migrations, bundled flashcard seeds, and vocabulary helpers. |
 | `lib/services/` | Review scheduling, study streak calculation, pronunciation abstractions, native/system speech, and Kokoro installation/configuration. |
-| `lib/ai/` | Ollama HTTP integration and HSK flashcard generation support. |
+| `lib/ai/` | Optional Gemini REST API scaffold and HSK flashcard generation support. |
 | `assets/data/` | Bundled HSK vocabulary and Tatoeba sentence candidates, with provenance and regeneration instructions. |
 | `test/` | Unit, widget, persistence, dataset, and service tests. |
 | `tool/` | Vocabulary import and sentence-candidate generation scripts. |
@@ -87,22 +87,23 @@ content review rather than rebuilding the app.
 
 Make sure to split jobs into reasonably sized commits with a commit message of the form "job type: message", and never add your agent name as co-author.
 
-### Optional Ollama development
+### Optional Gemini development
 
-Desktop startup can launch `ollama serve` if Ollama is installed on `PATH`.
-Use `ollama list` to inspect installed models. The first available model is the
-default unless overridden:
+AI requests use `lib/ai/gemini_service.dart`; startup never contacts Gemini.
+Configure a development key using an ignored `.env.gemini.json` file and run:
 
 ```sh
-flutter run --dart-define=OLLAMA_MODEL=model-name
-flutter run --dart-define=OLLAMA_URL=http://10.0.2.2:11434
+flutter run --dart-define-from-file=.env.gemini.json
 ```
 
-The second command targets an Android emulator reaching a host Ollama server.
-Mobile requires an explicit reachable endpoint. Android release endpoints must
-use HTTPS; debug/profile cleartext allowances are limited to emulator/loopback
-addresses. `OLLAMA_URL` must not contain credentials, a query, or a fragment.
-Dart defines are embedded in the app, so never use them to hide secrets.
+The file contains `GEMINI_API_KEY` and optionally `GEMINI_MODEL` (default:
+`gemini-2.5-flash`). See README for an example. Dart defines are embedded in the
+app, so never commit keys or distribute builds containing a shared key. A
+production backend that holds the key and authenticates requests is outside
+this scaffold. CI release artifacts leave Gemini unconfigured. Missing keys
+must fail without network requests, and generated lessons retain their local
+vocabulary fallback. Use injected HTTP clients to test the API contract and
+failures without contacting Google.
 
 ## Testing and build commands
 
@@ -122,7 +123,7 @@ flutter test test/review_scheduler_test.dart test/study_streak_calculator_test.d
 flutter test test/local_database_test.dart test/local_database_path_test.dart test/local_database_reset_test.dart test/sqlite_repository_validation_test.dart
 flutter test test/kokoro_voice_pack_test.dart test/sherpa_voice_config_test.dart test/pronunciation_service_test.dart
 flutter test test/startup_test.dart test/widget_test.dart
-flutter test test/ollama_service_test.dart test/ai_tutor_page_test.dart
+flutter test test/gemini_service_test.dart test/ai_tutor_page_test.dart
 flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart
 ```
 
@@ -132,7 +133,8 @@ flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart
   restore overrides, and clean temporary resources in teardown.
 - Use injected repositories, HTTP clients, pronunciation doubles, and explicit
   times where existing tests provide those seams. Tests should not require a
-  running Ollama server, actual speech playback, or a full voice-pack download.
+  Gemini API key or network access, actual speech playback, or a full voice-pack
+  download.
 - Add regression coverage for changed behavior, especially migrations, resume
   state, ratings, failed downloads, and asynchronous failures. Follow existing
   `flutter_test` patterns and restore widget surface sizes after layout tests.
@@ -195,7 +197,7 @@ and the Simplified Chinese system fallback working. Use test fixtures rather
 than downloading the production model for automated tests.
 
 The repository has Android, iOS, Linux, macOS, and Windows runners. Do not assume
-web support: core database and Ollama code imports `dart:io`, and there is no web
+web support: core database code imports `dart:io`, and there is no web
 runner in this checkout. Changes involving native plugins need platform-aware
 verification beyond widget tests.
 

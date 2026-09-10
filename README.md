@@ -3,7 +3,7 @@
 **TingShuo v1.0.0 Beta 1** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
 spaced daily review, a searchable vocabulary library, Vocab Rush, and an
-optional local AI tutor named Long Laoshi.
+optional Gemini AI tutor named Long Laoshi.
 
 > [!IMPORTANT]
 > This is a beta release. Learning data is stored only on the device. Dashboard
@@ -26,12 +26,12 @@ optional local AI tutor named Long Laoshi.
   filters plus word detail views.
 - Vocab Rush timed and survival modes; incorrect answers are added to the
   learner's review data.
-- Long Laoshi, an optional local AI tutor powered by Ollama.
+- Long Laoshi, an optional AI tutor powered by the Gemini API scaffold.
 - Responsive desktop and mobile layouts, local settings, and versioned SQLite
   migrations.
 
 The core study and review flow works without an account, internet connection,
-or Ollama.
+or a Gemini API key.
 
 ## Getting Started
 
@@ -41,8 +41,8 @@ or Ollama.
 - A Flutter desktop or mobile toolchain for the target platform; web is not supported
 - Linux builds: ALSA development headers (`sudo apt install libasound2-dev` on
   Ubuntu/Debian)
-- Optional: [Ollama](https://ollama.com/) for Long Laoshi and AI-assisted
-  lesson content
+- Optional: a [Gemini API key](https://aistudio.google.com/apikey) for local
+  development of Long Laoshi and AI-assisted lesson content
 
 Install dependencies:
 
@@ -84,7 +84,7 @@ return in daily review.
 
 ### Pronunciation audio
 
-The speaker button on lesson cards does not require Ollama. Sound can be
+The speaker button on lesson cards does not require Gemini. Sound can be
 enabled or disabled under **Settings → Sound**.
 
 For consistent mobile and desktop pronunciation, open **Settings → Offline
@@ -112,35 +112,39 @@ one is available. Kokoro uses the Apache-2.0-licensed
 
 ### Optional AI tutor
 
-Install Ollama and make at least one model available:
+The Gemini scaffold calls Google's HTTPS
+[`generateContent` API](https://ai.google.dev/api/generate-content) for tutor
+replies and lesson examples using the existing `http` dependency. No AI service
+is contacted during startup. Without a key, the tutor explains that it is
+unconfigured and lesson generation falls back to bundled vocabulary.
 
-```sh
-ollama list
+For local development, create an ignored `.env.gemini.json` file:
+
+```json
+{
+  "GEMINI_API_KEY": "your-development-key",
+  "GEMINI_MODEL": "gemini-2.5-flash"
+}
 ```
 
-On Linux, macOS, and Windows, TingShuo attempts to start `ollama serve` when
-needed. Ollama must be installed and available on `PATH`. The first installed
-model is used by default; select another model at launch with:
+Run on your chosen desktop or mobile device:
 
 ```sh
-flutter run --dart-define=OLLAMA_MODEL=model-name
+flutter run --dart-define-from-file=.env.gemini.json
 ```
 
-Android does not assume that Ollama is running on the device. Configure a
-reachable endpoint explicitly when developing against the Android emulator:
+`GEMINI_MODEL` is optional and defaults to `gemini-2.5-flash`. Model values use
+bare model IDs, without a `models/` prefix. Requests use JSON responses and
+include conversation history for the tutor; lesson requests send the topic,
+HSK level, and candidate vocabulary. This content goes to Google when AI is
+configured and used. Chat history remains in memory until reset or navigation.
 
-```sh
-flutter run --dart-define=OLLAMA_URL=http://10.0.2.2:11434
-```
-
-The Android debug and profile manifests permit cleartext traffic only to
-emulator and loopback addresses. Android release builds require an HTTPS
-endpoint. Use a trusted HTTPS proxy for a physical device; do not expose an
-unauthenticated Ollama server to the public network. Dart defines are embedded
-in the app, so `OLLAMA_URL` must not contain credentials, a query string, or a
-fragment.
-
-If Ollama is missing or unavailable, the rest of the app remains usable.
+This is a development scaffold, not production key management. Dart defines
+are compiled into the app even when read from an ignored file. Do not commit
+keys or distribute builds containing a shared key. Before enabling AI in a
+published app, add a backend that holds the key and authenticates client
+requests, following Google's [API key guidance](https://ai.google.dev/gemini-api/docs/api-key).
+The release workflow leaves Gemini unconfigured.
 
 ## Beta Limitations
 
@@ -151,8 +155,9 @@ If Ollama is missing or unavailable, the rest of the app remains usable.
   system notification.
 - There are no accounts, cloud sync, or cross-device backup. Resetting all
   local data is permanent.
-- AI responses require a reachable Ollama server with an installed model and
-  may vary in quality.
+- AI responses require internet access and a valid Gemini API configuration,
+  are subject to API usage limits, and may vary in quality. Production backend
+  integration is not included in this scaffold.
 - Speech recognition, pronunciation grading, and handwriting recognition are
   outside this beta's scope.
 
@@ -188,7 +193,7 @@ GitHub Actions, in addition to running the analyzer and tests.
 - **Framework:** Flutter
 - **Language:** Dart
 - **Storage:** SQLite via `sqflite_common_ffi`
-- **AI:** Ollama's local chat API through a lightweight HTTP client
+- **AI:** Gemini REST API scaffold through a lightweight HTTP client
 - **Audio:** offline Kokoro via `sherpa_onnx` and `flutter_soloud`, with a
   `flutter_tts` system-voice fallback. Android uses the system `zh-CN` voice
   only and ships without Kokoro, onnxruntime, and soloud native libraries.
@@ -198,7 +203,7 @@ GitHub Actions, in addition to running the analyzer and tests.
 
 ```text
 lib/
-├── ai/                 # Ollama integration and AI lesson support
+├── ai/                 # Gemini API scaffold and AI lesson support
 ├── core/               # Theme and shared navigation/widgets
 ├── database/           # Migrations and seeded lessons
 ├── features/           # Dashboard, lessons, review, vocabulary, game, tutor
@@ -244,11 +249,9 @@ The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
 
 Version tags matching `v*` use the same signing configuration in GitHub
-Actions. Optionally configure an `OLLAMA_URL` repository variable with a trusted
-HTTPS endpoint to enable the Android AI tutor. For a local build, pass
-`--dart-define=OLLAMA_URL=https://ollama.example.com`. Without an endpoint, core
-study features remain available and the mobile tutor reports that configuration
-is needed. Configure these repository secrets before creating a release tag:
+Actions. The Gemini scaffold stays unconfigured in release artifacts; core
+study features remain available offline. Do not add a Gemini key to release
+Dart defines. Configure these repository secrets before creating a release tag:
 
 | Secret | Value |
 | --- | --- |
