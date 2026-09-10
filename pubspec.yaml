@@ -74,6 +74,14 @@ dependency_overrides:
     path: third_party/sherpa_onnx_android_stub/x86
   sherpa_onnx_android_x86_64:
     path: third_party/sherpa_onnx_android_stub/x86_64
+  # Vendored copy of flutter_secure_storage_linux 3.0.2 (see
+  # third_party/README.md) with two fixes for the Linux keyring backend:
+  # the Secret schema name no longer dangles after setLabel() (upstream
+  # issue juliansteenbakker/flutter_secure_storage#1230), and every store
+  # is verified by reading it back because gnome-keyring 50.x can accept a
+  # write and persist the item without its secret body.
+  flutter_secure_storage_linux:
+    path: third_party/flutter_secure_storage_linux
 
 # The following section is specific to Flutter packages.
 flutter:
