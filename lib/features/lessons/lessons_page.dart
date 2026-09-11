@@ -65,6 +65,7 @@ class _LessonsPageState extends State<LessonsPage> {
   Map<int, LessonSession> _activeSessions = const {};
   bool _loadingTopics = true;
   bool _libraryLoadFailed = false;
+  int? _libraryHskFilter;
   int _topicsRequestId = 0;
   List<Flashcard> _cards = const [];
   String _lessonTitle = '';
@@ -375,6 +376,12 @@ class _LessonsPageState extends State<LessonsPage> {
     return themes.toList();
   }
 
+  List<LessonSummary> get _visibleTopics => _libraryHskFilter == null
+      ? _topics
+      : _topics
+            .where((topic) => topic.hskLevel == _libraryHskFilter)
+            .toList(growable: false);
+
   Future<void> _generateLesson() async {
     if (_generating) return;
     FocusScope.of(context).unfocus();
@@ -449,7 +456,12 @@ class _LessonsPageState extends State<LessonsPage> {
       if (saved == null) throw StateError('The lesson could not be reloaded.');
       await _openLesson(saved);
       if (mounted) {
-        setState(() => _notice = notice);
+        setState(() {
+          _notice = notice;
+          // Keep the freshly generated lesson visible even when a level
+          // filter would otherwise hide it.
+          _libraryHskFilter = null;
+        });
         unawaited(_loadTopics());
       }
     } catch (error) {
@@ -880,14 +892,51 @@ class _LessonsPageState extends State<LessonsPage> {
     return Column(
       key: const Key('lesson-library-content'),
       children: [
-        for (final topic in _topics) ...[
-          _LessonLibraryCard(
-            summary: topic,
-            isActive: _activeSessions.containsKey(topic.id),
-            onPressed: () => _startLesson(topic),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          key: const Key('lesson-library-level-filter'),
+          child: Row(
+            children: [
+              _LevelChip(
+                label: 'All levels',
+                selected: _libraryHskFilter == null,
+                onSelected: () => setState(() => _libraryHskFilter = null),
+              ),
+              for (var level = 1; level <= 6; level++) ...[
+                const SizedBox(width: 8),
+                _LevelChip(
+                  label: 'HSK $level',
+                  selected: _libraryHskFilter == level,
+                  onSelected: () => setState(() => _libraryHskFilter = level),
+                ),
+              ],
+            ],
           ),
-          if (topic != _topics.last) const SizedBox(height: 10),
-        ],
+        ),
+        const SizedBox(height: 14),
+        if (_visibleTopics.isEmpty)
+          _LessonLibraryStateCard(
+            key: const Key('lesson-library-filtered-empty-state'),
+            accent: AppColors.teal,
+            icon: const Icon(
+              Icons.filter_alt_outlined,
+              size: 30,
+              color: AppColors.teal,
+            ),
+            title: 'No HSK $_libraryHskFilter lessons yet',
+            message:
+                'No saved lessons match this level yet. Try another level, or '
+                'create a new lesson below.',
+          )
+        else
+          for (final (index, topic) in _visibleTopics.indexed) ...[
+            _LessonLibraryCard(
+              summary: topic,
+              isActive: _activeSessions.containsKey(topic.id),
+              onPressed: () => _startLesson(topic),
+            ),
+            if (index != _visibleTopics.length - 1) const SizedBox(height: 10),
+          ],
       ],
     );
   }

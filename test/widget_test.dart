@@ -1577,13 +1577,69 @@ void main() {
     expect(find.text('Generate lesson'), findsOneWidget);
     expect(find.text('Daily Life'), findsOneWidget);
 
-    await tester.tap(find.text('HSK 1'));
+    await tester.tap(find.text('HSK 1').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('HSK 2').last);
     await tester.pumpAndSettle();
 
     expect(find.text('School'), findsOneWidget);
     expect(find.text('Daily Life'), findsNothing);
+  });
+
+  testWidgets('lesson library filters saved lessons by HSK level', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _MultiLevelLessonRepository();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: lessons,
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('lesson-library-level-filter')),
+      findsOneWidget,
+    );
+    expect(find.text('Morning Greetings'), findsOneWidget);
+    expect(find.text('Restaurant Talk'), findsOneWidget);
+    expect(find.text('Market News'), findsOneWidget);
+
+    await tester.tap(find.text('HSK 1').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Morning Greetings'), findsOneWidget);
+    expect(find.text('Restaurant Talk'), findsNothing);
+    expect(find.text('Market News'), findsNothing);
+
+    await tester.tap(find.text('HSK 2'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('lesson-library-filtered-empty-state')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('No HSK 2 lessons yet'), findsOneWidget);
+    expect(find.text('Morning Greetings'), findsNothing);
+
+    await tester.tap(find.text('All levels'));
+    await tester.pumpAndSettle();
+    expect(find.text('Morning Greetings'), findsOneWidget);
+    expect(find.text('Restaurant Talk'), findsOneWidget);
+    expect(find.text('Market News'), findsOneWidget);
+    expect(
+      find.byKey(const Key('lesson-library-filtered-empty-state')),
+      findsNothing,
+    );
   });
 
   testWidgets('lesson library explains loading and empty states', (
@@ -3753,6 +3809,52 @@ class _GeneratedMemoryLessonRepository extends _MemoryLessonRepository {
     if (saveError != null) throw saveError!;
     generated = lesson;
   }
+}
+
+class _MultiLevelLessonRepository implements LessonRepository {
+  static const hsk1Lesson = LessonSummary(
+    id: 41,
+    title: 'Morning Greetings',
+    theme: 'Greetings',
+    hskLevel: 1,
+  );
+  static const hsk3Lesson = LessonSummary(
+    id: 42,
+    title: 'Restaurant Talk',
+    theme: 'Dining Out',
+    hskLevel: 3,
+  );
+  static const hsk4Lesson = LessonSummary(
+    id: 43,
+    title: 'Market News',
+    theme: 'News and Media',
+    hskLevel: 4,
+  );
+
+  @override
+  Future<List<LessonSummary>> topics() async => const [
+    hsk1Lesson,
+    hsk3Lesson,
+    hsk4Lesson,
+  ];
+
+  @override
+  Future<Lesson?> findById(int id) async => null;
+
+  @override
+  Future<Lesson?> findGenerated({
+    required String theme,
+    required int hskLevel,
+  }) async => null;
+
+  @override
+  Future<Flashcard> findOrCreateVocabularyCard({
+    required Flashcard card,
+    required int hskLevel,
+  }) async => card;
+
+  @override
+  Future<void> saveGenerated(Lesson lesson) async {}
 }
 
 class _LessonStateRepository implements LessonRepository {
