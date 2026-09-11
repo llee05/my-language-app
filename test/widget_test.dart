@@ -2594,6 +2594,99 @@ void main() {
     },
   );
 
+  testWidgets('Android menu supports swipes across pages and still scrolls', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.android),
+        home: DashboardPage(
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: _MemoryProgressRepository(),
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final scaffold = tester.state<ScaffoldState>(find.byType(Scaffold));
+    final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+    await tester.dragFrom(const Offset(200, 600), const Offset(0, -250));
+    await tester.pumpAndSettle();
+    expect(scrollable.position.pixels, greaterThan(0));
+    expect(scaffold.isDrawerOpen, isFalse);
+
+    await tester.dragFrom(const Offset(300, 400), const Offset(-200, 0));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isFalse);
+
+    await tester.dragFrom(const Offset(100, 400), const Offset(280, 0));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isTrue);
+    expect(tester.getTopLeft(find.byType(Drawer)).dx, 0);
+
+    await tester.tap(find.text('AI Tutor'));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(AiTutorPage), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.dragFrom(const Offset(100, 400), const Offset(280, 0));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isTrue);
+
+    await tester.dragFrom(const Offset(280, 400), const Offset(-260, 0));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.text('Hello'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.menu_rounded));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isTrue);
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(AiTutorPage), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.menu_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Vocabulary'));
+    await _waitForWidget(
+      tester,
+      find.byKey(const Key('vocabulary-result-count')),
+    );
+    await tester.pumpAndSettle();
+
+    final filters = find.byWidgetPredicate(
+      (widget) =>
+          widget is SingleChildScrollView &&
+          widget.scrollDirection == Axis.horizontal,
+    );
+    final filterScrollable = tester.state<ScrollableState>(
+      find.descendant(of: filters.first, matching: find.byType(Scrollable)),
+    );
+    final filterY = tester.getCenter(filters.first).dy;
+    await tester.dragFrom(Offset(280, filterY), const Offset(-160, 0));
+    await tester.pumpAndSettle();
+    final filterOffset = filterScrollable.position.pixels;
+    expect(filterOffset, greaterThan(0));
+    await tester.dragFrom(Offset(100, filterY), const Offset(160, 0));
+    await tester.pumpAndSettle();
+    expect(filterScrollable.position.pixels, lessThan(filterOffset));
+    expect(scaffold.isDrawerOpen, isFalse);
+  });
+
   testWidgets('settings edits profile and can reset onboarding', (
     tester,
   ) async {

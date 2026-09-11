@@ -35,6 +35,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  double _menuSwipeDistance = 0;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   int selectedNav = 0;
@@ -241,8 +243,12 @@ class _DashboardPageState extends State<DashboardPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final showSidebar = constraints.maxWidth >= 760;
+        final enableMenuSwipe =
+            !showSidebar &&
+            Theme.of(context).platform == TargetPlatform.android;
 
-        return Scaffold(
+        final scaffold = Scaffold(
+          key: _scaffoldKey,
           drawer: showSidebar
               ? null
               : Drawer(
@@ -321,6 +327,25 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
+        );
+
+        // Child controls keep their horizontal scrolling gestures. Swipes on
+        // the rest of the Android page open the menu after a deliberate drag.
+        return GestureDetector(
+          onHorizontalDragStart: enableMenuSwipe
+              ? (_) => _menuSwipeDistance = 0
+              : null,
+          onHorizontalDragUpdate: enableMenuSwipe
+              ? (details) => _menuSwipeDistance += details.primaryDelta ?? 0
+              : null,
+          onHorizontalDragEnd: enableMenuSwipe
+              ? (_) {
+                  if (_menuSwipeDistance >= 64) {
+                    _scaffoldKey.currentState?.openDrawer();
+                  }
+                }
+              : null,
+          child: scaffold,
         );
       },
     );
