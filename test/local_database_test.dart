@@ -460,10 +460,7 @@ void main() {
         ),
       ],
     );
-    await Future.wait([
-      lessons.saveGenerated(generated),
-      lessons.saveGenerated(generated),
-    ]);
+    await lessons.saveGenerated(generated);
 
     final topics = await lessons.topics();
     expect(
@@ -494,6 +491,70 @@ void main() {
     expect(cached!.summary.title, 'Ordering breakfast · HSK 1');
     expect(cached.cards, hasLength(1));
     expect(cached.cards.single.chinese, '吃');
+
+    // A fresh API result for the same topic keeps the previous lesson and
+    // its saved ratings/session intact, and becomes the latest fallback.
+    await learners.save(
+      const LearnerProfile(name: 'Mei', hskLevel: 1, dailyWordTarget: 10),
+    );
+    final session = await progress.startSession(cached.summary.id);
+    final reviewedAt = DateTime.utc(2026, 9, 11);
+    await progress.recordReview(
+      review: ReviewRecord(
+        id: 0,
+        cardId: cached.cards.single.id,
+        sessionId: session.id,
+        reviewedAt: reviewedAt,
+        rating: ReviewRating.good,
+        wasCorrect: true,
+      ),
+      progress: CardProgress(
+        cardId: cached.cards.single.id,
+        dueAt: reviewedAt.add(const Duration(days: 1)),
+      ),
+    );
+    await progress.updateSessionPosition(
+      sessionId: session.id,
+      currentCardIndex: 1,
+      expectedCardsReviewed: 0,
+    );
+    await lessons.saveGenerated(
+      Lesson(
+        summary: generated.summary,
+        cards: [
+          generated.cards.single.copyWith(
+            exampleChinese: '你吃早饭吗？',
+            examplePinyin: 'Nǐ chī zǎofàn ma?',
+            exampleEnglish: 'Do you eat breakfast?',
+          ),
+        ],
+      ),
+    );
+
+    final latest = await lessons.findGenerated(
+      theme: 'ordering BREAKFAST',
+      hskLevel: 1,
+    );
+    expect(latest!.summary.id, isNot(cached.summary.id));
+    expect(latest.cards.single.id, isNot(cached.cards.single.id));
+    expect(latest.cards.single.exampleEnglish, 'Do you eat breakfast?');
+    expect(
+      (await lessons.topics()).where(
+        (topic) => topic.theme == generated.summary.theme,
+      ),
+      hasLength(2),
+    );
+    final previous = await lessons.findById(cached.summary.id);
+    expect(previous!.cards.single.id, cached.cards.single.id);
+    expect(previous.cards.single.exampleEnglish, 'I eat breakfast.');
+    expect(
+      await progress.reviewHistory(cardId: cached.cards.single.id),
+      hasLength(1),
+    );
+    expect(await progress.progressForCard(cached.cards.single.id), isNotNull);
+    final resumed = await progress.activeSessionForLesson(cached.summary.id);
+    expect(resumed!.id, session.id);
+    expect(resumed.currentCardIndex, 1);
   });
 
   test('settings, sessions, reviews, and card progress persist', () async {

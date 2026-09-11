@@ -12,5 +12,7 @@ abstract interface class LessonRepository {
     required int hskLevel,
   });
 
+  /// Saves a new lesson, preserving earlier lessons on the same topic and
+  /// their cards, review history, and session positions.
   Future<void> saveGenerated(Lesson lesson);
 }

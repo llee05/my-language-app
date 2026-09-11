@@ -167,10 +167,10 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   void _beginTopicsLoad() {
-    unawaited(_loadTopics());
+    unawaited(_loadTopics(resumeLatest: widget.resumeLatest));
   }
 
-  Future<void> _loadTopics() async {
+  Future<void> _loadTopics({bool resumeLatest = false}) async {
     final requestId = ++_topicsRequestId;
     if (!_loadingTopics && mounted) {
       setState(() {
@@ -196,7 +196,7 @@ class _LessonsPageState extends State<LessonsPage> {
         _loadingTopics = false;
         _libraryLoadFailed = false;
       });
-      if (!widget.resumeLatest) return;
+      if (!resumeLatest) return;
       final session = await widget.progressRepository.latestActiveSession();
       if (session == null) return;
       final lesson = await widget.repository.findById(session.lessonId);
@@ -216,6 +216,7 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _startLesson(LessonSummary summary) async {
+    if (_generating) return;
     setState(() => _notice = null);
     try {
       final lesson = await widget.repository.findById(summary.id);
@@ -389,14 +390,6 @@ class _LessonsPageState extends State<LessonsPage> {
         theme: topic,
         hskLevel: hskLevel,
       );
-      if (cached != null) {
-        await _openLesson(cached);
-        if (mounted && _currentCard == 0) {
-          setState(() => _notice = 'Loaded an existing lesson instantly.');
-        }
-        return;
-      }
-
       final vocabulary =
           (jsonDecode(
                     await rootBundle.loadString(
@@ -408,19 +401,33 @@ class _LessonsPageState extends State<LessonsPage> {
       final candidates = vocabulary
           .where((word) => (word['hskLevel'] as int) <= hskLevel)
           .toList();
-      _rankForTopic(candidates, _topic);
+      _rankForTopic(candidates, topic);
+      if (!mounted) return;
 
       List<Flashcard> cards;
+      String notice;
       try {
         cards = await _generateWithAi(
           topic,
           hskLevel,
           candidates.take(40).toList(),
         );
-      } catch (_) {
+        notice = 'Created a new lesson using your AI connection.';
+      } catch (error) {
+        final reason = switch (error) {
+          AiConfigurationException(:final message) => message,
+          AiRequestException(:final message) => message,
+          _ => 'AI could not create a complete lesson. Please try again.',
+        };
+        if (cached != null) {
+          await _openLesson(cached);
+          if (mounted) {
+            setState(() => _notice = '$reason Opened your saved lesson.');
+          }
+          return;
+        }
         cards = candidates.take(10).map(_fallbackCard).toList();
-        _notice =
-            'AI was unavailable, so a vocabulary-based lesson was created locally.';
+        notice = '$reason Created a vocabulary lesson offline.';
       }
       if (cards.isEmpty) throw StateError('No vocabulary was available.');
       final title = '$topic · HSK $hskLevel';
@@ -441,6 +448,10 @@ class _LessonsPageState extends State<LessonsPage> {
       );
       if (saved == null) throw StateError('The lesson could not be reloaded.');
       await _openLesson(saved);
+      if (mounted) {
+        setState(() => _notice = notice);
+        unawaited(_loadTopics());
+      }
     } catch (error) {
       debugPrint('Lesson generation failed: $error');
       if (!mounted) return;
@@ -496,7 +507,11 @@ class _LessonsPageState extends State<LessonsPage> {
               'Create a Mandarin flashcard lesson. Return JSON only: '
               '{"cards":[{"index":0,"exampleChinese":"...",'
               '"examplePinyin":"...","exampleEnglish":"..."}]}. '
-              'Choose 8-10 unique indices only from the supplied vocabulary.',
+              'Choose 8-10 unique indices only from the supplied vocabulary. '
+              'For each word, write a natural Simplified Chinese sentence '
+              'using that word, full sentence pinyin with tone marks, and an '
+              'accurate English translation. Match the requested HSK level '
+              'and topic as closely as the supplied vocabulary allows.',
         },
         {
           'role': 'user',
@@ -508,18 +523,38 @@ class _LessonsPageState extends State<LessonsPage> {
     final clean = response
         .replaceFirst(RegExp(r'^```(?:json)?\s*'), '')
         .replaceFirst(RegExp(r'\s*```$'), '');
-    final generated = jsonDecode(clean) as Map<String, dynamic>;
+    final generated = jsonDecode(clean);
+    if (generated is! Map<String, dynamic> || generated['cards'] is! List) {
+      throw const FormatException('AI returned an invalid lesson.');
+    }
+    final items = generated['cards'] as List;
+    if (items.length < 8 || items.length > 10) {
+      throw const FormatException('AI returned an incomplete lesson.');
+    }
+    String example(Map<String, dynamic> item, String key) {
+      final value = item[key];
+      if (value is! String || value.trim().isEmpty) {
+        throw const FormatException('AI returned an incomplete example.');
+      }
+      return value.trim();
+    }
+
     final used = <int>{};
-    return (generated['cards'] as List<dynamic>).map((raw) {
-      final item = raw as Map<String, dynamic>;
-      final index = item['index'] as int;
-      if (index < 0 || index >= candidates.length || !used.add(index)) {
+    return items.map((item) {
+      if (item is! Map<String, dynamic>) {
+        throw const FormatException('AI returned an invalid card.');
+      }
+      final index = item['index'];
+      if (index is! int ||
+          index < 0 ||
+          index >= candidates.length ||
+          !used.add(index)) {
         throw const FormatException('AI selected invalid vocabulary.');
       }
       return _fallbackCard(candidates[index]).copyWith(
-        exampleChinese: item['exampleChinese'] as String? ?? '',
-        examplePinyin: item['examplePinyin'] as String? ?? '',
-        exampleEnglish: item['exampleEnglish'] as String? ?? '',
+        exampleChinese: example(item, 'exampleChinese'),
+        examplePinyin: example(item, 'examplePinyin'),
+        exampleEnglish: example(item, 'exampleEnglish'),
       );
     }).toList();
   }
@@ -687,9 +722,12 @@ class _LessonsPageState extends State<LessonsPage> {
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
             const SizedBox(height: 24),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              child: _buildLessonLibrary(),
+            IgnorePointer(
+              ignoring: _generating,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: _buildLessonLibrary(),
+              ),
             ),
             const SizedBox(height: 24),
             const Divider(),
@@ -704,7 +742,8 @@ class _LessonsPageState extends State<LessonsPage> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Choose a topic or ask AI for something new.',
+              'Generate a new lesson with your AI connection from Settings. '
+              'Saved lessons and local vocabulary are available offline.',
               style: TextStyle(color: AppColors.muted),
             ),
             const SizedBox(height: 20),
@@ -720,13 +759,15 @@ class _LessonsPageState extends State<LessonsPage> {
                 for (var level = 1; level <= 6; level++)
                   DropdownMenuItem(value: level, child: Text('HSK $level')),
               ],
-              onChanged: (value) {
-                final level = value ?? 1;
-                setState(() {
-                  _hskLevel = level;
-                  _selectedTopicTheme = _hskTopicPools[level]!.first;
-                });
-              },
+              onChanged: _generating
+                  ? null
+                  : (value) {
+                      final level = value ?? 1;
+                      setState(() {
+                        _hskLevel = level;
+                        _selectedTopicTheme = _hskTopicPools[level]!.first;
+                      });
+                    },
             ),
             const SizedBox(height: 18),
             DropdownButtonFormField<String>(
@@ -744,13 +785,17 @@ class _LessonsPageState extends State<LessonsPage> {
                     child: Text(topic, overflow: TextOverflow.ellipsis),
                   ),
               ],
-              onChanged: (value) => setState(
-                () => _selectedTopicTheme = value ?? _availableTopics.first,
-              ),
+              onChanged: _generating
+                  ? null
+                  : (value) => setState(
+                      () =>
+                          _selectedTopicTheme = value ?? _availableTopics.first,
+                    ),
             ),
             const SizedBox(height: 18),
             TextField(
               controller: _topicController,
+              enabled: !_generating,
               decoration: const InputDecoration(
                 labelText: 'Ask AI for a lesson topic',
                 hintText: 'e.g. ordering breakfast in Beijing',
@@ -893,6 +938,15 @@ class _LessonsPageState extends State<LessonsPage> {
           ],
         ),
       ),
+      if (_notice != null)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+          child: Text(
+            _notice!,
+            key: const Key('lesson-generation-notice'),
+            style: const TextStyle(color: AppColors.gold),
+          ),
+        ),
       Expanded(
         child: _session?.isComplete == true
             ? _buildCompletionSummary()

@@ -257,15 +257,6 @@ class SqliteLessonRepository implements LessonRepository {
   @override
   Future<void> saveGenerated(Lesson lesson) => LocalDatabase.use((db) async {
     await db.transaction((txn) async {
-      final existing = await txn.query(
-        'lessons',
-        columns: ['id'],
-        where: 'theme = ? COLLATE NOCASE AND hsk_level = ? AND is_listed = ?',
-        whereArgs: [lesson.summary.theme.trim(), lesson.summary.hskLevel, 1],
-        limit: 1,
-      );
-      if (existing.isNotEmpty) return;
-
       final lessonId = await txn.insert('lessons', {
         'lesson_title': lesson.summary.title,
         'theme': lesson.summary.theme.trim(),
