@@ -557,6 +557,59 @@ void main() {
     expect(resumed.currentCardIndex, 1);
   });
 
+  test(
+    'bundled library offers four extra lessons for every HSK level',
+    () async {
+      await LocalDatabase.resetForTesting();
+
+      const extraThemesByLevel = <int, List<String>>{
+        1: ['Greetings', 'Family', 'Food and Drinks', 'Numbers and Time'],
+        2: ['Shopping', 'Weather', 'Hobbies', 'Getting Around'],
+        3: ['Dining Out', 'Work and Study', 'Travel Plans', 'Daily Routines'],
+        4: ['Chinese Culture', 'Technology', 'Relationships', 'News and Media'],
+        5: ['Society', 'Environment', 'Education', 'Arts and Literature'],
+        6: [
+          'Economics',
+          'Politics',
+          'Science and Research',
+          'History and Philosophy',
+        ],
+      };
+
+      final topics = await lessons.topics();
+      for (final entry in extraThemesByLevel.entries) {
+        final level = entry.key;
+        for (final theme in entry.value) {
+          final lesson = await lessons.findGenerated(
+            theme: theme,
+            hskLevel: level,
+          );
+          expect(
+            lesson,
+            isNotNull,
+            reason: 'Missing bundled lesson "$theme" for HSK $level.',
+          );
+          expect(lesson!.summary.title, '$theme HSK$level Flashcards');
+          expect(lesson.cards, hasLength(10));
+          for (final card in lesson.cards) {
+            expect(card.chinese, isNotEmpty);
+            expect(card.pinyin, isNotEmpty);
+            expect(card.englishMeaning, isNotEmpty);
+            expect(card.partOfSpeech, isNotEmpty);
+            expect(card.exampleChinese, isNotEmpty);
+            expect(card.exampleEnglish, isNotEmpty);
+            expect(card.quizOptions, contains(card.englishMeaning));
+          }
+        }
+        expect(
+          topics.where((topic) => topic.hskLevel == level),
+          hasLength(greaterThanOrEqualTo(entry.value.length + 1)),
+          reason: 'HSK $level should keep its original bundled lesson too.',
+        );
+      }
+    },
+  );
+
   test('settings, sessions, reviews, and card progress persist', () async {
     await LocalDatabase.resetForTesting();
     await LocalDatabase.ensureInitialized();
