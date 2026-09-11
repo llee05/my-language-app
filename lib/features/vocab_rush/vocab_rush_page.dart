@@ -323,7 +323,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
         const SizedBox(height: 36),
         _modeBadge(),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           '词汇冲刺',
           style: TextStyle(
             fontFamily: 'serif',
@@ -331,12 +331,12 @@ class _VocabRushPageState extends State<VocabRushPage> {
             color: AppColors.text,
           ),
         ),
-        const Text(
+        Text(
           'Vocab Rush',
           style: TextStyle(fontSize: 17, color: AppColors.muted),
         ),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           'Race the clock. Pick the correct English meaning and score as many words as you can.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, height: 1.6, color: AppColors.muted),
@@ -352,7 +352,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
           ],
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'CHOOSE A TIME',
           style: TextStyle(
             letterSpacing: 1.5,
@@ -391,7 +391,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
           const SizedBox(height: 30),
           Text(
             '${_mistakes >= 3 ? 'Three strikes!' : 'Time!'} You scored $_score ${_score == 1 ? 'word' : 'words'}.',
-            style: const TextStyle(fontSize: 20, color: AppColors.text),
+            style: TextStyle(fontSize: 20, color: AppColors.text),
           ),
           const SizedBox(height: 12),
           _scoreRow(),
@@ -426,7 +426,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
             const SizedBox(width: 14),
             Text(
               durationSeconds == null ? '∞' : '${_secondsLeft}s',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.text,
@@ -437,7 +437,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
           ],
         ),
         const SizedBox(height: 52),
-        const Text(
+        Text(
           'PICK THE CORRECT MEANING',
           style: TextStyle(
             letterSpacing: 1.5,
@@ -448,7 +448,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
         const SizedBox(height: 20),
         Text(
           _card!['chinese'] as String,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'serif',
             fontSize: 64,
             color: AppColors.text,
@@ -456,7 +456,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
         ),
         Text(
           _card!['pinyin'] as String,
-          style: const TextStyle(fontSize: 16, color: AppColors.gold),
+          style: TextStyle(fontSize: 16, color: AppColors.gold),
         ),
         IconButton(
           key: const Key('vocab-rush-pronunciation'),
@@ -525,7 +525,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
           children: [
             Text(
               difficulty.chinese,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 20,
                 color: AppColors.text,
@@ -534,12 +534,12 @@ class _VocabRushPageState extends State<VocabRushPage> {
             const SizedBox(height: 5),
             Text(
               difficulty.english,
-              style: const TextStyle(fontSize: 10, color: AppColors.muted),
+              style: TextStyle(fontSize: 10, color: AppColors.muted),
             ),
             const SizedBox(height: 12),
             Text(
               'HSK ${difficulty.minHsk}–${difficulty.maxHsk}',
-              style: const TextStyle(fontSize: 9, color: AppColors.muted),
+              style: TextStyle(fontSize: 9, color: AppColors.muted),
             ),
           ],
         ),
@@ -552,7 +552,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
     children: [
       Text(
         '$_mistakes/3',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: AppColors.muted,
@@ -587,14 +587,14 @@ class _VocabRushPageState extends State<VocabRushPage> {
     children: [
       Text(
         value,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 19,
           fontWeight: FontWeight.w700,
           color: AppColors.text,
         ),
       ),
       const SizedBox(height: 4),
-      Text(label, style: const TextStyle(fontSize: 9, color: AppColors.muted)),
+      Text(label, style: TextStyle(fontSize: 9, color: AppColors.muted)),
     ],
   );
 
@@ -604,7 +604,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
       border: Border.all(color: AppColors.darkRed),
       borderRadius: BorderRadius.circular(20),
     ),
-    child: const Row(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.sports_martial_arts_rounded, size: 13, color: AppColors.red),

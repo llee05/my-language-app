@@ -34,7 +34,7 @@ class AppSidebar extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_fire_department_rounded,
                     color: AppColors.red,
                     size: 22,
@@ -57,7 +57,7 @@ class AppSidebar extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 31, top: 4, bottom: 24),
                 child: Text(
                   'Mandarin · HSK $hskLevel',
-                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                  style: TextStyle(fontSize: 10, color: AppColors.muted),
                 ),
               ),
               for (var i = 0; i < items.length; i++)
@@ -88,7 +88,7 @@ class AppSidebar extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.local_fire_department_rounded,
                           size: 16,
                           color: AppColors.red,
@@ -98,7 +98,7 @@ class AppSidebar extends StatelessWidget {
                           child: Text(
                             '$streakDays-day streak',
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: AppColors.text,
                             ),
@@ -107,7 +107,7 @@ class AppSidebar extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 5),
-                    const Text(
+                    Text(
                       '加油！ Keep going today.',
                       style: TextStyle(fontSize: 10, color: AppColors.muted),
                     ),

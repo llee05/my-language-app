@@ -70,12 +70,14 @@ class HanziPathApp extends StatefulWidget {
 
 class _HanziPathAppState extends State<HanziPathApp> {
   late Future<LearnerProfile?> _profile;
+  AppThemeId _appThemeId = AppThemeId.classic;
   late final PronunciationService _pronunciationService;
 
   @override
   void initState() {
     super.initState();
     _pronunciationService = widget.dependencies.createPronunciationService();
+    unawaited(_restoreAppTheme());
     final initialProfile = widget.initialProfile;
     if (initialProfile == null) {
       _profile = _loadProfileAndPronunciation();
@@ -88,6 +90,26 @@ class _HanziPathAppState extends State<HanziPathApp> {
     final profile = await _loadProfile();
     if (profile != null) unawaited(_restorePronunciationPreferences());
     return profile;
+  }
+
+  /// Best-effort restore of the persisted colour theme; failures keep the
+  /// default theme instead of blocking startup. Runs in parallel with the
+  /// profile load and shares its database initialization, so the palette is
+  /// applied before the first real screen is shown.
+  Future<void> _restoreAppTheme() async {
+    try {
+      final settings = await widget.dependencies.settings.load();
+      final themeId = AppThemes.tryParseId(settings.appThemeId);
+      if (themeId == null || !mounted || themeId == _appThemeId) return;
+      setState(() => _appThemeId = themeId);
+    } catch (error) {
+      debugPrint('Colour theme could not be restored: $error');
+    }
+  }
+
+  void _applyAppTheme(AppThemeId themeId) {
+    if (themeId == _appThemeId) return;
+    setState(() => _appThemeId = themeId);
   }
 
   Future<void> _restorePronunciationPreferences() async {
@@ -139,8 +161,11 @@ class _HanziPathAppState extends State<HanziPathApp> {
     await widget.dependencies.aiConfiguration.clear();
     await widget.dependencies.development.resetAllData();
     if (!mounted) return;
+    // The saved settings were removed together with the rest of the local
+    // data, so the app falls back to the default colour theme.
     setState(() {
       _profile = Future.value();
+      _appThemeId = AppThemeId.classic;
     });
   }
 
@@ -152,7 +177,8 @@ class _HanziPathAppState extends State<HanziPathApp> {
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFFFF6B5F);
+    AppColors.apply(AppThemes.paletteOf(_appThemeId));
+    final seed = AppColors.red;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'TingShuo',
@@ -167,7 +193,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
         fontFamily: 'sans-serif',
         dividerColor: AppColors.border,
         splashColor: seed.withValues(alpha: .12),
-        textTheme: const TextTheme(
+        textTheme: TextTheme(
           headlineMedium: TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.w600,
@@ -205,6 +231,8 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onProfileChanged: _completeSetup,
             onResetOnboarding: _resetOnboarding,
             onResetAllData: _resetAllData,
+            appThemeId: _appThemeId,
+            onThemeChanged: _applyAppTheme,
             lessonRepository: widget.dependencies.lessons,
             progressRepository: widget.dependencies.progress,
             dailyReviewSessionRepository: widget.dependencies.dailyReviews,
@@ -224,7 +252,7 @@ class _AppLoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: CircularProgressIndicator(color: AppColors.red, strokeWidth: 2),
       ),

@@ -7,6 +7,8 @@ class SettingsPage extends StatefulWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    required this.appThemeId,
+    required this.onThemeChanged,
     required this.developmentRepository,
     required this.settingsRepository,
     this.pronunciationService,
@@ -17,6 +19,8 @@ class SettingsPage extends StatefulWidget {
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final AppThemeId appThemeId;
+  final void Function(AppThemeId themeId) onThemeChanged;
   final DevelopmentRepository developmentRepository;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
@@ -39,6 +43,8 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
   int _reminderHour = 18;
+  AppThemeId _selectedThemeId = AppThemeId.classic;
+  bool _themeSaveFailed = false;
   List<String> _kokoroVoiceIds = const [];
   late final Future<String> _databasePath;
   late final PronunciationService _pronunciationService;
@@ -56,6 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _nameController = TextEditingController(text: widget.profile.name);
     _hskLevel = widget.profile.hskLevel;
     _dailyTarget = widget.profile.dailyWordTarget;
+    _selectedThemeId = widget.appThemeId;
     _databasePath = widget.developmentRepository.databasePath();
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
@@ -159,6 +166,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _reminderEnabled = settings.reminderEnabled;
         _reminderHour = settings.reminderHour;
         _kokoroVoiceIds = kokoroVoiceIds;
+        _selectedThemeId =
+            AppThemes.tryParseId(settings.appThemeId) ?? widget.appThemeId;
         _loadingPreferences = false;
         _preferencesLoadFailed = false;
       });
@@ -205,6 +214,7 @@ class _SettingsPageState extends State<SettingsPage> {
           reminderHour: _reminderHour,
           pronunciationEngine: PronunciationEngine.kokoro,
           kokoroVoiceIds: _kokoroVoiceIds,
+          appThemeId: _selectedThemeId.name,
         ),
       );
       await _applyPronunciationSelection();
@@ -227,6 +237,33 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     } catch (error) {
       debugPrint('Pronunciation selection could not be applied: $error');
+    }
+  }
+
+  void _selectTheme(AppThemeId themeId) {
+    if (themeId == _selectedThemeId) return;
+    setState(() {
+      _selectedThemeId = themeId;
+      _themeSaveFailed = false;
+    });
+    widget.onThemeChanged(themeId);
+    unawaited(_persistTheme(themeId));
+  }
+
+  /// Themes apply immediately; persistence merges into the currently saved
+  /// settings so unrelated preference values are not overwritten.
+  Future<void> _persistTheme(AppThemeId themeId) async {
+    try {
+      final settings = await widget.settingsRepository.load();
+      await widget.settingsRepository.save(
+        settings.copyWith(appThemeId: themeId.name),
+      );
+      if (!mounted) return;
+      setState(() => _themeSaveFailed = false);
+    } catch (error) {
+      debugPrint('Colour theme could not be saved: $error');
+      if (!mounted) return;
+      setState(() => _themeSaveFailed = true);
     }
   }
 
@@ -348,7 +385,7 @@ class _SettingsPageState extends State<SettingsPage> {
       children: [
         Text('Settings', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Manage your learning preferences and local test data.',
           style: TextStyle(color: AppColors.muted),
         ),
@@ -367,7 +404,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'HSK level',
                 style: TextStyle(
                   color: AppColors.text,
@@ -388,7 +425,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Daily word target',
                 style: TextStyle(
                   color: AppColors.text,
@@ -451,6 +488,39 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
         ),
+        const SizedBox(height: 20),
+        _SettingsCard(
+          title: 'Appearance',
+          subtitle:
+              'Pick a colour theme. It is applied immediately and saved locally.',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final palette in AppThemes.all)
+                    _ThemeSwatch(
+                      key: Key('theme-choice-${palette.id.name}'),
+                      palette: palette,
+                      selected: _selectedThemeId == palette.id,
+                      onTap: () => _selectTheme(palette.id),
+                    ),
+                ],
+              ),
+              if (_themeSaveFailed) ...[
+                const SizedBox(height: 14),
+                _AppInlineError(
+                  key: const Key('theme-save-error'),
+                  message: 'We couldn’t save your colour theme.',
+                  onRetry: () => _persistTheme(_selectedThemeId),
+                  retryKey: const Key('theme-save-retry'),
+                ),
+              ],
+            ],
+          ),
+        ),
         if (_shouldShowOfflineVoiceCard) ...[
           const SizedBox(height: 20),
           _SettingsCard(
@@ -490,10 +560,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   future: _databasePath,
                   builder: (context, snapshot) => SelectableText(
                     'Database: ${snapshot.data ?? 'Loading…'}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -558,7 +625,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Kokoro',
           style: TextStyle(
             color: AppColors.text,
@@ -567,7 +634,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(height: 5),
-        const Text(
+        Text(
           'Higher-quality int8 speech with 100 Mandarin voices.',
           style: TextStyle(color: AppColors.muted),
         ),
@@ -598,10 +665,7 @@ class _SettingsPageState extends State<SettingsPage> {
           key: _voiceControlKey('ready'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
-              Icons.check_circle_outline_rounded,
-              color: AppColors.teal,
-            ),
+            Icon(Icons.check_circle_outline_rounded, color: AppColors.teal),
             const SizedBox(width: 10),
             Expanded(
               child: const Text('Kokoro is installed and ready offline.'),
@@ -623,7 +687,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   : '${status.message ?? 'Downloading…'} $percent% '
                         '(${_formatMegabytes(status.downloadedBytes)} of '
                         '${_formatMegabytes(status.totalBytes)} MB)',
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: AppColors.muted),
             ),
           ],
         );
@@ -634,7 +698,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Text(
               status.message ??
                   'The offline voice could not be installed. Please try again.',
-              style: const TextStyle(color: AppColors.red),
+              style: TextStyle(color: AppColors.red),
             ),
             if (status.downloadedBytes > 0) ...[
               const SizedBox(height: 6),
@@ -642,7 +706,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 '${_formatMegabytes(status.downloadedBytes)} of '
                 '${_formatMegabytes(status.totalBytes)} MB is already '
                 'downloaded and will be reused next attempt.',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ],
             const SizedBox(height: 12),
@@ -665,10 +729,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 '${_formatMegabytes(resumableBytes)} of '
                 '${_formatMegabytes(status.totalBytes)} MB is already on your '
                 'device and will be reused.',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               )
             else
-              const Text(
+              Text(
                 'Optional one-time download: 147 MB, about 215 MB installed. '
                 'Installation needs about 600 MB of temporary free space.',
                 style: TextStyle(color: AppColors.muted),
@@ -717,7 +781,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Kokoro voice pool',
                         style: TextStyle(fontSize: 12, color: AppColors.muted),
                       ),
@@ -725,7 +789,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         _kokoroVoiceSummary(voices),
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: AppColors.text),
+                        style: TextStyle(color: AppColors.text),
                       ),
                     ],
                   ),
@@ -737,7 +801,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(height: 10),
-        const Text(
+        Text(
           'A voice is chosen for each phrase. Select one voice to keep it consistent. Changes apply immediately; save settings to keep them after restarting.',
           style: TextStyle(color: AppColors.muted, fontSize: 12),
         ),
@@ -885,7 +949,7 @@ class _KokoroVoicePoolDialogState extends State<_KokoroVoicePoolDialog> {
               ],
             ),
             if (_selectedVoiceIds.isEmpty)
-              const Padding(
+              Padding(
                 key: Key('kokoro-voice-empty-error'),
                 padding: EdgeInsets.only(bottom: 8),
                 child: Text(
@@ -935,7 +999,7 @@ class _KokoroVoicePoolDialogState extends State<_KokoroVoicePoolDialog> {
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontWeight: FontWeight.w600,
             ),
@@ -960,6 +1024,87 @@ class _KokoroVoicePoolDialogState extends State<_KokoroVoicePoolDialog> {
           }),
         ),
     ];
+  }
+}
+
+class _ThemeSwatch extends StatelessWidget {
+  const _ThemeSwatch({
+    super.key,
+    required this.palette,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppColorPalette palette;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = selected
+        ? AppColors.red.withValues(alpha: .9)
+        : AppColors.border.withValues(alpha: .45);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 132,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: palette.background,
+          border: Border.all(color: borderColor, width: selected ? 2 : 1),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                _swatchDot(palette.red),
+                const SizedBox(width: 5),
+                _swatchDot(palette.gold),
+                const SizedBox(width: 5),
+                _swatchDot(palette.teal),
+                const SizedBox(width: 5),
+                _swatchDot(palette.surfaceLight),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    palette.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: palette.text,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (selected)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: palette.red,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _swatchDot(Color color) {
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
   }
 }
 
@@ -991,7 +1136,7 @@ class _SettingsCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             subtitle,
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(height: 22),
           child,

@@ -69,6 +69,8 @@ Future<void> _pumpResetSettings(
     MaterialApp(
       home: Scaffold(
         body: SettingsPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: onResetOnboarding ?? () async {},
@@ -201,6 +203,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -244,6 +248,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -340,6 +346,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -397,6 +405,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -434,6 +444,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -468,6 +480,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -508,6 +522,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: DashboardPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -661,6 +677,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -1016,6 +1034,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -1727,6 +1747,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -1768,6 +1790,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -2662,6 +2686,8 @@ void main() {
       MaterialApp(
         theme: ThemeData(platform: TargetPlatform.android),
         home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
           profile: testProfile,
           onProfileChanged: (_) async {},
           onResetOnboarding: () async {},
@@ -2756,6 +2782,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (profile) async => updatedProfile = profile,
             onResetOnboarding: () async => resetOnboarding = true,
@@ -2806,6 +2834,8 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: SettingsPage(
+              appThemeId: AppThemeId.classic,
+              onThemeChanged: (_) {},
               profile: testProfile,
               onProfileChanged: (_) async {},
               onResetOnboarding: () async {},
@@ -3135,6 +3165,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -3159,6 +3191,9 @@ void main() {
       400,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('settings-save')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('settings-save')));
     await tester.pumpAndSettle();
 
@@ -3179,6 +3214,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -3215,6 +3252,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -3301,6 +3340,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -3339,6 +3380,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -3385,6 +3428,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
@@ -3448,6 +3493,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SettingsPage(
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
             profile: testProfile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},

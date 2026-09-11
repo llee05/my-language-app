@@ -112,7 +112,7 @@ class _AppErrorState extends StatelessWidget {
                     color: AppColors.red.withValues(alpha: .12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.error_outline_rounded,
                     size: 30,
                     color: AppColors.red,
@@ -122,7 +122,7 @@ class _AppErrorState extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.text,
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -132,7 +132,7 @@ class _AppErrorState extends StatelessWidget {
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     height: 1.45,
@@ -159,7 +159,7 @@ class _AppErrorDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const SizedBox.square(
+        SizedBox.square(
           dimension: 26,
           child: Center(
             child: Icon(
@@ -176,7 +176,7 @@ class _AppErrorDetails extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.text,
                   fontWeight: FontWeight.w600,
                 ),
@@ -184,7 +184,7 @@ class _AppErrorDetails extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 message,
-                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),
             ],
           ),
@@ -244,16 +244,12 @@ class _AppInlineError extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                size: 18,
-                color: AppColors.red,
-              ),
+              Icon(Icons.error_outline_rounded, size: 18, color: AppColors.red),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.red,
                     height: 1.4,
@@ -287,7 +283,7 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 9,
         letterSpacing: 1.4,
         fontWeight: FontWeight.w600,
@@ -309,10 +305,7 @@ class _Pill extends StatelessWidget {
         color: AppColors.darkRed,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 9, color: AppColors.red),
-      ),
+      child: Text(label, style: TextStyle(fontSize: 9, color: AppColors.red)),
     );
   }
 }

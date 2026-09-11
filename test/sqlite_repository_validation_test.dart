@@ -123,6 +123,22 @@ void main() {
 
       expect((await settings.load()).kokoroVoiceIds, ['zf_001', 'zm_041']);
     });
+
+    test('a corrupted theme id falls back to the default theme', () async {
+      await settings.save(const LearnerSettings(appThemeId: 'ocean'));
+      await LocalDatabase.use<void>((db) async {
+        await db.update(
+          'learner_settings',
+          {'theme_id': ''},
+          where: 'learner_id = ?',
+          whereArgs: [1],
+        );
+      });
+
+      final loaded = await settings.load();
+
+      expect(loaded.appThemeId, 'classic');
+    });
   });
 
   group('daily review session validation', () {

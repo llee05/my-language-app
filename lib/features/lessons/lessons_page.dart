@@ -721,7 +721,7 @@ class _LessonsPageState extends State<LessonsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '课程',
               style: TextStyle(
                 fontFamily: 'serif',
@@ -729,7 +729,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 color: AppColors.text,
               ),
             ),
-            const Text(
+            Text(
               'Lesson Library',
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
@@ -744,7 +744,7 @@ class _LessonsPageState extends State<LessonsPage> {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Create a lesson',
               style: TextStyle(
                 fontSize: 22,
@@ -753,7 +753,7 @@ class _LessonsPageState extends State<LessonsPage> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Generate a new lesson with your AI connection from Settings. '
               'Saved lessons and local vocabulary are available offline.',
               style: TextStyle(color: AppColors.muted),
@@ -817,7 +817,7 @@ class _LessonsPageState extends State<LessonsPage> {
             ),
             if (_notice != null) ...[
               const SizedBox(height: 14),
-              Text(_notice!, style: const TextStyle(color: AppColors.gold)),
+              Text(_notice!, style: TextStyle(color: AppColors.gold)),
             ],
             if (_generationFailed) ...[
               const SizedBox(height: 14),
@@ -853,7 +853,7 @@ class _LessonsPageState extends State<LessonsPage> {
 
   Widget _buildLessonLibrary() {
     if (_loadingTopics) {
-      return const _LessonLibraryStateCard(
+      return _LessonLibraryStateCard(
         key: Key('lesson-library-loading-state'),
         accent: AppColors.red,
         icon: SizedBox.square(
@@ -878,7 +878,7 @@ class _LessonsPageState extends State<LessonsPage> {
       );
     }
     if (_topics.isEmpty) {
-      return const _LessonLibraryStateCard(
+      return _LessonLibraryStateCard(
         key: Key('lesson-library-empty-state'),
         accent: AppColors.teal,
         icon: Icon(Icons.menu_book_outlined, size: 30, color: AppColors.teal),
@@ -918,7 +918,7 @@ class _LessonsPageState extends State<LessonsPage> {
           _LessonLibraryStateCard(
             key: const Key('lesson-library-filtered-empty-state'),
             accent: AppColors.teal,
-            icon: const Icon(
+            icon: Icon(
               Icons.filter_alt_outlined,
               size: 30,
               color: AppColors.teal,
@@ -964,7 +964,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 children: [
                   Text(
                     _lessonTitle,
-                    style: const TextStyle(fontSize: 18, color: AppColors.text),
+                    style: TextStyle(fontSize: 18, color: AppColors.text),
                   ),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
@@ -976,10 +976,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   Text(
                     '${_session?.cardsReviewed ?? 0} of '
                     '${_cards.length} words completed',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
                 ],
               ),
@@ -993,7 +990,7 @@ class _LessonsPageState extends State<LessonsPage> {
           child: Text(
             _notice!,
             key: const Key('lesson-generation-notice'),
-            style: const TextStyle(color: AppColors.gold),
+            style: TextStyle(color: AppColors.gold),
           ),
         ),
       Expanded(
@@ -1072,13 +1069,13 @@ class _LessonsPageState extends State<LessonsPage> {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.emoji_events_outlined,
                     size: 52,
                     color: AppColors.gold,
                   ),
                   const SizedBox(height: 14),
-                  const Text(
+                  Text(
                     'Lesson complete!',
                     style: TextStyle(
                       fontSize: 28,
@@ -1089,7 +1086,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   const SizedBox(height: 8),
                   Text(
                     _lessonTitle,
-                    style: const TextStyle(color: AppColors.muted),
+                    style: TextStyle(color: AppColors.muted),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -1170,7 +1167,7 @@ class _SummaryStat extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: AppColors.text,
@@ -1180,7 +1177,7 @@ class _SummaryStat extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: AppColors.muted),
             ),
           ],
         ),
@@ -1232,7 +1229,7 @@ class _LessonLibraryStateCard extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.text,
               fontSize: 19,
               fontWeight: FontWeight.w600,
@@ -1242,7 +1239,7 @@ class _LessonLibraryStateCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.muted,
               fontSize: 13,
               height: 1.45,
@@ -1291,7 +1288,7 @@ class _LessonLibraryCard extends StatelessWidget {
                 children: [
                   Text(
                     summary.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.text,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1299,10 +1296,7 @@ class _LessonLibraryCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${summary.theme} · HSK ${summary.hskLevel}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
                 ],
               ),
@@ -1433,7 +1427,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
       Text(
         widget.card.chinese,
         textAlign: TextAlign.center,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'serif',
           fontSize: 64,
           color: AppColors.text,
@@ -1457,7 +1451,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
       Text(
         widget.card.pinyin,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 22, color: AppColors.gold),
+        style: TextStyle(fontSize: 22, color: AppColors.gold),
       ),
       IconButton(
         tooltip: widget.onSpeak == null
@@ -1470,7 +1464,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
       Text(
         widget.card.englishMeaning,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 26, color: AppColors.text),
+        style: TextStyle(fontSize: 26, color: AppColors.text),
       ),
       if (widget.card.exampleChinese.isNotEmpty) ...[
         const SizedBox(height: 28),
@@ -1479,18 +1473,18 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
           Text(
             widget.card.examplePinyin,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted),
+            style: TextStyle(color: AppColors.muted),
           ),
         Text(
           widget.card.exampleEnglish,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.muted),
+          style: TextStyle(color: AppColors.muted),
         ),
         if (widget.card.exampleSource.isNotEmpty)
           Text(
             '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 10, color: AppColors.faint),
+            style: TextStyle(fontSize: 10, color: AppColors.faint),
           ),
       ],
       const Spacer(),
@@ -1523,18 +1517,18 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
               alignment: Alignment.centerRight,
               child: Text(
                 '${widget.index + 1} / ${widget.total}',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
             ),
             ...children,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.flip, size: 18, color: AppColors.muted),
+                Icon(Icons.flip, size: 18, color: AppColors.muted),
                 const SizedBox(width: 8),
                 Text(
                   _showAnswer ? 'Tap for word' : 'Tap for answer',
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
               ],
             ),

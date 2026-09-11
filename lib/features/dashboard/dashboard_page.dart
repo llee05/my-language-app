@@ -7,6 +7,8 @@ class DashboardPage extends StatefulWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    required this.appThemeId,
+    required this.onThemeChanged,
     required this.lessonRepository,
     required this.progressRepository,
     this.dailyReviewSessionRepository,
@@ -21,6 +23,8 @@ class DashboardPage extends StatefulWidget {
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final AppThemeId appThemeId;
+  final void Function(AppThemeId themeId) onThemeChanged;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -309,6 +313,8 @@ class _DashboardPageState extends State<DashboardPage> {
                           onProfileChanged: widget.onProfileChanged,
                           onResetOnboarding: widget.onResetOnboarding,
                           onResetAllData: widget.onResetAllData,
+                          appThemeId: widget.appThemeId,
+                          onThemeChanged: widget.onThemeChanged,
                           lessonRepository: widget.lessonRepository,
                           progressRepository: widget.progressRepository,
                           dailyReviewSessionRepository:
@@ -381,6 +387,8 @@ class _DashboardBody extends StatelessWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    required this.appThemeId,
+    required this.onThemeChanged,
     required this.lessonRepository,
     required this.progressRepository,
     this.dailyReviewSessionRepository,
@@ -417,6 +425,8 @@ class _DashboardBody extends StatelessWidget {
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final AppThemeId appThemeId;
+  final void Function(AppThemeId themeId) onThemeChanged;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -486,6 +496,8 @@ class _DashboardBody extends StatelessWidget {
         onProfileChanged: onProfileChanged,
         onResetOnboarding: onResetOnboarding,
         onResetAllData: onResetAllData,
+        appThemeId: appThemeId,
+        onThemeChanged: onThemeChanged,
         developmentRepository: developmentRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
@@ -587,8 +599,8 @@ class DashboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.symmetric(horizontal: 28),
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Row(
@@ -620,7 +632,7 @@ class DashboardHeader extends StatelessWidget {
                   'HSK ${profile.hskLevel}  ·  ${profile.dailyWordTarget} words today',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                  style: TextStyle(fontSize: 11, color: AppColors.muted),
                 ),
               ],
             ),
@@ -633,17 +645,17 @@ class DashboardHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.bolt_rounded, size: 15, color: AppColors.gold),
+                Icon(Icons.bolt_rounded, size: 15, color: AppColors.gold),
                 const SizedBox(width: 5),
                 Text(
                   '$totalXp XP',
-                  style: const TextStyle(fontSize: 12, color: AppColors.gold),
+                  style: TextStyle(fontSize: 12, color: AppColors.gold),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 14),
-          const CircleAvatar(
+          CircleAvatar(
             radius: 15,
             backgroundColor: AppColors.darkRed,
             child: Text(

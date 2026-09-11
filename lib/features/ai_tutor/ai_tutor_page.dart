@@ -252,14 +252,14 @@ Use an empty string for any field that is not needed.
         Container(
           height: 68,
           padding: const EdgeInsets.symmetric(horizontal: 26),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
           child: Row(
             children: [
               const _TutorAvatar(size: 36),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +410,7 @@ class _TutorMessage extends StatelessWidget {
                         Expanded(
                           child: Text(
                             chinese,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.text,
                               fontSize: 13,
                               height: 1.35,
@@ -440,7 +440,7 @@ class _TutorMessage extends StatelessWidget {
                     if (chinese.isNotEmpty) const SizedBox(height: 6),
                     Text(
                       pinyin,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.red,
                         fontSize: 11,
                         letterSpacing: .3,
@@ -452,10 +452,7 @@ class _TutorMessage extends StatelessWidget {
                       const SizedBox(height: 4),
                     Text(
                       english,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                      ),
+                      style: TextStyle(fontSize: 11, color: AppColors.muted),
                     ),
                   ],
                 ],
@@ -516,7 +513,7 @@ class _TipBubble extends StatelessWidget {
           ),
           child: Text(
             'Tip: $text',
-            style: const TextStyle(fontSize: 11, color: AppColors.gold),
+            style: TextStyle(fontSize: 11, color: AppColors.gold),
           ),
         ),
       ),
@@ -551,7 +548,7 @@ class _TutorComposer extends StatelessWidget {
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Column(
@@ -568,10 +565,7 @@ class _TutorComposer extends StatelessWidget {
                     onPressed: sending ? null : () => onPromptSelected(prompt),
                     backgroundColor: Colors.transparent,
                     side: const BorderSide(color: Color(0xFF73352C)),
-                    labelStyle: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.muted,
-                    ),
+                    labelStyle: TextStyle(fontSize: 10, color: AppColors.muted),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -596,7 +590,7 @@ class _TutorComposer extends StatelessWidget {
             onSubmitted: (_) => onSend(),
             decoration: InputDecoration(
               hintText: 'Ask 龙老师 anything in English or 中文...',
-              hintStyle: const TextStyle(fontSize: 12, color: AppColors.muted),
+              hintStyle: TextStyle(fontSize: 12, color: AppColors.muted),
               filled: true,
               fillColor: AppColors.surface,
               suffixIcon: Padding(
@@ -605,7 +599,7 @@ class _TutorComposer extends StatelessWidget {
                   tooltip: 'Send',
                   onPressed: sending ? null : onSend,
                   icon: sending
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
@@ -629,7 +623,7 @@ class _TutorComposer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: AppColors.red),
+                borderSide: BorderSide(color: AppColors.red),
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
@@ -645,7 +639,7 @@ class _TypingMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

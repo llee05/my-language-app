@@ -15,10 +15,10 @@ class RightRail extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: compact
-          ? const BoxDecoration(
+          ? BoxDecoration(
               border: Border(top: BorderSide(color: AppColors.border)),
             )
-          : const BoxDecoration(
+          : BoxDecoration(
               border: Border(left: BorderSide(color: AppColors.border)),
             ),
       padding: EdgeInsets.fromLTRB(
@@ -129,13 +129,13 @@ class WeeklyXp extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'This week',
                     style: TextStyle(fontSize: 10, color: AppColors.muted),
                   ),
                   Text(
                     '$totalXp XP',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: AppColors.text,
@@ -177,7 +177,7 @@ class VocabularyPanel extends StatelessWidget {
             const SectionLabel('VOCABULARY'),
             TextButton(
               onPressed: onReviewAll,
-              child: const Text(
+              child: Text(
                 'Review all',
                 style: TextStyle(fontSize: 10, color: AppColors.red),
               ),
@@ -214,7 +214,7 @@ class VocabularyPanel extends StatelessWidget {
           ),
         ),
         if (words.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Text(
               'Review vocabulary to see mastery here.',
@@ -258,17 +258,14 @@ class _VocabularyTotal extends StatelessWidget {
         Text(
           '$value',
           key: valueKey,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: AppColors.text,
           ),
         ),
         const SizedBox(height: 3),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 9, color: AppColors.muted),
-        ),
+        Text(label, style: TextStyle(fontSize: 9, color: AppColors.muted)),
       ],
     ),
   );
@@ -318,7 +315,7 @@ class _VocabularyCardState extends State<VocabularyCard> {
                     width: 40,
                     child: Text(
                       widget.hanzi,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'serif',
                         fontSize: 22,
                         color: AppColors.text,
@@ -331,18 +328,12 @@ class _VocabularyCardState extends State<VocabularyCard> {
                       children: [
                         Text(
                           revealed ? widget.pinyin : '••••',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.text,
-                          ),
+                          style: TextStyle(fontSize: 11, color: AppColors.text),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           revealed ? 'tap to hide' : 'tap to reveal',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: AppColors.muted,
-                          ),
+                          style: TextStyle(fontSize: 9, color: AppColors.muted),
                         ),
                       ],
                     ),
@@ -363,13 +354,13 @@ class _VocabularyCardState extends State<VocabularyCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Mastery',
                     style: TextStyle(fontSize: 9, color: AppColors.muted),
                   ),
                   Text(
                     '${(widget.mastery * 100).round()}%',
-                    style: const TextStyle(fontSize: 9, color: AppColors.muted),
+                    style: TextStyle(fontSize: 9, color: AppColors.muted),
                   ),
                 ],
               ),

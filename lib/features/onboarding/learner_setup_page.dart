@@ -93,7 +93,7 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'A few details help us shape your daily Mandarin practice.',
                         style: TextStyle(color: AppColors.muted, height: 1.5),
                       ),
@@ -121,7 +121,7 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                         label: 'Current HSK level',
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      Text(
                         'Choose the level that feels closest to you.',
                         style: TextStyle(fontSize: 12, color: AppColors.muted),
                       ),
@@ -145,7 +145,7 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                         label: 'Daily word target',
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      Text(
                         'Pick a goal you can keep up every day.',
                         style: TextStyle(fontSize: 12, color: AppColors.muted),
                       ),
@@ -211,7 +211,7 @@ class _SetupBrand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         CircleAvatar(
           radius: 20,
@@ -260,7 +260,7 @@ class _SetupLabel extends StatelessWidget {
       children: [
         Text(
           number,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.red,
             fontSize: 11,
             fontWeight: FontWeight.w700,
@@ -270,7 +270,7 @@ class _SetupLabel extends StatelessWidget {
         const SizedBox(width: 10),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.text,
             fontSize: 14,
             fontWeight: FontWeight.w600,

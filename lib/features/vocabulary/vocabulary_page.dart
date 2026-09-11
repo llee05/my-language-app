@@ -205,7 +205,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 '词汇',
                 style: TextStyle(
                   fontFamily: 'serif',
@@ -213,7 +213,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                   color: AppColors.text,
                 ),
               ),
-              const Text(
+              Text(
                 'Vocabulary',
                 style: TextStyle(fontSize: 16, color: AppColors.muted),
               ),
@@ -240,7 +240,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                   fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                 ),
               ),
@@ -312,7 +312,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
     }
     final results = _results;
     if (results.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -337,7 +337,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
         Text(
           '${results.length} ${results.length == 1 ? 'word' : 'words'}',
           key: const Key('vocabulary-result-count'),
-          style: const TextStyle(fontSize: 12, color: AppColors.muted),
+          style: TextStyle(fontSize: 12, color: AppColors.muted),
         ),
         const SizedBox(height: 10),
         Expanded(
@@ -464,7 +464,7 @@ class _VocabularyListItem extends StatelessWidget {
                 width: 92,
                 child: Text(
                   entry.simplified,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'serif',
                     fontSize: 30,
                     height: 1.15,
@@ -479,7 +479,7 @@ class _VocabularyListItem extends StatelessWidget {
                   children: [
                     Text(
                       entry.pinyin,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: AppColors.gold,
@@ -489,10 +489,7 @@ class _VocabularyListItem extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         'Traditional: ${entry.traditional}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.faint,
-                        ),
+                        style: TextStyle(fontSize: 12, color: AppColors.faint),
                       ),
                     ],
                     const SizedBox(height: 6),
@@ -500,10 +497,7 @@ class _VocabularyListItem extends StatelessWidget {
                       entry.meanings.join(' · '),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.text,
-                        height: 1.4,
-                      ),
+                      style: TextStyle(color: AppColors.text, height: 1.4),
                     ),
                   ],
                 ),
@@ -523,7 +517,7 @@ class _VocabularyListItem extends StatelessWidget {
                     ),
                     child: Text(
                       'HSK ${entry.hskLevel}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppColors.red,
@@ -533,11 +527,7 @@ class _VocabularyListItem extends StatelessWidget {
                   const SizedBox(height: 12),
                   _VocabularyStateBadge(state: learningState),
                   const SizedBox(height: 8),
-                  const Icon(
-                    Icons.chevron_right,
-                    size: 20,
-                    color: AppColors.muted,
-                  ),
+                  Icon(Icons.chevron_right, size: 20, color: AppColors.muted),
                 ],
               ),
             ],
@@ -630,7 +620,7 @@ class _VocabularyDetailPage extends StatelessWidget {
                                 width: 28,
                                 child: Text(
                                   '${index + 1}.',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.red,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -639,7 +629,7 @@ class _VocabularyDetailPage extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   entry.meanings[index],
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.text,
                                     fontSize: 15,
                                     height: 1.4,
@@ -666,7 +656,7 @@ class _VocabularyDetailPage extends StatelessWidget {
                                   child: Text(
                                     entry.exampleChinese,
                                     key: const Key('example-sentence-chinese'),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'serif',
                                       color: AppColors.text,
                                       fontSize: 24,
@@ -691,7 +681,7 @@ class _VocabularyDetailPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               Text(
                                 entry.examplePinyin,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.gold,
                                   fontSize: 15,
                                 ),
@@ -701,7 +691,7 @@ class _VocabularyDetailPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               Text(
                                 entry.exampleEnglish,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.muted,
                                   fontSize: 14,
                                 ),
@@ -709,7 +699,7 @@ class _VocabularyDetailPage extends StatelessWidget {
                             ],
                           ],
                         )
-                      : const Row(
+                      : Row(
                           children: [
                             Icon(
                               Icons.menu_book_outlined,
@@ -762,7 +752,7 @@ class _DetailHeader extends StatelessWidget {
                     Flexible(
                       child: Text(
                         entry.simplified,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 54,
                           height: 1.05,
@@ -794,7 +784,7 @@ class _DetailHeader extends StatelessWidget {
                 ),
                 child: Text(
                   'HSK ${entry.hskLevel}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.red,
                     fontWeight: FontWeight.w600,
                   ),
@@ -805,7 +795,7 @@ class _DetailHeader extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             entry.pinyin,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.gold,
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -815,7 +805,7 @@ class _DetailHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Traditional: ${entry.traditional}',
-              style: const TextStyle(color: AppColors.muted),
+              style: TextStyle(color: AppColors.muted),
             ),
           ],
           if (entry.partOfSpeech.isNotEmpty) ...[
@@ -828,7 +818,7 @@ class _DetailHeader extends StatelessWidget {
                   Chip(
                     visualDensity: VisualDensity.compact,
                     label: Text(label),
-                    side: const BorderSide(color: AppColors.border),
+                    side: BorderSide(color: AppColors.border),
                     backgroundColor: AppColors.surfaceLight,
                   ),
               ],
@@ -860,7 +850,7 @@ class _DetailSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.text,
               fontSize: 18,
               fontWeight: FontWeight.w600,

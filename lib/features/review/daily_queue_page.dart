@@ -273,7 +273,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            const heading = Column(
+            final heading = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -303,7 +303,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
             }
             return Row(
               children: [
-                const Expanded(child: heading),
+                Expanded(child: heading),
                 const SizedBox(width: 16),
                 action,
               ],
@@ -314,11 +314,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
         Text(
           'Cards to review and weak cards come first, followed by new words. '
           'Daily target: ${widget.profile.dailyWordTarget}.',
-          style: const TextStyle(
-            color: AppColors.muted,
-            fontSize: 13,
-            height: 1.4,
-          ),
+          style: TextStyle(color: AppColors.muted, fontSize: 13, height: 1.4),
         ),
         const SizedBox(height: 22),
       ],
@@ -461,7 +457,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
 
   Widget _buildStatusContent() {
     if (_loading) {
-      return const _DailyQueueStateCard(
+      return _DailyQueueStateCard(
         key: Key('daily-review-loading-state'),
         accent: AppColors.red,
         icon: SizedBox.square(
@@ -491,11 +487,7 @@ class _DailyQueuePageState extends State<DailyQueuePage>
       return _DailyQueueStateCard(
         key: const Key('daily-review-empty-state'),
         accent: AppColors.teal,
-        icon: const Icon(
-          Icons.task_alt_rounded,
-          size: 31,
-          color: AppColors.teal,
-        ),
+        icon: Icon(Icons.task_alt_rounded, size: 31, color: AppColors.teal),
         title: 'You’re all caught up',
         message:
             'Nothing is waiting in today’s queue. New and due cards will '
@@ -588,7 +580,7 @@ class _DailyQueueStateCard extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.text,
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -598,7 +590,7 @@ class _DailyQueueStateCard extends StatelessWidget {
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.muted,
                     fontSize: 13,
                     height: 1.45,
@@ -671,16 +663,13 @@ class _QueueCard extends StatelessWidget {
         children: [
           SizedBox(
             width: 28,
-            child: Text(
-              '$index',
-              style: const TextStyle(color: AppColors.muted),
-            ),
+            child: Text('$index', style: TextStyle(color: AppColors.muted)),
           ),
           SizedBox(
             width: 80,
             child: Text(
               item.card.chinese,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 27,
                 color: AppColors.text,
@@ -692,14 +681,11 @@ class _QueueCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.card.pinyin,
-                  style: const TextStyle(color: AppColors.gold),
-                ),
+                Text(item.card.pinyin, style: TextStyle(color: AppColors.gold)),
                 const SizedBox(height: 4),
                 Text(
                   item.card.englishMeaning,
-                  style: const TextStyle(color: AppColors.text),
+                  style: TextStyle(color: AppColors.text),
                 ),
               ],
             ),

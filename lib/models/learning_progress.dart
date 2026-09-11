@@ -10,6 +10,7 @@ class LearnerSettings {
     this.reminderHour = 18,
     this.pronunciationEngine = PronunciationEngine.kokoro,
     this.kokoroVoiceIds = const [],
+    this.appThemeId = 'classic',
   });
 
   final bool showPinyin;
@@ -23,6 +24,32 @@ class LearnerSettings {
   /// An empty list means all available Mandarin voices. A one-item list keeps
   /// pronunciation on that voice, while larger lists form a random voice pool.
   final List<String> kokoroVoiceIds;
+
+  /// Identifier of the selected colour theme.
+  ///
+  /// Stored as a raw string so the data model stays independent of UI code;
+  /// unknown ids fall back to the default theme when loaded.
+  final String appThemeId;
+
+  LearnerSettings copyWith({
+    bool? showPinyin,
+    bool? soundEnabled,
+    bool? reminderEnabled,
+    int? reminderHour,
+    PronunciationEngine? pronunciationEngine,
+    List<String>? kokoroVoiceIds,
+    String? appThemeId,
+  }) {
+    return LearnerSettings(
+      showPinyin: showPinyin ?? this.showPinyin,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
+      reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+      reminderHour: reminderHour ?? this.reminderHour,
+      pronunciationEngine: pronunciationEngine ?? this.pronunciationEngine,
+      kokoroVoiceIds: kokoroVoiceIds ?? this.kokoroVoiceIds,
+      appThemeId: appThemeId ?? this.appThemeId,
+    );
+  }
 }
 
 class LessonSession {

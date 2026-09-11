@@ -219,7 +219,7 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
               ),
               if (_busy) const LinearProgressIndicator(),
               if (_error != null)
-                Text(_error!, style: const TextStyle(color: AppColors.red)),
+                Text(_error!, style: TextStyle(color: AppColors.red)),
             ],
           )
         : Column(

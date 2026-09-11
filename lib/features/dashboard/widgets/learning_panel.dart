@@ -128,9 +128,9 @@ class _NewLearnerPrompt extends StatelessWidget {
     ),
     child: Row(
       children: [
-        const Icon(Icons.waving_hand_rounded, color: AppColors.gold, size: 34),
+        Icon(Icons.waving_hand_rounded, color: AppColors.gold, size: 34),
         const SizedBox(width: 16),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -165,7 +165,7 @@ class _AvailableLessonsLoading extends StatelessWidget {
     key: const Key('available-lessons-loading-state'),
     container: true,
     liveRegion: true,
-    child: const _AvailableLessonsStateCard(
+    child: _AvailableLessonsStateCard(
       icon: SizedBox.square(
         dimension: 22,
         child: CircularProgressIndicator(
@@ -207,7 +207,7 @@ class _AvailableLessonsEmpty extends StatelessWidget {
     container: true,
     liveRegion: true,
     child: _AvailableLessonsStateCard(
-      icon: const Icon(Icons.menu_book_outlined, color: AppColors.teal),
+      icon: Icon(Icons.menu_book_outlined, color: AppColors.teal),
       title: 'No saved lessons yet',
       message: 'Create a lesson to start building your library.',
       action: OutlinedButton.icon(
@@ -253,7 +253,7 @@ class _AvailableLessonsStateCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.text,
                       fontWeight: FontWeight.w600,
                     ),
@@ -261,10 +261,7 @@ class _AvailableLessonsStateCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     message,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: AppColors.muted, fontSize: 11),
                   ),
                 ],
               ),
@@ -337,7 +334,7 @@ class _DailyReviewPrompt extends StatelessWidget {
   Widget _buildPending() => Row(
     key: const ValueKey('daily-review-prompt-pending'),
     children: [
-      const Icon(Icons.style_outlined, color: AppColors.gold),
+      Icon(Icons.style_outlined, color: AppColors.gold),
       const SizedBox(width: 12),
       Expanded(
         child: newLearner
@@ -346,13 +343,13 @@ class _DailyReviewPrompt extends StatelessWidget {
                 children: [
                   Text(
                     'Learn your first $pendingCount word${pendingCount == 1 ? '' : 's'}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Reveal each meaning and rate how well you knew it. We’ll schedule the next review for you.',
                     style: TextStyle(fontSize: 11, color: AppColors.muted),
                   ),
@@ -360,7 +357,7 @@ class _DailyReviewPrompt extends StatelessWidget {
               )
             : Text(
                 '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
-                style: const TextStyle(color: AppColors.text),
+                style: TextStyle(color: AppColors.text),
               ),
       ),
       const SizedBox(width: 12),
@@ -386,7 +383,7 @@ class _DailyReviewPromptLoading extends StatelessWidget {
     key: const ValueKey('daily-review-prompt-loading'),
     container: true,
     liveRegion: true,
-    child: const Row(
+    child: Row(
       children: [
         SizedBox.square(
           dimension: 24,
@@ -429,7 +426,7 @@ class _DailyReviewPromptComplete extends StatelessWidget {
     key: const ValueKey('daily-review-prompt-complete'),
     container: true,
     liveRegion: true,
-    child: const Row(
+    child: Row(
       children: [
         Icon(Icons.task_alt, color: AppColors.teal),
         SizedBox(width: 12),
@@ -505,7 +502,7 @@ class ContinueCard extends StatelessWidget {
                   color: AppColors.darkRed,
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.book_rounded,
                   size: 31,
                   color: AppColors.text,
@@ -520,7 +517,7 @@ class ContinueCard extends StatelessWidget {
                       children: [
                         _Pill(label: 'HSK $level'),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'Lesson 1',
                           style: TextStyle(
                             fontSize: 11,
@@ -532,18 +529,12 @@ class ContinueCard extends StatelessWidget {
                     const SizedBox(height: 7),
                     Text(
                       lessonTitle,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: AppColors.text,
-                      ),
+                      style: TextStyle(fontSize: 17, color: AppColors.text),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '$theme · $duration · $xpReward XP reward',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                      ),
+                      style: TextStyle(fontSize: 11, color: AppColors.muted),
                     ),
                   ],
                 ),
@@ -596,10 +587,7 @@ class ContinueCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     '${(progress * 100).round()}%',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 10, color: AppColors.muted),
                   ),
                 ],
               ),
@@ -682,19 +670,13 @@ class LessonTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '$chinese · $unit · $duration',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.muted,
-                    ),
+                    style: TextStyle(fontSize: 10, color: AppColors.muted),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              xp,
-              style: const TextStyle(fontSize: 10, color: AppColors.muted),
-            ),
+            Text(xp, style: TextStyle(fontSize: 10, color: AppColors.muted)),
           ],
         ),
       ),

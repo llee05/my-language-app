@@ -123,7 +123,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                 child: _DailyQueueStateCard(
                   key: const Key('daily-review-cards-empty-state'),
                   accent: AppColors.teal,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.task_alt_rounded,
                     size: 31,
                     color: AppColors.teal,
@@ -162,7 +162,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                   icon: const Icon(Icons.close),
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Daily review',
                     style: TextStyle(
@@ -175,7 +175,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                 Text(
                   '${_position + 1} of ${widget.queue.length}',
                   key: const Key('daily-review-position'),
-                  style: const TextStyle(color: AppColors.muted),
+                  style: TextStyle(color: AppColors.muted),
                 ),
               ],
             ),
@@ -205,7 +205,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                             child: Text(
                               card.chinese,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'serif',
                                 fontSize: 76,
                                 color: AppColors.text,
@@ -231,10 +231,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                         const SizedBox(height: 8),
                         Text(
                           card.pinyin,
-                          style: const TextStyle(
-                            color: AppColors.gold,
-                            fontSize: 20,
-                          ),
+                          style: TextStyle(color: AppColors.gold, fontSize: 20),
                         ),
                       ],
                       const SizedBox(height: 28),
@@ -243,10 +240,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                           card.englishMeaning,
                           key: const Key('daily-review-meaning'),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.text,
-                            fontSize: 24,
-                          ),
+                          style: TextStyle(color: AppColors.text, fontSize: 24),
                         ),
                         const SizedBox(height: 26),
                         Wrap(
@@ -283,7 +277,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 180),
                           child: selectedAnswer == null
-                              ? const Text(
+                              ? Text(
                                   'Choose how well you remembered this card.',
                                   key: Key('review-answer-prompt'),
                                   style: TextStyle(color: AppColors.muted),
@@ -291,7 +285,7 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                               : Text(
                                   '${_ratingLabel(selectedAnswer)} selected',
                                   key: const Key('selected-review-answer'),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.teal,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -372,13 +366,13 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.emoji_events_outlined,
                       size: 54,
                       color: AppColors.gold,
                     ),
                     const SizedBox(height: 14),
-                    const Text(
+                    Text(
                       'Daily review complete!',
                       style: TextStyle(
                         color: AppColors.text,
@@ -450,7 +444,7 @@ class _DailyReviewSummaryStat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.text,
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -460,7 +454,7 @@ class _DailyReviewSummaryStat extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.muted),
+          style: TextStyle(color: AppColors.muted),
         ),
       ],
     ),

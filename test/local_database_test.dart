@@ -196,6 +196,7 @@ void main() {
     expect(restored.reminderHour, 8);
     expect(restored.pronunciationEngine, PronunciationEngine.kokoro);
     expect(restored.kokoroVoiceIds, isEmpty);
+    expect(restored.appThemeId, 'classic');
   });
 
   test('version 9 voice choice migrates to a one-voice Kokoro pool', () async {
@@ -624,6 +625,7 @@ void main() {
         reminderHour: 9,
         pronunciationEngine: PronunciationEngine.kokoro,
         kokoroVoiceIds: ['zf_021', 'zm_041'],
+        appThemeId: 'ocean',
       ),
     );
 
@@ -634,6 +636,7 @@ void main() {
     expect(storedSettings.reminderHour, 9);
     expect(storedSettings.pronunciationEngine, PronunciationEngine.kokoro);
     expect(storedSettings.kokoroVoiceIds, ['zf_021', 'zm_041']);
+    expect(storedSettings.appThemeId, 'ocean');
 
     final lessonSummary = (await lessons.topics()).first;
     final lesson = await lessons.findGenerated(

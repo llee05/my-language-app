@@ -98,6 +98,7 @@ class SqliteSettingsRepository implements SettingsRepository {
       reminderHour: row['reminder_hour'] as int,
       pronunciationEngine: PronunciationEngine.kokoro,
       kokoroVoiceIds: _decodeKokoroVoiceIds(row['kokoro_voice_ids']),
+      appThemeId: _decodeThemeId(row['theme_id']),
     );
   });
 
@@ -114,6 +115,7 @@ class SqliteSettingsRepository implements SettingsRepository {
           ? settings.kokoroVoiceIds.single
           : null,
       'kokoro_voice_ids': jsonEncode(settings.kokoroVoiceIds),
+      'theme_id': settings.appThemeId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   });
 }
@@ -133,6 +135,12 @@ List<String> _decodeKokoroVoiceIds(Object? storedValue) {
   } on FormatException {
     return const [];
   }
+}
+
+/// Unknown or blank theme ids fall back to the default theme.
+String _decodeThemeId(Object? storedValue) {
+  final value = storedValue is String ? storedValue.trim() : '';
+  return value.isEmpty ? 'classic' : value;
 }
 
 class SqliteLessonRepository implements LessonRepository {
