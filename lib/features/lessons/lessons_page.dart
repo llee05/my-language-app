@@ -146,12 +146,16 @@ class _LessonsPageState extends State<LessonsPage> {
     try {
       await applyPronunciationSettings(_pronunciationService, _learnerSettings);
       await _pronunciationService.speakMandarin(card.chinese);
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Mandarin audio is unavailable. Check your device text-to-speech voices.',
+            error is MandarinVoiceUnavailableException
+                ? 'No Chinese voice found on this device. Install a Mandarin '
+                      'text-to-speech voice in your system settings.'
+                : 'Mandarin audio is unavailable. Check your device '
+                      'text-to-speech voices.',
           ),
         ),
       );

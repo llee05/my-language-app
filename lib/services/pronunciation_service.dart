@@ -242,6 +242,16 @@ class OfflineVoiceNotInstalledException implements Exception {
   String toString() => 'The offline Mandarin voice is not installed.';
 }
 
+/// Thrown when the platform reports that no Mandarin (zh-CN) voice is
+/// available for system text-to-speech playback.
+class MandarinVoiceUnavailableException implements Exception {
+  const MandarinVoiceUnavailableException();
+
+  @override
+  String toString() =>
+      'No Chinese (Mandarin) text-to-speech voice is available on this device.';
+}
+
 abstract interface class PronunciationService {
   Stream<OfflineVoiceStatus> get offlineVoiceUpdates;
 
