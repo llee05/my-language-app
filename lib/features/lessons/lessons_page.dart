@@ -33,6 +33,8 @@ const Map<int, List<String>> _hskTopicPools = {
   ],
 };
 
+const _randomLessonTopic = 'Random mix';
+
 class LessonsPage extends StatefulWidget {
   const LessonsPage({
     super.key,
@@ -43,6 +45,7 @@ class LessonsPage extends StatefulWidget {
     this.resumeLatest = false,
     this.onProgressChanged,
     this.aiService = const AiService(),
+    this.random,
   });
 
   final LessonRepository repository;
@@ -52,6 +55,7 @@ class LessonsPage extends StatefulWidget {
   final bool resumeLatest;
   final VoidCallback? onProgressChanged;
   final AiService aiService;
+  final Random? random;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -82,11 +86,13 @@ class _LessonsPageState extends State<LessonsPage> {
   late final bool _ownsPronunciationService;
   bool _soundEnabled = true;
   LearnerSettings _learnerSettings = const LearnerSettings();
+  late final Random _random;
 
   @override
   void initState() {
     super.initState();
     _ownsPronunciationService = widget.pronunciationService == null;
+    _random = widget.random ?? Random();
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
     _beginTopicsLoad();
@@ -377,7 +383,10 @@ class _LessonsPageState extends State<LessonsPage> {
         themes.add(topic.theme);
       }
     }
-    return themes.toList();
+    themes.removeWhere(
+      (topic) => topic.toLowerCase() == _randomLessonTopic.toLowerCase(),
+    );
+    return [_randomLessonTopic, ...themes];
   }
 
   List<LessonSummary> get _visibleTopics => _libraryHskFilter == null
@@ -397,10 +406,12 @@ class _LessonsPageState extends State<LessonsPage> {
     try {
       final topic = _topic;
       final hskLevel = _hskLevel;
-      final cached = await widget.repository.findGenerated(
-        theme: topic,
-        hskLevel: hskLevel,
-      );
+      final cached = topic == _randomLessonTopic
+          ? null
+          : await widget.repository.findGenerated(
+              theme: topic,
+              hskLevel: hskLevel,
+            );
       final vocabulary =
           (jsonDecode(
                     await rootBundle.loadString(
@@ -412,7 +423,11 @@ class _LessonsPageState extends State<LessonsPage> {
       final candidates = vocabulary
           .where((word) => (word['hskLevel'] as int) <= hskLevel)
           .toList();
-      _rankForTopic(candidates, topic);
+      if (topic == _randomLessonTopic) {
+        candidates.shuffle(_random);
+      } else {
+        _rankForTopic(candidates, topic);
+      }
       if (!mounted) return;
 
       List<Flashcard> cards;
@@ -792,13 +807,24 @@ class _LessonsPageState extends State<LessonsPage> {
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Topic for this HSK level',
+                helperText: 'Random mix shuffles words from across the level.',
                 border: OutlineInputBorder(),
               ),
               items: [
                 for (final topic in _availableTopics)
                   DropdownMenuItem(
                     value: topic,
-                    child: Text(topic, overflow: TextOverflow.ellipsis),
+                    child: Row(
+                      children: [
+                        if (topic == _randomLessonTopic) ...[
+                          const Icon(Icons.shuffle_rounded, size: 18),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(topic, overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ),
                   ),
               ],
               onChanged: _generating

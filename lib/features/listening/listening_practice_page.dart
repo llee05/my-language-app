@@ -8,6 +8,7 @@ class ListeningPracticePage extends StatefulWidget {
     required this.maxHskLevel,
     this.pronunciationService,
     this.sessionSize = 10,
+    this.random,
   });
 
   final LessonRepository lessonRepository;
@@ -15,6 +16,7 @@ class ListeningPracticePage extends StatefulWidget {
   final int maxHskLevel;
   final PronunciationService? pronunciationService;
   final int sessionSize;
+  final Random? random;
 
   @override
   State<ListeningPracticePage> createState() => _ListeningPracticePageState();
@@ -22,10 +24,14 @@ class ListeningPracticePage extends StatefulWidget {
 
 class _ListeningPracticePageState extends State<ListeningPracticePage> {
   static const _slowPlaybackRate = .75;
+  static const _randomTopicKey = '__random_mix__';
+  static const _randomTopicLabel = 'Random mix';
 
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   LearnerSettings _learnerSettings = const LearnerSettings();
+  List<_ListeningTopic> _topics = const [];
+  List<Flashcard> _answerPool = const [];
   List<Flashcard> _cards = const [];
   bool _loading = true;
   bool _loadFailed = false;
@@ -33,17 +39,21 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   bool _transitioning = false;
   bool _answerRevealed = false;
   bool _complete = false;
+  bool _sessionStarted = false;
   int _position = 0;
   int _correctAnswers = 0;
   String? _selectedMeaning;
   String? _audioError;
+  String? _selectedTopicKey;
   int _audioRequestId = 0;
+  late final Random _random;
 
   Flashcard get _card => _cards[_position];
 
   @override
   void initState() {
     super.initState();
+    _random = widget.random ?? Random();
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -84,8 +94,23 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       final lessons = await Future.wait(
         eligible.map((summary) => widget.lessonRepository.findById(summary.id)),
       );
-      final uniqueCards = <String, Flashcard>{};
+      final allCards = <String, Flashcard>{};
+      final topicLabels = <String, String>{};
+      final cardsByTopic = <String, Map<String, Flashcard>>{};
       for (final lesson in lessons.whereType<Lesson>()) {
+        final rawTopic = lesson.summary.theme.trim();
+        final topicLabel = rawTopic.isEmpty
+            ? lesson.summary.title.trim()
+            : rawTopic;
+        if (topicLabel.isEmpty) continue;
+        final topicKey = topicLabel.toLowerCase();
+        final isRandomMix = topicKey == _randomTopicLabel.toLowerCase();
+        final topicCards = isRandomMix
+            ? null
+            : cardsByTopic.putIfAbsent(topicKey, () => {});
+        if (!isRandomMix) {
+          topicLabels.putIfAbsent(topicKey, () => topicLabel);
+        }
         for (final card in lesson.cards) {
           if (card.chinese.trim().isEmpty ||
               card.englishMeaning.trim().isEmpty) {
@@ -94,34 +119,40 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
           final identity =
               '${card.chinese}\u0000${card.pinyin}\u0000'
               '${card.englishMeaning.toLowerCase()}';
-          uniqueCards.putIfAbsent(identity, () => card);
+          allCards.putIfAbsent(identity, () => card);
+          topicCards?.putIfAbsent(identity, () => card);
         }
       }
-      final sessionSize = uniqueCards.isEmpty
-          ? 0
-          : widget.sessionSize.clamp(1, uniqueCards.length);
-      final cards = uniqueCards.values
-          .take(sessionSize)
-          .toList(growable: false);
+      final topics = [
+        for (final entry in cardsByTopic.entries)
+          if (entry.value.isNotEmpty)
+            _ListeningTopic(
+              key: entry.key,
+              label: topicLabels[entry.key]!,
+              cards: entry.value.values.toList(growable: false),
+            ),
+      ];
 
       if (!mounted) return;
       setState(() {
         _learnerSettings = settings;
-        _cards = cards;
+        _topics = topics;
+        _answerPool = allCards.values.toList(growable: false);
+        _selectedTopicKey = topics.isEmpty ? _randomTopicKey : topics.first.key;
+        _cards = const [];
+        _sessionStarted = false;
         _loading = false;
         _loadFailed = false;
         _resetSessionState();
       });
-      if (cards.isNotEmpty && settings.soundEnabled) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) unawaited(_play());
-        });
-      }
     } catch (error) {
       debugPrint('Listening practice load failed: $error');
       if (!mounted) return;
       setState(() {
+        _topics = const [];
+        _answerPool = const [];
         _cards = const [];
+        _sessionStarted = false;
         _loading = false;
         _loadFailed = true;
       });
@@ -135,6 +166,72 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     _answerRevealed = false;
     _complete = false;
     _audioError = null;
+  }
+
+  String get _selectedTopicLabel {
+    if (_selectedTopicKey == _randomTopicKey) return _randomTopicLabel;
+    for (final topic in _topics) {
+      if (topic.key == _selectedTopicKey) return topic.label;
+    }
+    return 'Listening practice';
+  }
+
+  Future<void> _startPractice() async {
+    final selectedTopicKey = _selectedTopicKey;
+    if (_transitioning || selectedTopicKey == null || _answerPool.isEmpty) {
+      return;
+    }
+    _audioRequestId++;
+    setState(() {
+      _transitioning = true;
+      _playing = false;
+    });
+    try {
+      await _pronunciationService.stop();
+    } catch (error) {
+      debugPrint('Listening practice pronunciation stop failed: $error');
+    }
+    if (!mounted || selectedTopicKey != _selectedTopicKey) return;
+
+    final source = selectedTopicKey == _randomTopicKey
+        ? (List<Flashcard>.of(_answerPool)..shuffle(_random))
+        : List<Flashcard>.of(
+            _topics.firstWhere((topic) => topic.key == selectedTopicKey).cards,
+          );
+    final sessionSize = widget.sessionSize.clamp(1, source.length);
+    final cards = source.take(sessionSize).toList(growable: false);
+    setState(() {
+      _cards = cards;
+      _sessionStarted = true;
+      _resetSessionState();
+      _transitioning = false;
+    });
+    if (_learnerSettings.soundEnabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_play());
+      });
+    }
+  }
+
+  Future<void> _chooseAnotherTopic() async {
+    if (_transitioning) return;
+    _audioRequestId++;
+    setState(() {
+      _transitioning = true;
+      _playing = false;
+    });
+    try {
+      await _pronunciationService.stop();
+    } catch (error) {
+      debugPrint('Listening practice pronunciation stop failed: $error');
+    }
+    if (!mounted) return;
+    setState(() {
+      _cards = const [];
+      _sessionStarted = false;
+      _resetSessionState();
+      _transitioning = false;
+    });
   }
 
   Future<void> _play({bool slow = false}) async {
@@ -196,7 +293,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     }
 
     add(correct);
-    for (final card in _cards) {
+    for (final card in _answerPool) {
       if (card != _card) add(card.englishMeaning);
       if (options.length >= 4) break;
     }
@@ -264,29 +361,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     });
   }
 
-  Future<void> _practiceAgain() async {
-    if (_transitioning) return;
-    _audioRequestId++;
-    setState(() {
-      _transitioning = true;
-      _playing = false;
-    });
-    try {
-      await _pronunciationService.stop();
-    } catch (error) {
-      debugPrint('Listening practice pronunciation stop failed: $error');
-    }
-    if (!mounted) return;
-    setState(() {
-      _resetSessionState();
-      _transitioning = false;
-    });
-    if (_learnerSettings.soundEnabled) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_play());
-      });
-    }
-  }
+  Future<void> _practiceAgain() => _startPractice();
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -296,8 +371,10 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         ? const Center(child: CircularProgressIndicator())
         : _loadFailed
         ? _buildLoadError()
-        : _cards.isEmpty
+        : _answerPool.isEmpty
         ? _buildEmptyState()
+        : !_sessionStarted
+        ? _buildSetup()
         : _complete
         ? _buildSummary()
         : _buildPractice(),
@@ -312,6 +389,111 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         message: 'Your saved lessons are still safe. Please try again.',
         onRetry: _loadPractice,
         retryKey: const Key('listening-load-retry'),
+      ),
+    ),
+  );
+
+  Widget _buildSetup() => SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 680),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              '听力练习',
+              style: TextStyle(
+                fontFamily: 'serif',
+                fontSize: 34,
+                color: AppColors.text,
+              ),
+            ),
+            Text(
+              'Listening practice',
+              style: TextStyle(fontSize: 16, color: AppColors.muted),
+            ),
+            const SizedBox(height: 24),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(
+                      Icons.headphones_rounded,
+                      size: 48,
+                      color: AppColors.gold,
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Choose what to listen for',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.text,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Pick one of your lesson topics, or use Random mix to '
+                      'shuffle words from every available topic.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.muted, height: 1.4),
+                    ),
+                    const SizedBox(height: 24),
+                    DropdownButtonFormField<String>(
+                      key: const Key('listening-topic-picker'),
+                      initialValue: _selectedTopicKey,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Topic',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: _randomTopicKey,
+                          child: Row(
+                            children: [
+                              Icon(Icons.shuffle_rounded, size: 18),
+                              SizedBox(width: 8),
+                              Text(_randomTopicLabel),
+                            ],
+                          ),
+                        ),
+                        for (final topic in _topics)
+                          DropdownMenuItem(
+                            value: topic.key,
+                            child: Text(
+                              topic.label,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: _transitioning
+                          ? null
+                          : (value) =>
+                                setState(() => _selectedTopicKey = value),
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      key: const Key('listening-start-practice'),
+                      onPressed: _transitioning ? null : _startPractice,
+                      icon: _transitioning
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.play_arrow_rounded),
+                      label: const Text('Start listening'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -368,7 +550,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
               ),
             ),
             Text(
-              'Listening practice · ${_position + 1} of ${_cards.length}',
+              '$_selectedTopicLabel · ${_position + 1} of ${_cards.length}',
               key: const Key('listening-position'),
               style: TextStyle(color: AppColors.muted),
             ),
@@ -620,11 +802,24 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                   style: TextStyle(color: AppColors.muted, fontSize: 16),
                 ),
                 const SizedBox(height: 26),
-                FilledButton.icon(
-                  key: const Key('listening-practice-again'),
-                  onPressed: _transitioning ? null : _practiceAgain,
-                  icon: const Icon(Icons.replay_rounded),
-                  label: const Text('Practice again'),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    FilledButton.icon(
+                      key: const Key('listening-practice-again'),
+                      onPressed: _transitioning ? null : _practiceAgain,
+                      icon: const Icon(Icons.replay_rounded),
+                      label: const Text('Practice again'),
+                    ),
+                    OutlinedButton.icon(
+                      key: const Key('listening-choose-topic'),
+                      onPressed: _transitioning ? null : _chooseAnotherTopic,
+                      icon: const Icon(Icons.tune_rounded),
+                      label: const Text('Choose topic'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -633,4 +828,16 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       ),
     ),
   );
+}
+
+class _ListeningTopic {
+  const _ListeningTopic({
+    required this.key,
+    required this.label,
+    required this.cards,
+  });
+
+  final String key;
+  final String label;
+  final List<Flashcard> cards;
 }

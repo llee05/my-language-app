@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -645,6 +646,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ListeningPracticePage), findsOneWidget);
+    expect(find.text('Choose what to listen for'), findsOneWidget);
+    expect(pronunciation.spoken, isEmpty);
+
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
     expect(find.text('Listen and choose the meaning'), findsOneWidget);
     expect(pronunciation.spoken, ['你']);
     expect(find.text('你'), findsNothing);
@@ -1629,6 +1636,12 @@ void main() {
     expect(find.text('Generate lesson'), findsOneWidget);
     expect(find.text('Daily Life'), findsOneWidget);
 
+    await tester.tap(find.byKey(const ValueKey('topics-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Random mix'), findsOneWidget);
+    await tester.tap(find.text('Random mix').last);
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('HSK 1').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('HSK 2').last);
@@ -1636,6 +1649,55 @@ void main() {
 
     expect(find.text('School'), findsOneWidget);
     expect(find.text('Daily Life'), findsNothing);
+  });
+
+  testWidgets('lessons can generate a random vocabulary mix', (tester) async {
+    const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
+    rootBundle.evict(vocabularyAsset);
+    addTearDown(() => rootBundle.evict(vocabularyAsset));
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _GeneratedMemoryLessonRepository();
+    lessons.generated = const Lesson(
+      summary: LessonSummary(
+        id: 88,
+        title: 'Old random lesson',
+        theme: 'Random mix',
+        hskLevel: 1,
+      ),
+      cards: [
+        Flashcard(id: 89, chinese: '旧', pinyin: 'jiù', englishMeaning: 'old'),
+      ],
+    );
+    final random = _CountingRandom();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: lessons,
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+            random: random,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('topics-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Random mix').last);
+    await tester.pumpAndSettle();
+    await _generateLesson(tester);
+
+    expect(random.nextIntCalls, greaterThan(0));
+    expect(lessons.generated?.summary.theme, 'Random mix');
+    expect(lessons.generated?.summary.title, 'Random mix · HSK 1');
+    expect(lessons.generated?.cards, hasLength(10));
+    expect(lessons.saveCalls, 1);
   });
 
   testWidgets('lesson library filters saved lessons by HSK level', (
@@ -3810,6 +3872,23 @@ class _MemoryDevelopmentRepository implements DevelopmentRepository {
     resetAllDataCalls++;
     final callback = onReset;
     if (callback != null) await callback();
+  }
+}
+
+class _CountingRandom implements Random {
+  final Random _delegate = Random(1);
+  int nextIntCalls = 0;
+
+  @override
+  bool nextBool() => _delegate.nextBool();
+
+  @override
+  double nextDouble() => _delegate.nextDouble();
+
+  @override
+  int nextInt(int max) {
+    nextIntCalls++;
+    return _delegate.nextInt(max);
   }
 }
 

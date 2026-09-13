@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
@@ -25,6 +27,11 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose what to listen for'), findsOneWidget);
+      expect(pronunciation.requests, isEmpty);
+      await tester.tap(find.byKey(const Key('listening-start-practice')));
       await tester.pumpAndSettle();
 
       expect(find.text('Listen and choose the meaning'), findsOneWidget);
@@ -87,6 +94,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
     expect(pronunciation.requests, isEmpty);
     expect(find.byKey(const Key('listening-sound-disabled')), findsOneWidget);
     expect(
@@ -104,6 +114,136 @@ void main() {
     await tester.pump();
     expect(find.text('你'), findsOneWidget);
     expect(find.text('nǐ'), findsOneWidget);
+  });
+
+  testWidgets('listening practice can be limited to a selected topic', (
+    tester,
+  ) async {
+    final pronunciation = _ListeningPronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 3,
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('listening-topic-picker')));
+    await tester.pumpAndSettle();
+    expect(find.text('Random mix'), findsOneWidget);
+    await tester.tap(find.text('Advanced').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Advanced · 1 of 1'), findsOneWidget);
+    expect(pronunciation.requests, [const ('高级', 1.0)]);
+    expect(find.text('高级'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'advanced'), findsOneWidget);
+  });
+
+  testWidgets('random listening mode shuffles cards from every topic', (
+    tester,
+  ) async {
+    final pronunciation = _ListeningPronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 3,
+          pronunciationService: pronunciation,
+          sessionSize: 4,
+          random: _ZeroRandom(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('listening-topic-picker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Random mix').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Random mix · 1 of 4'), findsOneWidget);
+    expect(pronunciation.requests.first, const ('学', 1.0));
+
+    for (var position = 0; position < 3; position++) {
+      final reveal = find.byKey(const Key('listening-reveal-answer'));
+      await tester.ensureVisible(reveal);
+      await tester.tap(reveal);
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('listening-next')));
+      await tester.pumpAndSettle();
+    }
+
+    expect(pronunciation.requests.map((request) => request.$1).toSet(), {
+      '你',
+      '学',
+      '书',
+      '高级',
+    });
+  });
+
+  testWidgets('a saved random lesson uses the single random picker mode', (
+    tester,
+  ) async {
+    final pronunciation = _ListeningPronunciationService();
+    addTearDown(pronunciation.dispose);
+    final repository = _ListeningLessonRepository(
+      lessons: const [
+        Lesson(
+          summary: LessonSummary(
+            id: 5,
+            title: 'Random mix · HSK 1',
+            theme: 'Random mix',
+            hskLevel: 1,
+          ),
+          cards: [
+            Flashcard(
+              id: 51,
+              chinese: '听',
+              pinyin: 'tīng',
+              englishMeaning: 'listen',
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: repository,
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 1,
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final picker = tester.widget<DropdownButton<String>>(
+      find.byType(DropdownButton<String>),
+    );
+    expect(picker.items, hasLength(1));
+    expect(find.text('Random mix'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Random mix · 1 of 1'), findsOneWidget);
+    expect(pronunciation.requests, [const ('听', 1.0)]);
   });
 
   testWidgets('listening is available from the app sidebar', (tester) async {
@@ -124,7 +264,11 @@ void main() {
 }
 
 class _ListeningLessonRepository implements LessonRepository {
-  static const lessons = [
+  _ListeningLessonRepository({this.lessons = defaultLessons});
+
+  final List<Lesson> lessons;
+
+  static const defaultLessons = [
     Lesson(
       summary: LessonSummary(
         id: 1,
@@ -227,4 +371,15 @@ class _ListeningPronunciationService
 
   @override
   Future<void> dispose() async {}
+}
+
+class _ZeroRandom implements Random {
+  @override
+  bool nextBool() => false;
+
+  @override
+  double nextDouble() => 0;
+
+  @override
+  int nextInt(int max) => 0;
 }
