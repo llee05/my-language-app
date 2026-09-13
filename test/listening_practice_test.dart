@@ -116,10 +116,10 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Listening'));
+    await tester.tap(find.text('Listening Practice'));
     await tester.pump();
 
-    expect(selected, 6);
+    expect(selected, 2);
   });
 }
 

@@ -81,10 +81,10 @@ continued later the same day.
 
 ### Listening practice
 
-Open **Listening** to practise words from saved lessons at or below your current
-HSK level. Each prompt plays before its Hanzi and pinyin are shown. Choose the
-English meaning or reveal the answer, and use **Replay** or **Slower** whenever
-you need to hear it again.
+Open **Listening Practice** to practise words from saved lessons at or below
+your current HSK level. Each prompt plays before its Hanzi and pinyin are shown.
+Choose the English meaning or reveal the answer, and use **Replay** or
+**Slower** whenever you need to hear it again.
 
 ### Vocabulary and Vocab Rush
 

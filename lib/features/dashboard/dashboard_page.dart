@@ -237,7 +237,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _openDailyReview() {
     setState(() {
-      selectedNav = 4;
+      selectedNav = 5;
       _startDailyReview = true;
     });
   }
@@ -452,6 +452,14 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 2) {
+      return ListeningPracticePage(
+        lessonRepository: lessonRepository,
+        settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
+        maxHskLevel: profile.hskLevel,
+      );
+    }
+    if (selectedNav == 3) {
       return VocabRushPage(
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,
@@ -460,14 +468,14 @@ class _DashboardBody extends StatelessWidget {
         pronunciationService: pronunciationService,
       );
     }
-    if (selectedNav == 3) {
+    if (selectedNav == 4) {
       return VocabularyPage(
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
       );
     }
-    if (selectedNav == 4) {
+    if (selectedNav == 5) {
       return DailyQueuePage(
         profile: profile,
         progressRepository: progressRepository,
@@ -480,21 +488,13 @@ class _DashboardBody extends StatelessWidget {
         clock: clock,
       );
     }
-    if (selectedNav == 5) {
+    if (selectedNav == 6) {
       return AiTutorPage(
         aiService: AiService(
           configurationRepository: aiConfigurationRepository,
         ),
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
-      );
-    }
-    if (selectedNav == 6) {
-      return ListeningPracticePage(
-        lessonRepository: lessonRepository,
-        settingsRepository: settingsRepository,
-        pronunciationService: pronunciationService,
-        maxHskLevel: profile.hskLevel,
       );
     }
     if (selectedNav == 7) {

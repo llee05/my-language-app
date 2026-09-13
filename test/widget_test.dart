@@ -615,7 +615,7 @@ void main() {
       await tester.tap(find.text('Vocab Rush'));
       await tester.pumpAndSettle();
 
-      expect(selected, 2);
+      expect(selected, 3);
     },
   );
 
@@ -641,7 +641,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Listening'));
+    await tester.tap(find.text('Listening Practice'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ListeningPracticePage), findsOneWidget);
