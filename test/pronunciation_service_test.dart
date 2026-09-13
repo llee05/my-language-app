@@ -36,6 +36,19 @@ void main() {
       expect(fallback.stopCalls, 1);
     });
 
+    test('keeps a requested playback rate when falling back', () async {
+      final primary = _RatePronunciationService(
+        speakError: StateError('primary unavailable'),
+      );
+      final fallback = _RatePronunciationService();
+      final service = FallbackPronunciationService(primary, fallback);
+
+      await service.speakMandarinAtRate('慢', rate: .75);
+
+      expect(primary.rateRequests, [const ('慢', .75)]);
+      expect(fallback.rateRequests, [const ('慢', .75)]);
+    });
+
     test('uses the fallback service when the primary fails', () async {
       final primary = _FakePronunciationService(
         speakError: StateError('primary unavailable'),
@@ -403,5 +416,18 @@ class _PreparingPronunciationService extends _FakePronunciationService
   Future<void> prepareMandarin(String text) async {
     prepared.add(text);
     throw StateError('unavailable');
+  }
+}
+
+class _RatePronunciationService extends _FakePronunciationService
+    implements PlaybackRatePronunciationService {
+  _RatePronunciationService({super.speakError});
+
+  final List<(String, double)> rateRequests = [];
+
+  @override
+  Future<void> speakMandarinAtRate(String text, {required double rate}) async {
+    rateRequests.add((text, rate));
+    if (speakError case final error?) throw error;
   }
 }

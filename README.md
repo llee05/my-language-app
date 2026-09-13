@@ -2,8 +2,9 @@
 
 **TingShuo v1.0.0 Beta 1** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
-spaced daily review, a searchable vocabulary library, Vocab Rush, and an
-optional AI tutor named Long Laoshi, using your own provider and API key.
+listening practice, spaced daily review, a searchable vocabulary library,
+Vocab Rush, and an optional AI tutor named Long Laoshi, using your own provider
+and API key.
 
 > [!IMPORTANT]
 > This is a beta release. Learning data is stored only on the device. Dashboard
@@ -17,6 +18,8 @@ optional AI tutor named Long Laoshi, using your own provider and API key.
 - Seeded and AI-assisted flashcard lessons with an offline vocabulary fallback.
 - Hanzi, pinyin, English meanings, example sentences, and on-device Mandarin
   pronunciation.
+- Listening practice with hidden Hanzi and pinyin, meaning choices, answer
+  reveal, replay, and slower playback.
 - Immediate card ratings, persisted lesson position, completion summaries, and
   the ability to resume an unfinished lesson after restarting the app.
 - A daily review queue that prioritises due and weak cards before new words.
@@ -75,6 +78,13 @@ Open **Daily Review** or use the dashboard prompt to review today's queue. Due a
 weak vocabulary is shown first, followed by new words up to the configured
 daily target. Session position and answers are persisted, so a review can be
 continued later the same day.
+
+### Listening practice
+
+Open **Listening** to practise words from saved lessons at or below your current
+HSK level. Each prompt plays before its Hanzi and pinyin are shown. Choose the
+English meaning or reveal the answer, and use **Replay** or **Slower** whenever
+you need to hear it again.
 
 ### Vocabulary and Vocab Rush
 

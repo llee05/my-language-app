@@ -619,6 +619,38 @@ void main() {
     },
   );
 
+  testWidgets('dashboard opens listening practice from the sidebar', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          settings: _MemorySettingsRepository(),
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+          createPronunciationService: () => pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Listening'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListeningPracticePage), findsOneWidget);
+    expect(find.text('Listen and choose the meaning'), findsOneWidget);
+    expect(pronunciation.spoken, ['你']);
+    expect(find.text('你'), findsNothing);
+    expect(find.text('nǐ'), findsNothing);
+  });
+
   testWidgets('vocab rush starts a timed vocabulary game', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

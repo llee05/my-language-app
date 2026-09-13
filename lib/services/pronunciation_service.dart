@@ -271,6 +271,12 @@ abstract interface class PreparedPronunciationService {
   Future<void> prepareMandarin(String text);
 }
 
+/// Optional capability for practice modes that need speech at a relative
+/// speed. A rate of 1 uses the service's normal Mandarin speaking speed.
+abstract interface class PlaybackRatePronunciationService {
+  Future<void> speakMandarinAtRate(String text, {required double rate});
+}
+
 abstract interface class OfflinePronunciationManager {
   Stream<OfflineVoiceStatus> get voicePackUpdates;
 

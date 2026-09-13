@@ -20,6 +20,7 @@ class AppSidebar extends StatelessWidget {
     (Icons.language_rounded, 'Vocabulary'),
     (Icons.bar_chart_rounded, 'Daily Review'),
     (Icons.chat_bubble_outline_rounded, 'AI Tutor'),
+    (Icons.hearing_rounded, 'Listening'),
   ];
 
   @override

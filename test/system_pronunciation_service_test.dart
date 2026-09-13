@@ -10,6 +10,7 @@ class _FakeTts extends FlutterTts {
   Object? languageResult;
   final List<String> requestedLanguages = [];
   final List<String> spokenTexts = [];
+  final List<double> requestedSpeechRates = [];
   int stopCalls = 0;
 
   @override
@@ -19,7 +20,10 @@ class _FakeTts extends FlutterTts {
   }
 
   @override
-  Future<dynamic> setSpeechRate(double rate) async => 1;
+  Future<dynamic> setSpeechRate(double rate) async {
+    requestedSpeechRates.add(rate);
+    return 1;
+  }
 
   @override
   Future<dynamic> setPitch(double pitch) async => 1;
@@ -125,6 +129,17 @@ void main() {
       await service.speakMandarin('学');
 
       expect(tts.spokenTexts, ['学']);
+      await service.dispose();
+    });
+
+    test('supports slower listening-practice playback', () async {
+      final tts = _FakeTts();
+      final service = SystemPronunciationService(tts: tts);
+
+      await service.speakMandarinAtRate('听', rate: .75);
+
+      expect(tts.spokenTexts, ['听']);
+      expect(tts.requestedSpeechRates.single, closeTo(.315, .0001));
       await service.dispose();
     });
 

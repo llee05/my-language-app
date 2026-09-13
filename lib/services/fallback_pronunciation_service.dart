@@ -5,7 +5,8 @@ class FallbackPronunciationService
     implements
         PronunciationService,
         OfflinePronunciationManager,
-        PreparedPronunciationService {
+        PreparedPronunciationService,
+        PlaybackRatePronunciationService {
   FallbackPronunciationService(this._primary, this._fallback);
 
   final PronunciationService _primary;
@@ -76,13 +77,19 @@ class FallbackPronunciationService
   }
 
   @override
-  Future<void> speakMandarin(String text) async {
+  Future<void> speakMandarin(String text) => _speakMandarin(text);
+
+  @override
+  Future<void> speakMandarinAtRate(String text, {required double rate}) =>
+      _speakMandarin(text, rate: rate);
+
+  Future<void> _speakMandarin(String text, {double? rate}) async {
     if (_disposed || text.trim().isEmpty) return;
     final requestId = ++_requestId;
     await _stopChildren();
     if (_disposed || requestId != _requestId) return;
     try {
-      await _primary.speakMandarin(text);
+      await _speakWithOptionalRate(_primary, text, rate);
     } catch (_) {
       if (_disposed || requestId != _requestId) return;
       try {
@@ -91,8 +98,22 @@ class FallbackPronunciationService
         // A failed cleanup must not prevent the working fallback from speaking.
       }
       if (_disposed || requestId != _requestId) return;
-      await _fallback.speakMandarin(text);
+      await _speakWithOptionalRate(_fallback, text, rate);
     }
+  }
+
+  Future<void> _speakWithOptionalRate(
+    PronunciationService service,
+    String text,
+    double? rate,
+  ) {
+    if (rate != null && service is PlaybackRatePronunciationService) {
+      return (service as PlaybackRatePronunciationService).speakMandarinAtRate(
+        text,
+        rate: rate,
+      );
+    }
+    return service.speakMandarin(text);
   }
 
   @override

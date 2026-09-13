@@ -5,10 +5,12 @@ import 'pronunciation_service.dart';
 PronunciationService createPlatformPronunciationService() =>
     SystemPronunciationService();
 
-class SystemPronunciationService implements PronunciationService {
+class SystemPronunciationService
+    implements PronunciationService, PlaybackRatePronunciationService {
   SystemPronunciationService({FlutterTts? tts}) : _tts = tts ?? FlutterTts();
 
   final FlutterTts _tts;
+  int _requestId = 0;
   bool _disposed = false;
 
   @override
@@ -26,15 +28,23 @@ class SystemPronunciationService implements PronunciationService {
   );
 
   @override
-  Future<void> speakMandarin(String text) async {
+  Future<void> speakMandarin(String text) => speakMandarinAtRate(text, rate: 1);
+
+  @override
+  Future<void> speakMandarinAtRate(String text, {required double rate}) async {
     if (_disposed || text.trim().isEmpty) return;
+    final requestId = ++_requestId;
     await _tts.stop();
+    if (_disposed || requestId != _requestId) return;
     final languageResult = await _tts.setLanguage('zh-CN');
+    if (_disposed || requestId != _requestId) return;
     if (_isMandarinVoiceMissing(languageResult)) {
       throw const MandarinVoiceUnavailableException();
     }
-    await _tts.setSpeechRate(.42);
+    await _tts.setSpeechRate((.42 * rate).clamp(.2, .8));
+    if (_disposed || requestId != _requestId) return;
     await _tts.setPitch(1);
+    if (_disposed || requestId != _requestId) return;
     await _tts.speak(text);
   }
 
@@ -55,12 +65,14 @@ class SystemPronunciationService implements PronunciationService {
   @override
   Future<void> stop() async {
     if (_disposed) return;
+    _requestId++;
     await _tts.stop();
   }
 
   @override
   Future<void> dispose() async {
     if (_disposed) return;
+    _requestId++;
     try {
       await _tts.stop();
     } catch (_) {

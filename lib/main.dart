@@ -38,6 +38,7 @@ part 'features/dashboard/dashboard_page.dart';
 part 'features/dashboard/widgets/learning_panel.dart';
 part 'features/dashboard/widgets/progress_rail.dart';
 part 'features/lessons/lessons_page.dart';
+part 'features/listening/listening_practice_page.dart';
 part 'features/onboarding/learner_setup_page.dart';
 part 'features/review/daily_queue_page.dart';
 part 'features/review/daily_review_card_screen.dart';

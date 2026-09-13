@@ -490,6 +490,14 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 6) {
+      return ListeningPracticePage(
+        lessonRepository: lessonRepository,
+        settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
+        maxHskLevel: profile.hskLevel,
+      );
+    }
+    if (selectedNav == 7) {
       return SettingsPage(
         aiConfigurationRepository: aiConfigurationRepository,
         profile: profile,

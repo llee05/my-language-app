@@ -33,7 +33,8 @@ class _SherpaPronunciationService
     implements
         PronunciationService,
         OfflinePronunciationManager,
-        PreparedPronunciationService {
+        PreparedPronunciationService,
+        PlaybackRatePronunciationService {
   _SherpaPronunciationService(this._kokoroVoicePack) {
     _voicePackSubscriptions = [
       _kokoroVoicePack.updates.listen(_voicePackUpdates.add),
@@ -145,7 +146,10 @@ class _SherpaPronunciationService
   }
 
   @override
-  Future<void> speakMandarin(String text) async {
+  Future<void> speakMandarin(String text) => speakMandarinAtRate(text, rate: 1);
+
+  @override
+  Future<void> speakMandarinAtRate(String text, {required double rate}) async {
     if (_disposed || text.trim().isEmpty) return;
     final requestId = ++_requestId;
     await _stopPlayback();
@@ -180,6 +184,12 @@ class _SherpaPronunciationService
     if (handle.isError) {
       await soLoud.disposeSource(source);
       throw StateError('The audio device could not start playback.');
+    }
+    try {
+      soLoud.setRelativePlaySpeed(handle, rate.clamp(.5, 1.5));
+    } catch (_) {
+      await soLoud.disposeSource(source);
+      rethrow;
     }
     _audioSource = source;
   }
