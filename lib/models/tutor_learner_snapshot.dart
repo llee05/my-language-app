@@ -5,6 +5,7 @@ class TutorLearnerSnapshot {
   const TutorLearnerSnapshot({
     required this.asOf,
     this.hskLevel,
+    this.knownWords = const [],
     this.weakWords = const [],
     this.dueCards = const [],
     this.recentMistakes = const [],
@@ -13,15 +14,17 @@ class TutorLearnerSnapshot {
 
   final DateTime asOf;
   final int? hskLevel;
+  final List<TutorWordSnapshot> knownWords;
   final List<TutorWordSnapshot> weakWords;
   final List<TutorWordSnapshot> dueCards;
   final List<TutorMistakeSnapshot> recentMistakes;
   final List<TutorLessonSnapshot> lessonHistory;
 
   String toPromptJson() => jsonEncode({
-    'schema_version': 1,
+    'schema_version': 2,
     'as_of': asOf.toUtc().toIso8601String(),
     'hsk_level': hskLevel,
+    'known_words': knownWords.map((word) => word.toJson()).toList(),
     'weak_words': weakWords.map((word) => word.toJson()).toList(),
     'due_cards': dueCards.map((word) => word.toJson()).toList(),
     'recent_mistakes': recentMistakes

@@ -6,7 +6,8 @@ class FallbackPronunciationService
         PronunciationService,
         OfflinePronunciationManager,
         PreparedPronunciationService,
-        PlaybackRatePronunciationService {
+        PlaybackRatePronunciationService,
+        DialoguePronunciationService {
   FallbackPronunciationService(this._primary, this._fallback);
 
   final PronunciationService _primary;
@@ -82,6 +83,21 @@ class FallbackPronunciationService
   @override
   Future<void> speakMandarinAtRate(String text, {required double rate}) =>
       _speakMandarin(text, rate: rate);
+
+  @override
+  Future<void> speakDialogue(List<PronunciationUtterance> utterances) async {
+    if (_disposed || utterances.isEmpty) return;
+    final primary = _primary;
+    if (primary is! DialoguePronunciationService) {
+      throw UnsupportedError(
+        'The installed pronunciation engine cannot play two voices.',
+      );
+    }
+    final requestId = ++_requestId;
+    await _stopChildren();
+    if (_disposed || requestId != _requestId) return;
+    await (primary as DialoguePronunciationService).speakDialogue(utterances);
+  }
 
   Future<void> _speakMandarin(String text, {double? rate}) async {
     if (_disposed || text.trim().isEmpty) return;

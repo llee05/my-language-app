@@ -19,6 +19,7 @@ class SqliteTutorContextRepository implements TutorContextRepository {
   const SqliteTutorContextRepository();
 
   static const _itemLimit = 8;
+  static const _knownWordLimit = 80;
   static const _lessonLimit = 5;
   static const _recentMistakeEventLimit = 16;
   static const _textLimit = 80;
@@ -49,6 +50,22 @@ class SqliteTutorContextRepository implements TutorContextRepository {
           LIMIT ?
           ''',
           [1, .7, _itemLimit],
+        );
+        final knownRows = await db.rawQuery(
+          '''
+          SELECT cards.chinese, cards.pinyin, cards.english_meaning,
+            card_progress.mastery, card_progress.incorrect_answers,
+            card_progress.due_at
+          FROM card_progress
+          INNER JOIN cards ON cards.id = card_progress.card_id
+          WHERE card_progress.learner_id = ?
+            AND card_progress.times_seen > 0
+          ORDER BY card_progress.mastery DESC,
+            card_progress.last_reviewed_at DESC,
+            cards.id ASC
+          LIMIT ?
+          ''',
+          [1, _knownWordLimit],
         );
         final dueRows = await db.rawQuery(
           '''
@@ -105,6 +122,7 @@ class SqliteTutorContextRepository implements TutorContextRepository {
           hskLevel: profileRows.isEmpty
               ? null
               : profileRows.single['hsk_level'] as int,
+          knownWords: knownRows.map(_wordFromRow).toList(growable: false),
           weakWords: weakRows.map(_wordFromRow).toList(growable: false),
           dueCards: dueRows.map(_wordFromRow).toList(growable: false),
           recentMistakes: mistakeRows

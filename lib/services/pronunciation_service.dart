@@ -69,6 +69,13 @@ class PronunciationVoice {
   final String label;
 }
 
+class PronunciationUtterance {
+  const PronunciationUtterance({required this.text, required this.voice});
+
+  final String text;
+  final PronunciationVoice voice;
+}
+
 const _kokoroFemaleVoiceIds = <String>[
   'zf_001',
   'zf_002',
@@ -235,6 +242,37 @@ PronunciationVoice pickPronunciationVoice(
   return voices[nextIndex >= previousIndex ? nextIndex + 1 : nextIndex];
 }
 
+/// Chooses two stable, audibly distinct voices for a generated dialogue.
+///
+/// Learner-selected voices are preferred. If the saved pool contains fewer
+/// than two voices, another voice from the installed pack is added because a
+/// dialogue always needs separate speakers.
+List<PronunciationVoice> selectDialogueVoices(
+  List<PronunciationVoice> availableVoices, {
+  Iterable<String> preferredVoiceIds = const [],
+}) {
+  if (availableVoices.length < 2) return const [];
+  final preferredIds = preferredVoiceIds.toSet();
+  final pool = preferredIds.isEmpty
+      ? availableVoices
+      : [
+          for (final voice in availableVoices)
+            if (preferredIds.contains(voice.id)) voice,
+        ];
+  final first = pool.isEmpty ? availableVoices.first : pool.first;
+  final firstFamily = first.id.split('_').first;
+  final candidates = pool.length >= 2
+      ? pool.where((voice) => voice.id != first.id).toList(growable: false)
+      : availableVoices
+            .where((voice) => voice.id != first.id)
+            .toList(growable: false);
+  final second = candidates.firstWhere(
+    (voice) => voice.id.split('_').first != firstFamily,
+    orElse: () => candidates.first,
+  );
+  return List.unmodifiable([first, second]);
+}
+
 class OfflineVoiceNotInstalledException implements Exception {
   const OfflineVoiceNotInstalledException();
 
@@ -275,6 +313,12 @@ abstract interface class PreparedPronunciationService {
 /// speed. A rate of 1 uses the service's normal Mandarin speaking speed.
 abstract interface class PlaybackRatePronunciationService {
   Future<void> speakMandarinAtRate(String text, {required double rate});
+}
+
+/// Optional capability for synthesizing one continuous conversation while
+/// assigning a specific installed voice to each speaker turn.
+abstract interface class DialoguePronunciationService {
+  Future<void> speakDialogue(List<PronunciationUtterance> utterances);
 }
 
 abstract interface class OfflinePronunciationManager {

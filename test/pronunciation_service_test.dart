@@ -239,6 +239,25 @@ void main() {
     expect(selected.id, 'zm_041');
   });
 
+  test('dialogue voices prefer configured choices and distinct families', () {
+    final voices = selectDialogueVoices(
+      kokoroMandarinVoices,
+      preferredVoiceIds: const ['zf_021', 'zm_041'],
+    );
+
+    expect(voices.map((voice) => voice.id), ['zf_021', 'zm_041']);
+  });
+
+  test('dialogue voices add a contrasting voice to a one-voice preference', () {
+    final voices = selectDialogueVoices(
+      kokoroMandarinVoices,
+      preferredVoiceIds: const ['zf_021'],
+    );
+
+    expect(voices.first.id, 'zf_021');
+    expect(voices.last.id, startsWith('zm_'));
+  });
+
   test('applies a learner voice preference before pronunciation', () async {
     final service = _FakeManagedPronunciationService();
 
@@ -272,6 +291,21 @@ void main() {
     expect(primary.configuredEngine, PronunciationEngine.kokoro);
     expect(primary.configuredVoiceIds, ['zm_041']);
     expect(service.voicePackUpdates, same(primary.voicePackUpdates));
+  });
+
+  test('delegates two-speaker dialogue playback only to the primary', () async {
+    final primary = _FakeDialoguePronunciationService();
+    final fallback = _FakePronunciationService();
+    final service = FallbackPronunciationService(primary, fallback);
+    final utterances = [
+      PronunciationUtterance(text: '你好', voice: kokoroMandarinVoices.first),
+      PronunciationUtterance(text: '你好', voice: kokoroMandarinVoices[55]),
+    ];
+
+    await service.speakDialogue(utterances);
+
+    expect(primary.dialogues.single, utterances);
+    expect(fallback.spokenTexts, isEmpty);
   });
 
   test('unmanaged primaries cannot manage voice packs', () async {
@@ -350,6 +384,15 @@ class _FakeManagedPronunciationService extends _FakePronunciationService
     configuredEngine = engine;
     configuredVoiceIds = List.of(voiceIds);
   }
+}
+
+class _FakeDialoguePronunciationService extends _FakeManagedPronunciationService
+    implements DialoguePronunciationService {
+  final List<List<PronunciationUtterance>> dialogues = [];
+
+  @override
+  Future<void> speakDialogue(List<PronunciationUtterance> utterances) async =>
+      dialogues.add(utterances);
 }
 
 class _FakePronunciationService implements PronunciationService {

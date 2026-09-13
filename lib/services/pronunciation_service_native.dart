@@ -34,7 +34,8 @@ class _SherpaPronunciationService
         PronunciationService,
         OfflinePronunciationManager,
         PreparedPronunciationService,
-        PlaybackRatePronunciationService {
+        PlaybackRatePronunciationService,
+        DialoguePronunciationService {
   _SherpaPronunciationService(this._kokoroVoicePack) {
     _voicePackSubscriptions = [
       _kokoroVoicePack.updates.listen(_voicePackUpdates.add),
@@ -167,6 +168,42 @@ class _SherpaPronunciationService
     }
     _previousKokoroVoiceId = voice.id;
 
+    await _playAudio(audio, requestId: requestId, rate: rate);
+  }
+
+  @override
+  Future<void> speakDialogue(List<PronunciationUtterance> utterances) async {
+    final usable = utterances
+        .where((utterance) => utterance.text.trim().isNotEmpty)
+        .toList(growable: false);
+    if (_disposed || usable.isEmpty) return;
+    if (usable.map((utterance) => utterance.voice.id).toSet().length < 2) {
+      throw ArgumentError('A dialogue requires two different voices.');
+    }
+    final requestId = ++_requestId;
+    await _stopPlayback();
+    _preparedText = null;
+    _preparedVoice = null;
+    _preparedAudio = null;
+    if (_disposed || requestId != _requestId) return;
+    final audioParts = await Future.wait([
+      for (final utterance in usable)
+        _generateAudio(utterance.text, utterance.voice),
+    ]);
+    if (_disposed || requestId != _requestId) return;
+    final audio = _joinDialogueAudio(audioParts);
+    await _playAudio(audio, requestId: requestId, rate: 1);
+  }
+
+  Future<void> _playAudio(
+    _SherpaAudio audio, {
+    required int requestId,
+    required double rate,
+  }) async {
+    if (audio.samples.isEmpty || audio.sampleRate <= 0) {
+      throw StateError('Sherpa produced no audio.');
+    }
+
     final soLoud = SoLoud.instance;
     if (!soLoud.isInitialized) {
       await soLoud.init(automaticCleanup: true);
@@ -243,6 +280,28 @@ class _SherpaAudio {
 
   final Float32List samples;
   final int sampleRate;
+}
+
+_SherpaAudio _joinDialogueAudio(List<_SherpaAudio> parts) {
+  if (parts.isEmpty) throw ArgumentError('Dialogue audio cannot be empty.');
+  final sampleRate = parts.first.sampleRate;
+  if (sampleRate <= 0 || parts.any((part) => part.sampleRate != sampleRate)) {
+    throw StateError('Dialogue lines used incompatible sample rates.');
+  }
+  final pauseLength = (sampleRate * .24).round();
+  final totalLength = parts.fold<int>(
+    pauseLength * (parts.length - 1),
+    (total, part) => total + part.samples.length,
+  );
+  final combined = Float32List(totalLength);
+  var offset = 0;
+  for (var index = 0; index < parts.length; index++) {
+    final samples = parts[index].samples;
+    combined.setRange(offset, offset + samples.length, samples);
+    offset += samples.length;
+    if (index < parts.length - 1) offset += pauseLength;
+  }
+  return _SherpaAudio(samples: combined, sampleRate: sampleRate);
 }
 
 class _SherpaWorker {

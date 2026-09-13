@@ -86,6 +86,7 @@ void main() {
         jsonDecode(snapshot.toPromptJson()) as Map<String, dynamic>;
 
     expect(snapshot.hskLevel, 3);
+    expect(snapshot.knownWords.map((word) => word.chinese), ['认为', '觉得']);
     expect(snapshot.weakWords.map((word) => word.chinese), ['觉得', '认为']);
     expect(snapshot.dueCards.map((word) => word.chinese), ['觉得']);
     expect(snapshot.recentMistakes, hasLength(1));
@@ -148,6 +149,7 @@ void main() {
     final snapshot = await repository.load(asOf: now);
 
     expect(snapshot.weakWords, hasLength(8));
+    expect(snapshot.knownWords, hasLength(10));
     expect(snapshot.dueCards, hasLength(8));
     expect(snapshot.recentMistakes, hasLength(8));
     expect(snapshot.lessonHistory, hasLength(5));
