@@ -9,7 +9,9 @@ import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/ai_configuration.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
+import 'package:mylanguageapp/repositories/tutor_context_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 import 'ai_test_support.dart';
@@ -59,12 +61,33 @@ class _FakePronunciationService implements PronunciationService {
   Future<void> dispose() async => disposeCalls++;
 }
 
+class _MemoryTutorContextRepository implements TutorContextRepository {
+  _MemoryTutorContextRepository({
+    TutorLearnerSnapshot? snapshot,
+    this.loadError,
+  }) : snapshot =
+           snapshot ?? TutorLearnerSnapshot(asOf: DateTime.utc(2026, 9, 13));
+
+  final TutorLearnerSnapshot snapshot;
+  final Object? loadError;
+  final List<DateTime> requestedAt = [];
+
+  @override
+  Future<TutorLearnerSnapshot> load({required DateTime asOf}) async {
+    requestedAt.add(asOf);
+    if (loadError != null) throw loadError!;
+    return snapshot;
+  }
+}
+
 Future<void> _pumpTutor(
   WidgetTester tester, {
   AiTutorRequest? request,
   AiService aiService = const AiService(),
   SettingsRepository? settingsRepository,
+  TutorContextRepository? tutorContextRepository,
   PronunciationService? pronunciationService,
+  DateTime Function()? clock,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1100, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -75,7 +98,10 @@ Future<void> _pumpTutor(
           request: request,
           aiService: aiService,
           settingsRepository: settingsRepository ?? _MemorySettingsRepository(),
+          tutorContextRepository:
+              tutorContextRepository ?? _MemoryTutorContextRepository(),
           pronunciationService: pronunciationService,
+          clock: clock,
         ),
       ),
     ),
@@ -188,6 +214,104 @@ void main() {
     expect(find.text('my book'), findsOneWidget);
     expect(find.text('Tip: 的 links a modifier to a noun.'), findsOneWidget);
     expect(find.text('龙老师 is thinking...'), findsNothing);
+  });
+
+  testWidgets('sends a bounded learner snapshot with the tutor prompt', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 9, 13, 10, 30);
+    final contextRepository = _MemoryTutorContextRepository(
+      snapshot: TutorLearnerSnapshot(
+        asOf: now,
+        hskLevel: 3,
+        weakWords: [
+          TutorWordSnapshot(
+            chinese: '觉得',
+            pinyin: 'juéde',
+            englishMeaning: 'to feel; to think',
+            mastery: .4,
+            incorrectAnswers: 3,
+            dueAt: DateTime.utc(2026, 9, 12),
+          ),
+        ],
+        dueCards: [
+          TutorWordSnapshot(
+            chinese: '认为',
+            pinyin: 'rènwéi',
+            englishMeaning: 'to believe',
+            mastery: .5,
+            incorrectAnswers: 2,
+            dueAt: DateTime.utc(2026, 9, 13, 9),
+          ),
+        ],
+        recentMistakes: [
+          TutorMistakeSnapshot(
+            chinese: '认为',
+            pinyin: 'rènwéi',
+            englishMeaning: 'to believe',
+            mistakeCount: 2,
+            lastMistakeAt: DateTime.utc(2026, 9, 13, 9),
+          ),
+        ],
+        lessonHistory: [
+          TutorLessonSnapshot(
+            title: 'Opinions and feelings',
+            theme: 'Conversation',
+            hskLevel: 3,
+            startedAt: DateTime.utc(2026, 9, 12, 8),
+            completedAt: DateTime.utc(2026, 9, 12, 8, 15),
+            cardsReviewed: 8,
+            correctAnswers: 5,
+          ),
+        ],
+      ),
+    );
+    List<Map<String, String>>? sentMessages;
+    await _pumpTutor(
+      tester,
+      tutorContextRepository: contextRepository,
+      clock: () => now,
+      request: (messages) async {
+        sentMessages = messages;
+        return '{"chinese":"我们来练习觉得和认为。"}';
+      },
+    );
+
+    expect(contextRepository.requestedAt, isEmpty);
+    await tester.enterText(find.byType(TextField), 'What should I practise?');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(contextRepository.requestedAt, [now]);
+    final systemPrompt = sentMessages!.first['content']!;
+    expect(systemPrompt, contains('bounded snapshot'));
+    expect(systemPrompt, contains('"hsk_level":3'));
+    expect(systemPrompt, contains('"chinese":"觉得"'));
+    expect(systemPrompt, contains('"chinese":"认为"'));
+    expect(systemPrompt, contains('"mistake_count":2'));
+    expect(systemPrompt, contains('"title":"Opinions and feelings"'));
+    expect(systemPrompt, isNot(contains('learner name')));
+  });
+
+  testWidgets('snapshot failures do not prevent a tutor reply', (tester) async {
+    List<Map<String, String>>? sentMessages;
+    await _pumpTutor(
+      tester,
+      tutorContextRepository: _MemoryTutorContextRepository(
+        loadError: StateError('local database unavailable'),
+      ),
+      request: (messages) async {
+        sentMessages = messages;
+        return '{"chinese":"好的","english":"OK"}';
+      },
+    );
+
+    await tester.enterText(find.byType(TextField), 'Help me practise');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(sentMessages!.first['content'], isNot(contains('bounded snapshot')));
+    expect(find.text('好的'), findsOneWidget);
   });
 
   testWidgets('prompt chips send their preset question', (tester) async {

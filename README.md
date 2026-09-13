@@ -136,6 +136,12 @@ Open **Settings → AI provider** to configure AI without rebuilding the app:
 4. Optionally select **Test connection** to make a small request with the values
    in the form. This uses your API allowance and does not save changes.
 
+When you send a tutor message, the request also includes a bounded snapshot of
+your locally saved HSK level, weak and due words, recent mistakes, and recent
+lesson sessions so the tutor can personalize practice. The snapshot excludes
+your name and is limited to 8 words per category and 5 lesson sessions. If the
+snapshot cannot be read, tutor chat continues without personalization.
+
 | Provider option | API used |
 | --- | --- |
 | Google Gemini | Google's [`generateContent`](https://ai.google.dev/api/generate-content) API |

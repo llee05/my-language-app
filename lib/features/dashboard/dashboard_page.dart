@@ -15,6 +15,7 @@ class DashboardPage extends StatefulWidget {
     required this.settingsRepository,
     required this.developmentRepository,
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
+    this.tutorContextRepository = const SqliteTutorContextRepository(),
     this.pronunciationService,
     this.clock,
   });
@@ -31,6 +32,7 @@ class DashboardPage extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
   final AiConfigurationRepository aiConfigurationRepository;
+  final TutorContextRepository tutorContextRepository;
   final PronunciationService? pronunciationService;
   final DateTime Function()? clock;
 
@@ -323,6 +325,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           developmentRepository: widget.developmentRepository,
                           aiConfigurationRepository:
                               widget.aiConfigurationRepository,
+                          tutorContextRepository: widget.tutorContextRepository,
                           pronunciationService: _pronunciationService,
                           clock: widget.clock,
                         ),
@@ -395,6 +398,7 @@ class _DashboardBody extends StatelessWidget {
     required this.settingsRepository,
     required this.developmentRepository,
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
+    this.tutorContextRepository = const SqliteTutorContextRepository(),
     required this.pronunciationService,
     this.clock,
   });
@@ -433,6 +437,7 @@ class _DashboardBody extends StatelessWidget {
   final SettingsRepository settingsRepository;
   final DevelopmentRepository developmentRepository;
   final AiConfigurationRepository aiConfigurationRepository;
+  final TutorContextRepository tutorContextRepository;
   final PronunciationService pronunciationService;
   final DateTime Function()? clock;
 
@@ -494,7 +499,9 @@ class _DashboardBody extends StatelessWidget {
           configurationRepository: aiConfigurationRepository,
         ),
         settingsRepository: settingsRepository,
+        tutorContextRepository: tutorContextRepository,
         pronunciationService: pronunciationService,
+        clock: clock,
       );
     }
     if (selectedNav == 7) {

@@ -23,6 +23,7 @@ import 'repositories/lesson_repository.dart';
 import 'repositories/progress_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'repositories/sqlite_repositories.dart';
+import 'repositories/tutor_context_repository.dart';
 import 'services/review_scheduler.dart';
 import 'services/pronunciation_service_factory.dart';
 import 'services/study_streak_calculator.dart';
@@ -240,6 +241,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             settingsRepository: widget.dependencies.settings,
             developmentRepository: widget.dependencies.development,
             aiConfigurationRepository: widget.dependencies.aiConfiguration,
+            tutorContextRepository: widget.dependencies.tutorContext,
             pronunciationService: _pronunciationService,
           );
         },

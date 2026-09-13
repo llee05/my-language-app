@@ -6,12 +6,154 @@ import '../local_database.dart';
 import '../models/learner_profile.dart';
 import '../models/learning_progress.dart';
 import '../models/lesson.dart';
+import '../models/tutor_learner_snapshot.dart';
 import 'development_repository.dart';
 import 'daily_review_session_repository.dart';
 import 'learner_repository.dart';
 import 'lesson_repository.dart';
 import 'progress_repository.dart';
 import 'settings_repository.dart';
+import 'tutor_context_repository.dart';
+
+class SqliteTutorContextRepository implements TutorContextRepository {
+  const SqliteTutorContextRepository();
+
+  static const _itemLimit = 8;
+  static const _lessonLimit = 5;
+  static const _recentMistakeEventLimit = 16;
+  static const _textLimit = 80;
+
+  @override
+  Future<TutorLearnerSnapshot> load({required DateTime asOf}) =>
+      LocalDatabase.use((db) async {
+        final profileRows = await db.query(
+          'learner_profiles',
+          columns: ['hsk_level'],
+          where: 'id = ?',
+          whereArgs: [1],
+          limit: 1,
+        );
+        final weakRows = await db.rawQuery(
+          '''
+          SELECT cards.chinese, cards.pinyin, cards.english_meaning,
+            card_progress.mastery, card_progress.incorrect_answers,
+            card_progress.due_at
+          FROM card_progress
+          INNER JOIN cards ON cards.id = card_progress.card_id
+          WHERE card_progress.learner_id = ?
+            AND card_progress.times_seen > 0
+            AND card_progress.mastery < ?
+          ORDER BY card_progress.mastery ASC,
+            card_progress.incorrect_answers DESC,
+            card_progress.last_reviewed_at DESC
+          LIMIT ?
+          ''',
+          [1, .7, _itemLimit],
+        );
+        final dueRows = await db.rawQuery(
+          '''
+          SELECT cards.chinese, cards.pinyin, cards.english_meaning,
+            card_progress.mastery, card_progress.incorrect_answers,
+            card_progress.due_at
+          FROM card_progress
+          INNER JOIN cards ON cards.id = card_progress.card_id
+          WHERE card_progress.learner_id = ?
+            AND card_progress.due_at <= ?
+          ORDER BY card_progress.due_at ASC
+          LIMIT ?
+          ''',
+          [1, asOf.toUtc().toIso8601String(), _itemLimit],
+        );
+        final mistakeRows = await db.rawQuery(
+          '''
+          SELECT cards.chinese, cards.pinyin, cards.english_meaning,
+            COUNT(*) AS mistake_count,
+            MAX(recent_mistakes.reviewed_at) AS last_mistake_at
+          FROM (
+            SELECT card_id, reviewed_at
+            FROM review_history
+            WHERE learner_id = ? AND was_correct = 0
+            ORDER BY reviewed_at DESC, id DESC
+            LIMIT ?
+          ) AS recent_mistakes
+          INNER JOIN cards ON cards.id = recent_mistakes.card_id
+          GROUP BY recent_mistakes.card_id
+          ORDER BY last_mistake_at DESC
+          LIMIT ?
+          ''',
+          [1, _recentMistakeEventLimit, _itemLimit],
+        );
+        final lessonRows = await db.rawQuery(
+          '''
+          SELECT lessons.lesson_title, lessons.theme, lessons.hsk_level,
+            lesson_sessions.started_at, lesson_sessions.completed_at,
+            lesson_sessions.cards_reviewed, lesson_sessions.correct_answers
+          FROM lesson_sessions
+          INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
+          WHERE lesson_sessions.learner_id = ? AND lessons.is_listed = 1
+          ORDER BY COALESCE(
+            lesson_sessions.completed_at,
+            lesson_sessions.started_at
+          ) DESC, lesson_sessions.id DESC
+          LIMIT ?
+          ''',
+          [1, _lessonLimit],
+        );
+
+        return TutorLearnerSnapshot(
+          asOf: asOf,
+          hskLevel: profileRows.isEmpty
+              ? null
+              : profileRows.single['hsk_level'] as int,
+          weakWords: weakRows.map(_wordFromRow).toList(growable: false),
+          dueCards: dueRows.map(_wordFromRow).toList(growable: false),
+          recentMistakes: mistakeRows
+              .map(
+                (row) => TutorMistakeSnapshot(
+                  chinese: _boundedText(row['chinese']),
+                  pinyin: _boundedText(row['pinyin']),
+                  englishMeaning: _boundedText(row['english_meaning']),
+                  mistakeCount: row['mistake_count'] as int,
+                  lastMistakeAt: DateTime.parse(
+                    row['last_mistake_at'] as String,
+                  ),
+                ),
+              )
+              .toList(growable: false),
+          lessonHistory: lessonRows
+              .map(
+                (row) => TutorLessonSnapshot(
+                  title: _boundedText(row['lesson_title']),
+                  theme: _boundedText(row['theme']),
+                  hskLevel: row['hsk_level'] as int,
+                  startedAt: DateTime.parse(row['started_at'] as String),
+                  completedAt: row['completed_at'] == null
+                      ? null
+                      : DateTime.parse(row['completed_at'] as String),
+                  cardsReviewed: row['cards_reviewed'] as int,
+                  correctAnswers: row['correct_answers'] as int,
+                ),
+              )
+              .toList(growable: false),
+        );
+      });
+
+  TutorWordSnapshot _wordFromRow(Map<String, Object?> row) => TutorWordSnapshot(
+    chinese: _boundedText(row['chinese']),
+    pinyin: _boundedText(row['pinyin']),
+    englishMeaning: _boundedText(row['english_meaning']),
+    mastery: (row['mastery'] as num).toDouble(),
+    incorrectAnswers: row['incorrect_answers'] as int,
+    dueAt: DateTime.parse(row['due_at'] as String),
+  );
+
+  String _boundedText(Object? value) {
+    final normalized = (value as String).trim().replaceAll(RegExp(r'\s+'), ' ');
+    final characters = normalized.runes.toList(growable: false);
+    if (characters.length <= _textLimit) return normalized;
+    return String.fromCharCodes(characters.take(_textLimit));
+  }
+}
 
 class SqliteLearnerRepository implements LearnerRepository {
   const SqliteLearnerRepository();

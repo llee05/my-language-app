@@ -12,6 +12,7 @@ import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/ai_configuration.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/app_dependencies.dart';
@@ -20,6 +21,7 @@ import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
+import 'package:mylanguageapp/repositories/tutor_context_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 import 'ai_test_support.dart';
@@ -2563,6 +2565,7 @@ void main() {
         home: Scaffold(
           body: AiTutorPage(
             settingsRepository: _MemorySettingsRepository(),
+            tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
           ),
         ),
@@ -2593,6 +2596,7 @@ void main() {
         home: Scaffold(
           body: AiTutorPage(
             settingsRepository: _MemorySettingsRepository(),
+            tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
             request: (messages) async {
               calls++;
@@ -2651,6 +2655,7 @@ void main() {
         home: Scaffold(
           body: AiTutorPage(
             settingsRepository: _MemorySettingsRepository(),
+            tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
             request: (_) async => throw const GeminiConfigurationException(
               'Gemini is not configured for this build.',
@@ -2682,6 +2687,7 @@ void main() {
         home: Scaffold(
           body: AiTutorPage(
             settingsRepository: _MemorySettingsRepository(),
+            tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
             request: (_) async =>
                 '{"chinese":"你好，梅！","pinyin":"nǐ hǎo, Méi!",'
@@ -2728,6 +2734,7 @@ void main() {
             settingsRepository: _MemorySettingsRepository(
               const LearnerSettings(soundEnabled: false),
             ),
+            tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
           ),
         ),
@@ -3777,6 +3784,12 @@ class _MemorySettingsRepository implements SettingsRepository {
   Future<void> save(LearnerSettings settings) async {
     this.settings = settings;
   }
+}
+
+class _EmptyTutorContextRepository implements TutorContextRepository {
+  @override
+  Future<TutorLearnerSnapshot> load({required DateTime asOf}) async =>
+      TutorLearnerSnapshot(asOf: asOf);
 }
 
 class _GatedSettingsRepository extends _MemorySettingsRepository {
