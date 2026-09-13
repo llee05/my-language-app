@@ -1657,6 +1657,7 @@ void main() {
     expect(find.text('Create a lesson'), findsOneWidget);
     expect(find.text('HSK level'), findsOneWidget);
     expect(find.text('Ask AI for a lesson topic'), findsOneWidget);
+    expect(find.byKey(const Key('lesson-topic-push-to-talk')), findsOneWidget);
     expect(find.text('Generate lesson'), findsOneWidget);
     expect(find.text('Daily Life'), findsOneWidget);
 

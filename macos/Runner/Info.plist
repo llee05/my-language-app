@@ -24,6 +24,10 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TingShuo uses the microphone when you hold the talk button to dictate a prompt.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>TingShuo converts speech into text for tutor and lesson prompts.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

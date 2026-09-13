@@ -28,6 +28,7 @@ import 'repositories/sqlite_repositories.dart';
 import 'repositories/tutor_context_repository.dart';
 import 'services/review_scheduler.dart';
 import 'services/pronunciation_service_factory.dart';
+import 'services/speech_input_service_factory.dart';
 import 'services/study_streak_calculator.dart';
 
 export 'models/learner_profile.dart';
@@ -35,6 +36,7 @@ export 'models/lesson.dart';
 
 part 'core/theme/app_colors.dart';
 part 'core/widgets/app_sidebar.dart';
+part 'core/widgets/push_to_talk_button.dart';
 part 'core/widgets/shared_widgets.dart';
 part 'features/ai_tutor/ai_tutor_page.dart';
 part 'features/ai_tutor/ai_listening_dialogue.dart';
@@ -78,11 +80,13 @@ class _HanziPathAppState extends State<HanziPathApp> {
   late Future<LearnerProfile?> _profile;
   AppThemeId _appThemeId = AppThemeId.classic;
   late final PronunciationService _pronunciationService;
+  late final SpeechInputService _speechInputService;
 
   @override
   void initState() {
     super.initState();
     _pronunciationService = widget.dependencies.createPronunciationService();
+    _speechInputService = widget.dependencies.createSpeechInputService();
     unawaited(_restoreAppTheme());
     final initialProfile = widget.initialProfile;
     if (initialProfile == null) {
@@ -178,6 +182,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
   @override
   void dispose() {
     unawaited(_pronunciationService.dispose());
+    unawaited(_speechInputService.dispose());
     super.dispose();
   }
 
@@ -247,6 +252,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             aiConfigurationRepository: widget.dependencies.aiConfiguration,
             tutorContextRepository: widget.dependencies.tutorContext,
             pronunciationService: _pronunciationService,
+            speechInputService: _speechInputService,
           );
         },
       ),

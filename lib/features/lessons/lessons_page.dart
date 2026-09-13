@@ -42,6 +42,7 @@ class LessonsPage extends StatefulWidget {
     required this.progressRepository,
     required this.settingsRepository,
     this.pronunciationService,
+    this.speechInputService,
     this.resumeLatest = false,
     this.onProgressChanged,
     this.aiService = const AiService(),
@@ -52,6 +53,7 @@ class LessonsPage extends StatefulWidget {
   final ProgressRepository progressRepository;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
+  final SpeechInputService? speechInputService;
   final bool resumeLatest;
   final VoidCallback? onProgressChanged;
   final AiService aiService;
@@ -84,6 +86,8 @@ class _LessonsPageState extends State<LessonsPage> {
   bool _savingAnswer = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
+  late final SpeechInputService _speechInputService;
+  late final bool _ownsSpeechInputService;
   bool _soundEnabled = true;
   LearnerSettings _learnerSettings = const LearnerSettings();
   late final Random _random;
@@ -95,6 +99,9 @@ class _LessonsPageState extends State<LessonsPage> {
     _random = widget.random ?? Random();
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
+    _ownsSpeechInputService = widget.speechInputService == null;
+    _speechInputService =
+        widget.speechInputService ?? createSystemSpeechInputService();
     _beginTopicsLoad();
     unawaited(_loadSoundPreference());
   }
@@ -107,6 +114,11 @@ class _LessonsPageState extends State<LessonsPage> {
       unawaited(_pronunciationService.dispose());
     } else {
       unawaited(_pronunciationService.stop());
+    }
+    if (_ownsSpeechInputService) {
+      unawaited(_speechInputService.dispose());
+    } else {
+      unawaited(_speechInputService.cancelListening());
     }
     super.dispose();
   }
@@ -838,11 +850,17 @@ class _LessonsPageState extends State<LessonsPage> {
             TextField(
               controller: _topicController,
               enabled: !_generating,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Ask AI for a lesson topic',
                 hintText: 'e.g. ordering breakfast in Beijing',
                 helperText: 'This overrides the selected previous topic.',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                suffixIcon: _PushToTalkButton(
+                  key: const Key('lesson-topic-push-to-talk'),
+                  controller: _topicController,
+                  speechInputService: _speechInputService,
+                  enabled: !_generating,
+                ),
               ),
             ),
             if (_notice != null) ...[

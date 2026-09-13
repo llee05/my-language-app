@@ -13,6 +13,7 @@ import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/tutor_context_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
+import 'package:mylanguageapp/services/speech_input_service.dart';
 
 import 'ai_test_support.dart';
 
@@ -92,6 +93,37 @@ class _FakeDialoguePronunciationService extends _FakePronunciationService
       dialogues.add(List.unmodifiable(utterances));
 }
 
+class _FakeSpeechInputService implements SpeechInputService {
+  String transcript = '';
+  String? preferredLocaleId;
+  int startCalls = 0;
+  int stopCalls = 0;
+  int cancelCalls = 0;
+  int disposeCalls = 0;
+  Object? startError;
+
+  @override
+  Future<void> startListening({
+    required SpeechInputResult onResult,
+    SpeechInputError? onError,
+    String? preferredLocaleId,
+  }) async {
+    startCalls++;
+    this.preferredLocaleId = preferredLocaleId;
+    if (startError != null) throw startError!;
+    if (transcript.isNotEmpty) onResult(transcript);
+  }
+
+  @override
+  Future<void> stopListening() async => stopCalls++;
+
+  @override
+  Future<void> cancelListening() async => cancelCalls++;
+
+  @override
+  Future<void> dispose() async => disposeCalls++;
+}
+
 class _MemoryTutorContextRepository implements TutorContextRepository {
   _MemoryTutorContextRepository({
     TutorLearnerSnapshot? snapshot,
@@ -118,6 +150,7 @@ Future<void> _pumpTutor(
   SettingsRepository? settingsRepository,
   TutorContextRepository? tutorContextRepository,
   PronunciationService? pronunciationService,
+  SpeechInputService? speechInputService,
   DateTime Function()? clock,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1100, 900));
@@ -132,6 +165,7 @@ Future<void> _pumpTutor(
           tutorContextRepository:
               tutorContextRepository ?? _MemoryTutorContextRepository(),
           pronunciationService: pronunciationService,
+          speechInputService: speechInputService,
           clock: clock,
         ),
       ),
@@ -265,6 +299,84 @@ void main() {
     expect(find.text('How do I use 的 correctly?'), findsOneWidget);
     expect(find.text('What are the four tones?'), findsOneWidget);
     expect(find.byTooltip('Send'), findsOneWidget);
+    expect(find.byKey(const Key('ai-tutor-push-to-talk')), findsOneWidget);
+  });
+
+  testWidgets(
+    'holding the tutor microphone dictates Mandarin into the prompt',
+    (tester) async {
+      final speechInput = _FakeSpeechInputService()..transcript = '我想练习中文';
+      final pronunciation = _FakePronunciationService();
+      await _pumpTutor(
+        tester,
+        speechInputService: speechInput,
+        pronunciationService: pronunciation,
+        request: (_) async => fail('Dictation should not send automatically.'),
+      );
+
+      await tester.enterText(find.byType(TextField), '龙老师，');
+      await tester.longPress(find.byKey(const Key('ai-tutor-push-to-talk')));
+      await tester.pumpAndSettle();
+
+      expect(speechInput.startCalls, 1);
+      expect(speechInput.stopCalls, 1);
+      expect(pronunciation.stopCalls, 1);
+      expect(speechInput.preferredLocaleId, 'zh_CN');
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        '龙老师， 我想练习中文',
+      );
+    },
+  );
+
+  testWidgets('push-to-talk failures leave typed prompts intact', (
+    tester,
+  ) async {
+    final speechInput = _FakeSpeechInputService()
+      ..startError = const SpeechInputException(
+        'Microphone access was denied.',
+      );
+    await _pumpTutor(
+      tester,
+      speechInputService: speechInput,
+      pronunciationService: _FakePronunciationService(),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Keep this text');
+    await tester.longPress(find.byKey(const Key('ai-tutor-push-to-talk')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Microphone access was denied.'), findsOneWidget);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'Keep this text',
+    );
+  });
+
+  testWidgets('listening-dialogue topics support push-to-talk', (tester) async {
+    final speechInput = _FakeSpeechInputService()
+      ..transcript = 'Ordering breakfast';
+    await _pumpTutor(
+      tester,
+      speechInputService: speechInput,
+      pronunciationService: _FakePronunciationService(),
+    );
+
+    await tester.tap(find.text('Listening dialogue'));
+    await tester.pumpAndSettle();
+    await tester.longPress(
+      find.byKey(const Key('dialogue-topic-push-to-talk')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(speechInput.preferredLocaleId, isNull);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('dialogue-topic')))
+          .controller!
+          .text,
+      'Ordering breakfast',
+    );
   });
 
   testWidgets(

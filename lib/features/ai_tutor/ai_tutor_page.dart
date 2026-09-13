@@ -10,6 +10,7 @@ class AiTutorPage extends StatefulWidget {
     this.settingsRepository = const SqliteSettingsRepository(),
     this.tutorContextRepository = const SqliteTutorContextRepository(),
     this.pronunciationService,
+    this.speechInputService,
     this.aiService = const AiService(),
     this.clock,
   });
@@ -18,6 +19,7 @@ class AiTutorPage extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final TutorContextRepository tutorContextRepository;
   final PronunciationService? pronunciationService;
+  final SpeechInputService? speechInputService;
   final AiService aiService;
   final DateTime Function()? clock;
 
@@ -32,6 +34,8 @@ class _AiTutorPageState extends State<AiTutorPage> {
   bool _dialogueOpened = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
+  late final SpeechInputService _speechInputService;
+  late final bool _ownsSpeechInputService;
 
   @override
   void initState() {
@@ -39,6 +43,9 @@ class _AiTutorPageState extends State<AiTutorPage> {
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
+    _ownsSpeechInputService = widget.speechInputService == null;
+    _speechInputService =
+        widget.speechInputService ?? createSystemSpeechInputService();
   }
 
   @override
@@ -48,12 +55,18 @@ class _AiTutorPageState extends State<AiTutorPage> {
     } else {
       unawaited(_pronunciationService.stop());
     }
+    if (_ownsSpeechInputService) {
+      unawaited(_speechInputService.dispose());
+    } else {
+      unawaited(_speechInputService.cancelListening());
+    }
     super.dispose();
   }
 
   void _selectMode(_AiTutorMode mode) {
     if (mode == _mode) return;
     unawaited(_pronunciationService.stop());
+    unawaited(_speechInputService.cancelListening());
     setState(() {
       _mode = mode;
       if (mode == _AiTutorMode.listeningDialogue) _dialogueOpened = true;
@@ -74,6 +87,7 @@ class _AiTutorPageState extends State<AiTutorPage> {
                 settingsRepository: widget.settingsRepository,
                 tutorContextRepository: widget.tutorContextRepository,
                 pronunciationService: _pronunciationService,
+                speechInputService: _speechInputService,
                 aiService: widget.aiService,
                 clock: widget.clock,
               ),
@@ -84,6 +98,7 @@ class _AiTutorPageState extends State<AiTutorPage> {
                   settingsRepository: widget.settingsRepository,
                   tutorContextRepository: widget.tutorContextRepository,
                   pronunciationService: _pronunciationService,
+                  speechInputService: _speechInputService,
                   aiService: widget.aiService,
                   clock: widget.clock,
                 )
@@ -144,6 +159,7 @@ class _TutorChat extends StatefulWidget {
     required this.settingsRepository,
     required this.tutorContextRepository,
     required this.pronunciationService,
+    required this.speechInputService,
     required this.aiService,
     this.clock,
   });
@@ -152,6 +168,7 @@ class _TutorChat extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final TutorContextRepository tutorContextRepository;
   final PronunciationService pronunciationService;
+  final SpeechInputService speechInputService;
   final AiService aiService;
   final DateTime Function()? clock;
 
@@ -452,6 +469,8 @@ useful:
           onSend: _send,
           onRetry: _sendErrorIsRetryable ? _retrySend : null,
           onPromptSelected: _send,
+          speechInputService: widget.speechInputService,
+          beforeListening: _stopPronunciation,
         ),
       ],
     );
@@ -665,6 +684,8 @@ class _TutorComposer extends StatelessWidget {
     required this.onSend,
     required this.onRetry,
     required this.onPromptSelected,
+    required this.speechInputService,
+    required this.beforeListening,
   });
 
   final TextEditingController controller;
@@ -673,6 +694,8 @@ class _TutorComposer extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback? onRetry;
   final ValueChanged<String> onPromptSelected;
+  final SpeechInputService speechInputService;
+  final Future<void> Function() beforeListening;
 
   @override
   Widget build(BuildContext context) {
@@ -731,23 +754,36 @@ class _TutorComposer extends StatelessWidget {
               fillColor: AppColors.surface,
               suffixIcon: Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: IconButton(
-                  tooltip: 'Send',
-                  onPressed: sending ? null : onSend,
-                  icon: sending
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.red,
-                          ),
-                        )
-                      : const Icon(Icons.send_rounded, size: 18),
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF6A241E),
-                    foregroundColor: AppColors.red,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _PushToTalkButton(
+                      key: const Key('ai-tutor-push-to-talk'),
+                      controller: controller,
+                      speechInputService: speechInputService,
+                      enabled: !sending,
+                      preferredLocaleId: 'zh_CN',
+                      beforeListening: beforeListening,
+                    ),
+                    IconButton(
+                      tooltip: 'Send',
+                      onPressed: sending ? null : onSend,
+                      icon: sending
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.red,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded, size: 18),
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFF6A241E),
+                        foregroundColor: AppColors.red,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               border: OutlineInputBorder(

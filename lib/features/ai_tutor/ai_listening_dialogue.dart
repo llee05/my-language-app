@@ -7,6 +7,7 @@ class _AiListeningDialogueMode extends StatefulWidget {
     required this.settingsRepository,
     required this.tutorContextRepository,
     required this.pronunciationService,
+    required this.speechInputService,
     required this.aiService,
     this.clock,
   });
@@ -16,6 +17,7 @@ class _AiListeningDialogueMode extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final TutorContextRepository tutorContextRepository;
   final PronunciationService pronunciationService;
+  final SpeechInputService speechInputService;
   final AiService aiService;
   final DateTime Function()? clock;
 
@@ -372,10 +374,17 @@ Return only compact JSON with this exact shape:
             enabled: !_generating,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => unawaited(_generateDialogue()),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Topic (optional)',
               hintText: 'Ordering lunch, meeting a friend…',
-              prefixIcon: Icon(Icons.lightbulb_outline_rounded),
+              prefixIcon: const Icon(Icons.lightbulb_outline_rounded),
+              suffixIcon: _PushToTalkButton(
+                key: const Key('dialogue-topic-push-to-talk'),
+                controller: _topicController,
+                speechInputService: widget.speechInputService,
+                enabled: !_generating,
+                beforeListening: _stopAudio,
+              ),
             ),
           ),
           const SizedBox(height: 12),

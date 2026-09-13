@@ -8,6 +8,7 @@ import 'settings_repository.dart';
 import 'sqlite_repositories.dart';
 import 'tutor_context_repository.dart';
 import '../services/pronunciation_service_factory.dart';
+import '../services/speech_input_service_factory.dart';
 
 class AppDependencies {
   const AppDependencies({
@@ -18,6 +19,7 @@ class AppDependencies {
     this.progress = const SqliteProgressRepository(),
     this.dailyReviews = const SqliteDailyReviewSessionRepository(),
     this.createPronunciationService = createDefaultPronunciationService,
+    this.createSpeechInputService = createSystemSpeechInputService,
     this.aiConfiguration = const SecureAiConfigurationRepository(),
     this.tutorContext = const SqliteTutorContextRepository(),
   });
@@ -29,6 +31,7 @@ class AppDependencies {
   final ProgressRepository progress;
   final DailyReviewSessionRepository dailyReviews;
   final PronunciationServiceFactory createPronunciationService;
+  final SpeechInputServiceFactory createSpeechInputService;
   final AiConfigurationRepository aiConfiguration;
   final TutorContextRepository tutorContext;
 }

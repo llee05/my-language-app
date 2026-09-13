@@ -17,6 +17,7 @@ class DashboardPage extends StatefulWidget {
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
     this.tutorContextRepository = const SqliteTutorContextRepository(),
     this.pronunciationService,
+    this.speechInputService,
     this.clock,
   });
 
@@ -34,6 +35,7 @@ class DashboardPage extends StatefulWidget {
   final AiConfigurationRepository aiConfigurationRepository;
   final TutorContextRepository tutorContextRepository;
   final PronunciationService? pronunciationService;
+  final SpeechInputService? speechInputService;
   final DateTime Function()? clock;
 
   @override
@@ -45,6 +47,8 @@ class _DashboardPageState extends State<DashboardPage> {
   double _menuSwipeDistance = 0;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
+  late final SpeechInputService _speechInputService;
+  late final bool _ownsSpeechInputService;
   int selectedNav = 0;
   bool _resumeLatestLesson = false;
   bool _startDailyReview = false;
@@ -70,6 +74,9 @@ class _DashboardPageState extends State<DashboardPage> {
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
+    _ownsSpeechInputService = widget.speechInputService == null;
+    _speechInputService =
+        widget.speechInputService ?? createSystemSpeechInputService();
     _loadDailyReviewPrompt();
     _loadActiveLesson();
     _loadLearningStats();
@@ -82,6 +89,11 @@ class _DashboardPageState extends State<DashboardPage> {
       unawaited(_pronunciationService.dispose());
     } else {
       unawaited(_pronunciationService.stop());
+    }
+    if (_ownsSpeechInputService) {
+      unawaited(_speechInputService.dispose());
+    } else {
+      unawaited(_speechInputService.cancelListening());
     }
     super.dispose();
   }
@@ -350,6 +362,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               widget.aiConfigurationRepository,
                           tutorContextRepository: widget.tutorContextRepository,
                           pronunciationService: _pronunciationService,
+                          speechInputService: _speechInputService,
                           clock: widget.clock,
                         ),
                       ),
@@ -426,6 +439,7 @@ class _DashboardBody extends StatelessWidget {
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
     this.tutorContextRepository = const SqliteTutorContextRepository(),
     required this.pronunciationService,
+    required this.speechInputService,
     this.clock,
   });
   final int selectedNav;
@@ -468,6 +482,7 @@ class _DashboardBody extends StatelessWidget {
   final AiConfigurationRepository aiConfigurationRepository;
   final TutorContextRepository tutorContextRepository;
   final PronunciationService pronunciationService;
+  final SpeechInputService speechInputService;
   final DateTime Function()? clock;
 
   @override
@@ -481,6 +496,7 @@ class _DashboardBody extends StatelessWidget {
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
+        speechInputService: speechInputService,
         resumeLatest: resumeLatestLesson,
         onProgressChanged: onLessonProgressChanged,
       );
@@ -530,6 +546,7 @@ class _DashboardBody extends StatelessWidget {
         settingsRepository: settingsRepository,
         tutorContextRepository: tutorContextRepository,
         pronunciationService: pronunciationService,
+        speechInputService: speechInputService,
         clock: clock,
       );
     }

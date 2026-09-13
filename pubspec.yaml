@@ -46,6 +46,7 @@ dependencies:
   sherpa_onnx: ^1.13.6
   # v11 requires Android SDK 37; keep the app's SDK 36 toolchain supported.
   flutter_secure_storage: ^10.3.2
+  speech_to_text: ^7.4.0
 
 dev_dependencies:
   flutter_test:

@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TingShuo uses the microphone when you hold the talk button to dictate a prompt.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>TingShuo converts speech into text for tutor and lesson prompts.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
