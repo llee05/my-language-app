@@ -61,6 +61,37 @@ class _FakePronunciationService implements PronunciationService {
   Future<void> dispose() async => disposeCalls++;
 }
 
+class _FakeDialoguePronunciationService extends _FakePronunciationService
+    implements OfflinePronunciationManager, DialoguePronunciationService {
+  final List<List<PronunciationUtterance>> dialogues = [];
+
+  @override
+  Stream<OfflineVoiceStatus> get voicePackUpdates => const Stream.empty();
+
+  @override
+  Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) async =>
+      OfflineVoiceStatus.ready(engine: engine);
+
+  @override
+  Future<void> installVoicePack(PronunciationEngine engine) async {}
+
+  @override
+  List<PronunciationVoice> voicesFor(PronunciationEngine engine) => [
+    kokoroMandarinVoices.first,
+    kokoroMandarinVoices.firstWhere((voice) => voice.id.startsWith('zm_')),
+  ];
+
+  @override
+  Future<void> configurePronunciation({
+    required PronunciationEngine engine,
+    List<String> voiceIds = const [],
+  }) async {}
+
+  @override
+  Future<void> speakDialogue(List<PronunciationUtterance> utterances) async =>
+      dialogues.add(List.unmodifiable(utterances));
+}
+
 class _MemoryTutorContextRepository implements TutorContextRepository {
   _MemoryTutorContextRepository({
     TutorLearnerSnapshot? snapshot,
@@ -108,6 +139,58 @@ Future<void> _pumpTutor(
   );
   await tester.pumpAndSettle();
 }
+
+String _dialogueResponse() => jsonEncode({
+  'title': 'At the café',
+  'setting': 'Two friends order a drink.',
+  'lines': [
+    {
+      'speaker': 'A',
+      'chinese': '你好！',
+      'tokens': ['你', '好'],
+      'pinyin': 'Nǐ hǎo!',
+      'english': 'Hello!',
+    },
+    {
+      'speaker': 'B',
+      'chinese': '你好！',
+      'tokens': ['你', '好'],
+      'pinyin': 'Nǐ hǎo!',
+      'english': 'Hello!',
+    },
+    {
+      'speaker': 'A',
+      'chinese': '我要咖啡。',
+      'tokens': ['我', '要', '咖啡'],
+      'pinyin': 'Wǒ yào kāfēi.',
+      'english': 'I want coffee.',
+    },
+    {
+      'speaker': 'B',
+      'chinese': '好，谢谢。',
+      'tokens': ['好', '谢谢'],
+      'pinyin': 'Hǎo, xièxie.',
+      'english': 'Okay, thank you.',
+    },
+  ],
+  'new_words': [
+    {'chinese': '咖啡', 'pinyin': 'kāfēi', 'english': 'coffee'},
+  ],
+  'questions': [
+    {
+      'prompt': 'What does Speaker A want?',
+      'options': ['Coffee', 'Tea'],
+      'correct_index': 0,
+      'explanation': 'Speaker A says they want coffee.',
+    },
+    {
+      'prompt': 'What does Speaker B say at the end?',
+      'options': ['Goodbye', 'Okay, thank you'],
+      'correct_index': 1,
+      'explanation': 'Speaker B agrees and says thank you.',
+    },
+  ],
+});
 
 void main() {
   testWidgets('tutor uses the saved provider and removal stops later sends', (
@@ -183,6 +266,113 @@ void main() {
     expect(find.text('What are the four tones?'), findsOneWidget);
     expect(find.byTooltip('Send'), findsOneWidget);
   });
+
+  testWidgets(
+    'generates a validated two-voice dialogue with tappable new words and questions',
+    (tester) async {
+      final pronunciation = _FakeDialoguePronunciationService();
+      final contextRepository = _MemoryTutorContextRepository(
+        snapshot: TutorLearnerSnapshot(
+          asOf: DateTime.utc(2026, 9, 14),
+          knownWords: const [
+            TutorWordSnapshot(
+              chinese: '你',
+              pinyin: 'nǐ',
+              englishMeaning: 'you',
+              mastery: .8,
+              incorrectAnswers: 0,
+            ),
+            TutorWordSnapshot(
+              chinese: '好',
+              pinyin: 'hǎo',
+              englishMeaning: 'good',
+              mastery: .9,
+              incorrectAnswers: 0,
+            ),
+            TutorWordSnapshot(
+              chinese: '我',
+              pinyin: 'wǒ',
+              englishMeaning: 'I',
+              mastery: .8,
+              incorrectAnswers: 0,
+            ),
+            TutorWordSnapshot(
+              chinese: '要',
+              pinyin: 'yào',
+              englishMeaning: 'want',
+              mastery: .7,
+              incorrectAnswers: 1,
+            ),
+            TutorWordSnapshot(
+              chinese: '谢谢',
+              pinyin: 'xièxie',
+              englishMeaning: 'thank you',
+              mastery: .8,
+              incorrectAnswers: 0,
+            ),
+          ],
+        ),
+      );
+      List<Map<String, String>>? requestMessages;
+      await _pumpTutor(
+        tester,
+        pronunciationService: pronunciation,
+        tutorContextRepository: contextRepository,
+        request: (messages) async {
+          requestMessages = messages;
+          return _dialogueResponse();
+        },
+      );
+
+      await tester.tap(find.text('Listening dialogue'));
+      await tester.pumpAndSettle();
+      expect(find.text('AI listening dialogue'), findsOneWidget);
+      expect(find.textContaining('5 studied words'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('dialogue-topic')),
+        'At a café',
+      );
+      await tester.tap(find.byKey(const Key('generate-dialogue')));
+      await tester.pumpAndSettle();
+
+      expect(requestMessages, isNotNull);
+      expect(requestMessages!.first['content'], contains('known_words='));
+      expect(requestMessages!.first['content'], contains('"chinese":"你"'));
+      expect(requestMessages!.last['content'], contains('At a café'));
+      expect(find.text('At the café'), findsOneWidget);
+      expect(find.textContaining('What does Speaker A want?'), findsOneWidget);
+      expect(find.byKey(const Key('dialogue-transcript')), findsNothing);
+      expect(pronunciation.dialogues, hasLength(1));
+      expect(
+        pronunciation.dialogues.single.map((line) => line.voice.id).toSet(),
+        hasLength(2),
+      );
+
+      await tester.tap(find.byKey(const Key('dialogue-new-word-咖啡')));
+      await tester.pumpAndSettle();
+      expect(find.text('kāfēi'), findsOneWidget);
+      expect(find.text('coffee'), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('dialogue-answer-0-0')));
+      await tester.tap(find.byKey(const Key('dialogue-answer-0-0')));
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('dialogue-answer-1-1')));
+      await tester.tap(find.byKey(const Key('dialogue-answer-1-1')));
+      await tester.pump();
+      await tester.ensureVisible(
+        find.byKey(const Key('submit-dialogue-answers')),
+      );
+      await tester.tap(find.byKey(const Key('submit-dialogue-answers')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Score: 2 / 2'), findsOneWidget);
+      expect(find.byKey(const Key('dialogue-transcript')), findsOneWidget);
+      expect(find.text('Wǒ yào kāfēi.'), findsOneWidget);
+    },
+  );
 
   testWidgets('sends a typed prompt and renders a parsed JSON reply', (
     tester,

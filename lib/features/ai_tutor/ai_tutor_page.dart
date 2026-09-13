@@ -3,7 +3,7 @@ part of '../../main.dart';
 typedef AiTutorRequest =
     Future<String> Function(List<Map<String, String>> messages);
 
-class AiTutorPage extends StatelessWidget {
+class AiTutorPage extends StatefulWidget {
   const AiTutorPage({
     super.key,
     this.request,
@@ -22,14 +22,118 @@ class AiTutorPage extends StatelessWidget {
   final DateTime Function()? clock;
 
   @override
+  State<AiTutorPage> createState() => _AiTutorPageState();
+}
+
+enum _AiTutorMode { chat, listeningDialogue }
+
+class _AiTutorPageState extends State<AiTutorPage> {
+  _AiTutorMode _mode = _AiTutorMode.chat;
+  bool _dialogueOpened = false;
+  late final PronunciationService _pronunciationService;
+  late final bool _ownsPronunciationService;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsPronunciationService = widget.pronunciationService == null;
+    _pronunciationService =
+        widget.pronunciationService ?? createSystemPronunciationService();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsPronunciationService) {
+      unawaited(_pronunciationService.dispose());
+    } else {
+      unawaited(_pronunciationService.stop());
+    }
+    super.dispose();
+  }
+
+  void _selectMode(_AiTutorMode mode) {
+    if (mode == _mode) return;
+    unawaited(_pronunciationService.stop());
+    setState(() {
+      _mode = mode;
+      if (mode == _AiTutorMode.listeningDialogue) _dialogueOpened = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _TutorChat(
-      request: request,
-      settingsRepository: settingsRepository,
-      tutorContextRepository: tutorContextRepository,
-      pronunciationService: pronunciationService,
-      aiService: aiService,
-      clock: clock,
+    return Column(
+      children: [
+        _AiTutorModeSelector(selected: _mode, onSelected: _selectMode),
+        Expanded(
+          child: IndexedStack(
+            index: _mode.index,
+            children: [
+              _TutorChat(
+                request: widget.request,
+                settingsRepository: widget.settingsRepository,
+                tutorContextRepository: widget.tutorContextRepository,
+                pronunciationService: _pronunciationService,
+                aiService: widget.aiService,
+                clock: widget.clock,
+              ),
+              if (_dialogueOpened)
+                _AiListeningDialogueMode(
+                  active: _mode == _AiTutorMode.listeningDialogue,
+                  request: widget.request,
+                  settingsRepository: widget.settingsRepository,
+                  tutorContextRepository: widget.tutorContextRepository,
+                  pronunciationService: _pronunciationService,
+                  aiService: widget.aiService,
+                  clock: widget.clock,
+                )
+              else
+                const SizedBox.shrink(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AiTutorModeSelector extends StatelessWidget {
+  const _AiTutorModeSelector({
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final _AiTutorMode selected;
+  final ValueChanged<_AiTutorMode> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
+      decoration: BoxDecoration(
+        color: AppColors.sidebar,
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SegmentedButton<_AiTutorMode>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(
+              value: _AiTutorMode.chat,
+              icon: Icon(Icons.chat_bubble_outline_rounded, size: 17),
+              label: Text('Tutor chat'),
+            ),
+            ButtonSegment(
+              value: _AiTutorMode.listeningDialogue,
+              icon: Icon(Icons.graphic_eq_rounded, size: 17),
+              label: Text('Listening dialogue'),
+            ),
+          ],
+          selected: {selected},
+          onSelectionChanged: (selection) => onSelected(selection.single),
+        ),
+      ),
     );
   }
 }
@@ -39,7 +143,7 @@ class _TutorChat extends StatefulWidget {
     this.request,
     required this.settingsRepository,
     required this.tutorContextRepository,
-    this.pronunciationService,
+    required this.pronunciationService,
     required this.aiService,
     this.clock,
   });
@@ -47,7 +151,7 @@ class _TutorChat extends StatefulWidget {
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
   final TutorContextRepository tutorContextRepository;
-  final PronunciationService? pronunciationService;
+  final PronunciationService pronunciationService;
   final AiService aiService;
   final DateTime Function()? clock;
 
@@ -84,7 +188,6 @@ useful:
   String? _failedPrompt;
   var _sendErrorIsRetryable = false;
   late final PronunciationService _pronunciationService;
-  late final bool _ownsPronunciationService;
 
   static const _initialMessages = [
     _ChatMessage.assistant(
@@ -101,9 +204,7 @@ useful:
   @override
   void initState() {
     super.initState();
-    _ownsPronunciationService = widget.pronunciationService == null;
-    _pronunciationService =
-        widget.pronunciationService ?? createSystemPronunciationService();
+    _pronunciationService = widget.pronunciationService;
     unawaited(_loadSoundPreference());
   }
 
@@ -111,11 +212,6 @@ useful:
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
-    if (_ownsPronunciationService) {
-      unawaited(_pronunciationService.dispose());
-    } else {
-      unawaited(_stopPronunciation());
-    }
     super.dispose();
   }
 

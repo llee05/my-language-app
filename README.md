@@ -29,7 +29,8 @@ and API key.
   filters plus word detail views.
 - Vocab Rush timed and survival modes; incorrect answers are added to the
   learner's review data.
-- Long Laoshi, an optional AI tutor with personal API keys configured in Settings.
+- Long Laoshi, an optional AI tutor with chat and generated listening dialogues
+  using personal API keys configured in Settings.
 - Responsive desktop and mobile layouts, local settings, and versioned SQLite
   migrations.
 
@@ -137,10 +138,19 @@ Open **Settings → AI provider** to configure AI without rebuilding the app:
    in the form. This uses your API allowance and does not save changes.
 
 When you send a tutor message, the request also includes a bounded snapshot of
-your locally saved HSK level, weak and due words, recent mistakes, and recent
-lesson sessions so the tutor can personalize practice. The snapshot excludes
-your name and is limited to 8 words per category and 5 lesson sessions. If the
-snapshot cannot be read, tutor chat continues without personalization.
+your locally saved HSK level, studied vocabulary, weak and due words, recent
+mistakes, and recent lesson sessions so the tutor can personalize practice. The
+snapshot excludes your name and is limited to 80 studied words, 8 targeted
+words per category, and 5 lesson sessions. If the snapshot cannot be read,
+tutor chat continues without personalization.
+
+Choose **Listening dialogue** inside AI Tutor to generate a short conversation
+from up to 80 recently studied words. The response is locally checked so every
+spoken token comes from that list apart from one or two highlighted new words.
+Listen without the transcript, answer the comprehension questions, then reveal
+the pinyin and translation. New words are tappable for their reading, meaning,
+and pronunciation. When the Kokoro pack is installed, the two speakers use two
+different voices from the learner's selected voice pool where possible.
 
 | Provider option | API used |
 | --- | --- |
