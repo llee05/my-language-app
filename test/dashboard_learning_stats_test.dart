@@ -20,6 +20,11 @@ void main() {
       expect(stats.totalXp, 25);
       expect(stats.weeklyXp, [0, 0, 0, 5, 10, 0, 0]);
       expect(stats.streakDays, 2);
+      expect(stats.reviewCount, 3);
+      expect(stats.correctReviewCount, 2);
+      expect(stats.accuracy, closeTo(2 / 3, .0001));
+      expect(stats.activeStudyDays, 3);
+      expect(stats.weeklyReviewCount, 2);
     });
 
     test('returns zeroed progress for a learner without saved data', () {
@@ -35,6 +40,9 @@ void main() {
       expect(stats.wordsSeen, 0);
       expect(stats.wordsLearning, 0);
       expect(stats.wordsLearned, 0);
+      expect(stats.reviewCount, 0);
+      expect(stats.accuracy, 0);
+      expect(stats.activeStudyDays, 0);
       expect(stats.vocabulary, isEmpty);
     });
 

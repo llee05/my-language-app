@@ -58,6 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
   LessonSession? _activeLessonSession;
   DashboardLearningStats _learningStats = const DashboardLearningStats();
   bool _loadingLearningStats = true;
+  bool _learningStatsLoadError = false;
   List<Lesson> _availableLessons = const [];
   bool _loadingAvailableLessons = true;
   bool _availableLessonsLoadError = false;
@@ -118,6 +119,12 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadLearningStats() async {
+    if (!_loadingLearningStats && mounted) {
+      setState(() {
+        _loadingLearningStats = true;
+        _learningStatsLoadError = false;
+      });
+    }
     try {
       final results = await Future.wait([
         widget.progressRepository.reviewHistory(),
@@ -134,12 +141,15 @@ class _DashboardPageState extends State<DashboardPage> {
           now: now,
         );
         _loadingLearningStats = false;
+        _learningStatsLoadError = false;
       });
-    } catch (_) {
+    } catch (error) {
+      debugPrint('Learning analytics load failed: $error');
       if (!mounted) return;
       setState(() {
         _learningStats = const DashboardLearningStats();
         _loadingLearningStats = false;
+        _learningStatsLoadError = true;
       });
     }
   }
@@ -244,6 +254,14 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
+  void _openProfile() => setState(() {
+    selectedNav = 8;
+    _resumeLatestLesson = false;
+    _startDailyReview = false;
+  });
+
+  void _openSettings() => _selectNavigation(7);
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -285,6 +303,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         showMenu: !showSidebar,
                         profile: widget.profile,
                         totalXp: _learningStats.totalXp,
+                        profileSelected: selectedNav == 8,
+                        onProfilePressed: _openProfile,
                       ),
                       Expanded(
                         child: _DashboardBody(
@@ -308,6 +328,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           activeLessonSession: _activeLessonSession,
                           learningStats: _learningStats,
                           loadingLearningStats: _loadingLearningStats,
+                          learningStatsLoadError: _learningStatsLoadError,
+                          onRetryLearningStats: _loadLearningStats,
+                          onOpenProfileSettings: _openSettings,
                           availableLessons: _availableLessons,
                           loadingAvailableLessons: _loadingAvailableLessons,
                           availableLessonsLoadError: _availableLessonsLoadError,
@@ -383,6 +406,9 @@ class _DashboardBody extends StatelessWidget {
     required this.activeLessonSession,
     required this.learningStats,
     required this.loadingLearningStats,
+    required this.learningStatsLoadError,
+    required this.onRetryLearningStats,
+    required this.onOpenProfileSettings,
     required this.availableLessons,
     required this.loadingAvailableLessons,
     required this.availableLessonsLoadError,
@@ -422,6 +448,9 @@ class _DashboardBody extends StatelessWidget {
   final LessonSession? activeLessonSession;
   final DashboardLearningStats learningStats;
   final bool loadingLearningStats;
+  final bool learningStatsLoadError;
+  final VoidCallback onRetryLearningStats;
+  final VoidCallback onOpenProfileSettings;
   final List<Lesson> availableLessons;
   final bool loadingAvailableLessons;
   final bool availableLessonsLoadError;
@@ -518,6 +547,17 @@ class _DashboardBody extends StatelessWidget {
         pronunciationService: pronunciationService,
       );
     }
+    if (selectedNav == 8) {
+      return ProfilePage(
+        profile: profile,
+        stats: learningStats,
+        loading: loadingLearningStats,
+        loadError: learningStatsLoadError,
+        onRetry: onRetryLearningStats,
+        onStartReview: onStartDailyReview,
+        onEditProfile: onOpenProfileSettings,
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -605,10 +645,14 @@ class DashboardHeader extends StatelessWidget {
     required this.showMenu,
     required this.profile,
     this.totalXp = 0,
+    this.profileSelected = false,
+    this.onProfilePressed,
   });
   final bool showMenu;
   final LearnerProfile profile;
   final int totalXp;
+  final bool profileSelected;
+  final VoidCallback? onProfilePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -636,6 +680,8 @@ class DashboardHeader extends StatelessWidget {
               children: [
                 Text(
                   '你好，${profile.name}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'serif',
                     fontSize: 20,
@@ -670,12 +716,35 @@ class DashboardHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          CircleAvatar(
-            radius: 15,
-            backgroundColor: AppColors.darkRed,
-            child: Text(
-              '学',
-              style: TextStyle(color: AppColors.red, fontFamily: 'serif'),
+          Tooltip(
+            message: 'Open profile',
+            child: Material(
+              color: profileSelected ? AppColors.red : AppColors.darkRed,
+              shape: CircleBorder(
+                side: BorderSide(
+                  color: profileSelected ? AppColors.gold : AppColors.red,
+                  width: profileSelected ? 2 : 1,
+                ),
+              ),
+              child: InkWell(
+                key: const Key('open-profile-button'),
+                onTap: onProfilePressed,
+                customBorder: const CircleBorder(),
+                child: SizedBox.square(
+                  dimension: 40,
+                  child: Center(
+                    child: Text(
+                      '学',
+                      style: TextStyle(
+                        color: profileSelected
+                            ? AppColors.background
+                            : AppColors.red,
+                        fontFamily: 'serif',
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -692,6 +761,10 @@ class DashboardLearningStats {
     this.wordsSeen = 0,
     this.wordsLearning = 0,
     this.wordsLearned = 0,
+    this.reviewCount = 0,
+    this.correctReviewCount = 0,
+    this.activeStudyDays = 0,
+    this.weeklyReviewCount = 0,
     this.vocabulary = const [],
   });
 
@@ -701,7 +774,14 @@ class DashboardLearningStats {
   final int wordsSeen;
   final int wordsLearning;
   final int wordsLearned;
+  final int reviewCount;
+  final int correctReviewCount;
+  final int activeStudyDays;
+  final int weeklyReviewCount;
   final List<VocabularyCardProgress> vocabulary;
+
+  double get accuracy =>
+      reviewCount == 0 ? 0 : correctReviewCount / reviewCount;
 
   factory DashboardLearningStats.fromSavedData({
     required List<ReviewRecord> reviews,
@@ -713,14 +793,22 @@ class DashboardLearningStats {
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final weeklyXp = List<int>.filled(7, 0);
     var totalXp = 0;
+    var correctReviewCount = 0;
+    var weeklyReviewCount = 0;
+    final activeDays = <(int, int, int)>{};
 
     for (final review in reviews) {
       final xp = review.wasCorrect ? 10 : 5;
       totalXp += xp;
+      if (review.wasCorrect) correctReviewCount++;
       final reviewed = review.reviewedAt.toLocal();
       final day = DateTime(reviewed.year, reviewed.month, reviewed.day);
+      activeDays.add((day.year, day.month, day.day));
       final offset = day.difference(weekStart).inDays;
-      if (offset >= 0 && offset < 7) weeklyXp[offset] += xp;
+      if (offset >= 0 && offset < 7) {
+        weeklyXp[offset] += xp;
+        weeklyReviewCount++;
+      }
     }
 
     final seenVocabulary = vocabulary
@@ -740,6 +828,10 @@ class DashboardLearningStats {
       wordsSeen: seenVocabulary.length,
       wordsLearning: seenVocabulary.length - wordsLearned,
       wordsLearned: wordsLearned,
+      reviewCount: reviews.length,
+      correctReviewCount: correctReviewCount,
+      activeStudyDays: activeDays.length,
+      weeklyReviewCount: weeklyReviewCount,
       vocabulary: seenVocabulary.take(6).toList(growable: false),
     );
   }

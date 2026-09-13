@@ -129,6 +129,28 @@ void main() {
     expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
   });
 
+  testWidgets('dashboard user icon opens progress analytics', (tester) async {
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          settings: _MemorySettingsRepository(),
+          progress: _MemoryProgressRepository(hasActiveSession: false),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('open-profile-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfilePage), findsOneWidget);
+    expect(find.text('PROGRESS OVERVIEW'), findsOneWidget);
+    expect(find.text('Your progress story starts here'), findsOneWidget);
+  });
+
   testWidgets('app restores the selected pronunciation engine and voice', (
     tester,
   ) async {
