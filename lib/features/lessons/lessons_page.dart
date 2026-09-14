@@ -64,6 +64,7 @@ class LessonsPage extends StatefulWidget {
 
 class _LessonsPageState extends State<LessonsPage> {
   final _topicController = TextEditingController();
+  final _lessonSearchController = TextEditingController();
   final _pageController = PageController(viewportFraction: .82);
   int _hskLevel = 1;
   String _selectedTopicTheme = _hskTopicPools[1]!.first;
@@ -109,6 +110,7 @@ class _LessonsPageState extends State<LessonsPage> {
   @override
   void dispose() {
     _topicController.dispose();
+    _lessonSearchController.dispose();
     _pageController.dispose();
     if (_ownsPronunciationService) {
       unawaited(_pronunciationService.dispose());
@@ -401,11 +403,22 @@ class _LessonsPageState extends State<LessonsPage> {
     return [_randomLessonTopic, ...themes];
   }
 
-  List<LessonSummary> get _visibleTopics => _libraryHskFilter == null
-      ? _topics
-      : _topics
-            .where((topic) => topic.hskLevel == _libraryHskFilter)
-            .toList(growable: false);
+  List<LessonSummary> get _visibleTopics {
+    final query = _lessonSearchController.text.trim().toLowerCase();
+    return _topics
+        .where((topic) {
+          if (_libraryHskFilter != null &&
+              topic.hskLevel != _libraryHskFilter) {
+            return false;
+          }
+          if (query.isEmpty) return true;
+          return topic.title.toLowerCase().contains(query) ||
+              topic.theme.toLowerCase().contains(query) ||
+              'hsk ${topic.hskLevel}'.contains(query) ||
+              topic.hskLevel.toString() == query;
+        })
+        .toList(growable: false);
+  }
 
   Future<void> _generateLesson() async {
     if (_generating) return;
@@ -940,6 +953,34 @@ class _LessonsPageState extends State<LessonsPage> {
     return Column(
       key: const Key('lesson-library-content'),
       children: [
+        TextField(
+          key: const Key('lesson-library-search'),
+          controller: _lessonSearchController,
+          onChanged: (_) => setState(() {}),
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search lesson titles, topics, or HSK levels',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _lessonSearchController.text.isEmpty
+                ? null
+                : IconButton(
+                    key: const Key('lesson-library-search-clear'),
+                    tooltip: 'Clear search',
+                    onPressed: () {
+                      _lessonSearchController.clear();
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
+            filled: true,
+            fillColor: AppColors.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: AppColors.border),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           key: const Key('lesson-library-level-filter'),
@@ -962,7 +1003,18 @@ class _LessonsPageState extends State<LessonsPage> {
           ),
         ),
         const SizedBox(height: 14),
-        if (_visibleTopics.isEmpty)
+        if (_visibleTopics.isEmpty &&
+            _lessonSearchController.text.trim().isNotEmpty)
+          _LessonLibraryStateCard(
+            key: const Key('lesson-library-search-empty-state'),
+            accent: AppColors.teal,
+            icon: Icon(Icons.search_off, size: 30, color: AppColors.teal),
+            title: 'No lessons found',
+            message:
+                'Try another lesson title, topic, or HSK level, or clear the '
+                'current level filter.',
+          )
+        else if (_visibleTopics.isEmpty)
           _LessonLibraryStateCard(
             key: const Key('lesson-library-filtered-empty-state'),
             accent: AppColors.teal,

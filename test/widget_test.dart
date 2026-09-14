@@ -1781,6 +1781,53 @@ void main() {
     );
   });
 
+  testWidgets('lesson library searches titles, topics, and HSK levels', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _MultiLevelLessonRepository(),
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final search = find.byKey(const Key('lesson-library-search'));
+    await tester.enterText(search, 'dining');
+    await tester.pump();
+    expect(find.text('Restaurant Talk'), findsOneWidget);
+    expect(find.text('Morning Greetings'), findsNothing);
+    expect(find.text('Market News'), findsNothing);
+
+    await tester.enterText(search, 'HSK 4');
+    await tester.pump();
+    expect(find.text('Market News'), findsOneWidget);
+    expect(find.text('Restaurant Talk'), findsNothing);
+
+    await tester.enterText(search, 'missing lesson');
+    await tester.pump();
+    expect(
+      find.byKey(const Key('lesson-library-search-empty-state')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('lesson-library-search-clear')));
+    await tester.pump();
+    expect(find.text('Morning Greetings'), findsOneWidget);
+    expect(find.text('Restaurant Talk'), findsOneWidget);
+    expect(find.text('Market News'), findsOneWidget);
+  });
+
   testWidgets('lesson library explains loading and empty states', (
     tester,
   ) async {

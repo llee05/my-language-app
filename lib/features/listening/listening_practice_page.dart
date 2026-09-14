@@ -29,6 +29,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
 
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
+  final _topicSearchController = TextEditingController();
   LearnerSettings _learnerSettings = const LearnerSettings();
   List<_ListeningTopic> _topics = const [];
   List<Flashcard> _answerPool = const [];
@@ -62,6 +63,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
 
   @override
   void dispose() {
+    _topicSearchController.dispose();
     if (_ownsPronunciationService) {
       unawaited(_pronunciationService.dispose());
     } else {
@@ -174,6 +176,56 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       if (topic.key == _selectedTopicKey) return topic.label;
     }
     return 'Listening practice';
+  }
+
+  String get _topicSearchQuery =>
+      _topicSearchController.text.trim().toLowerCase();
+
+  List<_ListeningTopic> get _visibleTopics {
+    final query = _topicSearchQuery;
+    if (query.isEmpty) return _topics;
+    final normalizedQuery = _normalizePinyin(query);
+    final compactQuery = normalizedQuery.replaceAll(' ', '');
+    return _topics
+        .where((topic) {
+          if (topic.label.toLowerCase().contains(query)) return true;
+          return topic.cards.any((card) {
+            final normalizedPinyin = _normalizePinyin(card.pinyin);
+            return card.chinese.toLowerCase().contains(query) ||
+                (normalizedQuery.isNotEmpty &&
+                    (normalizedPinyin.contains(normalizedQuery) ||
+                        normalizedPinyin
+                            .replaceAll(' ', '')
+                            .contains(compactQuery))) ||
+                card.englishMeaning.toLowerCase().contains(query);
+          });
+        })
+        .toList(growable: false);
+  }
+
+  bool get _showRandomTopic =>
+      _topicSearchQuery.isEmpty ||
+      _randomTopicLabel.toLowerCase().contains(_topicSearchQuery);
+
+  void _updateTopicSearch(String _) {
+    setState(() {
+      final visibleTopics = _visibleTopics;
+      final selectedIsVisible =
+          (_selectedTopicKey == _randomTopicKey && _showRandomTopic) ||
+          visibleTopics.any((topic) => topic.key == _selectedTopicKey);
+      if (!selectedIsVisible) {
+        _selectedTopicKey = _showRandomTopic
+            ? _randomTopicKey
+            : visibleTopics.isEmpty
+            ? null
+            : visibleTopics.first.key;
+      }
+    });
+  }
+
+  void _clearTopicSearch() {
+    _topicSearchController.clear();
+    _updateTopicSearch('');
   }
 
   Future<void> _startPractice() async {
@@ -443,26 +495,57 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                       style: TextStyle(color: AppColors.muted, height: 1.4),
                     ),
                     const SizedBox(height: 24),
+                    TextField(
+                      key: const Key('listening-topic-search'),
+                      controller: _topicSearchController,
+                      onChanged: _updateTopicSearch,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Search topics, Hanzi, pinyin, or English',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _topicSearchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                key: const Key('listening-topic-search-clear'),
+                                tooltip: 'Clear search',
+                                onPressed: _clearTopicSearch,
+                                icon: const Icon(Icons.close),
+                              ),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       key: const Key('listening-topic-picker'),
                       initialValue: _selectedTopicKey,
                       isExpanded: true,
+                      hint: Text(
+                        _topicSearchQuery.isEmpty
+                            ? 'Choose a topic'
+                            : 'No matching topics',
+                      ),
                       decoration: const InputDecoration(
                         labelText: 'Topic',
                         border: OutlineInputBorder(),
                       ),
                       items: [
-                        const DropdownMenuItem(
-                          value: _randomTopicKey,
-                          child: Row(
-                            children: [
-                              Icon(Icons.shuffle_rounded, size: 18),
-                              SizedBox(width: 8),
-                              Text(_randomTopicLabel),
-                            ],
+                        if (_showRandomTopic)
+                          const DropdownMenuItem(
+                            value: _randomTopicKey,
+                            child: Row(
+                              children: [
+                                Icon(Icons.shuffle_rounded, size: 18),
+                                SizedBox(width: 8),
+                                Text(_randomTopicLabel),
+                              ],
+                            ),
                           ),
-                        ),
-                        for (final topic in _topics)
+                        for (final topic in _visibleTopics)
                           DropdownMenuItem(
                             value: topic.key,
                             child: Text(
@@ -471,15 +554,28 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                             ),
                           ),
                       ],
-                      onChanged: _transitioning
+                      onChanged:
+                          _transitioning ||
+                              (!_showRandomTopic && _visibleTopics.isEmpty)
                           ? null
                           : (value) =>
                                 setState(() => _selectedTopicKey = value),
                     ),
+                    if (!_showRandomTopic && _visibleTopics.isEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'No listening topics match your search.',
+                        key: const Key('listening-topic-search-empty'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.muted),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     FilledButton.icon(
                       key: const Key('listening-start-practice'),
-                      onPressed: _transitioning ? null : _startPractice,
+                      onPressed: _transitioning || _selectedTopicKey == null
+                          ? null
+                          : _startPractice,
                       icon: _transitioning
                           ? const SizedBox.square(
                               dimension: 18,

@@ -148,6 +148,70 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'advanced'), findsOneWidget);
   });
 
+  testWidgets('listening topics can be searched by pinyin', (tester) async {
+    final pronunciation = _ListeningPronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 3,
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('listening-topic-search')),
+      'gao ji',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Advanced'), findsOneWidget);
+    expect(find.text('Basics'), findsNothing);
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Advanced · 1 of 1'), findsOneWidget);
+    expect(pronunciation.requests, [const ('高级', 1.0)]);
+  });
+
+  testWidgets('listening search explains when no topics match', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 3,
+          pronunciationService: _ListeningPronunciationService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('listening-topic-search')),
+      'not in any lesson',
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('listening-topic-search-empty')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('listening-start-practice')),
+          )
+          .onPressed,
+      isNull,
+    );
+  });
+
   testWidgets('random listening mode shuffles cards from every topic', (
     tester,
   ) async {
