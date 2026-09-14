@@ -637,12 +637,50 @@ void main() {
       );
 
       expect(find.text('Vocab Rush'), findsOneWidget);
+      expect(find.text('Roleplay Missions'), findsOneWidget);
       await tester.tap(find.text('Vocab Rush'));
       await tester.pumpAndSettle();
 
       expect(selected, 3);
+
+      await tester.ensureVisible(find.text('Roleplay Missions'));
+      await tester.tap(find.text('Roleplay Missions'));
+      await tester.pumpAndSettle();
+
+      expect(selected, 7);
     },
   );
+
+  testWidgets('dashboard opens roleplay missions from the sidebar', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final pronunciation = _FakePronunciationService();
+    addTearDown(pronunciation.dispose);
+
+    await tester.pumpWidget(
+      HanziPathApp(
+        initialProfile: testProfile,
+        dependencies: AppDependencies(
+          lessons: _MemoryLessonRepository(),
+          settings: _MemorySettingsRepository(),
+          progress: _MemoryProgressRepository(),
+          dailyReviews: _MemoryDailyReviewSessionRepository(null),
+          tutorContext: _EmptyTutorContextRepository(),
+          createPronunciationService: () => pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Roleplay Missions'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AiRoleplayMissionsPage), findsOneWidget);
+    expect(find.text('AI roleplay missions'), findsOneWidget);
+    expect(find.byType(AiTutorPage), findsNothing);
+  });
 
   testWidgets('dashboard opens listening practice from the sidebar', (
     tester,

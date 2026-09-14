@@ -174,6 +174,38 @@ Future<void> _pumpTutor(
   await tester.pumpAndSettle();
 }
 
+Future<void> _pumpRoleplay(
+  WidgetTester tester, {
+  AiTutorRequest? request,
+  AiService aiService = const AiService(),
+  SettingsRepository? settingsRepository,
+  TutorContextRepository? tutorContextRepository,
+  PronunciationService? pronunciationService,
+  SpeechInputService? speechInputService,
+  DateTime Function()? clock,
+}) async {
+  await tester.binding.setSurfaceSize(const Size(1100, 900));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: AiRoleplayMissionsPage(
+          request: request,
+          aiService: aiService,
+          settingsRepository: settingsRepository ?? _MemorySettingsRepository(),
+          tutorContextRepository:
+              tutorContextRepository ?? _MemoryTutorContextRepository(),
+          pronunciationService:
+              pronunciationService ?? _FakePronunciationService(),
+          speechInputService: speechInputService ?? _FakeSpeechInputService(),
+          clock: clock,
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 String _dialogueResponse() => jsonEncode({
   'title': 'At the café',
   'setting': 'Two friends order a drink.',
@@ -382,6 +414,7 @@ void main() {
     expect(find.textContaining('你想练习什么中文'), findsOneWidget);
     expect(find.text('How do I use 的 correctly?'), findsOneWidget);
     expect(find.text('What are the four tones?'), findsOneWidget);
+    expect(find.text('Roleplay missions'), findsNothing);
     expect(find.byTooltip('Send'), findsOneWidget);
     expect(find.byKey(const Key('ai-tutor-push-to-talk')), findsOneWidget);
   });
@@ -571,16 +604,13 @@ void main() {
   );
 
   testWidgets('offers five goal-oriented roleplay missions', (tester) async {
-    await _pumpTutor(
+    await _pumpRoleplay(
       tester,
       tutorContextRepository: _MemoryTutorContextRepository(
         snapshot: _roleplaySnapshot(),
       ),
       request: (_) async => fail('A mission should not start automatically.'),
     );
-
-    await tester.tap(find.text('Roleplay missions'));
-    await tester.pumpAndSettle();
 
     expect(find.text('AI roleplay missions'), findsOneWidget);
     expect(find.text('Order food'), findsOneWidget);
@@ -594,13 +624,10 @@ void main() {
   testWidgets('roleplay waits for a small studied vocabulary base', (
     tester,
   ) async {
-    await _pumpTutor(
+    await _pumpRoleplay(
       tester,
       request: (_) async => fail('A disabled mission must not make a request.'),
     );
-
-    await tester.tap(find.text('Roleplay missions'));
-    await tester.pumpAndSettle();
 
     expect(find.textContaining('Study at least five'), findsOneWidget);
     final startButton = tester.widget<FilledButton>(
@@ -614,7 +641,7 @@ void main() {
     (tester) async {
       final requests = <List<Map<String, String>>>[];
       var turn = 0;
-      await _pumpTutor(
+      await _pumpRoleplay(
         tester,
         tutorContextRepository: _MemoryTutorContextRepository(
           snapshot: _roleplaySnapshot(),
@@ -625,8 +652,6 @@ void main() {
         },
       );
 
-      await tester.tap(find.text('Roleplay missions'));
-      await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const Key('start-roleplay-food-spicy')),
       );

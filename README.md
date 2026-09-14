@@ -153,12 +153,12 @@ the pinyin and translation. New words are tappable for their reading, meaning,
 and pronunciation. When the Kokoro pack is installed, the two speakers use two
 different voices from the learner's selected voice pool where possible.
 
-Choose **Roleplay missions** for a short goal-driven exchange such as ordering
-food, visiting a pharmacist, meeting a language partner, correcting an order,
-or handling a station announcement. Each turn is locally checked against the
-learner's studied words plus a small mission-specific vocabulary set. Hints stay
-hidden until requested, and every completed mission ends with tailored feedback
-and a short list of words to review.
+Choose **Roleplay Missions** from the sidebar for a short goal-driven exchange
+such as ordering food, visiting a pharmacist, meeting a language partner,
+correcting an order, or handling a station announcement. Each turn is locally
+checked against the learner's studied words plus a small mission-specific
+vocabulary set. Hints stay hidden until requested, and every completed mission
+ends with tailored feedback and a short list of words to review.
 
 | Provider option | API used |
 | --- | --- |

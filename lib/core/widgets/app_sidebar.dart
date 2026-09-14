@@ -21,6 +21,7 @@ class AppSidebar extends StatelessWidget {
     (Icons.language_rounded, 'Vocabulary'),
     (Icons.bar_chart_rounded, 'Daily Review'),
     (Icons.chat_bubble_outline_rounded, 'AI Tutor'),
+    (Icons.flag_outlined, 'Roleplay Missions'),
   ];
 
   @override
@@ -61,22 +62,28 @@ class AppSidebar extends StatelessWidget {
                   style: TextStyle(fontSize: 10, color: AppColors.muted),
                 ),
               ),
-              for (var i = 0; i < items.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: _NavItem(
-                    icon: items[i].$1,
-                    label: items[i].$2,
-                    selected: selectedIndex == i,
-                    onTap: () {
-                      onSelected?.call(i);
-                      if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    for (var i = 0; i < items.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: _NavItem(
+                          icon: items[i].$1,
+                          label: items[i].$2,
+                          selected: selectedIndex == i,
+                          onTap: () {
+                            onSelected?.call(i);
+                            if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ),
+                  ],
                 ),
-              const Spacer(),
+              ),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(

@@ -273,12 +273,12 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _openProfile() => setState(() {
-    selectedNav = 8;
+    selectedNav = 9;
     _resumeLatestLesson = false;
     _startDailyReview = false;
   });
 
-  void _openSettings() => _selectNavigation(7);
+  void _openSettings() => _selectNavigation(8);
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +321,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         showMenu: !showSidebar,
                         profile: widget.profile,
                         totalXp: _learningStats.totalXp,
-                        profileSelected: selectedNav == 8,
+                        profileSelected: selectedNav == 9,
                         onProfilePressed: _openProfile,
                       ),
                       Expanded(
@@ -566,6 +566,18 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 7) {
+      return AiRoleplayMissionsPage(
+        aiService: AiService(
+          configurationRepository: aiConfigurationRepository,
+        ),
+        settingsRepository: settingsRepository,
+        tutorContextRepository: tutorContextRepository,
+        pronunciationService: pronunciationService,
+        speechInputService: speechInputService,
+        clock: clock,
+      );
+    }
+    if (selectedNav == 8) {
       return SettingsPage(
         aiConfigurationRepository: aiConfigurationRepository,
         profile: profile,
@@ -582,7 +594,7 @@ class _DashboardBody extends StatelessWidget {
         backupFileService: backupFileService,
       );
     }
-    if (selectedNav == 8) {
+    if (selectedNav == 9) {
       return ProfilePage(
         profile: profile,
         stats: learningStats,

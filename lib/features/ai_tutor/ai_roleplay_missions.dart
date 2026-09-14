@@ -1,8 +1,39 @@
 part of '../../main.dart';
 
+class AiRoleplayMissionsPage extends StatelessWidget {
+  const AiRoleplayMissionsPage({
+    super.key,
+    this.request,
+    this.settingsRepository = const SqliteSettingsRepository(),
+    this.tutorContextRepository = const SqliteTutorContextRepository(),
+    required this.pronunciationService,
+    required this.speechInputService,
+    this.aiService = const AiService(),
+    this.clock,
+  });
+
+  final AiTutorRequest? request;
+  final SettingsRepository settingsRepository;
+  final TutorContextRepository tutorContextRepository;
+  final PronunciationService pronunciationService;
+  final SpeechInputService speechInputService;
+  final AiService aiService;
+  final DateTime Function()? clock;
+
+  @override
+  Widget build(BuildContext context) => _AiRoleplayMissionsMode(
+    request: request,
+    settingsRepository: settingsRepository,
+    tutorContextRepository: tutorContextRepository,
+    pronunciationService: pronunciationService,
+    speechInputService: speechInputService,
+    aiService: aiService,
+    clock: clock,
+  );
+}
+
 class _AiRoleplayMissionsMode extends StatefulWidget {
   const _AiRoleplayMissionsMode({
-    required this.active,
     this.request,
     required this.settingsRepository,
     required this.tutorContextRepository,
@@ -12,7 +43,6 @@ class _AiRoleplayMissionsMode extends StatefulWidget {
     this.clock,
   });
 
-  final bool active;
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
   final TutorContextRepository tutorContextRepository;
@@ -334,7 +364,7 @@ Return only compact JSON with this exact shape:
         _sending = false;
       });
       _scrollToEnd();
-      if (widget.active && _settings.soundEnabled) {
+      if (_settings.soundEnabled) {
         unawaited(_speak(turn.npcReply.chinese));
       }
     } catch (error) {
