@@ -27,11 +27,12 @@ class AiTutorPage extends StatefulWidget {
   State<AiTutorPage> createState() => _AiTutorPageState();
 }
 
-enum _AiTutorMode { chat, listeningDialogue }
+enum _AiTutorMode { chat, listeningDialogue, roleplayMissions }
 
 class _AiTutorPageState extends State<AiTutorPage> {
   _AiTutorMode _mode = _AiTutorMode.chat;
   bool _dialogueOpened = false;
+  bool _roleplayOpened = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   late final SpeechInputService _speechInputService;
@@ -70,6 +71,7 @@ class _AiTutorPageState extends State<AiTutorPage> {
     setState(() {
       _mode = mode;
       if (mode == _AiTutorMode.listeningDialogue) _dialogueOpened = true;
+      if (mode == _AiTutorMode.roleplayMissions) _roleplayOpened = true;
     });
   }
 
@@ -94,6 +96,19 @@ class _AiTutorPageState extends State<AiTutorPage> {
               if (_dialogueOpened)
                 _AiListeningDialogueMode(
                   active: _mode == _AiTutorMode.listeningDialogue,
+                  request: widget.request,
+                  settingsRepository: widget.settingsRepository,
+                  tutorContextRepository: widget.tutorContextRepository,
+                  pronunciationService: _pronunciationService,
+                  speechInputService: _speechInputService,
+                  aiService: widget.aiService,
+                  clock: widget.clock,
+                )
+              else
+                const SizedBox.shrink(),
+              if (_roleplayOpened)
+                _AiRoleplayMissionsMode(
+                  active: _mode == _AiTutorMode.roleplayMissions,
                   request: widget.request,
                   settingsRepository: widget.settingsRepository,
                   tutorContextRepository: widget.tutorContextRepository,
@@ -131,22 +146,30 @@ class _AiTutorModeSelector extends StatelessWidget {
       ),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: SegmentedButton<_AiTutorMode>(
-          showSelectedIcon: false,
-          segments: const [
-            ButtonSegment(
-              value: _AiTutorMode.chat,
-              icon: Icon(Icons.chat_bubble_outline_rounded, size: 17),
-              label: Text('Tutor chat'),
-            ),
-            ButtonSegment(
-              value: _AiTutorMode.listeningDialogue,
-              icon: Icon(Icons.graphic_eq_rounded, size: 17),
-              label: Text('Listening dialogue'),
-            ),
-          ],
-          selected: {selected},
-          onSelectionChanged: (selection) => onSelected(selection.single),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SegmentedButton<_AiTutorMode>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(
+                value: _AiTutorMode.chat,
+                icon: Icon(Icons.chat_bubble_outline_rounded, size: 17),
+                label: Text('Tutor chat'),
+              ),
+              ButtonSegment(
+                value: _AiTutorMode.listeningDialogue,
+                icon: Icon(Icons.graphic_eq_rounded, size: 17),
+                label: Text('Listening dialogue'),
+              ),
+              ButtonSegment(
+                value: _AiTutorMode.roleplayMissions,
+                icon: Icon(Icons.flag_outlined, size: 17),
+                label: Text('Roleplay missions'),
+              ),
+            ],
+            selected: {selected},
+            onSelectionChanged: (selection) => onSelected(selection.single),
+          ),
         ),
       ),
     );

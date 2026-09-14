@@ -226,6 +226,90 @@ String _dialogueResponse() => jsonEncode({
   ],
 });
 
+String _roleplayResponse({bool complete = false}) => jsonEncode({
+  'npc_reply': {
+    'chinese': complete ? '好，这个菜不辣。' : '你好！你想点菜吗？',
+    'tokens': complete
+        ? ['好', '这个', '菜', '不', '辣']
+        : ['你', '好', '你', '想', '点', '菜', '吗'],
+    'pinyin': complete
+        ? 'Hǎo, zhège cài bù là.'
+        : 'Nǐ hǎo! Nǐ xiǎng diǎn cài ma?',
+    'english': complete
+        ? 'Okay, this dish is not spicy.'
+        : 'Hello! Would you like to order?',
+  },
+  'hint': {
+    'chinese': '我想点这个菜。',
+    'tokens': ['我', '想', '点', '这个', '菜'],
+    'pinyin': 'Wǒ xiǎng diǎn zhège cài.',
+    'english': 'I would like to order this dish.',
+  },
+  'progress': complete
+      ? 'You ordered and checked the spice level.'
+      : 'Order a dish and ask whether it is spicy.',
+  'mission_complete': complete,
+  'feedback': complete
+      ? 'You ordered politely and clearly asked about the spice level.'
+      : '',
+  'review_words': complete ? ['菜', '辣'] : <String>[],
+});
+
+TutorLearnerSnapshot _roleplaySnapshot() => TutorLearnerSnapshot(
+  asOf: DateTime.utc(2026, 9, 14),
+  knownWords: const [
+    TutorWordSnapshot(
+      chinese: '你',
+      pinyin: 'nǐ',
+      englishMeaning: 'you',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+    TutorWordSnapshot(
+      chinese: '好',
+      pinyin: 'hǎo',
+      englishMeaning: 'good',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+    TutorWordSnapshot(
+      chinese: '我',
+      pinyin: 'wǒ',
+      englishMeaning: 'I',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+    TutorWordSnapshot(
+      chinese: '想',
+      pinyin: 'xiǎng',
+      englishMeaning: 'want',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+    TutorWordSnapshot(
+      chinese: '这个',
+      pinyin: 'zhège',
+      englishMeaning: 'this',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+    TutorWordSnapshot(
+      chinese: '不',
+      pinyin: 'bù',
+      englishMeaning: 'not',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+    TutorWordSnapshot(
+      chinese: '吗',
+      pinyin: 'ma',
+      englishMeaning: 'question particle',
+      mastery: .8,
+      incorrectAnswers: 0,
+    ),
+  ],
+);
+
 void main() {
   testWidgets('tutor uses the saved provider and removal stops later sends', (
     tester,
@@ -483,6 +567,99 @@ void main() {
       expect(find.text('Score: 2 / 2'), findsOneWidget);
       expect(find.byKey(const Key('dialogue-transcript')), findsOneWidget);
       expect(find.text('Wǒ yào kāfēi.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('offers five goal-oriented roleplay missions', (tester) async {
+    await _pumpTutor(
+      tester,
+      tutorContextRepository: _MemoryTutorContextRepository(
+        snapshot: _roleplaySnapshot(),
+      ),
+      request: (_) async => fail('A mission should not start automatically.'),
+    );
+
+    await tester.tap(find.text('Roleplay missions'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AI roleplay missions'), findsOneWidget);
+    expect(find.text('Order food'), findsOneWidget);
+    expect(find.text('Visit a pharmacist'), findsOneWidget);
+    expect(find.text('Language exchange'), findsOneWidget);
+    expect(find.text('Return an order'), findsOneWidget);
+    expect(find.text('Survive a station announcement'), findsOneWidget);
+    expect(find.textContaining('7 studied words'), findsOneWidget);
+  });
+
+  testWidgets('roleplay waits for a small studied vocabulary base', (
+    tester,
+  ) async {
+    await _pumpTutor(
+      tester,
+      request: (_) async => fail('A disabled mission must not make a request.'),
+    );
+
+    await tester.tap(find.text('Roleplay missions'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Study at least five'), findsOneWidget);
+    final startButton = tester.widget<FilledButton>(
+      find.byKey(const Key('start-roleplay-food-spicy')),
+    );
+    expect(startButton.onPressed, isNull);
+  });
+
+  testWidgets(
+    'runs a roleplay with optional hints, feedback, and review words',
+    (tester) async {
+      final requests = <List<Map<String, String>>>[];
+      var turn = 0;
+      await _pumpTutor(
+        tester,
+        tutorContextRepository: _MemoryTutorContextRepository(
+          snapshot: _roleplaySnapshot(),
+        ),
+        request: (messages) async {
+          requests.add(messages);
+          return _roleplayResponse(complete: turn++ > 0);
+        },
+      );
+
+      await tester.tap(find.text('Roleplay missions'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('start-roleplay-food-spicy')),
+      );
+      await tester.tap(find.byKey(const Key('start-roleplay-food-spicy')));
+      await tester.pumpAndSettle();
+
+      expect(requests, hasLength(1));
+      expect(requests.first.first['content'], contains('known_words='));
+      expect(requests.first.first['content'], contains('"chinese":"你"'));
+      expect(requests.first.first['content'], contains('"chinese":"辣"'));
+      expect(find.text('你好！你想点菜吗？'), findsOneWidget);
+      expect(find.byKey(const Key('roleplay-hint')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('reveal-roleplay-hint')));
+      await tester.pumpAndSettle();
+      expect(find.text('Try: 我想点这个菜。'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('roleplay-reply')),
+        '我要这个菜。辣吗？',
+      );
+      await tester.tap(find.byKey(const Key('send-roleplay-reply')));
+      await tester.pumpAndSettle();
+
+      expect(requests, hasLength(2));
+      expect(requests.last.last, {'role': 'user', 'content': '我要这个菜。辣吗？'});
+      expect(find.byKey(const Key('roleplay-completion')), findsOneWidget);
+      expect(find.text('Mission complete'), findsOneWidget);
+      expect(find.textContaining('ordered politely'), findsOneWidget);
+      expect(find.text('Words to review'), findsOneWidget);
+      expect(find.byKey(const Key('roleplay-review-菜')), findsOneWidget);
+      expect(find.byKey(const Key('roleplay-review-辣')), findsOneWidget);
+      expect(find.byKey(const Key('roleplay-reply')), findsNothing);
     },
   );
 

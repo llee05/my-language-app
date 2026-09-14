@@ -29,8 +29,9 @@ and API key.
   filters plus word detail views.
 - Vocab Rush timed and survival modes; incorrect answers are added to the
   learner's review data.
-- Long Laoshi, an optional AI tutor with chat and generated listening dialogues
-  using personal API keys configured in Settings.
+- Long Laoshi, an optional AI tutor with chat, generated listening dialogues,
+  and short goal-oriented roleplay missions using personal API keys configured
+  in Settings.
 - Responsive desktop and mobile layouts, local settings, and versioned SQLite
   migrations.
 
@@ -151,6 +152,13 @@ Listen without the transcript, answer the comprehension questions, then reveal
 the pinyin and translation. New words are tappable for their reading, meaning,
 and pronunciation. When the Kokoro pack is installed, the two speakers use two
 different voices from the learner's selected voice pool where possible.
+
+Choose **Roleplay missions** for a short goal-driven exchange such as ordering
+food, visiting a pharmacist, meeting a language partner, correcting an order,
+or handling a station announcement. Each turn is locally checked against the
+learner's studied words plus a small mission-specific vocabulary set. Hints stay
+hidden until requested, and every completed mission ends with tailored feedback
+and a short list of words to review.
 
 | Provider option | API used |
 | --- | --- |
