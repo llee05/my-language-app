@@ -5,10 +5,12 @@ import 'learner_repository.dart';
 import 'lesson_repository.dart';
 import 'progress_repository.dart';
 import 'settings_repository.dart';
+import 'backup_repository.dart';
 import 'sqlite_repositories.dart';
 import 'tutor_context_repository.dart';
 import '../services/pronunciation_service_factory.dart';
 import '../services/speech_input_service_factory.dart';
+import '../services/backup_file_service.dart';
 
 class AppDependencies {
   const AppDependencies({
@@ -22,6 +24,8 @@ class AppDependencies {
     this.createSpeechInputService = createSystemSpeechInputService,
     this.aiConfiguration = const SecureAiConfigurationRepository(),
     this.tutorContext = const SqliteTutorContextRepository(),
+    this.backups = const SqliteBackupRepository(),
+    this.backupFiles = const FilePickerBackupFileService(),
   });
 
   final LearnerRepository learners;
@@ -34,4 +38,6 @@ class AppDependencies {
   final SpeechInputServiceFactory createSpeechInputService;
   final AiConfigurationRepository aiConfiguration;
   final TutorContextRepository tutorContext;
+  final BackupRepository backups;
+  final BackupFileService backupFiles;
 }
