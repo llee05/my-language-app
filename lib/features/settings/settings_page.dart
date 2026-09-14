@@ -7,24 +7,30 @@ class SettingsPage extends StatefulWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    this.onBackupRestored,
     required this.appThemeId,
     required this.onThemeChanged,
     required this.developmentRepository,
     required this.settingsRepository,
     this.pronunciationService,
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
+    this.backupRepository = const SqliteBackupRepository(),
+    this.backupFileService = const FilePickerBackupFileService(),
   });
 
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final Future<void> Function()? onBackupRestored;
   final AppThemeId appThemeId;
   final void Function(AppThemeId themeId) onThemeChanged;
   final DevelopmentRepository developmentRepository;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
   final AiConfigurationRepository aiConfigurationRepository;
+  final BackupRepository backupRepository;
+  final BackupFileService backupFileService;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -39,6 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _preferencesLoadFailed = false;
   bool _saveFailed = false;
   bool _resetting = false;
+  bool _transferringBackup = false;
   bool _showPinyin = true;
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
@@ -363,6 +370,112 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _exportBackup() async {
+    if (_transferringBackup) return;
+    setState(() => _transferringBackup = true);
+    try {
+      final bytes = await widget.backupRepository.exportBackup();
+      final now = DateTime.now();
+      final date =
+          '${now.year.toString().padLeft(4, '0')}-'
+          '${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}';
+      final saved = await widget.backupFileService.saveBackup(
+        fileName: 'tingshuo-backup-$date.json',
+        bytes: bytes,
+      );
+      if (saved && mounted) _showMessage('Backup exported.');
+    } catch (error) {
+      debugPrint('Backup export failed: $error');
+      if (mounted) _showMessage('We couldn’t export your backup.');
+    } finally {
+      if (mounted) setState(() => _transferringBackup = false);
+    }
+  }
+
+  Future<void> _importBackup() async {
+    if (_transferringBackup) return;
+    var restoreCompleted = false;
+    setState(() => _transferringBackup = true);
+    try {
+      final bytes = await widget.backupFileService.chooseBackup();
+      if (bytes == null || !mounted) return;
+      final preview = widget.backupRepository.previewBackup(bytes);
+      final confirmed = await _showBackupPreview(preview);
+      if (!confirmed || !mounted) return;
+      await widget.backupRepository.restoreBackup(bytes);
+      restoreCompleted = true;
+      if (!mounted) return;
+      _showMessage('Backup restored.');
+      await widget.onBackupRestored?.call();
+    } on BackupFormatException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } catch (error) {
+      debugPrint('Backup import failed: $error');
+      if (mounted) {
+        _showMessage(
+          restoreCompleted
+              ? 'The backup was restored, but the app could not refresh.'
+              : 'We couldn’t restore this backup. Your data was not changed.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _transferringBackup = false);
+    }
+  }
+
+  Future<bool> _showBackupPreview(BackupPreview preview) async {
+    final localDate = preview.exportedAt.toLocal();
+    final date =
+        '${localDate.year.toString().padLeft(4, '0')}-'
+        '${localDate.month.toString().padLeft(2, '0')}-'
+        '${localDate.day.toString().padLeft(2, '0')}';
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            key: const Key('backup-preview-dialog'),
+            title: const Text('Restore this backup?'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${preview.learnerName} · HSK ${preview.hskLevel}'),
+                const SizedBox(height: 12),
+                Text('Exported $date'),
+                Text(
+                  '${preview.lessonCount} lessons · ${preview.cardCount} cards',
+                ),
+                Text(
+                  '${preview.reviewCount} reviews · ${preview.sessionCount} sessions',
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Restoring replaces the profile, lessons, review history, progress, and learning settings on this installation. API keys are not changed.',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                key: const Key('backup-restore-confirm'),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Restore backup'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _showRetrySnackBar({
     required String message,
     required Future<void> Function() onRetry,
@@ -545,7 +658,39 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         AiSettingsCard(
           repository: widget.aiConfigurationRepository,
-          enabled: !_resetting,
+          enabled: !_resetting && !_transferringBackup,
+        ),
+        const SizedBox(height: 20),
+        _SettingsCard(
+          title: 'Backup and restore',
+          subtitle:
+              'Move your local learning data to another TingShuo installation. API keys are never included.',
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              FilledButton.icon(
+                key: const Key('settings-export-backup'),
+                onPressed: _transferringBackup ? null : _exportBackup,
+                icon: const Icon(Icons.upload_file_rounded),
+                label: const Text('Export backup'),
+              ),
+              OutlinedButton.icon(
+                key: const Key('settings-import-backup'),
+                onPressed: _transferringBackup ? null : _importBackup,
+                icon: const Icon(Icons.file_open_outlined),
+                label: const Text('Restore backup'),
+              ),
+              if (_transferringBackup)
+                const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+            ],
+          ),
         ),
         if (kDebugMode) ...[
           const SizedBox(height: 20),
@@ -600,7 +745,10 @@ class _SettingsPageState extends State<SettingsPage> {
             child: FilledButton.icon(
               key: const Key('settings-save'),
               onPressed:
-                  _saving || _loadingPreferences || _preferencesLoadFailed
+                  _saving ||
+                      _transferringBackup ||
+                      _loadingPreferences ||
+                      _preferencesLoadFailed
                   ? null
                   : _save,
               icon: _saving

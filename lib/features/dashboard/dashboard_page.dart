@@ -7,6 +7,7 @@ class DashboardPage extends StatefulWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    this.onBackupRestored,
     required this.appThemeId,
     required this.onThemeChanged,
     required this.lessonRepository,
@@ -19,12 +20,15 @@ class DashboardPage extends StatefulWidget {
     this.pronunciationService,
     this.speechInputService,
     this.clock,
+    this.backupRepository = const SqliteBackupRepository(),
+    this.backupFileService = const FilePickerBackupFileService(),
   });
 
   final LearnerProfile profile;
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final Future<void> Function()? onBackupRestored;
   final AppThemeId appThemeId;
   final void Function(AppThemeId themeId) onThemeChanged;
   final LessonRepository lessonRepository;
@@ -37,6 +41,8 @@ class DashboardPage extends StatefulWidget {
   final PronunciationService? pronunciationService;
   final SpeechInputService? speechInputService;
   final DateTime Function()? clock;
+  final BackupRepository backupRepository;
+  final BackupFileService backupFileService;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -350,6 +356,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           onProfileChanged: widget.onProfileChanged,
                           onResetOnboarding: widget.onResetOnboarding,
                           onResetAllData: widget.onResetAllData,
+                          onBackupRestored: widget.onBackupRestored,
                           appThemeId: widget.appThemeId,
                           onThemeChanged: widget.onThemeChanged,
                           lessonRepository: widget.lessonRepository,
@@ -364,6 +371,8 @@ class _DashboardPageState extends State<DashboardPage> {
                           pronunciationService: _pronunciationService,
                           speechInputService: _speechInputService,
                           clock: widget.clock,
+                          backupRepository: widget.backupRepository,
+                          backupFileService: widget.backupFileService,
                         ),
                       ),
                     ],
@@ -429,6 +438,7 @@ class _DashboardBody extends StatelessWidget {
     required this.onProfileChanged,
     required this.onResetOnboarding,
     required this.onResetAllData,
+    this.onBackupRestored,
     required this.appThemeId,
     required this.onThemeChanged,
     required this.lessonRepository,
@@ -441,6 +451,8 @@ class _DashboardBody extends StatelessWidget {
     required this.pronunciationService,
     required this.speechInputService,
     this.clock,
+    this.backupRepository = const SqliteBackupRepository(),
+    this.backupFileService = const FilePickerBackupFileService(),
   });
   final int selectedNav;
   final bool resumeLatestLesson;
@@ -472,6 +484,7 @@ class _DashboardBody extends StatelessWidget {
   final Future<void> Function(LearnerProfile profile) onProfileChanged;
   final Future<void> Function() onResetOnboarding;
   final Future<void> Function() onResetAllData;
+  final Future<void> Function()? onBackupRestored;
   final AppThemeId appThemeId;
   final void Function(AppThemeId themeId) onThemeChanged;
   final LessonRepository lessonRepository;
@@ -484,6 +497,8 @@ class _DashboardBody extends StatelessWidget {
   final PronunciationService pronunciationService;
   final SpeechInputService speechInputService;
   final DateTime Function()? clock;
+  final BackupRepository backupRepository;
+  final BackupFileService backupFileService;
 
   @override
   Widget build(BuildContext context) {
@@ -557,11 +572,14 @@ class _DashboardBody extends StatelessWidget {
         onProfileChanged: onProfileChanged,
         onResetOnboarding: onResetOnboarding,
         onResetAllData: onResetAllData,
+        onBackupRestored: onBackupRestored,
         appThemeId: appThemeId,
         onThemeChanged: onThemeChanged,
         developmentRepository: developmentRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
+        backupRepository: backupRepository,
+        backupFileService: backupFileService,
       );
     }
     if (selectedNav == 8) {

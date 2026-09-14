@@ -13,6 +13,7 @@ import 'ai/ai_errors.dart';
 import 'ai/ai_service.dart';
 import 'models/ai_configuration.dart';
 import 'repositories/ai_configuration_repository.dart';
+import 'repositories/backup_repository.dart';
 import 'models/learner_profile.dart';
 import 'models/learning_progress.dart';
 import 'models/listening_dialogue.dart';
@@ -29,6 +30,7 @@ import 'repositories/tutor_context_repository.dart';
 import 'services/review_scheduler.dart';
 import 'services/pronunciation_service_factory.dart';
 import 'services/speech_input_service_factory.dart';
+import 'services/backup_file_service.dart';
 import 'services/study_streak_calculator.dart';
 
 export 'models/learner_profile.dart';
@@ -179,6 +181,18 @@ class _HanziPathAppState extends State<HanziPathApp> {
     });
   }
 
+  Future<void> _reloadAfterBackupRestore() async {
+    final profile = await widget.dependencies.learners.load();
+    final settings = await widget.dependencies.settings.load();
+    if (!mounted) return;
+    setState(() {
+      _profile = Future.value(profile);
+      _appThemeId =
+          AppThemes.tryParseId(settings.appThemeId) ?? AppThemeId.classic;
+    });
+    if (profile != null) unawaited(_restorePronunciationPreferences());
+  }
+
   @override
   void dispose() {
     unawaited(_pronunciationService.dispose());
@@ -242,6 +256,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onProfileChanged: _completeSetup,
             onResetOnboarding: _resetOnboarding,
             onResetAllData: _resetAllData,
+            onBackupRestored: _reloadAfterBackupRestore,
             appThemeId: _appThemeId,
             onThemeChanged: _applyAppTheme,
             lessonRepository: widget.dependencies.lessons,
@@ -251,6 +266,8 @@ class _HanziPathAppState extends State<HanziPathApp> {
             developmentRepository: widget.dependencies.development,
             aiConfigurationRepository: widget.dependencies.aiConfiguration,
             tutorContextRepository: widget.dependencies.tutorContext,
+            backupRepository: widget.dependencies.backups,
+            backupFileService: widget.dependencies.backupFiles,
             pronunciationService: _pronunciationService,
             speechInputService: _speechInputService,
           );
