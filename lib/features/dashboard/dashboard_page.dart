@@ -812,8 +812,11 @@ class DashboardLearningStats {
     this.correctReviewCount = 0,
     this.activeStudyDays = 0,
     this.weeklyReviewCount = 0,
+    this.hskWordsLearned = const [0, 0, 0, 0, 0, 0],
     this.vocabulary = const [],
   });
+
+  static const hskVocabularyTotals = [150, 147, 298, 598, 1298, 2500];
 
   final int totalXp;
   final List<int> weeklyXp;
@@ -825,10 +828,37 @@ class DashboardLearningStats {
   final int correctReviewCount;
   final int activeStudyDays;
   final int weeklyReviewCount;
+  final List<int> hskWordsLearned;
   final List<VocabularyCardProgress> vocabulary;
 
   double get accuracy =>
       reviewCount == 0 ? 0 : correctReviewCount / reviewCount;
+
+  int get hskLevelReached {
+    var reached = 0;
+    for (var index = 0; index < hskVocabularyTotals.length; index++) {
+      if (hskWordsLearned[index] < hskVocabularyTotals[index]) break;
+      reached = index + 1;
+    }
+    return reached;
+  }
+
+  int? get nextHskLevel => hskLevelReached >= 6 ? null : hskLevelReached + 1;
+
+  int get nextHskWordsLearned {
+    final next = nextHskLevel;
+    return next == null ? hskVocabularyTotals.last : hskWordsLearned[next - 1];
+  }
+
+  int get nextHskWordTarget {
+    final next = nextHskLevel;
+    return next == null
+        ? hskVocabularyTotals.last
+        : hskVocabularyTotals[next - 1];
+  }
+
+  double get nextHskProgress =>
+      (nextHskWordsLearned / nextHskWordTarget).clamp(0, 1);
 
   factory DashboardLearningStats.fromSavedData({
     required List<ReviewRecord> reviews,
@@ -864,6 +894,13 @@ class DashboardLearningStats {
     final wordsLearned = seenVocabulary
         .where((word) => word.progress.mastery >= .8)
         .length;
+    final learnedWordsByLevel = [
+      for (var level = 0; level < 6; level++) <String>{},
+    ];
+    for (final word in seenVocabulary) {
+      if (word.progress.mastery < .8) continue;
+      learnedWordsByLevel[word.hskLevel - 1].add(word.chinese);
+    }
 
     return DashboardLearningStats(
       totalXp: totalXp,
@@ -879,6 +916,9 @@ class DashboardLearningStats {
       correctReviewCount: correctReviewCount,
       activeStudyDays: activeDays.length,
       weeklyReviewCount: weeklyReviewCount,
+      hskWordsLearned: learnedWordsByLevel
+          .map((words) => words.length)
+          .toList(growable: false),
       vocabulary: seenVocabulary.take(6).toList(growable: false),
     );
   }

@@ -42,6 +42,7 @@ void main() {
       correctReviewCount: 24,
       activeStudyDays: 8,
       weeklyReviewCount: 12,
+      hskWordsLearned: [150, 100, 0, 0, 0, 0],
     );
 
     await tester.pumpWidget(
@@ -70,6 +71,8 @@ void main() {
     expect(find.text('12'), findsOneWidget);
     expect(find.text('Words seen'), findsOneWidget);
     expect(find.text('40'), findsOneWidget);
+    expect(find.text('HSK 1 reached'), findsOneWidget);
+    expect(find.text('100 of 147 HSK 2 words learned'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('edit-profile-button')));
     expect(editPresses, 1);

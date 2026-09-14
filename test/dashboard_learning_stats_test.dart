@@ -89,6 +89,57 @@ void main() {
         6,
       ]);
     });
+
+    test('reaches HSK levels only after mastering each level vocabulary', () {
+      final vocabulary = [
+        for (var id = 1; id <= 150; id++)
+          _word(id, timesSeen: 2, mastery: .8, hskLevel: 1),
+        for (var id = 1; id <= 146; id++)
+          _word(1000 + id, timesSeen: 2, mastery: 1, hskLevel: 2),
+        _word(3000, timesSeen: 2, mastery: .79, hskLevel: 2),
+      ];
+
+      final stats = DashboardLearningStats.fromSavedData(
+        now: now,
+        reviews: const [],
+        vocabulary: vocabulary,
+      );
+
+      expect(stats.hskWordsLearned, [150, 146, 0, 0, 0, 0]);
+      expect(stats.hskLevelReached, 1);
+      expect(stats.nextHskLevel, 2);
+      expect(stats.nextHskWordsLearned, 146);
+      expect(stats.nextHskWordTarget, 147);
+      expect(stats.nextHskProgress, closeTo(146 / 147, .0001));
+    });
+
+    test('does not skip an incomplete lower HSK level', () {
+      final stats = DashboardLearningStats.fromSavedData(
+        now: now,
+        reviews: const [],
+        vocabulary: [
+          for (var id = 1; id <= 147; id++)
+            _word(id, timesSeen: 1, mastery: 1, hskLevel: 2),
+        ],
+      );
+
+      expect(stats.hskLevelReached, 0);
+      expect(stats.nextHskLevel, 1);
+      expect(stats.nextHskWordsLearned, 0);
+    });
+
+    test('counts repeated lesson cards once toward an HSK milestone', () {
+      final stats = DashboardLearningStats.fromSavedData(
+        now: now,
+        reviews: const [],
+        vocabulary: [
+          _word(1, timesSeen: 2, mastery: 1, chinese: '学习'),
+          _word(2, timesSeen: 3, mastery: 1, chinese: '学习'),
+        ],
+      );
+
+      expect(stats.hskWordsLearned.first, 1);
+    });
   });
 }
 
@@ -105,9 +156,12 @@ VocabularyCardProgress _word(
   int id, {
   required int timesSeen,
   required double mastery,
+  int hskLevel = 1,
+  String? chinese,
 }) => VocabularyCardProgress(
-  chinese: '词$id',
+  chinese: chinese ?? '词$id',
   pinyin: 'cí',
+  hskLevel: hskLevel,
   progress: CardProgress(
     cardId: id,
     dueAt: DateTime(2026, 8, 15),

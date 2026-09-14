@@ -703,6 +703,7 @@ void main() {
       (item) => item.progress.cardId == cardId,
     );
     expect(vocabularyCard.chinese, lesson.cards.first.chinese);
+    expect(vocabularyCard.hskLevel, lesson.summary.hskLevel);
     expect(vocabularyCard.progress.mastery, 1);
   });
 

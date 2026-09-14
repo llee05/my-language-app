@@ -108,6 +108,8 @@ class ProfilePage extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 24),
+                _HskProgressAnalytics(stats: stats),
+                const SizedBox(height: 24),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final wide = constraints.maxWidth >= 760;
@@ -168,6 +170,148 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HskProgressAnalytics extends StatelessWidget {
+  const _HskProgressAnalytics({required this.stats});
+
+  final DashboardLearningStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final reached = stats.hskLevelReached;
+    final nextLevel = stats.nextHskLevel;
+    final title = reached == 0 ? 'Building HSK 1' : 'HSK $reached reached';
+    final detail = nextLevel == null
+        ? 'All 4,991 HSK words mastered'
+        : '${stats.nextHskWordsLearned} of ${stats.nextHskWordTarget} '
+              'HSK $nextLevel words learned';
+
+    return Container(
+      key: const Key('profile-hsk-progress'),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 560;
+          final summary = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionLabel('HSK VOCABULARY LEVEL'),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                key: const Key('profile-hsk-level-reached'),
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                detail,
+                key: const Key('profile-hsk-next-target'),
+                style: TextStyle(color: AppColors.muted, fontSize: 11),
+              ),
+              if (nextLevel != null) ...[
+                const SizedBox(height: 14),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: LinearProgressIndicator(
+                    value: stats.nextHskProgress,
+                    minHeight: 8,
+                    color: AppColors.gold,
+                    backgroundColor: AppColors.surfaceLight,
+                  ),
+                ),
+              ],
+            ],
+          );
+          final levels = _HskLevelSteps(reached: reached, nextLevel: nextLevel);
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [summary, const SizedBox(height: 20), levels],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(flex: 3, child: summary),
+              const SizedBox(width: 34),
+              Expanded(flex: 2, child: levels),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HskLevelSteps extends StatelessWidget {
+  const _HskLevelSteps({required this.reached, required this.nextLevel});
+
+  final int reached;
+  final int? nextLevel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        for (var level = 1; level <= 6; level++)
+          Column(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: level <= reached
+                      ? AppColors.teal
+                      : level == nextLevel
+                      ? AppColors.gold.withValues(alpha: .18)
+                      : AppColors.surfaceLight,
+                  border: Border.all(
+                    color: level <= reached
+                        ? AppColors.teal
+                        : level == nextLevel
+                        ? AppColors.gold
+                        : AppColors.border,
+                  ),
+                ),
+                child: level <= reached
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 17,
+                        color: AppColors.background,
+                      )
+                    : Text(
+                        '$level',
+                        style: TextStyle(
+                          color: level == nextLevel
+                              ? AppColors.gold
+                              : AppColors.muted,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'HSK $level',
+                style: TextStyle(color: AppColors.muted, fontSize: 8),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

@@ -183,9 +183,11 @@ class VocabularyCardProgress {
     required this.chinese,
     required this.pinyin,
     required this.progress,
-  });
+    this.hskLevel = 1,
+  }) : assert(hskLevel >= 1 && hskLevel <= 6);
 
   final String chinese;
   final String pinyin;
   final CardProgress progress;
+  final int hskLevel;
 }

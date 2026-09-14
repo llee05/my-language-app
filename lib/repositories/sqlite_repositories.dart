@@ -807,6 +807,7 @@ class SqliteProgressRepository implements ProgressRepository {
       SELECT
         cards.chinese,
         cards.pinyin,
+        cards.hsk_level AS card_hsk_level,
         card_progress.*
       FROM card_progress
       INNER JOIN cards ON cards.id = card_progress.card_id
@@ -820,6 +821,7 @@ class SqliteProgressRepository implements ProgressRepository {
               (row) => VocabularyCardProgress(
                 chinese: row['chinese'] as String,
                 pinyin: row['pinyin'] as String,
+                hskLevel: row['card_hsk_level'] as int,
                 progress: _progressFromRow(row),
               ),
             )
