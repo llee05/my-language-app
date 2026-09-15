@@ -259,6 +259,53 @@ void main() {
     });
   });
 
+  testWidgets('random topic mode chooses one focused listening topic', (
+    tester,
+  ) async {
+    final pronunciation = _ListeningPronunciationService();
+    addTearDown(pronunciation.dispose);
+    final random = _ZeroRandom();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 3,
+          pronunciationService: pronunciation,
+          sessionSize: 4,
+          random: random,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('listening-topic-picker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Random topic').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Basics · 1 of 3'), findsOneWidget);
+    expect(pronunciation.requests.first, const ('你', 1.0));
+
+    for (var position = 0; position < 2; position++) {
+      final reveal = find.byKey(const Key('listening-reveal-answer'));
+      await tester.ensureVisible(reveal);
+      await tester.tap(reveal);
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('listening-next')));
+      await tester.pumpAndSettle();
+    }
+
+    expect(pronunciation.requests.map((request) => request.$1).toSet(), {
+      '你',
+      '学',
+      '书',
+    });
+  });
+
   testWidgets('a saved random lesson uses the single random picker mode', (
     tester,
   ) async {
@@ -323,7 +370,7 @@ void main() {
     await tester.tap(find.text('Listening Practice'));
     await tester.pump();
 
-    expect(selected, 2);
+    expect(selected, 3);
   });
 }
 

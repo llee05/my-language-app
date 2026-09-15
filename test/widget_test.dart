@@ -641,13 +641,13 @@ void main() {
       await tester.tap(find.text('Vocab Rush'));
       await tester.pumpAndSettle();
 
-      expect(selected, 3);
+      expect(selected, 4);
 
       await tester.ensureVisible(find.text('Roleplay Missions'));
       await tester.tap(find.text('Roleplay Missions'));
       await tester.pumpAndSettle();
 
-      expect(selected, 7);
+      expect(selected, 2);
     },
   );
 
@@ -1701,6 +1701,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('topics-1')));
     await tester.pumpAndSettle();
+    expect(find.text('Random topic'), findsOneWidget);
     expect(find.text('Random mix'), findsOneWidget);
     await tester.tap(find.text('Random mix').last);
     await tester.pumpAndSettle();
@@ -1759,6 +1760,44 @@ void main() {
     expect(random.nextIntCalls, greaterThan(0));
     expect(lessons.generated?.summary.theme, 'Random mix');
     expect(lessons.generated?.summary.title, 'Random mix · HSK 1');
+    expect(lessons.generated?.cards, hasLength(10));
+    expect(lessons.saveCalls, 1);
+  });
+
+  testWidgets('lessons can choose one random topic', (tester) async {
+    const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
+    rootBundle.evict(vocabularyAsset);
+    addTearDown(() => rootBundle.evict(vocabularyAsset));
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _GeneratedMemoryLessonRepository();
+    final random = _ZeroRandom();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: lessons,
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+            random: random,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('topics-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Random topic').last);
+    await tester.pumpAndSettle();
+    await _generateLesson(tester);
+
+    expect(random.nextIntCalls, 1);
+    expect(lessons.generated?.summary.theme, 'Daily Life');
+    expect(lessons.generated?.summary.title, 'Daily Life · HSK 1');
     expect(lessons.generated?.cards, hasLength(10));
     expect(lessons.saveCalls, 1);
   });
@@ -4010,6 +4049,22 @@ class _CountingRandom implements Random {
   int nextInt(int max) {
     nextIntCalls++;
     return _delegate.nextInt(max);
+  }
+}
+
+class _ZeroRandom implements Random {
+  int nextIntCalls = 0;
+
+  @override
+  bool nextBool() => false;
+
+  @override
+  double nextDouble() => 0;
+
+  @override
+  int nextInt(int max) {
+    nextIntCalls++;
+    return 0;
   }
 }
 

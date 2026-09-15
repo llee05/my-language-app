@@ -24,8 +24,10 @@ class ListeningPracticePage extends StatefulWidget {
 
 class _ListeningPracticePageState extends State<ListeningPracticePage> {
   static const _slowPlaybackRate = .75;
-  static const _randomTopicKey = '__random_mix__';
-  static const _randomTopicLabel = 'Random mix';
+  static const _randomTopicKey = '__random_topic__';
+  static const _randomTopicLabel = 'Random topic';
+  static const _randomMixKey = '__random_mix__';
+  static const _randomMixLabel = 'Random mix';
 
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
@@ -46,6 +48,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   String? _selectedMeaning;
   String? _audioError;
   String? _selectedTopicKey;
+  String? _activeTopicLabel;
   int _audioRequestId = 0;
   late final Random _random;
 
@@ -106,7 +109,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
             : rawTopic;
         if (topicLabel.isEmpty) continue;
         final topicKey = topicLabel.toLowerCase();
-        final isRandomMix = topicKey == _randomTopicLabel.toLowerCase();
+        final isRandomMix = topicKey == _randomMixLabel.toLowerCase();
         final topicCards = isRandomMix
             ? null
             : cardsByTopic.putIfAbsent(topicKey, () => {});
@@ -140,7 +143,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         _learnerSettings = settings;
         _topics = topics;
         _answerPool = allCards.values.toList(growable: false);
-        _selectedTopicKey = topics.isEmpty ? _randomTopicKey : topics.first.key;
+        _selectedTopicKey = topics.isEmpty ? _randomMixKey : topics.first.key;
+        _activeTopicLabel = null;
         _cards = const [];
         _sessionStarted = false;
         _loading = false;
@@ -171,7 +175,10 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   }
 
   String get _selectedTopicLabel {
-    if (_selectedTopicKey == _randomTopicKey) return _randomTopicLabel;
+    if (_selectedTopicKey == _randomTopicKey) {
+      return _activeTopicLabel ?? _randomTopicLabel;
+    }
+    if (_selectedTopicKey == _randomMixKey) return _randomMixLabel;
     for (final topic in _topics) {
       if (topic.key == _selectedTopicKey) return topic.label;
     }
@@ -204,18 +211,26 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   }
 
   bool get _showRandomTopic =>
+      _topics.isNotEmpty &&
+      (_topicSearchQuery.isEmpty ||
+          _randomTopicLabel.toLowerCase().contains(_topicSearchQuery));
+
+  bool get _showRandomMix =>
       _topicSearchQuery.isEmpty ||
-      _randomTopicLabel.toLowerCase().contains(_topicSearchQuery);
+      _randomMixLabel.toLowerCase().contains(_topicSearchQuery);
 
   void _updateTopicSearch(String _) {
     setState(() {
       final visibleTopics = _visibleTopics;
       final selectedIsVisible =
           (_selectedTopicKey == _randomTopicKey && _showRandomTopic) ||
+          (_selectedTopicKey == _randomMixKey && _showRandomMix) ||
           visibleTopics.any((topic) => topic.key == _selectedTopicKey);
       if (!selectedIsVisible) {
         _selectedTopicKey = _showRandomTopic
             ? _randomTopicKey
+            : _showRandomMix
+            ? _randomMixKey
             : visibleTopics.isEmpty
             ? null
             : visibleTopics.first.key;
@@ -245,15 +260,27 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     }
     if (!mounted || selectedTopicKey != _selectedTopicKey) return;
 
-    final source = selectedTopicKey == _randomTopicKey
-        ? (List<Flashcard>.of(_answerPool)..shuffle(_random))
-        : List<Flashcard>.of(
-            _topics.firstWhere((topic) => topic.key == selectedTopicKey).cards,
-          );
+    late final List<Flashcard> source;
+    String? activeTopicLabel;
+    if (selectedTopicKey == _randomMixKey) {
+      source = List<Flashcard>.of(_answerPool)..shuffle(_random);
+    } else if (selectedTopicKey == _randomTopicKey) {
+      if (_topics.isEmpty) return;
+      final topic = _topics[_random.nextInt(_topics.length)];
+      source = List<Flashcard>.of(topic.cards);
+      activeTopicLabel = topic.label;
+    } else {
+      final topic = _topics.firstWhere(
+        (topic) => topic.key == selectedTopicKey,
+      );
+      source = List<Flashcard>.of(topic.cards);
+      activeTopicLabel = topic.label;
+    }
     final sessionSize = widget.sessionSize.clamp(1, source.length);
     final cards = source.take(sessionSize).toList(growable: false);
     setState(() {
       _cards = cards;
+      _activeTopicLabel = activeTopicLabel;
       _sessionStarted = true;
       _resetSessionState();
       _transitioning = false;
@@ -280,6 +307,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     if (!mounted) return;
     setState(() {
       _cards = const [];
+      _activeTopicLabel = null;
       _sessionStarted = false;
       _resetSessionState();
       _transitioning = false;
@@ -489,8 +517,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Pick one of your lesson topics, or use Random mix to '
-                      'shuffle words from every available topic.',
+                      'Pick one lesson topic, let Random topic choose one for '
+                      'you, or use Random mix to combine every topic.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.muted, height: 1.4),
                     ),
@@ -539,9 +567,20 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                             value: _randomTopicKey,
                             child: Row(
                               children: [
-                                Icon(Icons.shuffle_rounded, size: 18),
+                                Icon(Icons.casino_outlined, size: 18),
                                 SizedBox(width: 8),
                                 Text(_randomTopicLabel),
+                              ],
+                            ),
+                          ),
+                        if (_showRandomMix)
+                          const DropdownMenuItem(
+                            value: _randomMixKey,
+                            child: Row(
+                              children: [
+                                Icon(Icons.shuffle_rounded, size: 18),
+                                SizedBox(width: 8),
+                                Text(_randomMixLabel),
                               ],
                             ),
                           ),
@@ -556,12 +595,16 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                       ],
                       onChanged:
                           _transitioning ||
-                              (!_showRandomTopic && _visibleTopics.isEmpty)
+                              (!_showRandomTopic &&
+                                  !_showRandomMix &&
+                                  _visibleTopics.isEmpty)
                           ? null
                           : (value) =>
                                 setState(() => _selectedTopicKey = value),
                     ),
-                    if (!_showRandomTopic && _visibleTopics.isEmpty) ...[
+                    if (!_showRandomTopic &&
+                        !_showRandomMix &&
+                        _visibleTopics.isEmpty) ...[
                       const SizedBox(height: 12),
                       Text(
                         'No listening topics match your search.',

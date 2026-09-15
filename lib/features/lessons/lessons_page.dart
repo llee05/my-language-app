@@ -33,7 +33,8 @@ const Map<int, List<String>> _hskTopicPools = {
   ],
 };
 
-const _randomLessonTopic = 'Random mix';
+const _randomTopicLessonMode = 'Random topic';
+const _randomMixLessonMode = 'Random mix';
 
 class LessonsPage extends StatefulWidget {
   const LessonsPage({
@@ -384,13 +385,17 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  String get _topic {
+  String _resolveTopic() {
     final custom = _topicController.text.trim();
     if (custom.isNotEmpty) return custom;
+    if (_selectedTopicTheme == _randomTopicLessonMode) {
+      final topics = _concreteTopics;
+      return topics[_random.nextInt(topics.length)];
+    }
     return _selectedTopicTheme;
   }
 
-  List<String> get _availableTopics {
+  List<String> get _concreteTopics {
     final themes = <String>{...?_hskTopicPools[_hskLevel]};
     for (final topic in _topics) {
       if (topic.hskLevel == _hskLevel) {
@@ -398,10 +403,18 @@ class _LessonsPageState extends State<LessonsPage> {
       }
     }
     themes.removeWhere(
-      (topic) => topic.toLowerCase() == _randomLessonTopic.toLowerCase(),
+      (topic) =>
+          topic.toLowerCase() == _randomTopicLessonMode.toLowerCase() ||
+          topic.toLowerCase() == _randomMixLessonMode.toLowerCase(),
     );
-    return [_randomLessonTopic, ...themes];
+    return themes.toList(growable: false);
   }
+
+  List<String> get _availableTopics => [
+    _randomTopicLessonMode,
+    _randomMixLessonMode,
+    ..._concreteTopics,
+  ];
 
   List<LessonSummary> get _visibleTopics {
     final query = _lessonSearchController.text.trim().toLowerCase();
@@ -429,9 +442,9 @@ class _LessonsPageState extends State<LessonsPage> {
       _notice = null;
     });
     try {
-      final topic = _topic;
+      final topic = _resolveTopic();
       final hskLevel = _hskLevel;
-      final cached = topic == _randomLessonTopic
+      final cached = topic == _randomMixLessonMode
           ? null
           : await widget.repository.findGenerated(
               theme: topic,
@@ -448,7 +461,7 @@ class _LessonsPageState extends State<LessonsPage> {
       final candidates = vocabulary
           .where((word) => (word['hskLevel'] as int) <= hskLevel)
           .toList();
-      if (topic == _randomLessonTopic) {
+      if (topic == _randomMixLessonMode) {
         candidates.shuffle(_random);
       } else {
         _rankForTopic(candidates, topic);
@@ -832,7 +845,8 @@ class _LessonsPageState extends State<LessonsPage> {
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Topic for this HSK level',
-                helperText: 'Random mix shuffles words from across the level.',
+                helperText:
+                    'Random topic chooses one focus; Random mix combines topics.',
                 border: OutlineInputBorder(),
               ),
               items: [
@@ -841,8 +855,14 @@ class _LessonsPageState extends State<LessonsPage> {
                     value: topic,
                     child: Row(
                       children: [
-                        if (topic == _randomLessonTopic) ...[
-                          const Icon(Icons.shuffle_rounded, size: 18),
+                        if (topic == _randomTopicLessonMode ||
+                            topic == _randomMixLessonMode) ...[
+                          Icon(
+                            topic == _randomTopicLessonMode
+                                ? Icons.casino_outlined
+                                : Icons.shuffle_rounded,
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                         ],
                         Expanded(

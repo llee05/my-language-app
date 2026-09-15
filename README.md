@@ -74,7 +74,7 @@ Reveal each answer and rate the word; TingShuo saves every rating immediately
 and schedules the card's next review. An unfinished lesson can be resumed from
 the dashboard or Lessons page. When creating a lesson, choose **Random mix** to
 shuffle vocabulary from across the selected HSK level instead of targeting one
-topic.
+topic, or **Random topic** to have TingShuo choose one focused topic for you.
 
 ### Daily review
 
@@ -87,9 +87,10 @@ continued later the same day.
 
 Open **Listening Practice** to practise words from saved lessons at or below
 your current HSK level. Pick a lesson topic, or choose **Random mix** for a
-shuffled session spanning every available topic. Each prompt plays before its
-Hanzi and pinyin are shown. Choose the English meaning or reveal the answer,
-and use **Replay** or **Slower** whenever you need to hear it again.
+shuffled session spanning every available topic. Choose **Random topic** to
+practise one randomly selected topic instead. Each prompt plays before its Hanzi
+and pinyin are shown. Choose the English meaning or reveal the answer, and use
+**Replay** or **Slower** whenever you need to hear it again.
 
 ### Vocabulary and Vocab Rush
 
