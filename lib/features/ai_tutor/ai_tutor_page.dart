@@ -471,6 +471,7 @@ useful:
           onPromptSelected: _send,
           speechInputService: widget.speechInputService,
           beforeListening: _stopPronunciation,
+          animationStyle: _learnerSettings.buttonAnimationStyle,
         ),
       ],
     );
@@ -686,6 +687,7 @@ class _TutorComposer extends StatelessWidget {
     required this.onPromptSelected,
     required this.speechInputService,
     required this.beforeListening,
+    required this.animationStyle,
   });
 
   final TextEditingController controller;
@@ -696,6 +698,7 @@ class _TutorComposer extends StatelessWidget {
   final ValueChanged<String> onPromptSelected;
   final SpeechInputService speechInputService;
   final Future<void> Function() beforeListening;
+  final ButtonAnimationStyle animationStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -719,13 +722,22 @@ class _TutorComposer extends StatelessWidget {
               runSpacing: 8,
               children: [
                 for (final prompt in prompts)
-                  ActionChip(
-                    label: Text(prompt),
-                    onPressed: sending ? null : () => onPromptSelected(prompt),
-                    backgroundColor: Colors.transparent,
-                    side: const BorderSide(color: Color(0xFF73352C)),
-                    labelStyle: TextStyle(fontSize: 10, color: AppColors.muted),
-                    visualDensity: VisualDensity.compact,
+                  _AnimatedButtonFeedback(
+                    style: animationStyle,
+                    enabled: !sending,
+                    child: ActionChip(
+                      label: Text(prompt),
+                      onPressed: sending
+                          ? null
+                          : () => onPromptSelected(prompt),
+                      backgroundColor: Colors.transparent,
+                      side: const BorderSide(color: Color(0xFF73352C)),
+                      labelStyle: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.muted,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
               ],
             ),
@@ -764,23 +776,30 @@ class _TutorComposer extends StatelessWidget {
                       enabled: !sending,
                       preferredLocaleId: 'zh_CN',
                       beforeListening: beforeListening,
+                      animationStyle: animationStyle,
                     ),
-                    IconButton(
-                      tooltip: 'Send',
-                      onPressed: sending ? null : onSend,
-                      icon: sending
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.red,
-                              ),
-                            )
-                          : const Icon(Icons.send_rounded, size: 18),
-                      style: IconButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A241E),
-                        foregroundColor: AppColors.red,
+                    _AnimatedButtonFeedback(
+                      style: animationStyle,
+                      enabled: !sending,
+                      moveChild: true,
+                      shape: BoxShape.circle,
+                      child: IconButton(
+                        tooltip: 'Send',
+                        onPressed: sending ? null : onSend,
+                        icon: sending
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.red,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded, size: 18),
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF6A241E),
+                          foregroundColor: AppColors.red,
+                        ),
                       ),
                     ),
                   ],

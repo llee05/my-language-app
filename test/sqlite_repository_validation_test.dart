@@ -139,6 +139,35 @@ void main() {
 
       expect(loaded.appThemeId, 'classic');
     });
+
+    test(
+      'button animation style persists and corrupted values fall back',
+      () async {
+        await settings.save(
+          const LearnerSettings(
+            buttonAnimationStyle: ButtonAnimationStyle.bounce,
+          ),
+        );
+        expect(
+          (await settings.load()).buttonAnimationStyle,
+          ButtonAnimationStyle.bounce,
+        );
+
+        await LocalDatabase.use<void>((db) async {
+          await db.update(
+            'learner_settings',
+            {'button_animation_style': 'unknown-style'},
+            where: 'learner_id = ?',
+            whereArgs: [1],
+          );
+        });
+
+        expect(
+          (await settings.load()).buttonAnimationStyle,
+          ButtonAnimationStyle.combined,
+        );
+      },
+    );
   });
 
   group('daily review session validation', () {

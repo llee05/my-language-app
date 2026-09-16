@@ -3478,13 +3478,24 @@ void main() {
     await tester.pumpAndSettle();
 
     final download = find.byKey(const Key('kokoro-voice-download'));
-    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.scrollUntilVisible(
+      download,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pumpAndSettle();
 
     expect(pronunciation.installCalls, 1);
-    expect(find.byKey(const Key('kokoro-voice-ready')), findsOneWidget);
+    final ready = find.byKey(const Key('kokoro-voice-ready'));
+    await tester.scrollUntilVisible(
+      ready,
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(ready, findsOneWidget);
   });
 
   testWidgets('settings downloads Kokoro and saves a random voice pool', (
@@ -3517,7 +3528,11 @@ void main() {
 
     expect(find.byKey(const Key('kokoro-voice-picker')), findsNothing);
     final download = find.byKey(const Key('kokoro-voice-download'));
-    await tester.ensureVisible(download);
+    await tester.scrollUntilVisible(
+      download,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pumpAndSettle();
@@ -3608,7 +3623,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('kokoro-voice-picker')), findsOneWidget);
+    final picker = find.byKey(const Key('kokoro-voice-picker'));
+    await tester.scrollUntilVisible(
+      picker,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(picker, findsOneWidget);
     expect(find.text('Male 041'), findsOneWidget);
   });
 
@@ -3648,8 +3670,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('2 voices (random)'), findsOneWidget);
     final picker = find.byKey(const Key('kokoro-voice-picker'));
+    await tester.scrollUntilVisible(
+      picker,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('2 voices (random)'), findsOneWidget);
     await tester.ensureVisible(picker);
     await tester.pumpAndSettle();
     await tester.tap(picker);
@@ -3768,7 +3796,14 @@ void main() {
 
     expect(repository.saveAttempts, hasLength(1));
     expect(find.text('Settings saved.'), findsNothing);
-    expect(find.byKey(const Key('settings-save-error')), findsOneWidget);
+    final saveError = find.byKey(const Key('settings-save-error'));
+    await tester.scrollUntilVisible(
+      saveError,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(saveError, findsOneWidget);
 
     final retry = find.byKey(const Key('settings-save-retry'));
     await tester.ensureVisible(retry);

@@ -259,6 +259,9 @@ class SqliteSettingsRepository implements SettingsRepository {
       pronunciationEngine: PronunciationEngine.kokoro,
       kokoroVoiceIds: _decodeKokoroVoiceIds(row['kokoro_voice_ids']),
       appThemeId: _decodeThemeId(row['theme_id']),
+      buttonAnimationStyle: _decodeButtonAnimationStyle(
+        row['button_animation_style'],
+      ),
     );
   });
 
@@ -276,6 +279,7 @@ class SqliteSettingsRepository implements SettingsRepository {
           : null,
       'kokoro_voice_ids': jsonEncode(settings.kokoroVoiceIds),
       'theme_id': settings.appThemeId,
+      'button_animation_style': settings.buttonAnimationStyle.name,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   });
 }
@@ -301,6 +305,14 @@ List<String> _decodeKokoroVoiceIds(Object? storedValue) {
 String _decodeThemeId(Object? storedValue) {
   final value = storedValue is String ? storedValue.trim() : '';
   return value.isEmpty ? 'classic' : value;
+}
+
+ButtonAnimationStyle _decodeButtonAnimationStyle(Object? storedValue) {
+  final value = storedValue is String ? storedValue.trim() : '';
+  return ButtonAnimationStyle.values.firstWhere(
+    (style) => style.name == value,
+    orElse: () => ButtonAnimationStyle.combined,
+  );
 }
 
 class SqliteLessonRepository implements LessonRepository {

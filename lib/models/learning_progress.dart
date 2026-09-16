@@ -2,6 +2,16 @@ import 'lesson.dart';
 
 enum PronunciationEngine { kokoro }
 
+enum ButtonAnimationStyle {
+  subtleScale,
+  bounce,
+  glowPulse,
+  iconMotion,
+  fillTransition,
+  ripple,
+  combined,
+}
+
 class LearnerSettings {
   const LearnerSettings({
     this.showPinyin = true,
@@ -11,6 +21,7 @@ class LearnerSettings {
     this.pronunciationEngine = PronunciationEngine.kokoro,
     this.kokoroVoiceIds = const [],
     this.appThemeId = 'classic',
+    this.buttonAnimationStyle = ButtonAnimationStyle.combined,
   });
 
   final bool showPinyin;
@@ -31,6 +42,9 @@ class LearnerSettings {
   /// unknown ids fall back to the default theme when loaded.
   final String appThemeId;
 
+  /// Visual feedback used by animated buttons.
+  final ButtonAnimationStyle buttonAnimationStyle;
+
   LearnerSettings copyWith({
     bool? showPinyin,
     bool? soundEnabled,
@@ -39,6 +53,7 @@ class LearnerSettings {
     PronunciationEngine? pronunciationEngine,
     List<String>? kokoroVoiceIds,
     String? appThemeId,
+    ButtonAnimationStyle? buttonAnimationStyle,
   }) {
     return LearnerSettings(
       showPinyin: showPinyin ?? this.showPinyin,
@@ -48,6 +63,7 @@ class LearnerSettings {
       pronunciationEngine: pronunciationEngine ?? this.pronunciationEngine,
       kokoroVoiceIds: kokoroVoiceIds ?? this.kokoroVoiceIds,
       appThemeId: appThemeId ?? this.appThemeId,
+      buttonAnimationStyle: buttonAnimationStyle ?? this.buttonAnimationStyle,
     );
   }
 }

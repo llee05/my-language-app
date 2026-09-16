@@ -8,7 +8,11 @@ import 'package:mylanguageapp/repositories/settings_repository.dart';
 const _profile = LearnerProfile(name: 'Mei', hskLevel: 2, dailyWordTarget: 10);
 
 class _MemorySettingsRepository implements SettingsRepository {
-  LearnerSettings _settings = const LearnerSettings(showPinyin: false);
+  _MemorySettingsRepository([
+    this._settings = const LearnerSettings(showPinyin: false),
+  ]);
+
+  LearnerSettings _settings;
   bool failSaves = false;
   int saveCalls = 0;
 
@@ -154,5 +158,40 @@ void main() {
 
     expect(find.byKey(const Key('theme-save-error')), findsNothing);
     expect(settingsRepository.savedSettings.appThemeId, 'ocean');
+  });
+
+  testWidgets('button animation can be previewed and saved', (tester) async {
+    final settingsRepository = _MemorySettingsRepository(
+      const LearnerSettings(
+        showPinyin: false,
+        buttonAnimationStyle: ButtonAnimationStyle.bounce,
+      ),
+    );
+    await _pumpHarness(tester, settingsRepository);
+
+    final picker = find.byKey(const Key('settings-button-animation-picker'));
+    await tester.ensureVisible(picker);
+    await tester.pumpAndSettle();
+    expect(find.text('Bounce'), findsOneWidget);
+
+    await tester.tap(picker);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill transition').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('button-animation-preview')), findsOneWidget);
+    final save = find.byKey(const Key('settings-save'));
+    await tester.scrollUntilVisible(
+      save,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    expect(
+      settingsRepository.savedSettings.buttonAnimationStyle,
+      ButtonAnimationStyle.fillTransition,
+    );
   });
 }

@@ -39,6 +39,7 @@ export 'models/lesson.dart';
 
 part 'core/theme/app_colors.dart';
 part 'core/widgets/app_sidebar.dart';
+part 'core/widgets/button_animation.dart';
 part 'core/widgets/push_to_talk_button.dart';
 part 'core/widgets/shared_widgets.dart';
 part 'features/ai_tutor/ai_tutor_page.dart';

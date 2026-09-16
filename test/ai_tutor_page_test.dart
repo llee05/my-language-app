@@ -419,6 +419,30 @@ void main() {
     expect(find.byKey(const Key('ai-tutor-push-to-talk')), findsOneWidget);
   });
 
+  testWidgets('uses the saved button animation for tutor controls', (
+    tester,
+  ) async {
+    await _pumpTutor(
+      tester,
+      settingsRepository: _MemorySettingsRepository(
+        const LearnerSettings(
+          buttonAnimationStyle: ButtonAnimationStyle.subtleScale,
+        ),
+      ),
+    );
+
+    final send = find.byTooltip('Send');
+    final scale = find.ancestor(of: send, matching: find.byType(AnimatedScale));
+    expect(scale, findsOneWidget);
+
+    final gesture = await tester.startGesture(tester.getCenter(send));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.widget<AnimatedScale>(scale).scale, .95);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(tester.widget<AnimatedScale>(scale).scale, 1);
+  });
+
   testWidgets(
     'holding the tutor microphone dictates Mandarin into the prompt',
     (tester) async {

@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 12;
+const int databaseSchemaVersion = 13;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -317,6 +317,12 @@ final Map<int, MigrationStep> databaseMigrations = {
     await db.execute(
       "ALTER TABLE learner_settings "
       "ADD COLUMN theme_id TEXT NOT NULL DEFAULT 'classic'",
+    );
+  },
+  13: (db) async {
+    await db.execute(
+      "ALTER TABLE learner_settings "
+      "ADD COLUMN button_animation_style TEXT NOT NULL DEFAULT 'combined'",
     );
   },
 };

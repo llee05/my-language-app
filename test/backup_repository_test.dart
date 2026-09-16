@@ -49,6 +49,7 @@ void main() {
           reminderHour: 8,
           kokoroVoiceIds: ['zf_021'],
           appThemeId: 'ocean',
+          buttonAnimationStyle: ButtonAnimationStyle.iconMotion,
         ),
       );
       await lessons.saveGenerated(
@@ -172,6 +173,10 @@ void main() {
       expect(restoredSettings.reminderHour, 8);
       expect(restoredSettings.kokoroVoiceIds, ['zf_021']);
       expect(restoredSettings.appThemeId, 'ocean');
+      expect(
+        restoredSettings.buttonAnimationStyle,
+        ButtonAnimationStyle.iconMotion,
+      );
       expect(restoredLesson.cards.single.chinese, '护照');
       expect(restoredHistory.single.rating, ReviewRating.good);
       expect(restoredHistory.single.responseTimeMs, 900);
@@ -205,6 +210,33 @@ void main() {
     await expectLater(backups.restoreBackup(invalidBytes), throwsA(anything));
     expect((await learners.load())?.name, 'Keep me');
     expect(await lessons.topics(), isNotEmpty);
+  });
+
+  test('restores an older backup without an animation preference', () async {
+    await learners.save(
+      const LearnerProfile(name: 'Older Mei', hskLevel: 2, dailyWordTarget: 10),
+    );
+    await settings.save(
+      const LearnerSettings(buttonAnimationStyle: ButtonAnimationStyle.bounce),
+    );
+    final document =
+        jsonDecode(utf8.decode(await backups.exportBackup()))
+            as Map<String, dynamic>;
+    document['databaseSchemaVersion'] = 12;
+    final data = document['data'] as Map<String, dynamic>;
+    final settingsRows = data['learner_settings'] as List<dynamic>;
+    (settingsRows.single as Map<String, dynamic>).remove(
+      'button_animation_style',
+    );
+
+    await backups.restoreBackup(
+      Uint8List.fromList(utf8.encode(jsonEncode(document))),
+    );
+
+    expect(
+      (await settings.load()).buttonAnimationStyle,
+      ButtonAnimationStyle.combined,
+    );
   });
 
   test('rejects unrelated and unsupported files before import', () {

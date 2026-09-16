@@ -197,6 +197,7 @@ void main() {
     expect(restored.pronunciationEngine, PronunciationEngine.kokoro);
     expect(restored.kokoroVoiceIds, isEmpty);
     expect(restored.appThemeId, 'classic');
+    expect(restored.buttonAnimationStyle, ButtonAnimationStyle.combined);
   });
 
   test('version 9 voice choice migrates to a one-voice Kokoro pool', () async {
@@ -1213,6 +1214,7 @@ void main() {
         'pronunciation_engine',
         'pronunciation_voice_id',
         'kokoro_voice_ids',
+        'button_animation_style',
       ]),
     );
     expect(

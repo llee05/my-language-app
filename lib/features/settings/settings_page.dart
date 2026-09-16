@@ -51,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _reminderEnabled = false;
   int _reminderHour = 18;
   AppThemeId _selectedThemeId = AppThemeId.classic;
+  ButtonAnimationStyle _buttonAnimationStyle = ButtonAnimationStyle.combined;
   bool _themeSaveFailed = false;
   List<String> _kokoroVoiceIds = const [];
   late final Future<String> _databasePath;
@@ -175,6 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _kokoroVoiceIds = kokoroVoiceIds;
         _selectedThemeId =
             AppThemes.tryParseId(settings.appThemeId) ?? widget.appThemeId;
+        _buttonAnimationStyle = settings.buttonAnimationStyle;
         _loadingPreferences = false;
         _preferencesLoadFailed = false;
       });
@@ -222,6 +224,7 @@ class _SettingsPageState extends State<SettingsPage> {
           pronunciationEngine: PronunciationEngine.kokoro,
           kokoroVoiceIds: _kokoroVoiceIds,
           appThemeId: _selectedThemeId.name,
+          buttonAnimationStyle: _buttonAnimationStyle,
         ),
       );
       await _applyPronunciationSelection();
@@ -604,8 +607,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _SettingsCard(
           title: 'Appearance',
-          subtitle:
-              'Pick a colour theme. It is applied immediately and saved locally.',
+          subtitle: 'Pick a colour theme and how buttons respond when pressed.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -621,6 +623,62 @@ class _SettingsPageState extends State<SettingsPage> {
                       onTap: () => _selectTheme(palette.id),
                     ),
                 ],
+              ),
+              const SizedBox(height: 22),
+              const Divider(),
+              const SizedBox(height: 18),
+              Text(
+                'Button animation',
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _buttonAnimationStyle.description,
+                style: TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: KeyedSubtree(
+                  key: const Key('settings-button-animation-picker'),
+                  child: DropdownButtonFormField<ButtonAnimationStyle>(
+                    key: ValueKey(
+                      'button-animation-${_buttonAnimationStyle.name}',
+                    ),
+                    initialValue: _buttonAnimationStyle,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Press feedback',
+                      prefixIcon: Icon(Icons.animation_rounded),
+                    ),
+                    items: [
+                      for (final style in ButtonAnimationStyle.values)
+                        DropdownMenuItem(
+                          value: style,
+                          child: Text(style.label),
+                        ),
+                    ],
+                    onChanged: (style) {
+                      if (style == null) return;
+                      setState(() => _buttonAnimationStyle = style);
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _AnimatedButtonFeedback(
+                style: _buttonAnimationStyle,
+                moveChild: true,
+                borderRadius: BorderRadius.circular(12),
+                child: FilledButton.icon(
+                  key: const Key('button-animation-preview'),
+                  onPressed: () {},
+                  icon: const Icon(Icons.touch_app_rounded),
+                  label: const Text('Press and hold to preview'),
+                ),
               ),
               if (_themeSaveFailed) ...[
                 const SizedBox(height: 14),
@@ -1007,6 +1065,35 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _formatMegabytes(int bytes) =>
       (bytes / (1000 * 1000)).toStringAsFixed(1);
+}
+
+extension on ButtonAnimationStyle {
+  String get label => switch (this) {
+    ButtonAnimationStyle.subtleScale => 'Subtle scale',
+    ButtonAnimationStyle.bounce => 'Bounce',
+    ButtonAnimationStyle.glowPulse => 'Glow / pulse',
+    ButtonAnimationStyle.iconMotion => 'Icon motion',
+    ButtonAnimationStyle.fillTransition => 'Fill transition',
+    ButtonAnimationStyle.ripple => 'Ripple only',
+    ButtonAnimationStyle.combined => 'Combined (recommended)',
+  };
+
+  String get description => switch (this) {
+    ButtonAnimationStyle.subtleScale =>
+      'Buttons gently shrink while pressed, then return to full size.',
+    ButtonAnimationStyle.bounce =>
+      'Buttons compress further and spring back after release.',
+    ButtonAnimationStyle.glowPulse =>
+      'Buttons glow on press, and the microphone pulses while listening.',
+    ButtonAnimationStyle.iconMotion =>
+      'Button icons slide slightly in the direction of the action.',
+    ButtonAnimationStyle.fillTransition =>
+      'A soft accent colour fades across the button while pressed.',
+    ButtonAnimationStyle.ripple =>
+      'Uses the standard Material ripple without extra motion.',
+    ButtonAnimationStyle.combined =>
+      'Combines scale, glow, icon movement, fill, and Material ripple.',
+  };
 }
 
 class _KokoroVoicePoolDialog extends StatefulWidget {

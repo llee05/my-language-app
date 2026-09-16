@@ -663,6 +663,7 @@ Return only compact JSON with this exact shape:
                       enabled: !_sending,
                       preferredLocaleId: 'zh_CN',
                       beforeListening: _stopAudio,
+                      animationStyle: _settings.buttonAnimationStyle,
                     ),
                     IconButton(
                       key: const Key('send-roleplay-reply'),

@@ -45,6 +45,9 @@ class SqliteBackupRepository implements BackupRepository {
   static const _format = 'tingshuo-backup';
   static const _formatVersion = 1;
   static const _maxBackupBytes = 50 * 1024 * 1024;
+  static const _optionalColumnDefaults = <String, Object?>{
+    'learner_settings.button_animation_style': 'combined',
+  };
 
   final DateTime Function()? _clock;
 
@@ -67,6 +70,7 @@ class SqliteBackupRepository implements BackupRepository {
       'pronunciation_voice_id',
       'kokoro_voice_ids',
       'theme_id',
+      'button_animation_style',
     ],
     'lessons': ['id', 'lesson_title', 'theme', 'hsk_level', 'is_listed'],
     'cards': [
@@ -254,12 +258,21 @@ class SqliteBackupRepository implements BackupRepository {
       final rows = <Map<String, Object?>>[];
       for (final rawRow in rawRows) {
         if (rawRow is! Map<String, dynamic> ||
-            entry.value.any((column) => !rawRow.containsKey(column))) {
+            entry.value.any(
+              (column) =>
+                  !rawRow.containsKey(column) &&
+                  !_optionalColumnDefaults.containsKey('${entry.key}.$column'),
+            )) {
           throw const BackupFormatException(
             'This TingShuo backup contains invalid records.',
           );
         }
-        rows.add({for (final column in entry.value) column: rawRow[column]});
+        rows.add({
+          for (final column in entry.value)
+            column:
+                rawRow[column] ??
+                _optionalColumnDefaults['${entry.key}.$column'],
+        });
       }
       tables[entry.key] = rows;
     }

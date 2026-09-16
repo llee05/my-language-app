@@ -384,6 +384,7 @@ Return only compact JSON with this exact shape:
                 speechInputService: widget.speechInputService,
                 enabled: !_generating,
                 beforeListening: _stopAudio,
+                animationStyle: _settings.buttonAnimationStyle,
               ),
             ),
           ),

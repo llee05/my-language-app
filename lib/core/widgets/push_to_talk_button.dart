@@ -8,6 +8,7 @@ class _PushToTalkButton extends StatefulWidget {
     this.enabled = true,
     this.preferredLocaleId,
     this.beforeListening,
+    this.animationStyle = ButtonAnimationStyle.combined,
   });
 
   final TextEditingController controller;
@@ -15,6 +16,7 @@ class _PushToTalkButton extends StatefulWidget {
   final bool enabled;
   final String? preferredLocaleId;
   final Future<void> Function()? beforeListening;
+  final ButtonAnimationStyle animationStyle;
 
   @override
   State<_PushToTalkButton> createState() => _PushToTalkButtonState();
@@ -132,30 +134,37 @@ class _PushToTalkButtonState extends State<_PushToTalkButton> {
   @override
   Widget build(BuildContext context) {
     final active = _starting || _listening;
-    return Tooltip(
-      message: active ? 'Release to stop' : 'Hold to talk',
-      child: Semantics(
-        button: true,
-        enabled: widget.enabled,
-        label: active ? 'Listening. Release to stop.' : 'Hold to talk',
-        child: Material(
-          color: active
-              ? AppColors.red.withValues(alpha: .2)
-              : Colors.transparent,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTapDown: widget.enabled ? (_) => _press() : null,
-            onTapUp: widget.enabled ? (_) => _release() : null,
-            onTapCancel: widget.enabled ? _release : null,
-            child: SizedBox.square(
-              dimension: 42,
-              child: Icon(
-                active ? Icons.mic_rounded : Icons.mic_none_rounded,
-                size: 20,
-                color: widget.enabled
-                    ? (active ? AppColors.red : AppColors.muted)
-                    : Theme.of(context).disabledColor,
+    return _AnimatedButtonFeedback(
+      style: widget.animationStyle,
+      enabled: widget.enabled,
+      active: active,
+      moveChild: true,
+      shape: BoxShape.circle,
+      child: Tooltip(
+        message: active ? 'Release to stop' : 'Hold to talk',
+        child: Semantics(
+          button: true,
+          enabled: widget.enabled,
+          label: active ? 'Listening. Release to stop.' : 'Hold to talk',
+          child: Material(
+            color: active
+                ? AppColors.red.withValues(alpha: .2)
+                : Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTapDown: widget.enabled ? (_) => _press() : null,
+              onTapUp: widget.enabled ? (_) => _release() : null,
+              onTapCancel: widget.enabled ? _release : null,
+              child: SizedBox.square(
+                dimension: 42,
+                child: Icon(
+                  active ? Icons.mic_rounded : Icons.mic_none_rounded,
+                  size: 20,
+                  color: widget.enabled
+                      ? (active ? AppColors.red : AppColors.muted)
+                      : Theme.of(context).disabledColor,
+                ),
               ),
             ),
           ),
