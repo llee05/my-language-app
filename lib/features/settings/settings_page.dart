@@ -1075,7 +1075,7 @@ extension on ButtonAnimationStyle {
     ButtonAnimationStyle.iconMotion => 'Icon motion',
     ButtonAnimationStyle.fillTransition => 'Fill transition',
     ButtonAnimationStyle.ripple => 'Ripple only',
-    ButtonAnimationStyle.combined => 'Combined (recommended)',
+    ButtonAnimationStyle.combined => 'Combined',
   };
 
   String get description => switch (this) {
@@ -1084,7 +1084,7 @@ extension on ButtonAnimationStyle {
     ButtonAnimationStyle.bounce =>
       'Buttons compress further and spring back after release.',
     ButtonAnimationStyle.glowPulse =>
-      'Buttons glow on press, and the microphone pulses while listening.',
+      'The microphone pulses while listening; regular presses stay flat.',
     ButtonAnimationStyle.iconMotion =>
       'Button icons slide slightly in the direction of the action.',
     ButtonAnimationStyle.fillTransition =>
@@ -1092,7 +1092,7 @@ extension on ButtonAnimationStyle {
     ButtonAnimationStyle.ripple =>
       'Uses the standard Material ripple without extra motion.',
     ButtonAnimationStyle.combined =>
-      'Combines scale, glow, icon movement, fill, and Material ripple.',
+      'Combines scale, icon movement, fill, ripple, and a listening pulse.',
   };
 }
 

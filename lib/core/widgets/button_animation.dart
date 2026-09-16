@@ -115,12 +115,8 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
         child: widget.child,
         builder: (context, child) {
           final pulse = reduceMotion ? 0.0 : sin(_pulseController.value * pi);
-          final glowStrength = _usesGlow
-              ? widget.active
-                    ? .3 + pulse * .35
-                    : _pressed
-                    ? .55
-                    : 0.0
+          final glowStrength = _usesGlow && widget.active
+              ? .3 + pulse * .35
               : 0.0;
           Widget result = AnimatedSlide(
             offset: !reduceMotion && _usesIconMotion && _pressed
