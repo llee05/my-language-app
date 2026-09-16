@@ -439,17 +439,8 @@ useful:
               ),
               OutlinedButton.icon(
                 onPressed: _reset,
-                icon: const Icon(Icons.refresh_rounded, size: 14),
+                icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Reset'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.muted,
-                  side: const BorderSide(color: Color(0xFF71463E)),
-                  textStyle: const TextStyle(fontSize: 11),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
-                  ),
-                ),
               ),
             ],
           ),
@@ -730,12 +721,6 @@ class _TutorComposer extends StatelessWidget {
                       onPressed: sending
                           ? null
                           : () => onPromptSelected(prompt),
-                      backgroundColor: Colors.transparent,
-                      side: const BorderSide(color: Color(0xFF73352C)),
-                      labelStyle: TextStyle(
-                        fontSize: 10,
-                        color: AppColors.muted,
-                      ),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
@@ -785,6 +770,7 @@ class _TutorComposer extends StatelessWidget {
                       shape: BoxShape.circle,
                       child: IconButton(
                         tooltip: 'Send',
+                        isSelected: true,
                         onPressed: sending ? null : onSend,
                         icon: sending
                             ? SizedBox(
@@ -797,8 +783,6 @@ class _TutorComposer extends StatelessWidget {
                               )
                             : const Icon(Icons.send_rounded, size: 18),
                         style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF6A241E),
-                          foregroundColor: AppColors.red,
                           overlayColor:
                               animationStyle == ButtonAnimationStyle.ripple
                               ? null

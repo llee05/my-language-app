@@ -38,6 +38,7 @@ export 'models/learner_profile.dart';
 export 'models/lesson.dart';
 
 part 'core/theme/app_colors.dart';
+part 'core/theme/app_button_theme.dart';
 part 'core/widgets/app_sidebar.dart';
 part 'core/widgets/button_animation.dart';
 part 'core/widgets/push_to_talk_button.dart';
@@ -207,17 +208,22 @@ class _HanziPathAppState extends State<HanziPathApp> {
   Widget build(BuildContext context) {
     AppColors.apply(AppThemes.paletteOf(_appThemeId));
     final seed = AppColors.red;
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'TingShuo',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(
+    final colorScheme =
+        ColorScheme.fromSeed(
           seedColor: seed,
           brightness: Brightness.dark,
           surface: AppColors.surface,
-        ),
+        ).copyWith(
+          primary: AppColors.red,
+          onPrimary: Colors.white,
+          outline: AppColors.border,
+          outlineVariant: AppColors.border.withValues(alpha: .65),
+        );
+    final appTheme = AppButtonTheme.apply(
+      ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: AppColors.background,
+        colorScheme: colorScheme,
         fontFamily: 'sans-serif',
         dividerColor: AppColors.border,
         splashColor: seed.withValues(alpha: .12),
@@ -241,6 +247,11 @@ class _HanziPathAppState extends State<HanziPathApp> {
           bodyMedium: TextStyle(fontSize: 13, color: AppColors.muted),
         ),
       ),
+    );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'TingShuo',
+      theme: appTheme,
       home: FutureBuilder<LearnerProfile?>(
         future: _profile,
         builder: (context, snapshot) {

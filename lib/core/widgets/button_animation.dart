@@ -55,22 +55,33 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
     if (_usesMaterialRipple) return widget.child;
 
     final theme = Theme.of(context);
-    const flatStyle = ButtonStyle(
-      overlayColor: WidgetStatePropertyAll(Colors.transparent),
-      elevation: WidgetStatePropertyAll(0),
-      shadowColor: WidgetStatePropertyAll(Colors.transparent),
-      splashFactory: NoSplash.splashFactory,
-    );
+    ButtonStyle flatten(ButtonStyle? style) =>
+        (style ?? const ButtonStyle()).copyWith(
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+          elevation: const WidgetStatePropertyAll(0),
+          shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+          splashFactory: NoSplash.splashFactory,
+        );
     return Theme(
       data: theme.copyWith(
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
-        elevatedButtonTheme: const ElevatedButtonThemeData(style: flatStyle),
-        filledButtonTheme: const FilledButtonThemeData(style: flatStyle),
-        outlinedButtonTheme: const OutlinedButtonThemeData(style: flatStyle),
-        textButtonTheme: const TextButtonThemeData(style: flatStyle),
-        iconButtonTheme: const IconButtonThemeData(style: flatStyle),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: flatten(theme.elevatedButtonTheme.style),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: flatten(theme.filledButtonTheme.style),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: flatten(theme.outlinedButtonTheme.style),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: flatten(theme.textButtonTheme.style),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: flatten(theme.iconButtonTheme.style),
+        ),
         chipTheme: theme.chipTheme.copyWith(
           pressElevation: 0,
           shadowColor: Colors.transparent,

@@ -382,13 +382,6 @@ class _VocabRushPageState extends State<VocabRushPage> {
             onPressed: _start,
             icon: const Icon(Icons.sports_martial_arts_rounded, size: 18),
             label: Text(_finished ? '再玩一次 — Play Again' : '开始游戏 — Start Game'),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.red,
-              foregroundColor: AppColors.text,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
           ),
         ),
         if (_finished) ...[

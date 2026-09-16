@@ -543,15 +543,7 @@ class ContinueCard extends StatelessWidget {
           );
           final button = FilledButton.icon(
             onPressed: onResume,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(11),
-              ),
-            ),
-            label: const Text('Resume', style: TextStyle(fontSize: 12)),
+            label: const Text('Resume'),
             iconAlignment: IconAlignment.end,
             icon: const Icon(Icons.arrow_forward_rounded, size: 16),
           );

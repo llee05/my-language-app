@@ -668,6 +668,7 @@ Return only compact JSON with this exact shape:
                     IconButton(
                       key: const Key('send-roleplay-reply'),
                       tooltip: 'Send roleplay reply',
+                      isSelected: true,
                       onPressed: _sending ? null : _sendReply,
                       icon: _sending
                           ? const SizedBox.square(
