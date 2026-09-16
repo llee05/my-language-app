@@ -432,6 +432,13 @@ void main() {
     );
 
     final send = find.byTooltip('Send');
+    final sendButton = tester.widget<IconButton>(
+      find.ancestor(of: send, matching: find.byType(IconButton)),
+    );
+    expect(
+      sendButton.style?.overlayColor?.resolve({WidgetState.pressed}),
+      Colors.transparent,
+    );
     final scale = find.ancestor(of: send, matching: find.byType(AnimatedScale));
     expect(scale, findsOneWidget);
 

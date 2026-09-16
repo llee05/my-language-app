@@ -1092,7 +1092,7 @@ extension on ButtonAnimationStyle {
     ButtonAnimationStyle.ripple =>
       'Uses the standard Material ripple without extra motion.',
     ButtonAnimationStyle.combined =>
-      'Combines scale, icon movement, fill, ripple, and a listening pulse.',
+      'Combines scale, icon movement, fill, and a listening pulse.',
   };
 }
 

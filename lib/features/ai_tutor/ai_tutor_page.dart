@@ -799,6 +799,12 @@ class _TutorComposer extends StatelessWidget {
                         style: IconButton.styleFrom(
                           backgroundColor: const Color(0xFF6A241E),
                           foregroundColor: AppColors.red,
+                          overlayColor:
+                              animationStyle == ButtonAnimationStyle.ripple
+                              ? null
+                              : Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          elevation: 0,
                         ),
                       ),
                     ),

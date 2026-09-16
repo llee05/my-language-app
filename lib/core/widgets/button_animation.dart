@@ -1,7 +1,7 @@
 part of '../../main.dart';
 
 /// Adds the learner-selected motion treatment around an existing Material
-/// control. The wrapped control still owns taps, focus, semantics, and ripples.
+/// control. The wrapped control still owns taps, focus, and semantics.
 class _AnimatedButtonFeedback extends StatefulWidget {
   const _AnimatedButtonFeedback({
     required this.style,
@@ -48,6 +48,38 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
       widget.moveChild &&
       (widget.style == ButtonAnimationStyle.iconMotion ||
           widget.style == ButtonAnimationStyle.combined);
+
+  bool get _usesMaterialRipple => widget.style == ButtonAnimationStyle.ripple;
+
+  Widget _materialChild(BuildContext context) {
+    if (_usesMaterialRipple) return widget.child;
+
+    final theme = Theme.of(context);
+    const flatStyle = ButtonStyle(
+      overlayColor: WidgetStatePropertyAll(Colors.transparent),
+      elevation: WidgetStatePropertyAll(0),
+      shadowColor: WidgetStatePropertyAll(Colors.transparent),
+      splashFactory: NoSplash.splashFactory,
+    );
+    return Theme(
+      data: theme.copyWith(
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        elevatedButtonTheme: const ElevatedButtonThemeData(style: flatStyle),
+        filledButtonTheme: const FilledButtonThemeData(style: flatStyle),
+        outlinedButtonTheme: const OutlinedButtonThemeData(style: flatStyle),
+        textButtonTheme: const TextButtonThemeData(style: flatStyle),
+        iconButtonTheme: const IconButtonThemeData(style: flatStyle),
+        chipTheme: theme.chipTheme.copyWith(
+          pressElevation: 0,
+          shadowColor: Colors.transparent,
+          selectedShadowColor: Colors.transparent,
+        ),
+      ),
+      child: widget.child,
+    );
+  }
 
   @override
   void initState() {
@@ -112,7 +144,7 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
       onPointerCancel: widget.enabled ? (_) => _setPressed(false) : null,
       child: AnimatedBuilder(
         animation: _pulseController,
-        child: widget.child,
+        child: _materialChild(context),
         builder: (context, child) {
           final pulse = reduceMotion ? 0.0 : sin(_pulseController.value * pi);
           final glowStrength = _usesGlow && widget.active

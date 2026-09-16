@@ -153,6 +153,20 @@ class _PushToTalkButtonState extends State<_PushToTalkButton> {
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
+              splashFactory:
+                  widget.animationStyle == ButtonAnimationStyle.ripple
+                  ? null
+                  : NoSplash.splashFactory,
+              splashColor: widget.animationStyle == ButtonAnimationStyle.ripple
+                  ? null
+                  : Colors.transparent,
+              highlightColor:
+                  widget.animationStyle == ButtonAnimationStyle.ripple
+                  ? null
+                  : Colors.transparent,
+              overlayColor: widget.animationStyle == ButtonAnimationStyle.ripple
+                  ? null
+                  : const WidgetStatePropertyAll(Colors.transparent),
               onTapDown: widget.enabled ? (_) => _press() : null,
               onTapUp: widget.enabled ? (_) => _release() : null,
               onTapCancel: widget.enabled ? _release : null,
