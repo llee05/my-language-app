@@ -10,6 +10,8 @@ class SettingsPage extends StatefulWidget {
     this.onBackupRestored,
     required this.appThemeId,
     required this.onThemeChanged,
+    this.buttonAnimationStyle = ButtonAnimationStyle.combined,
+    this.onButtonAnimationStyleChanged,
     required this.developmentRepository,
     required this.settingsRepository,
     this.pronunciationService,
@@ -25,6 +27,8 @@ class SettingsPage extends StatefulWidget {
   final Future<void> Function()? onBackupRestored;
   final AppThemeId appThemeId;
   final void Function(AppThemeId themeId) onThemeChanged;
+  final ButtonAnimationStyle buttonAnimationStyle;
+  final ValueChanged<ButtonAnimationStyle>? onButtonAnimationStyleChanged;
   final DevelopmentRepository developmentRepository;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
@@ -71,6 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _hskLevel = widget.profile.hskLevel;
     _dailyTarget = widget.profile.dailyWordTarget;
     _selectedThemeId = widget.appThemeId;
+    _buttonAnimationStyle = widget.buttonAnimationStyle;
     _databasePath = widget.developmentRepository.databasePath();
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
@@ -664,6 +669,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     onChanged: (style) {
                       if (style == null) return;
                       setState(() => _buttonAnimationStyle = style);
+                      widget.onButtonAnimationStyleChanged?.call(style);
                     },
                   ),
                 ),
@@ -1092,7 +1098,7 @@ extension on ButtonAnimationStyle {
     ButtonAnimationStyle.ripple =>
       'Uses the standard Material ripple without extra motion.',
     ButtonAnimationStyle.combined =>
-      'Combines scale, icon movement, fill, and a listening pulse.',
+      'Combines scale, icon movement, and a listening pulse.',
   };
 }
 

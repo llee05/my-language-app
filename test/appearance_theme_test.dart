@@ -56,6 +56,7 @@ class _ThemeHarness extends StatefulWidget {
 
 class _ThemeHarnessState extends State<_ThemeHarness> {
   late AppThemeId _themeId = widget.initialTheme;
+  ButtonAnimationStyle _buttonAnimationStyle = ButtonAnimationStyle.combined;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +69,10 @@ class _ThemeHarnessState extends State<_ThemeHarness> {
             color: AppColors.background,
             child: const SizedBox(height: 1, width: 1),
           ),
+          Text(
+            _buttonAnimationStyle.name,
+            key: const Key('button-animation-probe'),
+          ),
           Expanded(
             child: SettingsPage(
               profile: _profile,
@@ -76,6 +81,9 @@ class _ThemeHarnessState extends State<_ThemeHarness> {
               onResetAllData: () async {},
               appThemeId: _themeId,
               onThemeChanged: (themeId) => setState(() => _themeId = themeId),
+              buttonAnimationStyle: _buttonAnimationStyle,
+              onButtonAnimationStyleChanged: (style) =>
+                  setState(() => _buttonAnimationStyle = style),
               developmentRepository: _FakeDevelopmentRepository(),
               settingsRepository: widget.settingsRepository,
             ),
@@ -180,6 +188,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('button-animation-preview')), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('button-animation-probe'))).data,
+      ButtonAnimationStyle.fillTransition.name,
+    );
     final save = find.byKey(const Key('settings-save'));
     await tester.scrollUntilVisible(
       save,

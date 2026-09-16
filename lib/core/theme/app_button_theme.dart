@@ -13,7 +13,27 @@ abstract final class AppButtonTheme {
     height: 1.1,
   );
 
-  static ThemeData apply(ThemeData theme) {
+  static ThemeData apply(
+    ThemeData theme, {
+    ButtonAnimationStyle animationStyle = ButtonAnimationStyle.combined,
+  }) {
+    final usesRipple = animationStyle == ButtonAnimationStyle.ripple;
+    final usesFill = animationStyle == ButtonAnimationStyle.fillTransition;
+    final splashFactory = usesRipple
+        ? InkRipple.splashFactory
+        : NoSplash.splashFactory;
+    final overlayColor = WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.disabled)) return Colors.transparent;
+      if (usesFill && states.contains(WidgetState.pressed)) {
+        return AppColors.red.withValues(alpha: .14);
+      }
+      if (usesFill &&
+          (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.focused))) {
+        return AppColors.red.withValues(alpha: .07);
+      }
+      return Colors.transparent;
+    });
     final buttonShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(_radius),
     );
@@ -26,6 +46,8 @@ abstract final class AppButtonTheme {
       elevation: const WidgetStatePropertyAll(0),
       shadowColor: const WidgetStatePropertyAll(Colors.transparent),
       surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+      overlayColor: usesRipple ? null : overlayColor,
+      splashFactory: splashFactory,
     );
     final outlinedButton = flatButton.copyWith(
       side: WidgetStateProperty.resolveWith((states) {
@@ -110,8 +132,17 @@ abstract final class AppButtonTheme {
           elevation: const WidgetStatePropertyAll(0),
           shadowColor: const WidgetStatePropertyAll(Colors.transparent),
           surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          overlayColor: usesRipple ? null : overlayColor,
+          splashFactory: splashFactory,
         ),
       ),
+      splashFactory: splashFactory,
+      splashColor: usesRipple
+          ? AppColors.red.withValues(alpha: .16)
+          : Colors.transparent,
+      highlightColor: usesFill
+          ? AppColors.red.withValues(alpha: .12)
+          : Colors.transparent,
     );
   }
 }

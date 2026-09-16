@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/models/learning_progress.dart';
 
 void main() {
   setUp(() => AppColors.apply(AppThemes.classic));
@@ -73,6 +74,52 @@ void main() {
     expect(
       segmented.foregroundColor?.resolve({WidgetState.selected}),
       AppColors.red,
+    );
+  });
+
+  test('combined style removes native press fill and splash', () {
+    final theme = AppButtonTheme.apply(
+      ThemeData.dark(),
+      animationStyle: ButtonAnimationStyle.combined,
+    );
+    final pressed = {WidgetState.pressed};
+
+    expect(theme.splashFactory, NoSplash.splashFactory);
+    expect(theme.highlightColor, Colors.transparent);
+    expect(
+      theme.filledButtonTheme.style?.overlayColor?.resolve(pressed),
+      Colors.transparent,
+    );
+    expect(
+      theme.filledButtonTheme.style?.splashFactory,
+      NoSplash.splashFactory,
+    );
+    expect(
+      theme.segmentedButtonTheme.style?.overlayColor?.resolve(pressed),
+      Colors.transparent,
+    );
+  });
+
+  test('fill and ripple surface effects only apply when selected', () {
+    final fillTheme = AppButtonTheme.apply(
+      ThemeData.dark(),
+      animationStyle: ButtonAnimationStyle.fillTransition,
+    );
+    final rippleTheme = AppButtonTheme.apply(
+      ThemeData.dark(),
+      animationStyle: ButtonAnimationStyle.ripple,
+    );
+    final pressed = {WidgetState.pressed};
+
+    expect(fillTheme.splashFactory, NoSplash.splashFactory);
+    expect(
+      fillTheme.filledButtonTheme.style?.overlayColor?.resolve(pressed),
+      isNot(Colors.transparent),
+    );
+    expect(rippleTheme.splashFactory, InkRipple.splashFactory);
+    expect(
+      rippleTheme.filledButtonTheme.style?.splashFactory,
+      InkRipple.splashFactory,
     );
   });
 }

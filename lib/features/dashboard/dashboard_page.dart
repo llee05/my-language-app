@@ -10,6 +10,8 @@ class DashboardPage extends StatefulWidget {
     this.onBackupRestored,
     required this.appThemeId,
     required this.onThemeChanged,
+    this.buttonAnimationStyle = ButtonAnimationStyle.combined,
+    this.onButtonAnimationStyleChanged,
     required this.lessonRepository,
     required this.progressRepository,
     this.dailyReviewSessionRepository,
@@ -31,6 +33,8 @@ class DashboardPage extends StatefulWidget {
   final Future<void> Function()? onBackupRestored;
   final AppThemeId appThemeId;
   final void Function(AppThemeId themeId) onThemeChanged;
+  final ButtonAnimationStyle buttonAnimationStyle;
+  final ValueChanged<ButtonAnimationStyle>? onButtonAnimationStyleChanged;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -359,6 +363,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           onBackupRestored: widget.onBackupRestored,
                           appThemeId: widget.appThemeId,
                           onThemeChanged: widget.onThemeChanged,
+                          buttonAnimationStyle: widget.buttonAnimationStyle,
+                          onButtonAnimationStyleChanged:
+                              widget.onButtonAnimationStyleChanged,
                           lessonRepository: widget.lessonRepository,
                           progressRepository: widget.progressRepository,
                           dailyReviewSessionRepository:
@@ -441,6 +448,8 @@ class _DashboardBody extends StatelessWidget {
     this.onBackupRestored,
     required this.appThemeId,
     required this.onThemeChanged,
+    required this.buttonAnimationStyle,
+    this.onButtonAnimationStyleChanged,
     required this.lessonRepository,
     required this.progressRepository,
     this.dailyReviewSessionRepository,
@@ -487,6 +496,8 @@ class _DashboardBody extends StatelessWidget {
   final Future<void> Function()? onBackupRestored;
   final AppThemeId appThemeId;
   final void Function(AppThemeId themeId) onThemeChanged;
+  final ButtonAnimationStyle buttonAnimationStyle;
+  final ValueChanged<ButtonAnimationStyle>? onButtonAnimationStyleChanged;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -587,6 +598,8 @@ class _DashboardBody extends StatelessWidget {
         onBackupRestored: onBackupRestored,
         appThemeId: appThemeId,
         onThemeChanged: onThemeChanged,
+        buttonAnimationStyle: buttonAnimationStyle,
+        onButtonAnimationStyleChanged: onButtonAnimationStyleChanged,
         developmentRepository: developmentRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,

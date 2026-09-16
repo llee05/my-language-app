@@ -35,9 +35,7 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
       widget.style == ButtonAnimationStyle.glowPulse ||
       widget.style == ButtonAnimationStyle.combined;
 
-  bool get _usesFill =>
-      widget.style == ButtonAnimationStyle.fillTransition ||
-      widget.style == ButtonAnimationStyle.combined;
+  bool get _usesFill => widget.style == ButtonAnimationStyle.fillTransition;
 
   bool get _usesMotion =>
       widget.style == ButtonAnimationStyle.subtleScale ||

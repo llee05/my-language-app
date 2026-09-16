@@ -85,6 +85,7 @@ class HanziPathApp extends StatefulWidget {
 class _HanziPathAppState extends State<HanziPathApp> {
   late Future<LearnerProfile?> _profile;
   AppThemeId _appThemeId = AppThemeId.classic;
+  ButtonAnimationStyle _buttonAnimationStyle = ButtonAnimationStyle.combined;
   late final PronunciationService _pronunciationService;
   late final SpeechInputService _speechInputService;
 
@@ -93,7 +94,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
     super.initState();
     _pronunciationService = widget.dependencies.createPronunciationService();
     _speechInputService = widget.dependencies.createSpeechInputService();
-    unawaited(_restoreAppTheme());
+    unawaited(_restoreAppearancePreferences());
     final initialProfile = widget.initialProfile;
     if (initialProfile == null) {
       _profile = _loadProfileAndPronunciation();
@@ -108,24 +109,36 @@ class _HanziPathAppState extends State<HanziPathApp> {
     return profile;
   }
 
-  /// Best-effort restore of the persisted colour theme; failures keep the
-  /// default theme instead of blocking startup. Runs in parallel with the
-  /// profile load and shares its database initialization, so the palette is
-  /// applied before the first real screen is shown.
-  Future<void> _restoreAppTheme() async {
+  /// Best-effort restore of the persisted appearance preferences; failures
+  /// keep the defaults instead of blocking startup. Runs in parallel with the
+  /// profile load and shares its database initialization.
+  Future<void> _restoreAppearancePreferences() async {
     try {
       final settings = await widget.dependencies.settings.load();
       final themeId = AppThemes.tryParseId(settings.appThemeId);
-      if (themeId == null || !mounted || themeId == _appThemeId) return;
-      setState(() => _appThemeId = themeId);
+      if (!mounted) return;
+      final resolvedThemeId = themeId ?? AppThemeId.classic;
+      if (resolvedThemeId == _appThemeId &&
+          settings.buttonAnimationStyle == _buttonAnimationStyle) {
+        return;
+      }
+      setState(() {
+        _appThemeId = resolvedThemeId;
+        _buttonAnimationStyle = settings.buttonAnimationStyle;
+      });
     } catch (error) {
-      debugPrint('Colour theme could not be restored: $error');
+      debugPrint('Appearance preferences could not be restored: $error');
     }
   }
 
   void _applyAppTheme(AppThemeId themeId) {
     if (themeId == _appThemeId) return;
     setState(() => _appThemeId = themeId);
+  }
+
+  void _applyButtonAnimationStyle(ButtonAnimationStyle style) {
+    if (style == _buttonAnimationStyle) return;
+    setState(() => _buttonAnimationStyle = style);
   }
 
   Future<void> _restorePronunciationPreferences() async {
@@ -178,10 +191,11 @@ class _HanziPathAppState extends State<HanziPathApp> {
     await widget.dependencies.development.resetAllData();
     if (!mounted) return;
     // The saved settings were removed together with the rest of the local
-    // data, so the app falls back to the default colour theme.
+    // data, so the app falls back to the default appearance.
     setState(() {
       _profile = Future.value();
       _appThemeId = AppThemeId.classic;
+      _buttonAnimationStyle = ButtonAnimationStyle.combined;
     });
   }
 
@@ -193,6 +207,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
       _profile = Future.value(profile);
       _appThemeId =
           AppThemes.tryParseId(settings.appThemeId) ?? AppThemeId.classic;
+      _buttonAnimationStyle = settings.buttonAnimationStyle;
     });
     if (profile != null) unawaited(_restorePronunciationPreferences());
   }
@@ -247,6 +262,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
           bodyMedium: TextStyle(fontSize: 13, color: AppColors.muted),
         ),
       ),
+      animationStyle: _buttonAnimationStyle,
     );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -273,6 +289,8 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onBackupRestored: _reloadAfterBackupRestore,
             appThemeId: _appThemeId,
             onThemeChanged: _applyAppTheme,
+            buttonAnimationStyle: _buttonAnimationStyle,
+            onButtonAnimationStyleChanged: _applyButtonAnimationStyle,
             lessonRepository: widget.dependencies.lessons,
             progressRepository: widget.dependencies.progress,
             dailyReviewSessionRepository: widget.dependencies.dailyReviews,
