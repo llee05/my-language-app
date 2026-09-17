@@ -22,6 +22,7 @@ class DashboardPage extends StatefulWidget {
     this.pronunciationService,
     this.speechInputService,
     this.clock,
+    this.random,
     this.backupRepository = const SqliteBackupRepository(),
     this.backupFileService = const FilePickerBackupFileService(),
   });
@@ -45,6 +46,7 @@ class DashboardPage extends StatefulWidget {
   final PronunciationService? pronunciationService;
   final SpeechInputService? speechInputService;
   final DateTime Function()? clock;
+  final Random? random;
   final BackupRepository backupRepository;
   final BackupFileService backupFileService;
 
@@ -61,6 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
   late final bool _ownsSpeechInputService;
   int selectedNav = 0;
   bool _resumeLatestLesson = false;
+  int? _initialLessonId;
   bool _startDailyReview = false;
   bool _loadingDailyReview = true;
   bool _dailyReviewLoadError = false;
@@ -77,6 +80,7 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _loadingAvailableLessons = true;
   bool _availableLessonsLoadError = false;
   int _availableLessonsRequestId = 0;
+  late final Random _random;
 
   @override
   void initState() {
@@ -87,6 +91,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _ownsSpeechInputService = widget.speechInputService == null;
     _speechInputService =
         widget.speechInputService ?? createSystemSpeechInputService();
+    _random = widget.random ?? Random();
     _loadDailyReviewPrompt();
     _loadActiveLesson();
     _loadLearningStats();
@@ -125,7 +130,9 @@ class _DashboardPageState extends State<DashboardPage> {
       );
       if (!mounted || requestId != _availableLessonsRequestId) return;
       setState(() {
-        _availableLessons = lessons.whereType<Lesson>().toList(growable: false);
+        _availableLessons = _randomLessonsAcrossHskLevels(
+          lessons.whereType<Lesson>().toList(growable: false),
+        );
         _loadingAvailableLessons = false;
         _availableLessonsLoadError = false;
       });
@@ -138,6 +145,41 @@ class _DashboardPageState extends State<DashboardPage> {
         _availableLessonsLoadError = true;
       });
     }
+  }
+
+  List<Lesson> _randomLessonsAcrossHskLevels(List<Lesson> lessons) {
+    final previousIdsByLevel = {
+      for (final lesson in _availableLessons)
+        lesson.summary.hskLevel: lesson.summary.id,
+    };
+    final lessonsByLevel = <int, List<Lesson>>{};
+    for (final lesson in lessons) {
+      lessonsByLevel
+          .putIfAbsent(lesson.summary.hskLevel, () => <Lesson>[])
+          .add(lesson);
+    }
+
+    final selected = <Lesson>[];
+    for (var level = 1; level <= 6; level++) {
+      final choices = lessonsByLevel[level];
+      if (choices == null || choices.isEmpty) continue;
+      final previousId = previousIdsByLevel[level];
+      final freshChoices = choices.length > 1 && previousId != null
+          ? choices.where((lesson) => lesson.summary.id != previousId).toList()
+          : choices;
+      selected.add(freshChoices[_random.nextInt(freshChoices.length)]);
+    }
+
+    if (selected.length < 6) {
+      final selectedIds = selected.map((lesson) => lesson.summary.id).toSet();
+      final remaining =
+          lessons
+              .where((lesson) => !selectedIds.contains(lesson.summary.id))
+              .toList()
+            ..shuffle(_random);
+      selected.addAll(remaining.take(6 - selected.length));
+    }
+    return selected.take(6).toList(growable: false);
   }
 
   Future<void> _loadLearningStats() async {
@@ -241,6 +283,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       selectedNav = value;
       _resumeLatestLesson = false;
+      _initialLessonId = null;
       _startDailyReview = false;
     });
     if (value == 0) {
@@ -259,6 +302,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       selectedNav = 1;
       _resumeLatestLesson = true;
+      _initialLessonId = null;
     });
   }
 
@@ -266,6 +310,15 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       selectedNav = 1;
       _resumeLatestLesson = false;
+      _initialLessonId = null;
+    });
+  }
+
+  void _openAvailableLesson(Lesson lesson) {
+    setState(() {
+      selectedNav = 1;
+      _resumeLatestLesson = false;
+      _initialLessonId = lesson.summary.id;
     });
   }
 
@@ -332,9 +385,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: _DashboardBody(
                           selectedNav: selectedNav,
                           resumeLatestLesson: _resumeLatestLesson,
+                          initialLessonId: _initialLessonId,
                           startDailyReview: _startDailyReview,
                           onResumeLesson: _resumeLesson,
                           onOpenLessons: _openLessons,
+                          onOpenAvailableLesson: _openAvailableLesson,
                           onStartDailyReview: _openDailyReview,
                           onRetryDailyReview: _loadDailyReviewPrompt,
                           onRetryAvailableLessons: _loadAvailableLessons,
@@ -417,9 +472,11 @@ class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.selectedNav,
     required this.resumeLatestLesson,
+    this.initialLessonId,
     required this.startDailyReview,
     required this.onResumeLesson,
     required this.onOpenLessons,
+    required this.onOpenAvailableLesson,
     required this.onStartDailyReview,
     required this.onRetryDailyReview,
     required this.onRetryAvailableLessons,
@@ -465,9 +522,11 @@ class _DashboardBody extends StatelessWidget {
   });
   final int selectedNav;
   final bool resumeLatestLesson;
+  final int? initialLessonId;
   final bool startDailyReview;
   final VoidCallback onResumeLesson;
   final VoidCallback onOpenLessons;
+  final ValueChanged<Lesson> onOpenAvailableLesson;
   final VoidCallback onStartDailyReview;
   final VoidCallback onRetryDailyReview;
   final VoidCallback onRetryAvailableLessons;
@@ -524,6 +583,7 @@ class _DashboardBody extends StatelessWidget {
         pronunciationService: pronunciationService,
         speechInputService: speechInputService,
         resumeLatest: resumeLatestLesson,
+        initialLessonId: initialLessonId,
         onProgressChanged: onLessonProgressChanged,
       );
     }
@@ -634,6 +694,7 @@ class _DashboardBody extends StatelessWidget {
                         onStartReview: onStartDailyReview,
                         onRetryReview: onRetryDailyReview,
                         onRetryLessons: onRetryAvailableLessons,
+                        onLessonSelected: onOpenAvailableLesson,
                         loadingReview: loadingDailyReview,
                         reviewLoadError: dailyReviewLoadError,
                         pendingReviewCount: pendingReviewCount,
@@ -670,6 +731,7 @@ class _DashboardBody extends StatelessWidget {
                       onStartReview: onStartDailyReview,
                       onRetryReview: onRetryDailyReview,
                       onRetryLessons: onRetryAvailableLessons,
+                      onLessonSelected: onOpenAvailableLesson,
                       loadingReview: loadingDailyReview,
                       reviewLoadError: dailyReviewLoadError,
                       pendingReviewCount: pendingReviewCount,

@@ -8,6 +8,7 @@ class MainDashboard extends StatelessWidget {
     required this.onStartReview,
     this.onRetryReview,
     this.onRetryLessons,
+    required this.onLessonSelected,
     required this.loadingReview,
     this.reviewLoadError = false,
     required this.pendingReviewCount,
@@ -26,6 +27,7 @@ class MainDashboard extends StatelessWidget {
   final VoidCallback onStartReview;
   final VoidCallback? onRetryReview;
   final VoidCallback? onRetryLessons;
+  final ValueChanged<Lesson> onLessonSelected;
   final bool loadingReview;
   final bool reviewLoadError;
   final int pendingReviewCount;
@@ -85,7 +87,17 @@ class MainDashboard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 26),
-          const SectionLabel('AVAILABLE HSK LESSONS'),
+          Row(
+            children: [
+              const Expanded(child: SectionLabel('AVAILABLE HSK LESSONS')),
+              IconButton(
+                key: const Key('available-lessons-refresh'),
+                tooltip: 'Refresh lessons',
+                onPressed: loadingAvailableLessons ? null : onRetryLessons,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           if (loadingAvailableLessons)
             const _AvailableLessonsLoading()
@@ -95,6 +107,7 @@ class MainDashboard extends StatelessWidget {
             _AvailableLessonsEmpty(onBrowse: onStartLearning),
           for (final availableLesson in availableLessons.take(6))
             LessonTile(
+              key: ValueKey('available-lesson-${availableLesson.summary.id}'),
               title: availableLesson.summary.title,
               chinese: availableLesson.summary.theme,
               unit: 'HSK ${availableLesson.summary.hskLevel}',
@@ -104,6 +117,7 @@ class MainDashboard extends StatelessWidget {
               state: availableLesson.summary.id == activeLesson?.summary.id
                   ? LessonState.active
                   : LessonState.available,
+              onTap: () => onLessonSelected(availableLesson),
             ),
         ],
       ),
@@ -602,6 +616,7 @@ class LessonTile extends StatelessWidget {
     required this.duration,
     required this.xp,
     required this.state,
+    this.onTap,
   });
   final String title;
   final String chinese;
@@ -609,6 +624,7 @@ class LessonTile extends StatelessWidget {
   final String duration;
   final String xp;
   final LessonState state;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -619,57 +635,74 @@ class LessonTile extends StatelessWidget {
         : AppColors.text;
     return Opacity(
       opacity: state == LessonState.locked ? .48 : 1,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
           color: active ? const Color(0xFF1B0D0C) : AppColors.surface,
-          border: Border.all(
-            color: active ? const Color(0xFF711C14) : AppColors.border,
-          ),
-          borderRadius: BorderRadius.circular(13),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              done
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              size: 18,
-              color: done
-                  ? AppColors.teal
-                  : (active ? AppColors.red : AppColors.faint),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: active ? const Color(0xFF711C14) : AppColors.border,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: state == LessonState.locked ? null : onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: TextStyle(fontSize: 12, color: contentColor),
-                        ),
-                      ),
-                      if (active) ...[
-                        const SizedBox(width: 8),
-                        const _Pill(label: 'In progress'),
-                      ],
-                    ],
+                  Icon(
+                    done
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 18,
+                    color: done
+                        ? AppColors.teal
+                        : (active ? AppColors.red : AppColors.faint),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: contentColor,
+                                ),
+                              ),
+                            ),
+                            if (active) ...[
+                              const SizedBox(width: 8),
+                              const _Pill(label: 'In progress'),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$chinese · $unit · $duration',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Text(
-                    '$chinese · $unit · $duration',
+                    xp,
                     style: TextStyle(fontSize: 10, color: AppColors.muted),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            Text(xp, style: TextStyle(fontSize: 10, color: AppColors.muted)),
-          ],
+          ),
         ),
       ),
     );

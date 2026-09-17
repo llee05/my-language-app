@@ -2067,6 +2067,66 @@ void main() {
     );
   });
 
+  testWidgets('dashboard rotates one usable lesson from every HSK level', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _RotatingLessonRepository();
+    final progress = _MemoryProgressRepository(hasActiveSession: false);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: lessons,
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+          random: Random(7),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    List<LessonTile> visibleLessons() => tester
+        .widgetList<LessonTile>(find.byType(LessonTile))
+        .toList(growable: false);
+
+    final firstSelection = visibleLessons();
+    expect(firstSelection, hasLength(6));
+    expect(firstSelection.map((lesson) => lesson.unit).toSet(), {
+      for (var level = 1; level <= 6; level++) 'HSK $level',
+    });
+
+    await tester.tap(find.byKey(const Key('available-lessons-refresh')));
+    await tester.pumpAndSettle();
+
+    final refreshedSelection = visibleLessons();
+    expect(refreshedSelection, hasLength(6));
+    for (var index = 0; index < refreshedSelection.length; index++) {
+      expect(
+        refreshedSelection[index].title,
+        isNot(firstSelection[index].title),
+      );
+    }
+
+    final selectedLesson = lessons.lessons.singleWhere(
+      (lesson) => lesson.summary.title == refreshedSelection.first.title,
+    );
+    await tester.tap(find.byType(LessonTile).first);
+    await tester.pumpAndSettle();
+
+    expect(progress.startedLessonId, selectedLesson.summary.id);
+    expect(find.byType(PageView), findsOneWidget);
+    expect(find.text(selectedLesson.summary.title), findsOneWidget);
+  });
+
   for (final useAi in [false, true]) {
     testWidgets(
       useAi
@@ -4209,6 +4269,60 @@ class _MultiLevelLessonRepository implements LessonRepository {
 
   @override
   Future<Lesson?> findById(int id) async => null;
+
+  @override
+  Future<Lesson?> findGenerated({
+    required String theme,
+    required int hskLevel,
+  }) async => null;
+
+  @override
+  Future<Flashcard> findOrCreateVocabularyCard({
+    required Flashcard card,
+    required int hskLevel,
+  }) async => card;
+
+  @override
+  Future<void> saveGenerated(Lesson lesson) async {}
+}
+
+class _RotatingLessonRepository implements LessonRepository {
+  late final List<Lesson> lessons = [
+    for (var level = 1; level <= 6; level++)
+      for (var variant = 1; variant <= 2; variant++)
+        Lesson(
+          summary: LessonSummary(
+            id: level * 10 + variant,
+            title: 'HSK $level lesson $variant',
+            theme: 'Level $level theme $variant',
+            hskLevel: level,
+          ),
+          cards: [
+            Flashcard(
+              id: level * 100 + variant * 10 + 1,
+              chinese: '学',
+              pinyin: 'xué',
+              englishMeaning: 'study',
+            ),
+            Flashcard(
+              id: level * 100 + variant * 10 + 2,
+              chinese: '习',
+              pinyin: 'xí',
+              englishMeaning: 'practice',
+            ),
+          ],
+        ),
+  ];
+
+  @override
+  Future<List<LessonSummary>> topics() async =>
+      lessons.map((lesson) => lesson.summary).toList(growable: false);
+
+  @override
+  Future<Lesson?> findById(int id) async => lessons.cast<Lesson?>().firstWhere(
+    (lesson) => lesson?.summary.id == id,
+    orElse: () => null,
+  );
 
   @override
   Future<Lesson?> findGenerated({

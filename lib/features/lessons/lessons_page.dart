@@ -45,6 +45,7 @@ class LessonsPage extends StatefulWidget {
     this.pronunciationService,
     this.speechInputService,
     this.resumeLatest = false,
+    this.initialLessonId,
     this.onProgressChanged,
     this.aiService = const AiService(),
     this.random,
@@ -56,6 +57,7 @@ class LessonsPage extends StatefulWidget {
   final PronunciationService? pronunciationService;
   final SpeechInputService? speechInputService;
   final bool resumeLatest;
+  final int? initialLessonId;
   final VoidCallback? onProgressChanged;
   final AiService aiService;
   final Random? random;
@@ -75,6 +77,7 @@ class _LessonsPageState extends State<LessonsPage> {
   bool _libraryLoadFailed = false;
   int? _libraryHskFilter;
   int _topicsRequestId = 0;
+  int? _pendingInitialLessonId;
   List<Flashcard> _cards = const [];
   String _lessonTitle = '';
   bool _generating = false;
@@ -98,6 +101,7 @@ class _LessonsPageState extends State<LessonsPage> {
   void initState() {
     super.initState();
     _ownsPronunciationService = widget.pronunciationService == null;
+    _pendingInitialLessonId = widget.initialLessonId;
     _random = widget.random ?? Random();
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -222,6 +226,18 @@ class _LessonsPageState extends State<LessonsPage> {
         _loadingTopics = false;
         _libraryLoadFailed = false;
       });
+      final initialLessonId = _pendingInitialLessonId;
+      if (initialLessonId != null) {
+        _pendingInitialLessonId = null;
+        final summary = topics.cast<LessonSummary?>().firstWhere(
+          (topic) => topic?.id == initialLessonId,
+          orElse: () => null,
+        );
+        if (summary != null) {
+          await _startLesson(summary);
+        }
+        return;
+      }
       if (!resumeLatest) return;
       final session = await widget.progressRepository.latestActiveSession();
       if (session == null) return;
