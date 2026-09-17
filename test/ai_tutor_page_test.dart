@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -122,6 +123,13 @@ class _FakeSpeechInputService implements SpeechInputService {
 
   @override
   Future<void> dispose() async => disposeCalls++;
+}
+
+class _GatedTutorContextRepository implements TutorContextRepository {
+  final result = Completer<TutorLearnerSnapshot>();
+
+  @override
+  Future<TutorLearnerSnapshot> load({required DateTime asOf}) => result.future;
 }
 
 class _MemoryTutorContextRepository implements TutorContextRepository {
@@ -343,6 +351,72 @@ TutorLearnerSnapshot _roleplaySnapshot() => TutorLearnerSnapshot(
 );
 
 void main() {
+  for (final fails in [false, true]) {
+    testWidgets('chat reset ignores a stale ${fails ? 'error' : 'reply'}', (
+      tester,
+    ) async {
+      final responses = [Completer<String>(), Completer<String>()];
+      var requests = 0;
+      await _pumpTutor(
+        tester,
+        request: (_) => responses[requests++].future,
+        pronunciationService: _FakePronunciationService(),
+        speechInputService: _FakeSpeechInputService(),
+      );
+
+      await tester.enterText(find.byType(TextField), 'Old question');
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await tester.pump();
+      await tester.tap(find.text('Reset'));
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'New question');
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await tester.pump();
+      expect(requests, 2);
+
+      if (fails) {
+        responses.first.completeError(StateError('old request failed'));
+      } else {
+        responses.first.complete('{"english":"Old reply"}');
+      }
+      await tester.pump();
+      expect(find.text('Old reply'), findsNothing);
+      expect(find.text('Try again'), findsNothing);
+      expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
+
+      responses.last.complete('{"english":"New reply"}');
+      await tester.pumpAndSettle();
+      expect(find.text('New reply'), findsOneWidget);
+      expect(find.text('Old question'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('leaving chat during context loading does not send a request', (
+    tester,
+  ) async {
+    final context = _GatedTutorContextRepository();
+    var requests = 0;
+    await _pumpTutor(
+      tester,
+      tutorContextRepository: context,
+      request: (_) async {
+        requests++;
+        return '{"english":"Reply"}';
+      },
+      pronunciationService: _FakePronunciationService(),
+      speechInputService: _FakeSpeechInputService(),
+    );
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox.shrink());
+    context.result.complete(TutorLearnerSnapshot(asOf: DateTime(2026, 9, 17)));
+    await tester.pumpAndSettle();
+    expect(requests, 0);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tutor uses the saved provider and removal stops later sends', (
     tester,
   ) async {

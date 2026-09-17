@@ -199,6 +199,7 @@ useful:
   final _scrollController = ScrollController();
   var _messages = _initialMessages;
   var _sending = false;
+  int _requestId = 0;
   var _soundEnabled = true;
   LearnerSettings _learnerSettings = const LearnerSettings();
   String? _sendError;
@@ -290,6 +291,7 @@ useful:
   }
 
   Future<void> _submit(String text, {required bool appendUserMessage}) async {
+    final requestId = ++_requestId;
     unawaited(_stopPronunciation());
     setState(() {
       _sending = true;
@@ -304,6 +306,7 @@ useful:
 
     try {
       final snapshotPrompt = await _loadSnapshotPrompt();
+      if (!mounted || requestId != _requestId) return;
       final messages = <Map<String, String>>[
         {
           'role': 'system',
@@ -320,7 +323,7 @@ useful:
               jsonResponse: true,
             )
           : await widget.request!(messages);
-      if (!mounted) {
+      if (!mounted || requestId != _requestId) {
         return;
       }
       setState(() {
@@ -333,10 +336,10 @@ useful:
       });
       _scrollToEnd();
     } catch (error) {
-      debugPrint('AI tutor request failed: $error');
-      if (!mounted) {
+      if (!mounted || requestId != _requestId) {
         return;
       }
+      debugPrint('AI tutor request failed: $error');
       setState(() {
         _sendError = _friendlyError(error);
         _sendErrorIsRetryable =
@@ -363,6 +366,7 @@ useful:
   }
 
   void _reset() {
+    _requestId++;
     unawaited(_stopPronunciation());
     setState(() {
       _messages = _initialMessages;
