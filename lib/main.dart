@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'local_database.dart';
 import 'database/flashcard_seed.dart';
 import 'database/vocabulary_content.dart';
 import 'ai/ai_errors.dart';
@@ -62,8 +61,8 @@ part 'features/vocabulary/vocabulary_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize local services
-  await LocalDatabase.initialize();
+  // Repositories initialize the database while the app displays its loading
+  // screen, allowing the profile loader to surface failures with a retry.
   runApp(const HanziPathApp());
 }
 
@@ -165,6 +164,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
   }
 
   void _retryProfileLoad() {
+    unawaited(_restoreAppearancePreferences());
     setState(() {
       _profile = _loadProfileAndPronunciation();
     });

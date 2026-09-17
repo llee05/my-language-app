@@ -1,11 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
+import 'package:mylanguageapp/main.dart' as app show main;
+import 'package:mylanguageapp/local_database.dart';
 import 'package:mylanguageapp/repositories/app_dependencies.dart';
 import 'package:mylanguageapp/repositories/learner_repository.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('entry point shows a retry screen when database opening fails', (
+    tester,
+  ) async {
+    await tester.runAsync(LocalDatabase.close);
+    LocalDatabase.useDatabasePathForTesting(null);
+    LocalDatabase.useDatabaseDirectoryProvidersForTesting(
+      support: () async => throw StateError('support directory unavailable'),
+    );
+    addTearDown(() async {
+      await LocalDatabase.close();
+      LocalDatabase.useDatabaseDirectoryProvidersForTesting();
+      LocalDatabase.useDatabasePathForTesting(inMemoryDatabasePath);
+    });
+
+    await app.main();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('app-startup-error')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    LocalDatabase.useDatabasePathForTesting(inMemoryDatabasePath);
+    await tester.runAsync(LocalDatabase.initialize);
+    await tester.tap(find.byKey(const Key('app-startup-retry')));
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Build your learning path'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('learner setup collects first-run preferences', (tester) async {
     LearnerProfile? savedProfile;
