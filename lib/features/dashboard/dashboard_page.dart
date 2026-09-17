@@ -123,16 +123,29 @@ class _DashboardPageState extends State<DashboardPage> {
     }
     try {
       final summaries = await widget.lessonRepository.topics();
-      final lessons = await Future.wait(
-        summaries.map(
-          (summary) => widget.lessonRepository.findById(summary.id),
-        ),
-      );
+      if (!mounted || requestId != _availableLessonsRequestId) return;
+      final remaining = List<LessonSummary>.of(summaries);
+      final lessons = <Lesson>[];
+      // Choose from lightweight summaries before fetching card content. A
+      // growing library should not require loading every lesson on Home.
+      while (lessons.length < 6 && remaining.isNotEmpty) {
+        final selected = _randomLessonsAcrossHskLevels(remaining, lessons);
+        final selectedIds = selected.map((summary) => summary.id).toSet();
+        remaining.removeWhere((summary) => selectedIds.contains(summary.id));
+        final loaded = await Future.wait(
+          selected.map(
+            (summary) => widget.lessonRepository.findById(summary.id),
+          ),
+        );
+        if (!mounted || requestId != _availableLessonsRequestId) return;
+        lessons.addAll(
+          loaded.whereType<Lesson>().where((lesson) => lesson.cards.isNotEmpty),
+        );
+      }
+      lessons.sort((a, b) => a.summary.hskLevel.compareTo(b.summary.hskLevel));
       if (!mounted || requestId != _availableLessonsRequestId) return;
       setState(() {
-        _availableLessons = _randomLessonsAcrossHskLevels(
-          lessons.whereType<Lesson>().toList(growable: false),
-        );
+        _availableLessons = lessons;
         _loadingAvailableLessons = false;
         _availableLessonsLoadError = false;
       });
@@ -147,39 +160,47 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  List<Lesson> _randomLessonsAcrossHskLevels(List<Lesson> lessons) {
+  List<LessonSummary> _randomLessonsAcrossHskLevels(
+    List<LessonSummary> summaries,
+    List<Lesson> loaded,
+  ) {
     final previousIdsByLevel = {
       for (final lesson in _availableLessons)
         lesson.summary.hskLevel: lesson.summary.id,
     };
-    final lessonsByLevel = <int, List<Lesson>>{};
-    for (final lesson in lessons) {
+    final lessonsByLevel = <int, List<LessonSummary>>{};
+    for (final summary in summaries) {
       lessonsByLevel
-          .putIfAbsent(lesson.summary.hskLevel, () => <Lesson>[])
-          .add(lesson);
+          .putIfAbsent(summary.hskLevel, () => <LessonSummary>[])
+          .add(summary);
     }
 
-    final selected = <Lesson>[];
+    final loadedLevels = loaded
+        .map((lesson) => lesson.summary.hskLevel)
+        .toSet();
+    final capacity = 6 - loaded.length;
+    final selected = <LessonSummary>[];
     for (var level = 1; level <= 6; level++) {
+      if (loadedLevels.contains(level)) continue;
       final choices = lessonsByLevel[level];
       if (choices == null || choices.isEmpty) continue;
       final previousId = previousIdsByLevel[level];
       final freshChoices = choices.length > 1 && previousId != null
-          ? choices.where((lesson) => lesson.summary.id != previousId).toList()
+          ? choices.where((summary) => summary.id != previousId).toList()
           : choices;
       selected.add(freshChoices[_random.nextInt(freshChoices.length)]);
     }
 
-    if (selected.length < 6) {
-      final selectedIds = selected.map((lesson) => lesson.summary.id).toSet();
+    if (selected.length < capacity) {
+      final selectedIds = selected.map((summary) => summary.id).toSet();
       final remaining =
-          lessons
-              .where((lesson) => !selectedIds.contains(lesson.summary.id))
+          summaries
+              .where((summary) => !selectedIds.contains(summary.id))
               .toList()
             ..shuffle(_random);
-      selected.addAll(remaining.take(6 - selected.length));
+      selected.addAll(remaining.take(capacity - selected.length));
     }
-    return selected.take(6).toList(growable: false);
+    return selected.take(capacity).toList(growable: false);
   }
 
   Future<void> _loadLearningStats() async {

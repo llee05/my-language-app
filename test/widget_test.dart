@@ -110,6 +110,63 @@ Future<void> _openSettingsResetDialog(
 }
 
 void main() {
+  for (final size in [const Size(320, 640), const Size(1280, 900)]) {
+    testWidgets('main screens remain usable at ${size.width.toInt()}px', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      rootBundle.evict('assets/data/hsk_vocabulary.json');
+      addTearDown(() => rootBundle.evict('assets/data/hsk_vocabulary.json'));
+      final pronunciation = _FakePronunciationService();
+      addTearDown(pronunciation.dispose);
+      await tester.pumpWidget(
+        HanziPathApp(
+          initialProfile: testProfile,
+          dependencies: AppDependencies(
+            lessons: _MemoryLessonRepository(),
+            progress: _MemoryProgressRepository(),
+            dailyReviews: _MemoryDailyReviewSessionRepository(null),
+            settings: _MemorySettingsRepository(),
+            development: _MemoryDevelopmentRepository(),
+            tutorContext: _EmptyTutorContextRepository(),
+            createPronunciationService: () => pronunciation,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final label in [
+        ...AppSidebar.items.map((item) => item.$2),
+        'Settings',
+      ]) {
+        if (size.width < 760) {
+          await tester.tap(find.byIcon(Icons.menu_rounded));
+          await tester.pumpAndSettle();
+        }
+        final navigation = find.descendant(
+          of: find.byType(AppSidebar),
+          matching: find.text(label),
+        );
+        await tester.ensureVisible(navigation);
+        await tester.tap(navigation);
+        if (label == 'Vocabulary') {
+          await _waitForWidget(
+            tester,
+            find.byKey(const Key('vocabulary-result-count')),
+          );
+        }
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: label);
+      }
+      await tester.tap(find.byKey(const Key('open-profile-button')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfilePage), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: 'Profile');
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets('dashboard renders core learning content', (tester) async {
     await tester.pumpWidget(
       HanziPathApp(
@@ -2099,6 +2156,7 @@ void main() {
         .toList(growable: false);
 
     final firstSelection = visibleLessons();
+    expect(lessons.requestedIds, hasLength(6));
     expect(firstSelection, hasLength(6));
     expect(firstSelection.map((lesson) => lesson.unit).toSet(), {
       for (var level = 1; level <= 6; level++) 'HSK $level',
@@ -2108,6 +2166,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final refreshedSelection = visibleLessons();
+    expect(lessons.requestedIds, hasLength(12));
     expect(refreshedSelection, hasLength(6));
     for (var index = 0; index < refreshedSelection.length; index++) {
       expect(
@@ -2125,6 +2184,42 @@ void main() {
     expect(progress.startedLessonId, selectedLesson.summary.id);
     expect(find.byType(PageView), findsOneWidget);
     expect(find.text(selectedLesson.summary.title), findsOneWidget);
+  });
+
+  testWidgets('dashboard replaces missing and empty lesson suggestions', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1280, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final lessons = _RotatingLessonRepository(missingIds: {11}, emptyIds: {21});
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: lessons,
+          progressRepository: _MemoryProgressRepository(
+            hasActiveSession: false,
+          ),
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+          random: _ZeroRandom(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final tiles = tester.widgetList<LessonTile>(find.byType(LessonTile));
+    expect(tiles, hasLength(6));
+    expect(tiles.map((tile) => tile.unit).toSet(), {
+      for (var level = 1; level <= 6; level++) 'HSK $level',
+    });
+    expect(find.text('HSK 1 lesson 1'), findsNothing);
+    expect(find.text('HSK 2 lesson 1'), findsNothing);
+    expect(lessons.requestedIds, hasLength(8));
   });
 
   for (final useAi in [false, true]) {
@@ -4287,6 +4382,14 @@ class _MultiLevelLessonRepository implements LessonRepository {
 }
 
 class _RotatingLessonRepository implements LessonRepository {
+  _RotatingLessonRepository({
+    this.missingIds = const {},
+    this.emptyIds = const {},
+  });
+
+  final Set<int> missingIds;
+  final Set<int> emptyIds;
+  final requestedIds = <int>[];
   late final List<Lesson> lessons = [
     for (var level = 1; level <= 6; level++)
       for (var variant = 1; variant <= 2; variant++)
@@ -4319,10 +4422,18 @@ class _RotatingLessonRepository implements LessonRepository {
       lessons.map((lesson) => lesson.summary).toList(growable: false);
 
   @override
-  Future<Lesson?> findById(int id) async => lessons.cast<Lesson?>().firstWhere(
-    (lesson) => lesson?.summary.id == id,
-    orElse: () => null,
-  );
+  Future<Lesson?> findById(int id) async {
+    requestedIds.add(id);
+    if (missingIds.contains(id)) return null;
+    final lesson = lessons.cast<Lesson?>().firstWhere(
+      (lesson) => lesson?.summary.id == id,
+      orElse: () => null,
+    );
+    if (lesson != null && emptyIds.contains(id)) {
+      return Lesson(summary: lesson.summary, cards: const []);
+    }
+    return lesson;
+  }
 
   @override
   Future<Lesson?> findGenerated({

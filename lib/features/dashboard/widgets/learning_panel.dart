@@ -527,10 +527,12 @@ class ContinueCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         _Pill(label: 'HSK $level'),
-                        const SizedBox(width: 8),
                         Text(
                           'Lesson 1',
                           style: TextStyle(
@@ -666,21 +668,19 @@ class LessonTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Flexible(
-                              child: Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: contentColor,
-                                ),
+                            Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: contentColor,
                               ),
                             ),
-                            if (active) ...[
-                              const SizedBox(width: 8),
-                              const _Pill(label: 'In progress'),
-                            ],
+                            if (active) const _Pill(label: 'In progress'),
                           ],
                         ),
                         const SizedBox(height: 4),

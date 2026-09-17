@@ -262,8 +262,10 @@ class _HskLevelSteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      spacing: 8,
+      runSpacing: 12,
       children: [
         for (var level = 1; level <= 6; level++)
           Column(
