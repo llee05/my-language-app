@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/database/vocabulary_content.dart';
 import 'package:mylanguageapp/main.dart';
@@ -25,6 +28,115 @@ void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
   });
+
+  testWidgets('an empty difficulty can recover by choosing available words', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: _RushSettingsRepository(),
+            initialVocabulary: _smallVocabulary,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Advanced'));
+    await tester.tap(find.text('开始游戏 — Start Game'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(
+      find.text(
+        'No words are available for this difficulty. Choose another difficulty.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Beginner'));
+    await startGame(tester);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'vocabulary loading blocks repeated starts and recovers after failure',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final gate = Completer<void>();
+      final bundle = _RushVocabularyBundle()..gate = gate.future;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DefaultAssetBundle(
+            bundle: bundle,
+            child: const Scaffold(
+              body: VocabRushPage(
+                settingsRepository: _RushSettingsRepository(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final start = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, '开始游戏 — Start Game'),
+      );
+      start.onPressed!();
+      start.onPressed!();
+      await tester.pump();
+      expect(bundle.loads, 1);
+      expect(find.text('Loading words…'), findsOneWidget);
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Words could not be loaded. Please try again.'),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      await startGame(tester);
+      expect(bundle.loads, 2);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'long answers stay readable and tappable on a narrow screen with large text',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: VocabRushPage(
+              settingsRepository: _RushSettingsRepository(),
+              initialVocabulary: _smallVocabulary,
+            ),
+          ),
+        ),
+      );
+      await startGame(tester);
+      expect(tester.takeException(), isNull);
+      for (final entry in _smallVocabulary) {
+        final answer = entry['studyMeaning']! as String;
+        final text = find.text(answer);
+        final button = find.widgetWithText(OutlinedButton, answer);
+        await tester.ensureVisible(button);
+        final paragraph = tester.renderObject<RenderParagraph>(text);
+        expect(
+          paragraph.size.height,
+          greaterThanOrEqualTo(
+            paragraph.getMaxIntrinsicHeight(paragraph.size.width) - .1,
+          ),
+          reason: answer,
+        );
+        expect(tester.getSize(button).height, greaterThanOrEqualTo(48));
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets('difficulty and duration can be selected independently', (
     tester,
@@ -455,6 +567,37 @@ void main() {
     );
     expect(pronunciation.spoken, isEmpty);
   });
+}
+
+const _smallVocabulary = [
+  {
+    'simplified': '你',
+    'pinyin': 'nǐ',
+    'studyMeaning': 'you (singular, used when addressing another person)',
+    'hskLevel': 1,
+  },
+  {
+    'simplified': '书',
+    'pinyin': 'shū',
+    'studyMeaning': 'a book or other bound collection of written pages',
+    'hskLevel': 1,
+  },
+];
+
+class _RushVocabularyBundle extends CachingAssetBundle {
+  Future<void>? gate;
+  int loads = 0;
+
+  @override
+  Future<String> loadString(String key, {bool cache = true}) async {
+    loads++;
+    await gate;
+    if (loads == 1) throw StateError('fixture unavailable');
+    return jsonEncode(_smallVocabulary);
+  }
+
+  @override
+  Future<ByteData> load(String key) => throw UnimplementedError();
 }
 
 class _RushSettingsRepository implements SettingsRepository {

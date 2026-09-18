@@ -66,6 +66,8 @@ class _VocabRushPageState extends State<VocabRushPage> {
   String _gameRunId = '';
   bool _playing = false;
   bool _finished = false;
+  bool _starting = false;
+  String? _startError;
   bool _soundEnabled = true;
   LearnerSettings _learnerSettings = const LearnerSettings();
 
@@ -133,57 +135,87 @@ class _VocabRushPageState extends State<VocabRushPage> {
   }
 
   Future<void> _start() async {
-    _timer?.cancel();
-    final vocabulary =
-        widget.initialVocabulary ??
-        (jsonDecode(
-              await rootBundle.loadString('assets/data/hsk_vocabulary.json'),
-            )
-            as List<dynamic>);
-    if (!mounted) return;
-    _cards = vocabulary
-        .cast<Map<String, dynamic>>()
-        .where((card) {
-          final level = card['hskLevel'] as int;
-          return level >= _difficulty.minHsk && level <= _difficulty.maxHsk;
-        })
-        .map(
-          (card) => {
-            'chinese': card['simplified'],
-            'pinyin': card['pinyin'],
-            'english_meaning': vocabularyStudyMeaning(card),
-            'hsk_level': card['hskLevel'],
-            'part_of_speech':
-                (card['partOfSpeech'] as List<dynamic>? ?? const []).join(', '),
-          },
-        )
-        .toList();
-    _cards.shuffle(_random);
-    final gameRunId = DateTime.now().toUtc().microsecondsSinceEpoch.toString();
-
+    if (_starting || _playing) return;
     setState(() {
-      _playing = true;
-      _finished = false;
-      _secondsLeft = _duration.seconds ?? 0;
-      _score = 0;
-      _streak = 0;
-      _bestStreak = 0;
-      _attempts = 0;
-      _mistakes = 0;
-      _gameRunId = gameRunId;
-      _selectedAnswer = null;
-      _nextCard();
+      _starting = true;
+      _startError = null;
     });
+    _timer?.cancel();
+    try {
+      final vocabulary =
+          widget.initialVocabulary ??
+          (jsonDecode(
+                await DefaultAssetBundle.of(
+                  context,
+                ).loadString('assets/data/hsk_vocabulary.json'),
+              )
+              as List<dynamic>);
+      if (!mounted) return;
+      _cards = vocabulary
+          .cast<Map<String, dynamic>>()
+          .where((card) {
+            final level = card['hskLevel'] as int;
+            return level >= _difficulty.minHsk && level <= _difficulty.maxHsk;
+          })
+          .map(
+            (card) => {
+              'chinese': card['simplified'],
+              'pinyin': card['pinyin'],
+              'english_meaning': vocabularyStudyMeaning(card),
+              'hsk_level': card['hskLevel'],
+              'part_of_speech':
+                  (card['partOfSpeech'] as List<dynamic>? ?? const []).join(
+                    ', ',
+                  ),
+            },
+          )
+          .toList();
+      if (_cards.isEmpty) {
+        setState(
+          () => _startError =
+              'No words are available for this difficulty. Choose another difficulty.',
+        );
+        return;
+      }
+      _cards.shuffle(_random);
+      final gameRunId = DateTime.now()
+          .toUtc()
+          .microsecondsSinceEpoch
+          .toString();
 
-    if (_duration.seconds != null) {
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        if (_secondsLeft <= 1) {
-          _finish();
-        } else {
-          setState(() => _secondsLeft--);
-        }
+      setState(() {
+        _playing = true;
+        _finished = false;
+        _secondsLeft = _duration.seconds ?? 0;
+        _score = 0;
+        _streak = 0;
+        _bestStreak = 0;
+        _attempts = 0;
+        _mistakes = 0;
+        _gameRunId = gameRunId;
+        _selectedAnswer = null;
+        _nextCard();
       });
+
+      if (_duration.seconds != null) {
+        _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (!mounted) return;
+          if (_secondsLeft <= 1) {
+            _finish();
+          } else {
+            setState(() => _secondsLeft--);
+          }
+        });
+      }
+    } catch (error) {
+      debugPrint('Vocab Rush vocabulary load failed: $error');
+      if (mounted) {
+        setState(
+          () => _startError = 'Words could not be loaded. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _starting = false);
     }
   }
 
@@ -365,23 +397,39 @@ class _VocabRushPageState extends State<VocabRushPage> {
           ),
         ),
         const SizedBox(height: 12),
-        SegmentedButton<_RushDuration>(
-          segments: [
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
             for (final duration in _RushDuration.values)
-              ButtonSegment(value: duration, label: Text(duration.label)),
+              ChoiceChip(
+                label: Text(duration.label),
+                selected: _duration == duration,
+                onSelected: _starting
+                    ? null
+                    : (_) => setState(() => _duration = duration),
+              ),
           ],
-          selected: {_duration},
-          onSelectionChanged: (selection) =>
-              setState(() => _duration = selection.first),
         ),
+        if (_startError != null) ...[
+          const SizedBox(height: 16),
+          _AppInlineError(message: _startError!),
+        ],
         const SizedBox(height: 28),
         SizedBox(
           width: 285,
-          height: 54,
           child: FilledButton.icon(
-            onPressed: _start,
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 54)),
+            onPressed: _starting ? null : _start,
             icon: const Icon(Icons.sports_martial_arts_rounded, size: 18),
-            label: Text(_finished ? '再玩一次 — Play Again' : '开始游戏 — Start Game'),
+            label: Text(
+              _starting
+                  ? 'Loading words…'
+                  : _finished
+                  ? '再玩一次 — Play Again'
+                  : '开始游戏 — Start Game',
+            ),
           ),
         ),
         if (_finished) ...[
@@ -464,14 +512,21 @@ class _VocabRushPageState extends State<VocabRushPage> {
           icon: const Icon(Icons.volume_up_outlined),
         ),
         const SizedBox(height: 38),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 3.4,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          children: [for (final answer in _answers) _answerButton(answer)],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final twoColumns = constraints.maxWidth >= 480;
+            final width = twoColumns
+                ? (constraints.maxWidth - 12) / 2
+                : constraints.maxWidth;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final answer in _answers)
+                  SizedBox(width: width, child: _answerButton(answer)),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 34),
         _scoreRow(),
@@ -493,6 +548,8 @@ class _VocabRushPageState extends State<VocabRushPage> {
     return OutlinedButton(
       onPressed: () => _answer(answer),
       style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         foregroundColor: AppColors.text,
         backgroundColor: background,
         side: BorderSide(color: border),
@@ -505,7 +562,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
   Widget _difficultyCard(_RushDifficulty difficulty) {
     final selected = difficulty == _difficulty;
     return InkWell(
-      onTap: () => setState(() => _difficulty = difficulty),
+      onTap: _starting ? null : () => setState(() => _difficulty = difficulty),
       borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
@@ -568,13 +625,13 @@ class _VocabRushPageState extends State<VocabRushPage> {
   );
 
   Widget _scoreRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 32,
+      runSpacing: 16,
       children: [
         _stat('$_score', 'Correct'),
-        const SizedBox(width: 48),
         _stat('×$_streak', 'Streak'),
-        const SizedBox(width: 48),
         _stat('×$_bestStreak', 'Best streak'),
       ],
     );
