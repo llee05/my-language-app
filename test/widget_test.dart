@@ -110,61 +110,94 @@ Future<void> _openSettingsResetDialog(
 }
 
 void main() {
-  for (final size in [const Size(320, 640), const Size(1280, 900)]) {
-    testWidgets('main screens remain usable at ${size.width.toInt()}px', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(size);
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      rootBundle.evict('assets/data/hsk_vocabulary.json');
-      addTearDown(() => rootBundle.evict('assets/data/hsk_vocabulary.json'));
-      final pronunciation = _FakePronunciationService();
-      addTearDown(pronunciation.dispose);
-      await tester.pumpWidget(
-        HanziPathApp(
-          initialProfile: testProfile,
-          dependencies: AppDependencies(
-            lessons: _MemoryLessonRepository(),
-            progress: _MemoryProgressRepository(),
-            dailyReviews: _MemoryDailyReviewSessionRepository(null),
-            settings: _MemorySettingsRepository(),
-            development: _MemoryDevelopmentRepository(),
-            tutorContext: _EmptyTutorContextRepository(),
-            createPronunciationService: () => pronunciation,
+  for (final (size, textScale) in [
+    (const Size(320, 640), 1.0),
+    (const Size(320, 640), 1.5),
+    (const Size(1280, 900), 1.0),
+  ]) {
+    testWidgets(
+      'main screens remain usable at ${size.width.toInt()}px with $textScale text',
+      (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = textScale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.binding.setSurfaceSize(size);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        rootBundle.evict('assets/data/hsk_vocabulary.json');
+        addTearDown(() => rootBundle.evict('assets/data/hsk_vocabulary.json'));
+        final pronunciation = _FakePronunciationService();
+        addTearDown(pronunciation.dispose);
+        await tester.pumpWidget(
+          HanziPathApp(
+            initialProfile: testProfile,
+            dependencies: AppDependencies(
+              lessons: _MemoryLessonRepository(),
+              progress: _MemoryProgressRepository(),
+              dailyReviews: _MemoryDailyReviewSessionRepository(null),
+              settings: _MemorySettingsRepository(),
+              development: _MemoryDevelopmentRepository(),
+              tutorContext: _EmptyTutorContextRepository(),
+              createPronunciationService: () => pronunciation,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      for (final label in [
-        ...AppSidebar.items.map((item) => item.$2),
-        'Settings',
-      ]) {
-        if (size.width < 760) {
-          await tester.tap(find.byIcon(Icons.menu_rounded));
-          await tester.pumpAndSettle();
-        }
-        final navigation = find.descendant(
-          of: find.byType(AppSidebar),
-          matching: find.text(label),
         );
-        await tester.ensureVisible(navigation);
-        await tester.tap(navigation);
-        if (label == 'Vocabulary') {
-          await _waitForWidget(
-            tester,
-            find.byKey(const Key('vocabulary-result-count')),
-          );
-        }
         await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull, reason: label);
-      }
-      await tester.tap(find.byKey(const Key('open-profile-button')));
-      await tester.pumpAndSettle();
-      expect(find.byType(ProfilePage), findsOneWidget);
-      expect(tester.takeException(), isNull, reason: 'Profile');
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+
+        for (final label in [
+          ...AppSidebar.items.map((item) => item.$2),
+          'Settings',
+        ]) {
+          if (size.width < 760) {
+            await tester.tap(find.byIcon(Icons.menu_rounded));
+            await tester.pumpAndSettle();
+          }
+          final navigation = find.descendant(
+            of: find.byType(AppSidebar),
+            matching: find.text(label),
+          );
+          if (label == 'Settings') {
+            await tester.ensureVisible(navigation);
+          } else {
+            await tester.scrollUntilVisible(
+              navigation,
+              100,
+              scrollable: find
+                  .descendant(
+                    of: find.byType(AppSidebar),
+                    matching: find.byType(Scrollable),
+                  )
+                  .first,
+            );
+          }
+          await tester.pumpAndSettle();
+          await tester.tap(navigation);
+          if (label == 'Vocabulary') {
+            await _waitForWidget(
+              tester,
+              find.byKey(const Key('vocabulary-result-count')),
+            );
+          }
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: label);
+          final pageType = switch (label) {
+            'Lessons' => LessonsPage,
+            'Roleplay Missions' => AiRoleplayMissionsPage,
+            'Listening Practice' => ListeningPracticePage,
+            'Vocab Rush' => VocabRushPage,
+            'Vocabulary' => VocabularyPage,
+            'Daily Review' => DailyQueuePage,
+            'AI Tutor' => AiTutorPage,
+            'Settings' => SettingsPage,
+            _ => MainDashboard,
+          };
+          expect(find.byType(pageType), findsOneWidget, reason: label);
+        }
+        await tester.tap(find.byKey(const Key('open-profile-button')));
+        await tester.pumpAndSettle();
+        expect(find.byType(ProfilePage), findsOneWidget);
+        expect(tester.takeException(), isNull, reason: 'Profile');
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 
   testWidgets('dashboard renders core learning content', (tester) async {

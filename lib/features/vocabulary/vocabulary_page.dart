@@ -461,80 +461,96 @@ class _VocabularyListItem extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(18),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 92,
-                child: Text(
-                  entry.simplified,
-                  style: TextStyle(
-                    fontFamily: 'serif',
-                    fontSize: 30,
-                    height: 1.15,
-                    color: AppColors.text,
-                  ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 420;
+              final hanzi = Text(
+                entry.simplified,
+                style: TextStyle(
+                  fontFamily: 'serif',
+                  fontSize: 30,
+                  height: 1.15,
+                  color: AppColors.text,
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.pinyin,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.gold,
-                      ),
+              );
+              final details = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.pinyin,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.gold,
                     ),
-                    if (showTraditional) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        'Traditional: ${entry.traditional}',
-                        style: TextStyle(fontSize: 12, color: AppColors.faint),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
+                  ),
+                  if (showTraditional) ...[
+                    const SizedBox(height: 3),
                     Text(
-                      entry.meanings.join(' · '),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: AppColors.text, height: 1.4),
+                      'Traditional: ${entry.traditional}',
+                      style: TextStyle(fontSize: 12, color: AppColors.faint),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.red.withValues(alpha: .13),
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    child: Text(
-                      'HSK ${entry.hskLevel}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.red,
-                      ),
-                    ),
+                  const SizedBox(height: 6),
+                  Text(
+                    entry.meanings.join(' · '),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: AppColors.text, height: 1.4),
                   ),
-                  const SizedBox(height: 12),
-                  _VocabularyStateBadge(state: learningState),
-                  const SizedBox(height: 8),
-                  Icon(Icons.chevron_right, size: 20, color: AppColors.muted),
                 ],
-              ),
-            ],
+              );
+              final heading = Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (compact)
+                    Expanded(child: hanzi)
+                  else
+                    SizedBox(width: 92, child: hanzi),
+                  if (!compact) ...[
+                    const SizedBox(width: 14),
+                    Expanded(child: details),
+                  ],
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.red.withValues(alpha: .13),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          'HSK ${entry.hskLevel}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.red,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _VocabularyStateBadge(state: learningState),
+                      const SizedBox(height: 8),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: AppColors.muted,
+                      ),
+                    ],
+                  ),
+                ],
+              );
+              if (!compact) return heading;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [heading, const SizedBox(height: 12), details],
+              );
+            },
           ),
         ),
       ),
