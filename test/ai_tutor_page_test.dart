@@ -42,6 +42,7 @@ class _FakePronunciationService implements PronunciationService {
   final List<String> spokenTexts = [];
   int stopCalls = 0;
   int disposeCalls = 0;
+  Future<void>? stopGate;
 
   @override
   Stream<OfflineVoiceStatus> get offlineVoiceUpdates => const Stream.empty();
@@ -57,7 +58,10 @@ class _FakePronunciationService implements PronunciationService {
   Future<void> speakMandarin(String text) async => spokenTexts.add(text);
 
   @override
-  Future<void> stop() async => stopCalls++;
+  Future<void> stop() async {
+    stopCalls++;
+    await stopGate;
+  }
 
   @override
   Future<void> dispose() async => disposeCalls++;
@@ -600,6 +604,55 @@ void main() {
       'Ordering breakfast',
     );
   });
+
+  for (final leavePage in [false, true]) {
+    testWidgets(
+      'dialogue generation waits safely for audio shutdown (leave: $leavePage)',
+      (tester) async {
+        final pronunciation = _FakeDialoguePronunciationService();
+        var requests = 0;
+        await _pumpTutor(
+          tester,
+          pronunciationService: pronunciation,
+          tutorContextRepository: _MemoryTutorContextRepository(
+            snapshot: TutorLearnerSnapshot(
+              asOf: DateTime.utc(2026, 9, 14),
+              knownWords: const [
+                TutorWordSnapshot(
+                  chinese: '你',
+                  pinyin: 'nǐ',
+                  englishMeaning: 'you',
+                  mastery: .8,
+                  incorrectAnswers: 0,
+                ),
+              ],
+            ),
+          ),
+          request: (_) async {
+            requests++;
+            throw const GeminiRequestException('Test provider unavailable.');
+          },
+        );
+        await tester.tap(find.text('Listening dialogue'));
+        await tester.pumpAndSettle();
+        final gate = Completer<void>();
+        pronunciation.stopGate = gate.future;
+        final generate = tester
+            .widget<FilledButton>(find.byKey(const Key('generate-dialogue')))
+            .onPressed!;
+        generate();
+        generate();
+        await tester.pump();
+        expect(requests, 0);
+        if (leavePage) await tester.pumpWidget(const SizedBox.shrink());
+        gate.complete();
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(requests, leavePage ? 0 : 1);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
 
   testWidgets(
     'generates a validated two-voice dialogue with tappable new words and questions',

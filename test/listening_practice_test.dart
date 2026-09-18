@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,44 @@ import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 void main() {
+  testWidgets('starting listening freezes topic search until audio stops', (
+    tester,
+  ) async {
+    final pronunciation = _ListeningPronunciationService();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 3,
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final search = find.byKey(const Key('listening-topic-search'));
+    await tester.enterText(search, 'Basics');
+    final stopGate = Completer<void>();
+    pronunciation.stopGate = stopGate.future;
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pump();
+
+    expect(tester.widget<TextField>(search).enabled, isFalse);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const Key('listening-topic-search-clear')),
+          )
+          .onPressed,
+      isNull,
+    );
+    stopGate.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Basics · 1 of 3'), findsOneWidget);
+    expect(pronunciation.requests, [const ('你', 1.0)]);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets(
     'listening practice hides Mandarin, auto-plays, replays, and slows speech',
     (tester) async {
@@ -456,6 +495,7 @@ class _ListeningPronunciationService
     implements PronunciationService, PlaybackRatePronunciationService {
   final List<(String, double)> requests = [];
   int stopCalls = 0;
+  Future<void>? stopGate;
 
   @override
   Stream<OfflineVoiceStatus> get offlineVoiceUpdates => const Stream.empty();
@@ -478,7 +518,10 @@ class _ListeningPronunciationService
   }
 
   @override
-  Future<void> stop() async => stopCalls++;
+  Future<void> stop() async {
+    stopCalls++;
+    await stopGate;
+  }
 
   @override
   Future<void> dispose() async {}

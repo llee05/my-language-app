@@ -158,13 +158,14 @@ Return only compact JSON with this exact shape:
 
   Future<void> _generateDialogue() async {
     if (_generating || _knownWords.isEmpty) return;
-    await _stopAudio();
     setState(() {
       _generating = true;
       _generationError = null;
       _audioError = null;
     });
     final topic = _topicController.text.trim();
+    await _stopAudio();
+    if (!mounted) return;
     final knownWordJson = jsonEncode([
       for (final word in _knownWords)
         {

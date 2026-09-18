@@ -525,6 +525,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                     const SizedBox(height: 24),
                     TextField(
                       key: const Key('listening-topic-search'),
+                      enabled: !_transitioning,
                       controller: _topicSearchController,
                       onChanged: _updateTopicSearch,
                       textInputAction: TextInputAction.search,
@@ -536,7 +537,9 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                             : IconButton(
                                 key: const Key('listening-topic-search-clear'),
                                 tooltip: 'Clear search',
-                                onPressed: _clearTopicSearch,
+                                onPressed: _transitioning
+                                    ? null
+                                    : _clearTopicSearch,
                                 icon: const Icon(Icons.close),
                               ),
                         filled: true,
