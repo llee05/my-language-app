@@ -94,6 +94,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/data/sentence_practice.json
     - assets/data/hsk_vocabulary.json
     - assets/data/tatoeba/flashcard_candidates.json
 

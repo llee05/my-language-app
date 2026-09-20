@@ -1,0 +1,552 @@
+[
+  {
+    "topic": "Greetings and introductions",
+    "sentences": [
+      {
+        "chinese": "你好！",
+        "pinyin": "Nǐ hǎo!",
+        "english": "Hello!"
+      },
+      {
+        "chinese": "早上好！",
+        "pinyin": "Zǎoshang hǎo!",
+        "english": "Good morning!"
+      },
+      {
+        "chinese": "好久不见！",
+        "pinyin": "Hǎojiǔ bú jiàn!",
+        "english": "Long time no see!"
+      },
+      {
+        "chinese": "你最近怎么样？",
+        "pinyin": "Nǐ zuìjìn zěnmeyàng?",
+        "english": "How have you been lately?"
+      },
+      {
+        "chinese": "我很好，谢谢。",
+        "pinyin": "Wǒ hěn hǎo, xièxie.",
+        "english": "I'm fine, thank you."
+      },
+      {
+        "chinese": "你叫什么名字？",
+        "pinyin": "Nǐ jiào shénme míngzi?",
+        "english": "What's your name?"
+      },
+      {
+        "chinese": "我叫小明。",
+        "pinyin": "Wǒ jiào Xiǎomíng.",
+        "english": "My name is Xiaoming."
+      },
+      {
+        "chinese": "很高兴认识你。",
+        "pinyin": "Hěn gāoxìng rènshi nǐ.",
+        "english": "Nice to meet you."
+      },
+      {
+        "chinese": "你是哪里人？",
+        "pinyin": "Nǐ shì nǎlǐ rén?",
+        "english": "Where are you from?"
+      },
+      {
+        "chinese": "明天见！",
+        "pinyin": "Míngtiān jiàn!",
+        "english": "See you tomorrow!"
+      }
+    ]
+  },
+  {
+    "topic": "Politeness and help",
+    "sentences": [
+      {
+        "chinese": "谢谢你的帮助。",
+        "pinyin": "Xièxie nǐ de bāngzhù.",
+        "english": "Thank you for your help."
+      },
+      {
+        "chinese": "不客气。",
+        "pinyin": "Bú kèqi.",
+        "english": "You're welcome."
+      },
+      {
+        "chinese": "不好意思。",
+        "pinyin": "Bù hǎoyìsi.",
+        "english": "Excuse me. / Sorry."
+      },
+      {
+        "chinese": "对不起。",
+        "pinyin": "Duìbuqǐ.",
+        "english": "I'm sorry."
+      },
+      {
+        "chinese": "没关系。",
+        "pinyin": "Méi guānxi.",
+        "english": "It's okay."
+      },
+      {
+        "chinese": "请等一下。",
+        "pinyin": "Qǐng děng yíxià.",
+        "english": "Please wait a moment."
+      },
+      {
+        "chinese": "你能帮我一下吗？",
+        "pinyin": "Nǐ néng bāng wǒ yíxià ma?",
+        "english": "Could you help me for a moment?"
+      },
+      {
+        "chinese": "麻烦你了。",
+        "pinyin": "Máfan nǐ le.",
+        "english": "Thank you for going to the trouble."
+      },
+      {
+        "chinese": "请进。",
+        "pinyin": "Qǐng jìn.",
+        "english": "Please come in."
+      },
+      {
+        "chinese": "请坐。",
+        "pinyin": "Qǐng zuò.",
+        "english": "Please sit down."
+      }
+    ]
+  },
+  {
+    "topic": "Understanding and learning",
+    "sentences": [
+      {
+        "chinese": "我听不懂。",
+        "pinyin": "Wǒ tīng bu dǒng.",
+        "english": "I don't understand what you're saying."
+      },
+      {
+        "chinese": "请再说一遍。",
+        "pinyin": "Qǐng zài shuō yí biàn.",
+        "english": "Please say it again."
+      },
+      {
+        "chinese": "请说慢一点。",
+        "pinyin": "Qǐng shuō màn yìdiǎn.",
+        "english": "Please speak a little more slowly."
+      },
+      {
+        "chinese": "这是什么意思？",
+        "pinyin": "Zhè shì shénme yìsi?",
+        "english": "What does this mean?"
+      },
+      {
+        "chinese": "这个用中文怎么说？",
+        "pinyin": "Zhège yòng Zhōngwén zěnme shuō?",
+        "english": "How do you say this in Chinese?"
+      },
+      {
+        "chinese": "我在学中文。",
+        "pinyin": "Wǒ zài xué Zhōngwén.",
+        "english": "I'm learning Chinese."
+      },
+      {
+        "chinese": "我只会说一点中文。",
+        "pinyin": "Wǒ zhǐ huì shuō yìdiǎn Zhōngwén.",
+        "english": "I only speak a little Chinese."
+      },
+      {
+        "chinese": "你会说英语吗？",
+        "pinyin": "Nǐ huì shuō Yīngyǔ ma?",
+        "english": "Do you speak English?"
+      },
+      {
+        "chinese": "请写下来。",
+        "pinyin": "Qǐng xiě xiàlai.",
+        "english": "Please write it down."
+      },
+      {
+        "chinese": "我明白了。",
+        "pinyin": "Wǒ míngbai le.",
+        "english": "I understand now."
+      }
+    ]
+  },
+  {
+    "topic": "Food and drinks",
+    "sentences": [
+      {
+        "chinese": "我饿了。",
+        "pinyin": "Wǒ è le.",
+        "english": "I'm hungry."
+      },
+      {
+        "chinese": "我渴了。",
+        "pinyin": "Wǒ kě le.",
+        "english": "I'm thirsty."
+      },
+      {
+        "chinese": "你想吃什么？",
+        "pinyin": "Nǐ xiǎng chī shénme?",
+        "english": "What would you like to eat?"
+      },
+      {
+        "chinese": "我想喝水。",
+        "pinyin": "Wǒ xiǎng hē shuǐ.",
+        "english": "I'd like some water."
+      },
+      {
+        "chinese": "请给我菜单。",
+        "pinyin": "Qǐng gěi wǒ càidān.",
+        "english": "Please give me the menu."
+      },
+      {
+        "chinese": "我要一碗米饭。",
+        "pinyin": "Wǒ yào yì wǎn mǐfàn.",
+        "english": "I'd like a bowl of rice."
+      },
+      {
+        "chinese": "不要放辣椒。",
+        "pinyin": "Bú yào fàng làjiāo.",
+        "english": "Please don't add chili."
+      },
+      {
+        "chinese": "我不吃肉。",
+        "pinyin": "Wǒ bù chī ròu.",
+        "english": "I don't eat meat."
+      },
+      {
+        "chinese": "很好吃！",
+        "pinyin": "Hěn hǎochī!",
+        "english": "It's delicious!"
+      },
+      {
+        "chinese": "服务员，买单。",
+        "pinyin": "Fúwùyuán, mǎidān.",
+        "english": "Excuse me, the bill, please."
+      }
+    ]
+  },
+  {
+    "topic": "Shopping and payment",
+    "sentences": [
+      {
+        "chinese": "这个多少钱？",
+        "pinyin": "Zhège duōshao qián?",
+        "english": "How much is this?"
+      },
+      {
+        "chinese": "太贵了。",
+        "pinyin": "Tài guì le.",
+        "english": "It's too expensive."
+      },
+      {
+        "chinese": "可以便宜一点吗？",
+        "pinyin": "Kěyǐ piányi yìdiǎn ma?",
+        "english": "Could you make it a little cheaper?"
+      },
+      {
+        "chinese": "我要这个。",
+        "pinyin": "Wǒ yào zhège.",
+        "english": "I'll take this one."
+      },
+      {
+        "chinese": "我先看看。",
+        "pinyin": "Wǒ xiān kànkan.",
+        "english": "I'll just have a look first."
+      },
+      {
+        "chinese": "可以试一下吗？",
+        "pinyin": "Kěyǐ shì yíxià ma?",
+        "english": "May I try it?"
+      },
+      {
+        "chinese": "有大一点的吗？",
+        "pinyin": "Yǒu dà yìdiǎn de ma?",
+        "english": "Do you have a bigger one?"
+      },
+      {
+        "chinese": "有别的颜色吗？",
+        "pinyin": "Yǒu bié de yánsè ma?",
+        "english": "Do you have any other colors?"
+      },
+      {
+        "chinese": "可以用微信支付吗？",
+        "pinyin": "Kěyǐ yòng Wēixìn zhīfù ma?",
+        "english": "Can I pay with WeChat?"
+      },
+      {
+        "chinese": "可以刷卡吗？",
+        "pinyin": "Kěyǐ shuā kǎ ma?",
+        "english": "Can I pay by card?"
+      }
+    ]
+  },
+  {
+    "topic": "Directions and transport",
+    "sentences": [
+      {
+        "chinese": "洗手间在哪里？",
+        "pinyin": "Xǐshǒujiān zài nǎlǐ?",
+        "english": "Where is the restroom?"
+      },
+      {
+        "chinese": "地铁站怎么走？",
+        "pinyin": "Dìtiězhàn zěnme zǒu?",
+        "english": "How do I get to the subway station?"
+      },
+      {
+        "chinese": "一直往前走。",
+        "pinyin": "Yìzhí wǎng qián zǒu.",
+        "english": "Go straight ahead."
+      },
+      {
+        "chinese": "在前面左转。",
+        "pinyin": "Zài qiánmiàn zuǒ zhuǎn.",
+        "english": "Turn left up ahead."
+      },
+      {
+        "chinese": "离这里远吗？",
+        "pinyin": "Lí zhèlǐ yuǎn ma?",
+        "english": "Is it far from here?"
+      },
+      {
+        "chinese": "走路要多久？",
+        "pinyin": "Zǒulù yào duōjiǔ?",
+        "english": "How long does it take to walk there?"
+      },
+      {
+        "chinese": "我要去机场。",
+        "pinyin": "Wǒ yào qù jīchǎng.",
+        "english": "I want to go to the airport."
+      },
+      {
+        "chinese": "请在这里停车。",
+        "pinyin": "Qǐng zài zhèlǐ tíng chē.",
+        "english": "Please stop here."
+      },
+      {
+        "chinese": "这趟车到火车站吗？",
+        "pinyin": "Zhè tàng chē dào huǒchēzhàn ma?",
+        "english": "Does this bus go to the train station?"
+      },
+      {
+        "chinese": "我迷路了。",
+        "pinyin": "Wǒ mílù le.",
+        "english": "I'm lost."
+      }
+    ]
+  },
+  {
+    "topic": "Time and plans",
+    "sentences": [
+      {
+        "chinese": "现在几点？",
+        "pinyin": "Xiànzài jǐ diǎn?",
+        "english": "What time is it now?"
+      },
+      {
+        "chinese": "今天星期几？",
+        "pinyin": "Jīntiān xīngqī jǐ?",
+        "english": "What day of the week is it today?"
+      },
+      {
+        "chinese": "你什么时候有空？",
+        "pinyin": "Nǐ shénme shíhou yǒu kòng?",
+        "english": "When are you free?"
+      },
+      {
+        "chinese": "我们几点见面？",
+        "pinyin": "Wǒmen jǐ diǎn jiànmiàn?",
+        "english": "What time shall we meet?"
+      },
+      {
+        "chinese": "我们在哪里见面？",
+        "pinyin": "Wǒmen zài nǎlǐ jiànmiàn?",
+        "english": "Where shall we meet?"
+      },
+      {
+        "chinese": "我马上到。",
+        "pinyin": "Wǒ mǎshàng dào.",
+        "english": "I'll be there very soon."
+      },
+      {
+        "chinese": "我会晚一点到。",
+        "pinyin": "Wǒ huì wǎn yìdiǎn dào.",
+        "english": "I'll arrive a little late."
+      },
+      {
+        "chinese": "我今天很忙。",
+        "pinyin": "Wǒ jīntiān hěn máng.",
+        "english": "I'm very busy today."
+      },
+      {
+        "chinese": "我们明天再说吧。",
+        "pinyin": "Wǒmen míngtiān zài shuō ba.",
+        "english": "Let's talk about it tomorrow."
+      },
+      {
+        "chinese": "你周末有什么安排？",
+        "pinyin": "Nǐ zhōumò yǒu shénme ānpái?",
+        "english": "What plans do you have for the weekend?"
+      }
+    ]
+  },
+  {
+    "topic": "Daily life",
+    "sentences": [
+      {
+        "chinese": "你吃饭了吗？",
+        "pinyin": "Nǐ chī fàn le ma?",
+        "english": "Have you eaten?"
+      },
+      {
+        "chinese": "你在做什么？",
+        "pinyin": "Nǐ zài zuò shénme?",
+        "english": "What are you doing?"
+      },
+      {
+        "chinese": "我要去上班了。",
+        "pinyin": "Wǒ yào qù shàng bān le.",
+        "english": "I'm heading to work."
+      },
+      {
+        "chinese": "我下班了。",
+        "pinyin": "Wǒ xià bān le.",
+        "english": "I've finished work."
+      },
+      {
+        "chinese": "我到家了。",
+        "pinyin": "Wǒ dào jiā le.",
+        "english": "I'm home."
+      },
+      {
+        "chinese": "我有点累。",
+        "pinyin": "Wǒ yǒudiǎn lèi.",
+        "english": "I'm a little tired."
+      },
+      {
+        "chinese": "我想休息一下。",
+        "pinyin": "Wǒ xiǎng xiūxi yíxià.",
+        "english": "I'd like to rest for a bit."
+      },
+      {
+        "chinese": "今天很热。",
+        "pinyin": "Jīntiān hěn rè.",
+        "english": "It's very hot today."
+      },
+      {
+        "chinese": "外面下雨了。",
+        "pinyin": "Wàimiàn xià yǔ le.",
+        "english": "It's raining outside."
+      },
+      {
+        "chinese": "早点睡吧。",
+        "pinyin": "Zǎo diǎn shuì ba.",
+        "english": "Get to bed early."
+      }
+    ]
+  },
+  {
+    "topic": "Opinions and conversation",
+    "sentences": [
+      {
+        "chinese": "你觉得怎么样？",
+        "pinyin": "Nǐ juéde zěnmeyàng?",
+        "english": "What do you think?"
+      },
+      {
+        "chinese": "我觉得很好。",
+        "pinyin": "Wǒ juéde hěn hǎo.",
+        "english": "I think it's very good."
+      },
+      {
+        "chinese": "我很喜欢。",
+        "pinyin": "Wǒ hěn xǐhuan.",
+        "english": "I really like it."
+      },
+      {
+        "chinese": "我不太喜欢。",
+        "pinyin": "Wǒ bú tài xǐhuan.",
+        "english": "I don't really like it."
+      },
+      {
+        "chinese": "我同意。",
+        "pinyin": "Wǒ tóngyì.",
+        "english": "I agree."
+      },
+      {
+        "chinese": "我不知道。",
+        "pinyin": "Wǒ bù zhīdào.",
+        "english": "I don't know."
+      },
+      {
+        "chinese": "我不确定。",
+        "pinyin": "Wǒ bú quèdìng.",
+        "english": "I'm not sure."
+      },
+      {
+        "chinese": "真的吗？",
+        "pinyin": "Zhēn de ma?",
+        "english": "Really?"
+      },
+      {
+        "chinese": "没问题。",
+        "pinyin": "Méi wèntí.",
+        "english": "No problem."
+      },
+      {
+        "chinese": "我们一起去吧。",
+        "pinyin": "Wǒmen yìqǐ qù ba.",
+        "english": "Let's go together."
+      }
+    ]
+  },
+  {
+    "topic": "Staying connected and getting help",
+    "sentences": [
+      {
+        "chinese": "你的电话号码是多少？",
+        "pinyin": "Nǐ de diànhuà hàomǎ shì duōshao?",
+        "english": "What's your phone number?"
+      },
+      {
+        "chinese": "可以加你微信吗？",
+        "pinyin": "Kěyǐ jiā nǐ Wēixìn ma?",
+        "english": "Can I add you on WeChat?"
+      },
+      {
+        "chinese": "我给你发消息。",
+        "pinyin": "Wǒ gěi nǐ fā xiāoxi.",
+        "english": "I'll send you a message."
+      },
+      {
+        "chinese": "这里有无线网络吗？",
+        "pinyin": "Zhèlǐ yǒu wúxiàn wǎngluò ma?",
+        "english": "Is there Wi-Fi here?"
+      },
+      {
+        "chinese": "密码是什么？",
+        "pinyin": "Mìmǎ shì shénme?",
+        "english": "What's the password?"
+      },
+      {
+        "chinese": "我的手机没电了。",
+        "pinyin": "Wǒ de shǒujī méi diàn le.",
+        "english": "My phone is out of battery."
+      },
+      {
+        "chinese": "我不舒服。",
+        "pinyin": "Wǒ bù shūfu.",
+        "english": "I don't feel well."
+      },
+      {
+        "chinese": "我需要看医生。",
+        "pinyin": "Wǒ xūyào kàn yīshēng.",
+        "english": "I need to see a doctor."
+      },
+      {
+        "chinese": "我的手机丢了。",
+        "pinyin": "Wǒ de shǒujī diū le.",
+        "english": "I've lost my phone."
+      },
+      {
+        "chinese": "请帮我叫救护车。",
+        "pinyin": "Qǐng bāng wǒ jiào jiùhùchē.",
+        "english": "Please call an ambulance for me."
+      }
+    ]
+  }
+]
