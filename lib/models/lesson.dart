@@ -4,12 +4,14 @@ class LessonSummary {
     required this.title,
     required this.theme,
     required this.hskLevel,
+    this.isSentencePractice = false,
   });
 
   final int id;
   final String title;
   final String theme;
   final int hskLevel;
+  final bool isSentencePractice;
 }
 
 class Flashcard {

@@ -46,6 +46,7 @@ class SqliteBackupRepository implements BackupRepository {
   static const _formatVersion = 1;
   static const _maxBackupBytes = 50 * 1024 * 1024;
   static const _optionalColumnDefaults = <String, Object?>{
+    'lessons.is_sentence_practice': 0,
     'learner_settings.button_animation_style': 'combined',
   };
 
@@ -72,7 +73,14 @@ class SqliteBackupRepository implements BackupRepository {
       'theme_id',
       'button_animation_style',
     ],
-    'lessons': ['id', 'lesson_title', 'theme', 'hsk_level', 'is_listed'],
+    'lessons': [
+      'id',
+      'lesson_title',
+      'theme',
+      'hsk_level',
+      'is_listed',
+      'is_sentence_practice',
+    ],
     'cards': [
       'id',
       'lesson_id',

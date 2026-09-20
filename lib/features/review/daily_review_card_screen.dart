@@ -207,7 +207,9 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: 'serif',
-                                fontSize: 76,
+                                fontSize: card.partOfSpeech == 'sentence'
+                                    ? 28
+                                    : 76,
                                 color: AppColors.text,
                               ),
                             ),

@@ -94,7 +94,9 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
 
       final summaries = await widget.lessonRepository.topics();
       final eligible = summaries.where(
-        (summary) => summary.hskLevel <= widget.maxHskLevel,
+        (summary) =>
+            !summary.isSentencePractice &&
+            summary.hskLevel <= widget.maxHskLevel,
       );
       final lessons = await Future.wait(
         eligible.map((summary) => widget.lessonRepository.findById(summary.id)),

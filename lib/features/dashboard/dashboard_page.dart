@@ -124,7 +124,9 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       final summaries = await widget.lessonRepository.topics();
       if (!mounted || requestId != _availableLessonsRequestId) return;
-      final remaining = List<LessonSummary>.of(summaries);
+      final remaining = summaries
+          .where((summary) => !summary.isSentencePractice)
+          .toList();
       final lessons = <Lesson>[];
       // Choose from lightweight summaries before fetching card content. A
       // growing library should not require loading every lesson on Home.

@@ -143,6 +143,7 @@ class LocalDatabase {
       await _maybeSeedDefaultLessons(openedDatabase);
       await _applyVocabularyContentV2(openedDatabase);
       await _applyTatoebaExamples(openedDatabase);
+      await _seedSentencePractice(openedDatabase);
       _database = openedDatabase;
       _openedDatabasePath = openedDatabase.path;
       return openedDatabase;
@@ -231,6 +232,53 @@ class LocalDatabase {
             'example_sentence_english': card['example_sentence_english'],
             'quiz_options': jsonEncode(card['quiz_options']),
             'correct_answer': card['correct_answer'],
+          });
+        }
+      }
+    });
+  }
+
+  static Future<void> _seedSentencePractice(Database db) async {
+    final decks =
+        jsonDecode(
+              await rootBundle.loadString('assets/data/sentence_practice.json'),
+            )
+            as List<dynamic>;
+    await db.transaction((txn) async {
+      final existing = await txn.query(
+        _lessonTable,
+        columns: ['lesson_title'],
+        where: 'is_sentence_practice = 1',
+      );
+      final titles = existing.map((row) => row['lesson_title']).toSet();
+      for (final deck in decks.cast<Map<String, dynamic>>()) {
+        final topic = deck['topic'] as String;
+        final title = 'Sentence practice · $topic';
+        if (titles.contains(title)) continue;
+        final lessonId = await txn.insert(_lessonTable, {
+          'lesson_title': title,
+          'theme': topic,
+          // This mixed everyday collection is not an HSK curriculum. The
+          // existing storage requires a level; the sentence UI omits it.
+          'hsk_level': 3,
+          'is_listed': 1,
+          'is_sentence_practice': 1,
+        });
+        for (final sentence
+            in (deck['sentences'] as List<dynamic>)
+                .cast<Map<String, dynamic>>()) {
+          await txn.insert(_cardTable, {
+            'lesson_id': lessonId,
+            'chinese': sentence['chinese'],
+            'pinyin': sentence['pinyin'],
+            'english_meaning': sentence['english'],
+            'part_of_speech': 'sentence',
+            'hsk_level': 3,
+            'example_sentence_chinese': '',
+            'example_sentence_pinyin': '',
+            'example_sentence_english': '',
+            'quiz_options': '[]',
+            'correct_answer': sentence['english'],
           });
         }
       }

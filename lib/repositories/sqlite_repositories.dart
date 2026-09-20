@@ -322,10 +322,16 @@ class SqliteLessonRepository implements LessonRepository {
   Future<List<LessonSummary>> topics() => LocalDatabase.use((db) async {
     final rows = await db.query(
       'lessons',
-      columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
+      columns: [
+        'id',
+        'lesson_title',
+        'theme',
+        'hsk_level',
+        'is_sentence_practice',
+      ],
       where: 'is_listed = ?',
       whereArgs: [1],
-      orderBy: 'id DESC',
+      orderBy: 'is_sentence_practice ASC, id DESC',
     );
     return rows.map(_summaryFromRow).toList(growable: false);
   });
@@ -334,7 +340,13 @@ class SqliteLessonRepository implements LessonRepository {
   Future<Lesson?> findById(int id) => LocalDatabase.use((db) async {
     final lessons = await db.query(
       'lessons',
-      columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
+      columns: [
+        'id',
+        'lesson_title',
+        'theme',
+        'hsk_level',
+        'is_sentence_practice',
+      ],
       where: 'id = ? AND is_listed = ?',
       whereArgs: [id, 1],
       limit: 1,
@@ -350,8 +362,15 @@ class SqliteLessonRepository implements LessonRepository {
   }) => LocalDatabase.use((db) async {
     final lessons = await db.query(
       'lessons',
-      columns: ['id', 'lesson_title', 'theme', 'hsk_level'],
-      where: 'theme = ? COLLATE NOCASE AND hsk_level = ? AND is_listed = ?',
+      columns: [
+        'id',
+        'lesson_title',
+        'theme',
+        'hsk_level',
+        'is_sentence_practice',
+      ],
+      where:
+          'theme = ? COLLATE NOCASE AND hsk_level = ? AND is_listed = ? AND is_sentence_practice = 0',
       whereArgs: [theme.trim(), hskLevel, 1],
       orderBy: 'id DESC',
       limit: 1,
@@ -441,6 +460,7 @@ class SqliteLessonRepository implements LessonRepository {
         'lesson_title': lesson.summary.title,
         'theme': lesson.summary.theme.trim(),
         'hsk_level': lesson.summary.hskLevel,
+        'is_sentence_practice': lesson.summary.isSentencePractice ? 1 : 0,
         'is_listed': 1,
       });
       for (final card in lesson.cards) {
@@ -464,6 +484,7 @@ class SqliteLessonRepository implements LessonRepository {
   LessonSummary _summaryFromRow(Map<String, Object?> row) => LessonSummary(
     id: row['id'] as int,
     title: row['lesson_title'] as String,
+    isSentencePractice: row['is_sentence_practice'] == 1,
     theme: row['theme'] as String,
     hskLevel: row['hsk_level'] as int,
   );
@@ -903,10 +924,12 @@ class SqliteProgressRepository implements ProgressRepository {
         card_progress.due_at AS progress_due_at,
         card_progress.last_reviewed_at AS progress_last_reviewed_at
       FROM cards
+      INNER JOIN lessons ON lessons.id = cards.lesson_id
       LEFT JOIN card_progress
         ON card_progress.card_id = cards.id
         AND card_progress.learner_id = ?
-      WHERE cards.hsk_level <= ?
+      WHERE (lessons.is_sentence_practice = 0 AND cards.hsk_level <= ?)
+        OR (lessons.is_sentence_practice = 1 AND card_progress.card_id IS NOT NULL)
       ORDER BY cards.id ASC
     ''',
       [1, maxHskLevel],

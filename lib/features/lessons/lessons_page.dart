@@ -73,6 +73,8 @@ class _LessonsPageState extends State<LessonsPage> {
   String _selectedTopicTheme = _hskTopicPools[1]!.first;
   List<LessonSummary> _topics = const [];
   Map<int, LessonSession> _activeSessions = const {};
+  bool _sentenceMode = false;
+  bool _lessonIsSentence = false;
   bool _loadingTopics = true;
   bool _libraryLoadFailed = false;
   int? _libraryHskFilter;
@@ -344,7 +346,11 @@ class _LessonsPageState extends State<LessonsPage> {
         sessions[lesson.summary.id] = active;
       }
       _activeSessions = sessions;
-      _lessonTitle = lesson.summary.title;
+      _lessonIsSentence = lesson.summary.isSentencePractice;
+      _sentenceMode = lesson.summary.isSentencePractice;
+      _lessonTitle = _lessonIsSentence
+          ? lesson.summary.theme
+          : lesson.summary.title;
       _cards = lesson.cards;
       _currentCard = index;
       _session = active;
@@ -414,7 +420,7 @@ class _LessonsPageState extends State<LessonsPage> {
   List<String> get _concreteTopics {
     final themes = <String>{...?_hskTopicPools[_hskLevel]};
     for (final topic in _topics) {
-      if (topic.hskLevel == _hskLevel) {
+      if (!topic.isSentencePractice && topic.hskLevel == _hskLevel) {
         themes.add(topic.theme);
       }
     }
@@ -432,19 +438,29 @@ class _LessonsPageState extends State<LessonsPage> {
     ..._concreteTopics,
   ];
 
+  List<LessonSummary> get _modeTopics {
+    final topics = _topics
+        .where((topic) => topic.isSentencePractice == _sentenceMode)
+        .toList(growable: false);
+    if (_sentenceMode) topics.sort((a, b) => a.id.compareTo(b.id));
+    return topics;
+  }
+
   List<LessonSummary> get _visibleTopics {
     final query = _lessonSearchController.text.trim().toLowerCase();
-    return _topics
+    return _modeTopics
         .where((topic) {
-          if (_libraryHskFilter != null &&
+          if (!_sentenceMode &&
+              _libraryHskFilter != null &&
               topic.hskLevel != _libraryHskFilter) {
             return false;
           }
           if (query.isEmpty) return true;
           return topic.title.toLowerCase().contains(query) ||
               topic.theme.toLowerCase().contains(query) ||
-              'hsk ${topic.hskLevel}'.contains(query) ||
-              topic.hskLevel.toString() == query;
+              (!_sentenceMode &&
+                  ('hsk ${topic.hskLevel}'.contains(query) ||
+                      topic.hskLevel.toString() == query));
         })
         .toList(growable: false);
   }
@@ -806,6 +822,47 @@ class _LessonsPageState extends State<LessonsPage> {
               'Lesson Library',
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final sentenceMode in [false, true])
+                  ChoiceChip(
+                    key: Key(
+                      sentenceMode
+                          ? 'sentence-practice-mode'
+                          : 'vocabulary-lesson-mode',
+                    ),
+                    label: Text(
+                      sentenceMode ? 'Sentence practice' : 'Vocabulary lessons',
+                    ),
+                    selected: _sentenceMode == sentenceMode,
+                    onSelected: _generating
+                        ? null
+                        : (_) => setState(() {
+                            _sentenceMode = sentenceMode;
+                            _lessonSearchController.clear();
+                          }),
+                  ),
+              ],
+            ),
+            if (_sentenceMode) ...[
+              const SizedBox(height: 16),
+              Text(
+                '100 everyday Mandarin sentences · 10 short decks',
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Practice common conversations offline. Tap a card for pinyin '
+                'and English, then rate how well you remember it.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+            ],
             const SizedBox(height: 24),
             IgnorePointer(
               ignoring: _generating,
@@ -814,134 +871,136 @@ class _LessonsPageState extends State<LessonsPage> {
                 child: _buildLessonLibrary(),
               ),
             ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 20),
-            Text(
-              'Create a lesson',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: AppColors.text,
+            if (!_sentenceMode) ...[
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 20),
+              Text(
+                'Create a lesson',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Generate a new lesson with your AI connection from Settings. '
-              'Saved lessons and local vocabulary are available offline.',
-              style: TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 20),
-            DropdownButtonFormField<int>(
-              key: ValueKey(_hskLevel),
-              initialValue: _hskLevel,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'HSK level',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 6),
+              Text(
+                'Generate a new lesson with your AI connection from Settings. '
+                'Saved lessons and local vocabulary are available offline.',
+                style: TextStyle(color: AppColors.muted),
               ),
-              items: [
-                for (var level = 1; level <= 6; level++)
-                  DropdownMenuItem(value: level, child: Text('HSK $level')),
-              ],
-              onChanged: _generating
-                  ? null
-                  : (value) {
-                      final level = value ?? 1;
-                      setState(() {
-                        _hskLevel = level;
-                        _selectedTopicTheme = _hskTopicPools[level]!.first;
-                      });
-                    },
-            ),
-            const SizedBox(height: 18),
-            DropdownButtonFormField<String>(
-              key: ValueKey('topics-$_hskLevel'),
-              initialValue: _selectedTopicTheme,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: 'Topic for this HSK level',
-                helperText:
-                    'Random topic chooses one focus; Random mix combines topics.',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<int>(
+                key: ValueKey(_hskLevel),
+                initialValue: _hskLevel,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'HSK level',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  for (var level = 1; level <= 6; level++)
+                    DropdownMenuItem(value: level, child: Text('HSK $level')),
+                ],
+                onChanged: _generating
+                    ? null
+                    : (value) {
+                        final level = value ?? 1;
+                        setState(() {
+                          _hskLevel = level;
+                          _selectedTopicTheme = _hskTopicPools[level]!.first;
+                        });
+                      },
               ),
-              items: [
-                for (final topic in _availableTopics)
-                  DropdownMenuItem(
-                    value: topic,
-                    child: Row(
-                      children: [
-                        if (topic == _randomTopicLessonMode ||
-                            topic == _randomMixLessonMode) ...[
-                          Icon(
-                            topic == _randomTopicLessonMode
-                                ? Icons.casino_outlined
-                                : Icons.shuffle_rounded,
-                            size: 18,
+              const SizedBox(height: 18),
+              DropdownButtonFormField<String>(
+                key: ValueKey('topics-$_hskLevel'),
+                initialValue: _selectedTopicTheme,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Topic for this HSK level',
+                  helperText:
+                      'Random topic chooses one focus; Random mix combines topics.',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  for (final topic in _availableTopics)
+                    DropdownMenuItem(
+                      value: topic,
+                      child: Row(
+                        children: [
+                          if (topic == _randomTopicLessonMode ||
+                              topic == _randomMixLessonMode) ...[
+                            Icon(
+                              topic == _randomTopicLessonMode
+                                  ? Icons.casino_outlined
+                                  : Icons.shuffle_rounded,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(topic, overflow: TextOverflow.ellipsis),
                           ),
-                          const SizedBox(width: 8),
                         ],
-                        Expanded(
-                          child: Text(topic, overflow: TextOverflow.ellipsis),
-                        ),
-                      ],
+                      ),
                     ),
+                ],
+                onChanged: _generating
+                    ? null
+                    : (value) => setState(
+                        () => _selectedTopicTheme =
+                            value ?? _availableTopics.first,
+                      ),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: _topicController,
+                enabled: !_generating,
+                decoration: InputDecoration(
+                  labelText: 'Ask AI for a lesson topic',
+                  hintText: 'e.g. ordering breakfast in Beijing',
+                  helperText: 'This overrides the selected previous topic.',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: _PushToTalkButton(
+                    key: const Key('lesson-topic-push-to-talk'),
+                    controller: _topicController,
+                    speechInputService: _speechInputService,
+                    enabled: !_generating,
                   ),
+                ),
+              ),
+              if (_notice != null) ...[
+                const SizedBox(height: 14),
+                Text(_notice!, style: TextStyle(color: AppColors.gold)),
               ],
-              onChanged: _generating
-                  ? null
-                  : (value) => setState(
-                      () =>
-                          _selectedTopicTheme = value ?? _availableTopics.first,
-                    ),
-            ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: _topicController,
-              enabled: !_generating,
-              decoration: InputDecoration(
-                labelText: 'Ask AI for a lesson topic',
-                hintText: 'e.g. ordering breakfast in Beijing',
-                helperText: 'This overrides the selected previous topic.',
-                border: const OutlineInputBorder(),
-                suffixIcon: _PushToTalkButton(
-                  key: const Key('lesson-topic-push-to-talk'),
-                  controller: _topicController,
-                  speechInputService: _speechInputService,
-                  enabled: !_generating,
+              if (_generationFailed) ...[
+                const SizedBox(height: 14),
+                _AppInlineError(
+                  key: const Key('lesson-generation-error'),
+                  message: _AppErrorCopy.generateLesson,
                 ),
-              ),
-            ),
-            if (_notice != null) ...[
-              const SizedBox(height: 14),
-              Text(_notice!, style: TextStyle(color: AppColors.gold)),
-            ],
-            if (_generationFailed) ...[
-              const SizedBox(height: 14),
-              _AppInlineError(
-                key: const Key('lesson-generation-error'),
-                message: _AppErrorCopy.generateLesson,
-              ),
-            ],
-            const SizedBox(height: 24),
-            if (_generationFailed)
-              _AppRetryButton(
-                key: const Key('lesson-generation-retry'),
-                onPressed: _generateLesson,
-              )
-            else
-              FilledButton.icon(
-                onPressed: _generating ? null : _generateLesson,
-                icon: _generating
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome),
-                label: Text(
-                  _generating ? 'Generating lesson…' : 'Generate lesson',
+              ],
+              const SizedBox(height: 24),
+              if (_generationFailed)
+                _AppRetryButton(
+                  key: const Key('lesson-generation-retry'),
+                  onPressed: _generateLesson,
+                )
+              else
+                FilledButton.icon(
+                  onPressed: _generating ? null : _generateLesson,
+                  icon: _generating
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(
+                    _generating ? 'Generating lesson…' : 'Generate lesson',
+                  ),
                 ),
-              ),
+            ],
           ],
         ),
       ),
@@ -974,15 +1033,18 @@ class _LessonsPageState extends State<LessonsPage> {
         retryKey: const Key('lesson-library-retry'),
       );
     }
-    if (_topics.isEmpty) {
+    if (_modeTopics.isEmpty) {
       return _LessonLibraryStateCard(
         key: Key('lesson-library-empty-state'),
         accent: AppColors.teal,
         icon: Icon(Icons.menu_book_outlined, size: 30, color: AppColors.teal),
-        title: 'No saved lessons yet',
-        message:
-            'Choose a topic below to create your first lesson. It will appear '
-            'here when you’re ready to return to it.',
+        title: _sentenceMode
+            ? 'No sentence decks available'
+            : 'No saved lessons yet',
+        message: _sentenceMode
+            ? 'Reopen Lessons after restoring your bundled content.'
+            : 'Choose a topic below to create your first lesson. It will appear '
+                  'here when you’re ready to return to it.',
       );
     }
 
@@ -995,7 +1057,9 @@ class _LessonsPageState extends State<LessonsPage> {
           onChanged: (_) => setState(() {}),
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Search lesson titles, topics, or HSK levels',
+            hintText: _sentenceMode
+                ? 'Search sentence topics'
+                : 'Search lesson titles, topics, or HSK levels',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _lessonSearchController.text.isEmpty
                 ? null
@@ -1017,27 +1081,28 @@ class _LessonsPageState extends State<LessonsPage> {
           ),
         ),
         const SizedBox(height: 14),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          key: const Key('lesson-library-level-filter'),
-          child: Row(
-            children: [
-              _LevelChip(
-                label: 'All levels',
-                selected: _libraryHskFilter == null,
-                onSelected: () => setState(() => _libraryHskFilter = null),
-              ),
-              for (var level = 1; level <= 6; level++) ...[
-                const SizedBox(width: 8),
+        if (!_sentenceMode)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            key: const Key('lesson-library-level-filter'),
+            child: Row(
+              children: [
                 _LevelChip(
-                  label: 'HSK $level',
-                  selected: _libraryHskFilter == level,
-                  onSelected: () => setState(() => _libraryHskFilter = level),
+                  label: 'All levels',
+                  selected: _libraryHskFilter == null,
+                  onSelected: () => setState(() => _libraryHskFilter = null),
                 ),
+                for (var level = 1; level <= 6; level++) ...[
+                  const SizedBox(width: 8),
+                  _LevelChip(
+                    label: 'HSK $level',
+                    selected: _libraryHskFilter == level,
+                    onSelected: () => setState(() => _libraryHskFilter = level),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
         const SizedBox(height: 14),
         if (_visibleTopics.isEmpty &&
             _lessonSearchController.text.trim().isNotEmpty)
@@ -1111,7 +1176,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   const SizedBox(height: 5),
                   Text(
                     '${_session?.cardsReviewed ?? 0} of '
-                    '${_cards.length} words completed',
+                    '${_cards.length} ${_lessonIsSentence ? 'sentences' : 'words'} completed',
                     style: TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
                 ],
@@ -1146,6 +1211,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 itemBuilder: (context, index) => _LessonFlashcard(
                   key: ValueKey('lesson-card-${_cards[index].id}'),
                   card: _cards[index],
+                  isSentence: _lessonIsSentence,
                   index: index,
                   total: _cards.length,
                   alreadyRated:
@@ -1159,8 +1225,10 @@ class _LessonsPageState extends State<LessonsPage> {
       if (_session?.isComplete != true)
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            runSpacing: 8,
             children: [
               OutlinedButton.icon(
                 onPressed: _savingAnswer || _currentCard == 0
@@ -1169,7 +1237,6 @@ class _LessonsPageState extends State<LessonsPage> {
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Previous'),
               ),
-              const SizedBox(width: 16),
               FilledButton.icon(
                 onPressed: _savingAnswer || _currentCard >= _cards.length - 1
                     ? null
@@ -1238,12 +1305,16 @@ class _LessonsPageState extends State<LessonsPage> {
                       ),
                       _SummaryStat(
                         icon: Icons.school_outlined,
-                        label: 'Learned words',
+                        label: _lessonIsSentence
+                            ? 'Learned sentences'
+                            : 'Learned words',
                         value: '${_learnedCardIds.length}',
                       ),
                       _SummaryStat(
                         icon: Icons.replay_outlined,
-                        label: 'Review words',
+                        label: _lessonIsSentence
+                            ? 'Review sentences'
+                            : 'Review words',
                         value: '${_reviewCardIds.length}',
                       ),
                       _SummaryStat(
@@ -1423,7 +1494,7 @@ class _LessonLibraryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    summary.title,
+                    summary.isSentencePractice ? summary.theme : summary.title,
                     style: TextStyle(
                       color: AppColors.text,
                       fontWeight: FontWeight.w600,
@@ -1431,7 +1502,9 @@ class _LessonLibraryCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${summary.theme} · HSK ${summary.hskLevel}',
+                    summary.isSentencePractice
+                        ? '10 sentences · Everyday Mandarin'
+                        : '${summary.theme} · HSK ${summary.hskLevel}',
                     style: TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
                 ],
@@ -1458,7 +1531,9 @@ class _LessonFlashcard extends StatefulWidget {
     required this.alreadyRated,
     required this.onRated,
     required this.onSpeak,
+    this.isSentence = false,
   });
+  final bool isSentence;
   final Flashcard card;
   final int index;
   final int total;
@@ -1565,7 +1640,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'serif',
-          fontSize: 64,
+          fontSize: widget.isSentence ? 32 : 64,
           color: AppColors.text,
         ),
       ),
@@ -1584,6 +1659,14 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     key: key,
     children: [
       const Spacer(),
+      if (widget.isSentence) ...[
+        Text(
+          widget.card.chinese,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 24, color: AppColors.text),
+        ),
+        const SizedBox(height: 16),
+      ],
       Text(
         widget.card.pinyin,
         textAlign: TextAlign.center,
@@ -1624,12 +1707,32 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
           ),
       ],
       const Spacer(),
-      OutlinedButton(
-        onPressed: _submitting || _rated || _ratingError != null
-            ? null
-            : () => _rate(ReviewRating.easy),
-        child: const Text('Click if you are already familiar with this word'),
-      ),
+      if (widget.isSentence)
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (rating, label) in [
+              (ReviewRating.again, 'Again'),
+              (ReviewRating.good, 'Good'),
+              (ReviewRating.easy, 'Easy'),
+            ])
+              OutlinedButton(
+                onPressed: _submitting || _rated || _ratingError != null
+                    ? null
+                    : () => _rate(rating),
+                child: Text(label),
+              ),
+          ],
+        )
+      else
+        OutlinedButton(
+          onPressed: _submitting || _rated || _ratingError != null
+              ? null
+              : () => _rate(ReviewRating.easy),
+          child: const Text('Click if you are already familiar with this word'),
+        ),
       if (_ratingError != null) ...[
         const SizedBox(height: 8),
         _AppInlineError(
@@ -1643,32 +1746,51 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     ],
   );
 
-  Widget _cardSide({required Key key, required List<Widget> children}) =>
-      Padding(
-        key: key,
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                '${widget.index + 1} / ${widget.total}',
-                style: TextStyle(color: AppColors.muted),
-              ),
+  Widget _cardSide({required Key key, required List<Widget> children}) {
+    final side = Padding(
+      padding: EdgeInsets.all(widget.isSentence ? 20 : 32),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${widget.index + 1} / ${widget.total}',
+              style: TextStyle(color: AppColors.muted),
             ),
-            ...children,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.flip, size: 18, color: AppColors.muted),
-                const SizedBox(width: 8),
-                Text(
-                  _showAnswer ? 'Tap for word' : 'Tap for answer',
+          ),
+          ...children,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.flip, size: 18, color: AppColors.muted),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  textAlign: TextAlign.center,
+                  _showAnswer
+                      ? (widget.isSentence
+                            ? 'Tap for sentence'
+                            : 'Tap for word')
+                      : 'Tap for answer',
                   style: TextStyle(color: AppColors.muted),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    if (!widget.isSentence) return KeyedSubtree(key: key, child: side);
+    // Sentence answers can be several lines long, particularly on phones or
+    // with large accessibility text. Keep ratings reachable by scrolling.
+    return LayoutBuilder(
+      key: key,
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: IntrinsicHeight(child: side),
         ),
-      );
+      ),
+    );
+  }
 }

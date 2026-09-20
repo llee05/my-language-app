@@ -161,8 +161,12 @@ void main() {
         expect(await _rowCount(db, 'review_history'), 0);
         expect(await _rowCount(db, 'card_progress'), 0);
         expect(await _rowCount(db, 'daily_review_sessions'), 0);
-        expect(await _rowCount(db, 'lessons'), flashcardLessons.length);
-        expect(await _rowCount(db, 'cards'), expectedCardCount);
+        expect(await _rowCount(db, 'lessons'), flashcardLessons.length + 10);
+        expect(await _rowCount(db, 'cards'), expectedCardCount + 100);
+        expect(
+          await db.query('lessons', where: 'is_sentence_practice = 1'),
+          hasLength(10),
+        );
         expect(
           await db.query(
             'content_migrations',
