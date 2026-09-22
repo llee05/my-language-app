@@ -112,17 +112,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
       await _pronunciationService.speakMandarin(card['chinese'] as String);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            error is MandarinVoiceUnavailableException
-                ? 'No Chinese voice found on this device. Install a Mandarin '
-                      'text-to-speech voice in your system settings.'
-                : 'Mandarin audio is unavailable. Check your device '
-                      'text-to-speech voices.',
-          ),
-        ),
-      );
+      _showPronunciationError(context, _pronunciationService, error);
     }
   }
 

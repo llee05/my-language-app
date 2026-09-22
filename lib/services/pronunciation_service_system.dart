@@ -1,9 +1,40 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'pronunciation_service.dart';
 
 PronunciationService createPlatformPronunciationService() =>
     SystemPronunciationService();
+
+PronunciationService createPlatformSystemPronunciationService() =>
+    SystemPronunciationService();
+
+class AndroidSystemPronunciationService extends SystemPronunciationService
+    implements SystemVoiceInstaller {
+  AndroidSystemPronunciationService({super.tts});
+
+  static const _channel = MethodChannel('tingshuo/system_voice');
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() async {
+    if (_disposed) return false;
+    final installed = await _tts.isLanguageInstalled('zh-CN');
+    if (installed is! bool) {
+      throw StateError('The speech engine did not report voice availability.');
+    }
+    return installed;
+  }
+
+  @override
+  Future<void> openMandarinVoiceInstaller() async {
+    if (_disposed) return;
+    final engine = await _tts.getDefaultEngine;
+    if (_disposed) return;
+    await _channel.invokeMethod<void>('installVoiceData', {
+      'engine': engine is String ? engine : null,
+    });
+  }
+}
 
 class SystemPronunciationService
     implements PronunciationService, PlaybackRatePronunciationService {

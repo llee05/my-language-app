@@ -1,5 +1,4 @@
 import 'pronunciation_service.dart';
-import 'pronunciation_service_system.dart';
 import 'pronunciation_service_system.dart'
     if (dart.library.io) 'pronunciation_service_native.dart'
     as platform;
@@ -10,4 +9,4 @@ PronunciationService createDefaultPronunciationService() =>
     platform.createPlatformPronunciationService();
 
 PronunciationService createSystemPronunciationService() =>
-    SystemPronunciationService();
+    platform.createPlatformSystemPronunciationService();

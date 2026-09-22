@@ -42,6 +42,7 @@ part 'core/widgets/app_sidebar.dart';
 part 'core/widgets/button_animation.dart';
 part 'core/widgets/push_to_talk_button.dart';
 part 'core/widgets/shared_widgets.dart';
+part 'core/widgets/system_voice_setup.dart';
 part 'features/ai_tutor/ai_tutor_page.dart';
 part 'features/ai_tutor/ai_listening_dialogue.dart';
 part 'features/ai_tutor/ai_roleplay_missions.dart';

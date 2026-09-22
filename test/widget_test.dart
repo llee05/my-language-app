@@ -3638,6 +3638,85 @@ void main() {
     expect(find.text('Settings saved.'), findsOneWidget);
   });
 
+  testWidgets(
+    'Android voice setup rechecks on return without assuming installation',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final pronunciation = _FakeSystemVoiceService();
+      addTearDown(pronunciation.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SettingsPage(
+              appThemeId: AppThemeId.classic,
+              onThemeChanged: (_) {},
+              profile: testProfile,
+              onProfileChanged: (_) async {},
+              onResetOnboarding: () async {},
+              onResetAllData: () async {},
+              developmentRepository: _MemoryDevelopmentRepository(),
+              settingsRepository: _MemorySettingsRepository(),
+              pronunciationService: pronunciation,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final install = find.byKey(const Key('system-voice-install'));
+      await tester.scrollUntilVisible(
+        install,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await Scrollable.ensureVisible(tester.element(install), alignment: .5);
+      await tester.pumpAndSettle();
+      await tester.tap(install);
+      await tester.pumpAndSettle();
+      expect(pronunciation.openCalls, 1);
+      expect(install, findsOneWidget);
+      expect(find.text('Offline Mandarin voices'), findsNothing);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(install, findsOneWidget); // Cancelled download.
+
+      pronunciation.failOpen = true;
+      await Scrollable.ensureVisible(tester.element(install), alignment: .5);
+      await tester.pumpAndSettle();
+      await tester.tap(install);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('system-voice-error')), findsOneWidget);
+
+      pronunciation.failCheck = true;
+      await Scrollable.ensureVisible(
+        tester.element(find.byKey(const Key('system-voice-check'))),
+        alignment: .5,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('system-voice-check')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Could not check the Mandarin voice. Try again.'),
+        findsOneWidget,
+      );
+
+      pronunciation.failCheck = false;
+      pronunciation.installed = true;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Mandarin voice installed for offline speech.'),
+        findsOneWidget,
+      );
+      expect(install, findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('settings installs the offline voice without manual files', (
     tester,
   ) async {
@@ -4983,4 +5062,28 @@ class _JourneyReviewRepository
 
   @override
   Future<List<VocabularyCardProgress>> vocabularyProgress() async => const [];
+}
+
+class _FakeSystemVoiceService extends _FakePronunciationService
+    implements SystemVoiceInstaller {
+  bool installed = false;
+  bool failOpen = false;
+  bool failCheck = false;
+  int openCalls = 0;
+
+  @override
+  Future<OfflineVoiceStatus> checkOfflineVoice() async =>
+      const OfflineVoiceStatus.unavailable();
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() async {
+    if (failCheck) throw StateError('Speech engine unavailable');
+    return installed;
+  }
+
+  @override
+  Future<void> openMandarinVoiceInstaller() async {
+    openCalls++;
+    if (failOpen) throw StateError('No installer');
+  }
 }

@@ -4,6 +4,14 @@ import '../models/learning_progress.dart';
 
 enum OfflineVoiceState { unavailable, notInstalled, downloading, ready, failed }
 
+/// System voice installation is managed by the device's speech engine.
+abstract interface class SystemVoiceInstaller {
+  Future<bool> isMandarinVoiceInstalled();
+
+  /// Opens the installer; completion does not mean voice data was installed.
+  Future<void> openMandarinVoiceInstaller();
+}
+
 const kokoroOfflineVoiceDownloadBytes = 147031220;
 
 class OfflineVoiceStatus {

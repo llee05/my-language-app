@@ -10,6 +10,15 @@ exclude a published plugin's native libraries per platform through
 105 MB of `.so` files) are replaced by the empty FFI-plugin stubs in this
 directory via `dependency_overrides` in the root `pubspec.yaml`.
 
+Android users can open **Settings → Mandarin voice → Install Mandarin voice**
+(or **Install voice** after a missing-voice playback error). TingShuo opens the
+selected speech engine's voice-data installer, falling back to Android settings
+if the engine has no installer. Select Chinese (Mandarin / China) there. Downloads
+are managed by the device's speech engine and may require user interaction and
+internet access; opening the installer does not mean installation succeeded.
+The app rechecks installed `zh-CN` voice data when it resumes, and **Check again**
+handles downloads that finish later. No Kokoro libraries are needed for this flow.
+
 Each stub is a valid Android library plugin with no `jniLibs`, so the Gradle
 plugin loader still finds a well-formed module for the `sherpa_onnx` plugin
 graph while nothing native is packaged into the APK. iOS, Linux, macOS, and

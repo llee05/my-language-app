@@ -350,6 +350,9 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     } catch (error) {
       debugPrint('Listening practice pronunciation failed: $error');
       if (!mounted || requestId != _audioRequestId) return;
+      if (error is MandarinVoiceUnavailableException) {
+        _showPronunciationError(context, _pronunciationService, error);
+      }
       setState(() {
         _audioError = error is MandarinVoiceUnavailableException
             ? 'No Mandarin voice is installed on this device.'

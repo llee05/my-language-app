@@ -250,6 +250,28 @@ void main() {
     expect(pronunciation.disposeCalls, 0);
   });
 
+  testWidgets('missing Mandarin speech offers the system voice installer', (
+    tester,
+  ) async {
+    final pronunciation = _MissingSystemVoiceService();
+    addTearDown(pronunciation.dispose);
+    await pumpPage(tester, pronunciationService: pronunciation);
+    await tester.tap(find.text('你好'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Hear word pronunciation'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Install voice'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await tester.tap(find.byKey(const Key('system-voice-install')));
+    await tester.pumpAndSettle();
+    expect(pronunciation.openCalls, 1);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('你好，很高兴认识你。'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('word details respect the disabled sound preference', (
     tester,
   ) async {
@@ -341,4 +363,19 @@ class _FakePronunciationService implements PronunciationService {
 
   @override
   Future<void> dispose() async => disposeCalls++;
+}
+
+class _MissingSystemVoiceService extends _FakePronunciationService
+    implements SystemVoiceInstaller {
+  int openCalls = 0;
+
+  @override
+  Future<void> speakMandarin(String text) async =>
+      throw const MandarinVoiceUnavailableException();
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() async => false;
+
+  @override
+  Future<void> openMandarinVoiceInstaller() async => openCalls++;
 }

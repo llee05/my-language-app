@@ -698,6 +698,17 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        if (_pronunciationService is SystemVoiceInstaller) ...[
+          const SizedBox(height: 20),
+          _SettingsCard(
+            title: 'Mandarin voice',
+            subtitle:
+                'Android provides pronunciation through your device’s speech engine.',
+            child: _SystemVoiceSetup(
+              installer: _pronunciationService as SystemVoiceInstaller,
+            ),
+          ),
+        ],
         if (_shouldShowOfflineVoiceCard) ...[
           const SizedBox(height: 20),
           _SettingsCard(
