@@ -633,7 +633,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(),
               const SizedBox(height: 18),
               Text(
-                'Button animation',
+                'Button animation (ignore this it doesn't really work)',
                 style: TextStyle(
                   color: AppColors.text,
                   fontWeight: FontWeight.w600,
