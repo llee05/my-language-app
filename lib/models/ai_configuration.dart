@@ -9,7 +9,11 @@ enum AiProvider {
     'https://api.openai.com/v1/chat/completions',
     'gpt-4.1-mini',
   ),
-  anthropic('Anthropic / Claude', 'https://api.anthropic.com/v1/messages', ''),
+  anthropic(
+    'Anthropic / Claude',
+    'https://api.anthropic.com/v1/messages',
+    'claude-haiku-4-5-20251001',
+  ),
   custom('Other / OpenAI-compatible', '', '');
 
   const AiProvider(this.label, this.endpoint, this.defaultModel);
@@ -17,6 +21,31 @@ enum AiProvider {
   final String label;
   final String endpoint;
   final String defaultModel;
+
+  Uri? get keyCreationUrl => switch (this) {
+    gemini => Uri.parse('https://aistudio.google.com/apikey'),
+    openai => Uri.parse('https://platform.openai.com/api-keys'),
+    anthropic => Uri.parse('https://platform.claude.com/settings/keys'),
+    custom => null,
+  };
+
+  String get keySetupInstructions => switch (this) {
+    gemini =>
+      'Sign in to Google AI Studio with your Google account. '
+          'Copy an existing API key, or choose Create API key and follow the project prompts. '
+          'Return here to paste it. Free access is available for selected models, with usage limits.',
+    openai =>
+      'Sign in to the OpenAI developer platform. Create a secret API key '
+          'for your project, copy it, then return here. Check API billing and available credit '
+          'in your provider account before testing.',
+    anthropic =>
+      'Sign in to the Claude Console. In Settings → API keys, create '
+          'a key scoped to one workspace and copy it. Return here to paste it. '
+          'Check API billing and available credit before testing.',
+    custom =>
+      'Get a key from your provider’s own website. Under Advanced, enter '
+          'its full HTTPS Chat Completions endpoint and a text/chat model ID.',
+  };
 }
 
 class AiConfiguration {

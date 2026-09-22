@@ -1,17 +1,23 @@
 part of '../../main.dart';
 
 typedef AiConnectionTest = Future<void> Function(AiConfiguration configuration);
+typedef AiSetupLinkOpener = Future<bool> Function(Uri uri);
+
+Future<bool> _openAiSetupLink(Uri uri) =>
+    launchUrl(uri, mode: LaunchMode.externalApplication);
 
 class AiSettingsCard extends StatefulWidget {
   const AiSettingsCard({
     super.key,
     required this.repository,
     this.testConnection,
+    this.openSetupLink = _openAiSetupLink,
     this.enabled = true,
   });
 
   final AiConfigurationRepository repository;
   final AiConnectionTest? testConnection;
+  final AiSetupLinkOpener openSetupLink;
   final bool enabled;
 
   @override
@@ -30,6 +36,8 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
   bool _loadFailed = false;
   bool _busy = false;
   bool _showKey = false;
+  bool _showAdvanced = false;
+  bool _setupSkipped = false;
   String? _error;
   String? _notice;
 
@@ -64,6 +72,7 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
       setState(() {
         _saved = saved;
         _provider = saved?.provider ?? AiProvider.gemini;
+        _showAdvanced = _provider == AiProvider.custom;
         _endpointController.text = saved?.customEndpoint ?? '';
         _modelController.text = saved?.model ?? AiProvider.gemini.defaultModel;
       });
@@ -104,19 +113,29 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
     final configuration = _draft();
     if (configuration == null) return;
     await _perform(() async {
-      await widget.repository.save(configuration);
-      if (!mounted) return;
-      setState(() {
-        _saved = configuration;
-        _keyController.clear();
-        _showKey = false;
-        _modelController.text = configuration.model;
-        _notice = 'AI settings saved. Your next AI request will use them.';
-      });
+      await _saveConfiguration(configuration);
     }, 'Your API key could not be saved securely. Please try again.');
   }
 
-  Future<void> _test() async {
+  Future<void> _saveConfiguration(AiConfiguration configuration) async {
+    try {
+      await widget.repository.save(configuration);
+    } catch (_) {
+      throw const AiConfigurationException(
+        'Your API key could not be saved securely. Please try again.',
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      _saved = configuration;
+      _keyController.clear();
+      _showKey = false;
+      _modelController.text = configuration.model;
+      _notice = 'AI settings saved. Your next AI request will use them.';
+    });
+  }
+
+  Future<void> _test({bool saveOnSuccess = false}) async {
     if (!_canEdit) return;
     final configuration = _draft();
     if (configuration == null) return;
@@ -134,7 +153,15 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
             temperature: 0,
           );
         }
-        if (mounted) {
+        if (!mounted) return;
+        if (saveOnSuccess) {
+          await _saveConfiguration(configuration);
+          if (!mounted) return;
+          setState(
+            () =>
+                _notice = 'Connection successful. AI settings saved securely.',
+          );
+        } else {
           setState(
             () => _notice = 'Connection successful. Save to keep any changes.',
           );
@@ -142,6 +169,58 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
       },
       'The connection test failed. Check your key, model, and internet connection.',
     );
+  }
+
+  Future<void> _openKeyPage() async {
+    if (!_canEdit) return;
+    final uri = _provider.keyCreationUrl;
+    if (uri == null) return;
+    await _perform(
+      () async {
+        if (!await widget.openSetupLink(uri)) {
+          throw StateError('Browser unavailable');
+        }
+        if (mounted) {
+          setState(
+            () => _notice =
+                'Create or copy your key in the browser, then return here to paste it.',
+          );
+        }
+      },
+      'Could not open your browser. Copy the provider address shown here and open it manually.',
+    );
+  }
+
+  Future<void> _pasteKey() async {
+    if (!_canEdit) return;
+    await _perform(() async {
+      final text = (await Clipboard.getData(
+        Clipboard.kTextPlain,
+      ))?.text?.trim();
+      if (!mounted) return;
+      if (text == null || text.isEmpty) {
+        setState(
+          () => _error = 'Your clipboard has no text. Copy your API key first.',
+        );
+        return;
+      }
+      setState(() {
+        _keyController.text = text;
+        _showKey = false;
+        _notice = 'Key pasted. Test and save when you are ready.';
+      });
+    }, 'Could not read the clipboard. Paste or type your key into the field.');
+  }
+
+  void _skipSetup() {
+    if (!_canEdit || _saved != null) return;
+    setState(() {
+      _keyController.clear();
+      _showKey = false;
+      _error = null;
+      _notice = null;
+      _setupSkipped = true;
+    });
   }
 
   Future<void> _remove() async {
@@ -157,6 +236,7 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
         _keyController.clear();
         _modelController.text = AiProvider.gemini.defaultModel;
         _showKey = false;
+        _showAdvanced = false;
         _notice = 'Your saved API key was removed from this device.';
       });
     }, 'Your API key could not be removed. Please try again.');
@@ -194,10 +274,15 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
     _notice = null;
   });
 
+  Widget _stepTitle(String title) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+  );
+
   @override
   Widget build(BuildContext context) => _SettingsCard(
     title: 'AI provider',
-    subtitle: 'Use your own API key for the tutor and lesson examples.',
+    subtitle: 'Set up optional AI for the tutor and lesson examples.',
     child: _loading
         ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
         : _loadFailed
@@ -222,6 +307,22 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
                 Text(_error!, style: TextStyle(color: AppColors.red)),
             ],
           )
+        : _setupSkipped
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'AI setup skipped. Lessons and review still work without AI.',
+              ),
+              TextButton(
+                key: const Key('ai-setup-resume'),
+                onPressed: _canEdit
+                    ? () => setState(() => _setupSkipped = false)
+                    : null,
+                child: const Text('Set up AI'),
+              ),
+            ],
+          )
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -231,6 +332,11 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
                 'Lessons and review still work without AI.',
               ),
               const SizedBox(height: 16),
+              _stepTitle('1. Choose a provider'),
+              const Text(
+                'New to AI? Google Gemini is a suggested starting point.',
+              ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<AiProvider>(
                 key: ValueKey('ai-provider-${_provider.name}'),
                 initialValue: _provider,
@@ -252,6 +358,7 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
                           _modelController.text = provider.defaultModel;
                           _endpointController.clear();
                           _showKey = false;
+                          _showAdvanced = provider == AiProvider.custom;
                           _error = null;
                           _notice = null;
                         });
@@ -259,33 +366,23 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
                     : null,
               ),
               const SizedBox(height: 16),
-              if (_provider == AiProvider.custom) ...[
-                TextField(
-                  key: const Key('ai-endpoint'),
-                  controller: _endpointController,
-                  enabled: _canEdit,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  keyboardType: TextInputType.url,
-                  onChanged: (value) {
-                    _keyController.clear();
-                    _edited(value);
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Chat completions endpoint',
-                    hintText: 'https://provider.example/v1/chat/completions',
-                  ),
-                ),
+              _stepTitle('2. Get your API key'),
+              Text(_provider.keySetupInstructions),
+              if (_provider.keyCreationUrl != null) ...[
                 const SizedBox(height: 8),
-                const Text(
-                  'Use an OpenAI-compatible HTTPS endpoint you trust. '
-                  'Your key will be sent to this address.',
+                OutlinedButton.icon(
+                  key: const Key('ai-get-key'),
+                  onPressed: _canEdit ? _openKeyPage : null,
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Get an API key'),
                 ),
-                const SizedBox(height: 16),
-              ] else ...[
-                Text('Requests go to ${Uri.parse(_provider.endpoint).host}.'),
-                const SizedBox(height: 16),
+                SelectableText(
+                  _provider.keyCreationUrl.toString(),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
+              const SizedBox(height: 16),
+              _stepTitle('3. Paste your key'),
               Text(
                 _saved == null
                     ? 'No personal key saved.'
@@ -321,35 +418,108 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                key: const Key('ai-model'),
-                controller: _modelController,
-                enabled: _canEdit,
-                autocorrect: false,
-                enableSuggestions: false,
-                onChanged: _edited,
-                decoration: InputDecoration(
-                  labelText: 'Model ID',
-                  hintText: _provider.defaultModel.isEmpty
-                      ? 'Enter a text model from your provider'
-                      : _provider.defaultModel,
-                ),
+              OutlinedButton.icon(
+                key: const Key('ai-paste-key'),
+                onPressed: _canEdit ? _pasteKey : null,
+                icon: const Icon(Icons.content_paste),
+                label: const Text('Paste key'),
               ),
               const SizedBox(height: 16),
+              TextButton.icon(
+                key: const Key('ai-advanced'),
+                onPressed: _canEdit
+                    ? () => setState(() => _showAdvanced = !_showAdvanced)
+                    : null,
+                icon: Icon(
+                  _showAdvanced ? Icons.expand_less : Icons.expand_more,
+                ),
+                label: const Text('Advanced'),
+              ),
+              if (_showAdvanced) ...[
+                if (_provider == AiProvider.custom) ...[
+                  TextField(
+                    key: const Key('ai-endpoint'),
+                    controller: _endpointController,
+                    enabled: _canEdit,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    keyboardType: TextInputType.url,
+                    onChanged: (value) {
+                      _keyController.clear();
+                      _edited(value);
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Chat completions endpoint',
+                      hintText: 'https://provider.example/v1/chat/completions',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Use an OpenAI-compatible HTTPS endpoint you trust. '
+                    'Your key will be sent to this address.',
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                TextField(
+                  key: const Key('ai-model'),
+                  controller: _modelController,
+                  enabled: _canEdit,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  onChanged: _edited,
+                  decoration: InputDecoration(
+                    labelText: 'Model ID',
+                    hintText: _provider.defaultModel.isEmpty
+                        ? 'Enter a text model from your provider'
+                        : _provider.defaultModel,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton(
+                      key: const Key('ai-save'),
+                      onPressed: _canEdit ? _save : null,
+                      child: const Text('Save without testing'),
+                    ),
+                    OutlinedButton(
+                      key: const Key('ai-test'),
+                      onPressed: _canEdit ? () => _test() : null,
+                      child: const Text('Test connection'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Saving without testing stays on this device. Test connection sends a small request without saving.',
+                ),
+                const SizedBox(height: 16),
+              ],
+              _stepTitle('4. Test and save'),
+              const Text(
+                'This sends a small request to your provider and uses your API allowance; '
+                'charges may apply. Your key is saved securely on this device only after a successful test.',
+              ),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   FilledButton(
-                    key: const Key('ai-save'),
-                    onPressed: _canEdit ? _save : null,
-                    child: const Text('Save AI settings'),
+                    key: const Key('ai-test-save'),
+                    onPressed: _canEdit
+                        ? () => _test(saveOnSuccess: true)
+                        : null,
+                    child: const Text('Test and save'),
                   ),
-                  OutlinedButton(
-                    key: const Key('ai-test'),
-                    onPressed: _canEdit ? _test : null,
-                    child: const Text('Test connection'),
-                  ),
+                  if (_saved == null)
+                    TextButton(
+                      key: const Key('ai-skip'),
+                      onPressed: _canEdit ? _skipSetup : null,
+                      child: const Text('Skip — continue without AI'),
+                    ),
                   if (_saved != null)
                     TextButton(
                       key: const Key('ai-remove'),

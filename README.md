@@ -131,13 +131,28 @@ one is available. Kokoro uses the Apache-2.0-licensed
 
 Open **Settings → AI provider** to configure AI without rebuilding the app:
 
-1. Select your provider and paste your personal API key.
-2. Enter a text/chat model ID available to your provider account. Gemini and
-   OpenAI have editable defaults; other providers require a model ID.
-3. Select **Save AI settings**. The next tutor or lesson-generation request uses
-   the saved configuration. Saving itself does not contact the provider.
-4. Optionally select **Test connection** to make a small request with the values
-   in the form. This uses your API allowance and does not save changes.
+1. Choose a provider. Gemini is suggested for new users; Gemini, OpenAI, and
+   Claude have preset text models.
+2. Select **Get an API key** to open the provider's official key page in your
+   browser. Follow the on-screen instructions, then return to TingShuo.
+3. Select **Paste key**, or paste/type into the masked API key field. The app
+   reads the clipboard only when you select **Paste key**.
+4. Select **Test and save**. This sends a small request using your API allowance
+   (charges may apply), then saves the key securely only if the test succeeds.
+   Failed tests keep your draft and leave previously saved settings unchanged.
+
+**Advanced** contains the editable model ID and custom HTTPS endpoint, along
+with **Save without testing** (local storage only) and **Test connection**
+(a request without saving). Custom providers need both an endpoint and model ID.
+**Skip — continue without AI** dismisses setup and discards the unsaved key;
+lessons and review remain available. You can reopen setup from Settings.
+
+The setup pages are [Google AI Studio](https://aistudio.google.com/apikey),
+[OpenAI API keys](https://platform.openai.com/api-keys), and
+[Claude Console API keys](https://platform.claude.com/settings/keys). Review the
+provider's billing and quota information before making requests. Gemini's free
+access applies to selected models and has usage limits. Claude defaults to
+`claude-haiku-4-5-20251001`; existing saved model choices are preserved.
 
 When you send a tutor message, the request also includes a bounded snapshot of
 your locally saved HSK level, studied vocabulary, weak and due words, recent

@@ -4,7 +4,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, Clipboard;
+import 'package:url_launcher/url_launcher.dart';
 
 import 'database/flashcard_seed.dart';
 import 'database/vocabulary_content.dart';

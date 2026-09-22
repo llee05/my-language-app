@@ -131,12 +131,18 @@ class GeminiService {
           response.bodyBytes,
         );
         throw switch (response.statusCode) {
-          400 || 401 || 403 || 404 => GeminiConfigurationException(
+          401 => GeminiConfigurationException(
+            'The API key was rejected. Copy a new key from Google AI Studio and try again.$detail',
+          ),
+          402 => GeminiConfigurationException(
+            'Gemini requires API credit or billing setup. Check billing in Google AI Studio.$detail',
+          ),
+          400 || 403 || 404 => GeminiConfigurationException(
             'Gemini could not accept this configuration. '
             'Check the API key, model, and API access.$detail',
           ),
           429 => GeminiRequestException(
-            'Gemini’s usage limit was reached. Please try again later.$detail',
+            'Gemini’s usage limit was reached. Please try again later, or check your model’s quota and billing in Google AI Studio.$detail',
           ),
           _ => GeminiRequestException(
             'Gemini is unavailable right now. Please try again later.$detail',

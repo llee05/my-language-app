@@ -245,7 +245,7 @@ void main() {
     }
   });
 
-  for (final status in [400, 401, 403, 404, 429, 500, 503]) {
+  for (final status in [400, 401, 402, 403, 404, 429, 500, 503]) {
     test(
       'HTTP $status is actionable and does not expose the API body',
       () async {

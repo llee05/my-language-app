@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/ai/ai_errors.dart';
 import 'package:mylanguageapp/main.dart';
@@ -12,6 +13,8 @@ Future<void> _pump(
   WidgetTester tester,
   MemoryAiConfigurationRepository repository, {
   AiConnectionTest? testConnection,
+  AiSetupLinkOpener? openSetupLink,
+  bool advanced = true,
   Size size = const Size(600, 1100),
   double scale = 1,
 }) async {
@@ -28,6 +31,7 @@ Future<void> _pump(
               child: AiSettingsCard(
                 repository: repository,
                 testConnection: testConnection,
+                openSetupLink: openSetupLink ?? (_) async => true,
               ),
             ),
           ),
@@ -36,11 +40,22 @@ Future<void> _pump(
     ),
   );
   await tester.pumpAndSettle();
+  if (advanced &&
+      find.byKey(const Key('ai-model')).evaluate().isEmpty &&
+      find.byKey(const Key('ai-advanced')).evaluate().isNotEmpty) {
+    await _tap(tester, 'ai-advanced');
+  }
 }
 
 Future<void> _tap(WidgetTester tester, String key) async {
+  if ((key == 'ai-save' || key == 'ai-test') &&
+      find.byKey(Key(key)).evaluate().isEmpty) {
+    await _tap(tester, 'ai-advanced');
+  }
   final finder = find.byKey(Key(key));
-  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await Scrollable.ensureVisible(tester.element(finder), alignment: .5);
+  await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
@@ -57,6 +72,264 @@ Future<void> _select(WidgetTester tester, AiProvider provider) async {
 }
 
 void main() {
+  testWidgets('guided setup opens official key pages only on request', (
+    tester,
+  ) async {
+    final opened = <Uri>[];
+    final repository = MemoryAiConfigurationRepository();
+    var requests = 0;
+    await _pump(
+      tester,
+      repository,
+      advanced: false,
+      openSetupLink: (uri) async {
+        opened.add(uri);
+        return true;
+      },
+      testConnection: (_) async => requests++,
+    );
+    expect(find.byKey(const Key('ai-model')), findsNothing);
+    expect(opened, isEmpty);
+    for (final provider in [
+      AiProvider.gemini,
+      AiProvider.openai,
+      AiProvider.anthropic,
+    ]) {
+      if (provider != AiProvider.gemini) await _select(tester, provider);
+      await _tap(tester, 'ai-get-key');
+      expect(opened.last, provider.keyCreationUrl);
+      expect(opened.last.query, isEmpty);
+    }
+    expect(opened.map((uri) => uri.host), [
+      'aistudio.google.com',
+      'platform.openai.com',
+      'platform.claude.com',
+    ]);
+    await _select(tester, AiProvider.custom);
+    expect(find.byKey(const Key('ai-get-key')), findsNothing);
+    expect(find.byKey(const Key('ai-endpoint')), findsOneWidget);
+    expect(requests, 0);
+    expect(repository.saves, isEmpty);
+  });
+
+  testWidgets(
+    'browser failure provides a copyable address without exposing errors',
+    (tester) async {
+      await _pump(
+        tester,
+        MemoryAiConfigurationRepository(),
+        advanced: false,
+        openSetupLink: (_) async => false,
+      );
+      await _tap(tester, 'ai-get-key');
+      expect(
+        find.textContaining('Could not open your browser'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(
+          SelectableText,
+          'https://aistudio.google.com/apikey',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'clipboard is read only on tap, trims keys, and handles empty data',
+    (tester) async {
+      var reads = 0;
+      String? clipboard = '  pasted-key  ';
+      var fail = false;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.getData') {
+            reads++;
+            if (fail) {
+              throw PlatformException(
+                code: 'denied',
+                message: 'private clipboard',
+              );
+            }
+            return clipboard == null ? null : {'text': clipboard};
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await _pump(tester, MemoryAiConfigurationRepository(), advanced: false);
+      expect(reads, 0);
+      await _tap(tester, 'ai-paste-key');
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('ai-api-key')),
+      );
+      expect(field.controller!.text, 'pasted-key');
+      expect(field.obscureText, isTrue);
+      clipboard = null;
+      await _tap(tester, 'ai-paste-key');
+      expect(find.textContaining('clipboard has no text'), findsOneWidget);
+      expect(field.controller!.text, 'pasted-key');
+      fail = true;
+      await _tap(tester, 'ai-paste-key');
+      expect(
+        find.textContaining('Could not read the clipboard'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('private clipboard'), findsNothing);
+      expect(reads, 3);
+    },
+  );
+
+  testWidgets('test and save waits for connection and secure persistence', (
+    tester,
+  ) async {
+    final connectionGate = Completer<void>();
+    final saveGate = Completer<void>();
+    final repository = MemoryAiConfigurationRepository()
+      ..saveGate = saveGate.future;
+    final tested = <AiConfiguration>[];
+    await _pump(
+      tester,
+      repository,
+      advanced: false,
+      testConnection: (configuration) async {
+        tested.add(configuration);
+        await connectionGate.future;
+      },
+    );
+    await tester.enterText(find.byKey(const Key('ai-api-key')), 'draft-key');
+    final action = find.byKey(const Key('ai-test-save'));
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    await tester.tap(action);
+    await tester.pump();
+    expect(tested.single.model, AiProvider.gemini.defaultModel);
+    expect(repository.saves, isEmpty);
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('ai-api-key'))).enabled,
+      isFalse,
+    );
+    connectionGate.complete();
+    await tester.pump();
+    expect(repository.saves, hasLength(1));
+    expect(find.textContaining('Connection successful.'), findsNothing);
+    saveGate.complete();
+    await tester.pumpAndSettle();
+    expect(repository.configuration!.apiKey, 'draft-key');
+    expect(
+      find.text('Connection successful. AI settings saved securely.'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('ai-api-key')))
+          .controller!
+          .text,
+      isEmpty,
+    );
+  });
+
+  testWidgets(
+    'failed test preserves saved settings and a failed save keeps the draft',
+    (tester) async {
+      final repository = MemoryAiConfigurationRepository(testAiConfiguration);
+      var failTest = true;
+      await _pump(
+        tester,
+        repository,
+        advanced: false,
+        testConnection: (_) async {
+          if (failTest) {
+            throw const AiRequestException('Your API quota was reached.');
+          }
+        },
+      );
+      await tester.enterText(
+        find.byKey(const Key('ai-api-key')),
+        'replacement-key',
+      );
+      await _tap(tester, 'ai-test-save');
+      expect(repository.saves, isEmpty);
+      expect(repository.configuration, same(testAiConfiguration));
+      expect(find.text('Your API quota was reached.'), findsOneWidget);
+      failTest = false;
+      repository.saveError = StateError('private-key');
+      await _tap(tester, 'ai-test-save');
+      expect(
+        find.textContaining('could not be saved securely'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Connection successful.'), findsNothing);
+      expect(find.textContaining('private-key'), findsNothing);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('ai-api-key')))
+            .controller!
+            .text,
+        'replacement-key',
+      );
+    },
+  );
+
+  testWidgets('leaving during a connection test does not save the draft', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final repository = MemoryAiConfigurationRepository();
+    await _pump(
+      tester,
+      repository,
+      advanced: false,
+      testConnection: (_) => gate.future,
+    );
+    await tester.enterText(find.byKey(const Key('ai-api-key')), 'draft-key');
+    await tester.pumpAndSettle();
+    final action = find.byKey(const Key('ai-test-save'));
+    await tester.ensureVisible(action);
+    await tester.pumpAndSettle();
+    await tester.tap(action);
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox.shrink());
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(repository.saves, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'skip discards the draft and supports returning to setup on a small screen',
+    (tester) async {
+      final repository = MemoryAiConfigurationRepository();
+      await _pump(
+        tester,
+        repository,
+        advanced: false,
+        size: const Size(320, 750),
+        scale: 1.6,
+      );
+      await tester.enterText(find.byKey(const Key('ai-api-key')), 'draft-key');
+      await _tap(tester, 'ai-skip');
+      expect(repository.saves, isEmpty);
+      expect(find.textContaining('AI setup skipped.'), findsOneWidget);
+      await _tap(tester, 'ai-setup-resume');
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('ai-api-key')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('a removed preset opens as custom without losing its saved key', (
     tester,
   ) async {
@@ -289,7 +562,7 @@ void main() {
     await _tap(tester, 'ai-remove');
     expect(repository.configuration, isNull);
     expect(find.text('No personal key saved.'), findsOneWidget);
-    expect(find.byKey(const Key('ai-save')), findsOneWidget);
+    expect(find.byKey(const Key('ai-advanced')), findsOneWidget);
   });
 
   testWidgets('pending saves disable edits and do not announce success early', (
@@ -300,6 +573,8 @@ void main() {
       ..saveGate = gate.future;
     await _pump(tester, repository);
     await tester.enterText(find.byKey(const Key('ai-api-key')), 'pending-key');
+    await tester.ensureVisible(find.byKey(const Key('ai-save')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('ai-save')));
     await tester.pump();
     expect(find.textContaining('AI settings saved.'), findsNothing);
@@ -327,6 +602,8 @@ void main() {
         find.byKey(const Key('ai-api-key')),
         'pending-key',
       );
+      await tester.ensureVisible(find.byKey(const Key('ai-save')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('ai-save')));
       await tester.pump();
       await tester.pumpWidget(const SizedBox.shrink());

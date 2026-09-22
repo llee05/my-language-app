@@ -248,7 +248,7 @@ void main() {
     );
   });
 
-  for (final status in [302, 400, 401, 403, 404, 422, 429, 500]) {
+  for (final status in [302, 400, 401, 402, 403, 404, 422, 429, 500]) {
     test('HTTP $status is sanitized and never follows redirects', () async {
       var count = 0;
       final client = MockClient((request) async {
@@ -270,7 +270,10 @@ void main() {
           predicate(
             (e) =>
                 (e is AiConfigurationException || e is AiRequestException) &&
-                !e.toString().contains('private key'),
+                !e.toString().contains('private key') &&
+                (status != 401 || e.toString().contains('key was rejected')) &&
+                (status != 402 || e.toString().contains('billing setup')) &&
+                (status != 429 || e.toString().contains('quota and credit')),
           ),
         ),
       );

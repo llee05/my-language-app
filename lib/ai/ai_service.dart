@@ -141,11 +141,17 @@ class AiService {
           response.bodyBytes,
         );
         throw switch (response.statusCode) {
-          400 || 401 || 403 || 404 || 422 => AiConfigurationException(
+          401 => AiConfigurationException(
+            'The API key was rejected. Copy a new key from your provider and try again.$detail',
+          ),
+          402 => AiConfigurationException(
+            'The provider requires API credit or billing setup. Check billing in your provider account.$detail',
+          ),
+          400 || 403 || 404 || 422 => AiConfigurationException(
             'The provider could not accept these settings. Check your API key, model, and endpoint.$detail',
           ),
           429 => AiRequestException(
-            'The provider’s usage limit was reached. Try again later.$detail',
+            'The provider’s usage limit was reached. Try again later, or check your API quota and credit in your provider account.$detail',
           ),
           _ => AiRequestException(
             'The AI provider is unavailable right now. Try again later.$detail',
