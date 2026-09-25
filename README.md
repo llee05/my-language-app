@@ -316,7 +316,12 @@ lib/
 
 ## Release
 
-Current version: **1.0.0-beta.1+1**
+Current version: **1.0.0-beta.4+4**
+
+Beta 4
+- Added guided setup for Gemini, OpenAI, and Claude API keys.
+- Added an Android flow for installing an offline Mandarin system voice.
+- Improved AI key, quota, and billing error messages.
 
 ### Android signing
 
