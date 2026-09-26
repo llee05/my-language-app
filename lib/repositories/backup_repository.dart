@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../database/migrations.dart';
 import '../local_database.dart';
+import '../models/lesson_guide.dart';
 
 class BackupFormatException implements Exception {
   const BackupFormatException(this.message);
@@ -47,6 +48,7 @@ class SqliteBackupRepository implements BackupRepository {
   static const _maxBackupBytes = 50 * 1024 * 1024;
   static const _optionalColumnDefaults = <String, Object?>{
     'lessons.is_sentence_practice': 0,
+    'lessons.guide_json': null,
     'learner_settings.button_animation_style': 'combined',
   };
 
@@ -80,6 +82,7 @@ class SqliteBackupRepository implements BackupRepository {
       'hsk_level',
       'is_listed',
       'is_sentence_practice',
+      'guide_json',
     ],
     'cards': [
       'id',
@@ -285,6 +288,18 @@ class SqliteBackupRepository implements BackupRepository {
       tables[entry.key] = rows;
     }
 
+    for (final lesson in tables['lessons']!) {
+      final guideJson = lesson['guide_json'];
+      if (guideJson == null) continue;
+      try {
+        if (guideJson is! String) throw const FormatException();
+        LessonGuide.fromJson(jsonDecode(guideJson));
+      } on FormatException {
+        throw const BackupFormatException(
+          'This backup contains an invalid lesson guide.',
+        );
+      }
+    }
     final profiles = tables['learner_profiles']!;
     if (profiles.length != 1) {
       throw const BackupFormatException(

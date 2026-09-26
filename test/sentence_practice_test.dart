@@ -93,13 +93,14 @@ void main() {
         (s) => !s.isSentencePractice,
       );
       final originalLesson = await _lessons.findById(original.id);
-      // Reconstruct the immediately previous schema in this temporary database.
+      // Reconstruct schema 13 in this temporary database.
       await db.delete(
         'cards',
         where:
             'lesson_id IN (SELECT id FROM lessons WHERE is_sentence_practice = 1)',
       );
       await db.delete('lessons', where: 'is_sentence_practice = 1');
+      await db.execute('ALTER TABLE lessons DROP COLUMN guide_json');
       await db.execute('ALTER TABLE lessons DROP COLUMN is_sentence_practice');
       await db.setVersion(13);
       await LocalDatabase.close();

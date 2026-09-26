@@ -11,6 +11,8 @@ import 'package:mylanguageapp/repositories/daily_review_session_repository.dart'
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'lesson_generation_test_support.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const learners = SqliteLearnerRepository();
@@ -155,6 +157,35 @@ void main() {
       final migratedSettings = await settings.load();
       expect(migratedSettings.pronunciationEngine, PronunciationEngine.kokoro);
       expect(migratedSettings.kokoroVoiceIds, isEmpty);
+    },
+  );
+
+  test(
+    'version 14 lessons gain an optional guide without changing rows',
+    () async {
+      final db = await openDatabase(
+        inMemoryDatabasePath,
+        singleInstance: false,
+      );
+      addTearDown(db.close);
+      await _createVersionOneSchema(db);
+      await migrateDatabase(db, fromVersion: 1, toVersion: 14);
+      await db.insert('lessons', {
+        'id': 77,
+        'lesson_title': 'Existing lesson',
+        'theme': 'Family',
+        'hsk_level': 1,
+      });
+      final before = (await db.query('lessons')).single;
+      await migrateDatabase(
+        db,
+        fromVersion: 14,
+        toVersion: databaseSchemaVersion,
+      );
+      expect((await db.query('lessons')).single, {
+        ...before,
+        'guide_json': null,
+      });
     },
   );
 
@@ -444,6 +475,7 @@ void main() {
     final db = await LocalDatabase.ensureInitialized();
 
     const generated = Lesson(
+      guide: savedLessonGuide,
       summary: LessonSummary(
         id: 0,
         title: 'Ordering breakfast · HSK 1',
@@ -493,6 +525,11 @@ void main() {
     expect(cached!.summary.title, 'Ordering breakfast · HSK 1');
     expect(cached.cards, hasLength(1));
     expect(cached.cards.single.chinese, '吃');
+    expect(cached.guide!.toJson(), savedLessonGuide.toJson());
+    expect(
+      (await lessons.findById(cached.summary.id))!.guide!.toJson(),
+      savedLessonGuide.toJson(),
+    );
 
     // A fresh API result for the same topic keeps the previous lesson and
     // its saved ratings/session intact, and becomes the latest fallback.

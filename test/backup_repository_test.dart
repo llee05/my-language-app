@@ -11,6 +11,8 @@ import 'package:mylanguageapp/repositories/ai_configuration_repository.dart';
 import 'package:mylanguageapp/repositories/backup_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 
+import 'lesson_generation_test_support.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -54,6 +56,7 @@ void main() {
       );
       await lessons.saveGenerated(
         const Lesson(
+          guide: savedLessonGuide,
           summary: LessonSummary(
             id: 0,
             title: 'Travel practice',
@@ -167,6 +170,7 @@ void main() {
         DateTime(2026, 9, 14),
       );
 
+      expect(restoredLesson.guide!.toJson(), savedLessonGuide.toJson());
       expect(restoredProfile?.name, 'Backup Mei');
       expect(restoredProfile?.hskLevel, 4);
       expect(restoredSettings.showPinyin, isFalse);
@@ -223,6 +227,9 @@ void main() {
         jsonDecode(utf8.decode(await backups.exportBackup()))
             as Map<String, dynamic>;
     document['databaseSchemaVersion'] = 12;
+    for (final row in document['data']['lessons'] as List) {
+      (row as Map).remove('guide_json');
+    }
     final data = document['data'] as Map<String, dynamic>;
     final settingsRows = data['learner_settings'] as List<dynamic>;
     (settingsRows.single as Map<String, dynamic>).remove(
@@ -238,6 +245,26 @@ void main() {
       ButtonAnimationStyle.combined,
     );
   });
+
+  test(
+    'rejects malformed lesson guides before restoring learner data',
+    () async {
+      await learners.save(
+        const LearnerProfile(name: 'Keep me', hskLevel: 1, dailyWordTarget: 10),
+      );
+      final document =
+          jsonDecode(utf8.decode(await backups.exportBackup()))
+              as Map<String, dynamic>;
+      document['data']['lessons'][0]['guide_json'] = '{"objective":3}';
+      await expectLater(
+        backups.restoreBackup(
+          Uint8List.fromList(utf8.encode(jsonEncode(document))),
+        ),
+        throwsA(isA<BackupFormatException>()),
+      );
+      expect((await learners.load())!.name, 'Keep me');
+    },
+  );
 
   test('rejects unrelated and unsupported files before import', () {
     expect(

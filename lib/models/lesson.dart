@@ -1,3 +1,5 @@
+import 'lesson_guide.dart';
+
 class LessonSummary {
   const LessonSummary({
     required this.id,
@@ -66,8 +68,9 @@ class Flashcard {
 }
 
 class Lesson {
-  const Lesson({required this.summary, required this.cards});
+  const Lesson({required this.summary, required this.cards, this.guide});
 
   final LessonSummary summary;
   final List<Flashcard> cards;
+  final LessonGuide? guide;
 }

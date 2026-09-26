@@ -4,7 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 14;
+const int databaseSchemaVersion = 15;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -331,6 +331,9 @@ final Map<int, MigrationStep> databaseMigrations = {
       'ADD COLUMN is_sentence_practice INTEGER NOT NULL DEFAULT 0 '
       'CHECK (is_sentence_practice IN (0, 1))',
     );
+  },
+  15: (db) async {
+    await db.execute('ALTER TABLE lessons ADD COLUMN guide_json TEXT');
   },
 };
 

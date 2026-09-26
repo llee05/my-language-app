@@ -6,6 +6,7 @@ import '../local_database.dart';
 import '../models/learner_profile.dart';
 import '../models/learning_progress.dart';
 import '../models/lesson.dart';
+import '../models/lesson_guide.dart';
 import '../models/tutor_learner_snapshot.dart';
 import 'development_repository.dart';
 import 'daily_review_session_repository.dart';
@@ -447,9 +448,19 @@ class SqliteLessonRepository implements LessonRepository {
       orderBy: 'id ASC',
     );
     if (rows.isEmpty) return null;
+    final lessonRows = await db.query(
+      'lessons',
+      columns: ['guide_json'],
+      where: 'id = ?',
+      whereArgs: [summary.id],
+    );
+    final guideJson = lessonRows.single['guide_json'] as String?;
     return Lesson(
       summary: summary,
       cards: rows.map(_cardFromRow).toList(growable: false),
+      guide: guideJson == null
+          ? null
+          : LessonGuide.fromJson(jsonDecode(guideJson)),
     );
   }
 
@@ -461,6 +472,9 @@ class SqliteLessonRepository implements LessonRepository {
         'theme': lesson.summary.theme.trim(),
         'hsk_level': lesson.summary.hskLevel,
         'is_sentence_practice': lesson.summary.isSentencePractice ? 1 : 0,
+        'guide_json': lesson.guide == null
+            ? null
+            : jsonEncode(lesson.guide!.toJson()),
         'is_listed': 1,
       });
       for (final card in lesson.cards) {
