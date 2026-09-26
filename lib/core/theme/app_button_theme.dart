@@ -88,6 +88,12 @@ abstract final class AppButtonTheme {
     );
 
     return theme.copyWith(
+      extensions: [
+        ...theme.extensions.values.where(
+          (value) => value is! _ButtonMotionTheme,
+        ),
+        _ButtonMotionTheme(animationStyle),
+      ],
       filledButtonTheme: FilledButtonThemeData(style: flatButton),
       elevatedButtonTheme: ElevatedButtonThemeData(style: flatButton),
       outlinedButtonTheme: OutlinedButtonThemeData(style: outlinedButton),

@@ -557,7 +557,7 @@ void main() {
     await tester.tap(find.text('Survival'));
     await startGame(tester);
 
-    final button = tester.widget<IconButton>(
+    final button = tester.widget<PronunciationButton>(
       find.byKey(const Key('vocab-rush-pronunciation')),
     );
     expect(button.onPressed, isNull);

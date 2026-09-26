@@ -559,21 +559,12 @@ class _TutorMessage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        IconButton(
+                        PronunciationButton(
                           key: const Key('ai-tutor-pronunciation'),
                           tooltip: onSpeak == null
                               ? 'Pronunciation audio is disabled in Settings'
                               : 'Hear Mandarin reply',
-                          onPressed: onSpeak == null
-                              ? null
-                              : () => unawaited(onSpeak!()),
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints.tightFor(
-                            width: 36,
-                            height: 36,
-                          ),
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.volume_up_outlined, size: 19),
+                          onPressed: onSpeak,
                         ),
                       ],
                     ),

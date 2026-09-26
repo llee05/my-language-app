@@ -292,7 +292,7 @@ void main() {
     );
     expect(
       tester
-          .widget<IconButton>(
+          .widget<PronunciationButton>(
             find.byKey(const Key('vocabulary-word-pronunciation')),
           )
           .onPressed,
@@ -300,7 +300,7 @@ void main() {
     );
     expect(
       tester
-          .widget<IconButton>(
+          .widget<PronunciationButton>(
             find.byKey(const Key('vocabulary-example-pronunciation')),
           )
           .onPressed,

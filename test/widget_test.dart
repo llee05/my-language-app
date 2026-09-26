@@ -1200,7 +1200,7 @@ void main() {
     );
     expect(
       tester
-          .widget<IconButton>(
+          .widget<PronunciationButton>(
             find.byKey(const Key('daily-review-pronunciation')),
           )
           .onPressed,
@@ -3149,7 +3149,9 @@ void main() {
     );
     expect(
       tester
-          .widget<IconButton>(find.byKey(const Key('ai-tutor-pronunciation')))
+          .widget<PronunciationButton>(
+            find.byKey(const Key('ai-tutor-pronunciation')),
+          )
           .onPressed,
       isNull,
     );

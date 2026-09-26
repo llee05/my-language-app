@@ -776,23 +776,29 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         spacing: 10,
         runSpacing: 10,
         children: [
-          OutlinedButton.icon(
+          PronunciationButton(
             key: const Key('listening-replay'),
+            requestKey: _card.id,
+            busy: _playing,
+            tooltip: 'Replay',
             onPressed:
                 _learnerSettings.soundEnabled && !_playing && !_transitioning
                 ? () => _play()
                 : null,
-            icon: const Icon(Icons.replay_rounded),
-            label: const Text('Replay'),
+            icon: Icons.replay_rounded,
+            label: 'Replay',
           ),
-          OutlinedButton.icon(
+          PronunciationButton(
             key: const Key('listening-slower-playback'),
+            requestKey: _card.id,
+            busy: _playing,
+            tooltip: 'Slower · 0.75×',
             onPressed:
                 _learnerSettings.soundEnabled && !_playing && !_transitioning
                 ? () => _play(slow: true)
                 : null,
-            icon: const Icon(Icons.slow_motion_video_rounded),
-            label: const Text('Slower · 0.75×'),
+            icon: Icons.slow_motion_video_rounded,
+            label: 'Slower · 0.75×',
           ),
         ],
       ),

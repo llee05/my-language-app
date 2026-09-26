@@ -1660,12 +1660,12 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
           color: AppColors.text,
         ),
       ),
-      IconButton(
+      PronunciationButton(
+        requestKey: widget.card.id,
         tooltip: widget.onSpeak == null
             ? 'Pronunciation audio is disabled in Settings'
             : 'Hear Mandarin pronunciation',
         onPressed: widget.onSpeak,
-        icon: const Icon(Icons.volume_up_outlined),
       ),
       const Spacer(),
     ],
@@ -1688,12 +1688,12 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 22, color: AppColors.gold),
       ),
-      IconButton(
+      PronunciationButton(
+        requestKey: widget.card.id,
         tooltip: widget.onSpeak == null
             ? 'Pronunciation audio is disabled in Settings'
             : 'Hear Mandarin pronunciation',
         onPressed: widget.onSpeak,
-        icon: const Icon(Icons.volume_up_outlined),
       ),
       const SizedBox(height: 18),
       Text(

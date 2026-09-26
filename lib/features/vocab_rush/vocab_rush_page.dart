@@ -493,13 +493,13 @@ class _VocabRushPageState extends State<VocabRushPage> {
           _card!['pinyin'] as String,
           style: TextStyle(fontSize: 16, color: AppColors.gold),
         ),
-        IconButton(
+        PronunciationButton(
+          requestKey: _attempts,
           key: const Key('vocab-rush-pronunciation'),
           tooltip: _soundEnabled
               ? 'Hear Mandarin pronunciation'
               : 'Pronunciation audio is disabled in Settings',
           onPressed: _soundEnabled ? _speakCurrentCard : null,
-          icon: const Icon(Icons.volume_up_outlined),
         ),
         const SizedBox(height: 38),
         LayoutBuilder(

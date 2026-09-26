@@ -299,12 +299,11 @@ Return only compact JSON with this exact shape:
         ),
         actions: [
           if (_settings.soundEnabled)
-            TextButton.icon(
-              onPressed: () => unawaited(
-                widget.pronunciationService.speakMandarin(word.chinese),
-              ),
-              icon: const Icon(Icons.volume_up_outlined),
-              label: const Text('Hear word'),
+            PronunciationButton(
+              onPressed: () =>
+                  widget.pronunciationService.speakMandarin(word.chinese),
+              tooltip: 'Hear word pronunciation',
+              label: 'Hear word',
             ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -475,13 +474,13 @@ Return only compact JSON with this exact shape:
               ),
             ),
             const SizedBox(width: 12),
-            FilledButton.tonalIcon(
+            PronunciationButton(
               key: const Key('play-dialogue'),
+              busy: _playing,
+              tooltip: 'Play dialogue',
               onPressed: _hasDialogueAudio && !_playing ? _playDialogue : null,
-              icon: Icon(
-                _playing ? Icons.graphic_eq_rounded : Icons.play_arrow_rounded,
-              ),
-              label: Text(_playing ? 'Playing' : 'Play dialogue'),
+              icon: Icons.play_arrow_rounded,
+              label: 'Play dialogue',
             ),
           ],
         ),

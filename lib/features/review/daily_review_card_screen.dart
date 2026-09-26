@@ -216,15 +216,15 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
                           ),
                           Align(
                             alignment: Alignment.centerRight,
-                            child: IconButton(
+                            child: PronunciationButton(
+                              requestKey: card.id,
                               key: const Key('daily-review-pronunciation'),
                               tooltip: widget.onSpeak == null
                                   ? 'Pronunciation audio is disabled in Settings'
                                   : 'Hear Mandarin pronunciation',
                               onPressed: widget.onSpeak == null
                                   ? null
-                                  : () => unawaited(widget.onSpeak!(card)),
-                              icon: const Icon(Icons.volume_up_outlined),
+                                  : () => widget.onSpeak!(card),
                             ),
                           ),
                         ],

@@ -832,7 +832,7 @@ class _RoleplayNpcTurn extends StatelessWidget {
   final RoleplayMissionTurn turn;
   final bool showPinyin;
   final bool soundEnabled;
-  final VoidCallback onSpeak;
+  final Future<void> Function() onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -864,12 +864,11 @@ class _RoleplayNpcTurn extends StatelessWidget {
                           style: const TextStyle(fontSize: 16, height: 1.35),
                         ),
                       ),
-                      IconButton(
+                      PronunciationButton(
                         tooltip: soundEnabled
                             ? 'Hear roleplay line'
                             : 'Pronunciation audio is disabled in Settings',
                         onPressed: soundEnabled ? onSpeak : null,
-                        icon: const Icon(Icons.volume_up_outlined, size: 19),
                       ),
                     ],
                   ),

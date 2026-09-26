@@ -1161,7 +1161,7 @@ void main() {
       pronunciationService: pronunciation,
     );
 
-    final button = tester.widget<IconButton>(
+    final button = tester.widget<PronunciationButton>(
       find.byKey(const Key('ai-tutor-pronunciation')),
     );
     expect(button.onPressed, isNull);

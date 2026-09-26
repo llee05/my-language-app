@@ -97,6 +97,11 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _syncPulse();
   }
 
@@ -108,7 +113,9 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
   }
 
   void _syncPulse() {
-    if (widget.active && _usesGlow) {
+    if (widget.active &&
+        _usesGlow &&
+        !MediaQuery.disableAnimationsOf(context)) {
       if (!_pulseController.isAnimating) {
         _pulseController.repeat(reverse: true);
       }
@@ -163,7 +170,9 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
             offset: !reduceMotion && _usesIconMotion && _pressed
                 ? const Offset(.07, 0)
                 : Offset.zero,
-            duration: const Duration(milliseconds: 140),
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 140),
             curve: Curves.easeOutCubic,
             child: child,
           );
@@ -175,7 +184,9 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
                 Positioned.fill(
                   child: IgnorePointer(
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
+                      duration: reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 160),
                       decoration: BoxDecoration(
                         color: _pressed
                             ? AppColors.red.withValues(alpha: .14)
@@ -217,4 +228,19 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
       ),
     );
   }
+}
+
+/// Carries the saved motion preference through routes and modal sheets.
+class _ButtonMotionTheme extends ThemeExtension<_ButtonMotionTheme> {
+  const _ButtonMotionTheme(this.style);
+
+  final ButtonAnimationStyle style;
+
+  @override
+  _ButtonMotionTheme copyWith({ButtonAnimationStyle? style}) =>
+      _ButtonMotionTheme(style ?? this.style);
+
+  @override
+  _ButtonMotionTheme lerp(covariant _ButtonMotionTheme? other, double t) =>
+      other == null || t < .5 ? this : other;
 }

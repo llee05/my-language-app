@@ -673,17 +673,14 @@ class _VocabularyDetailPage extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                IconButton(
+                                PronunciationButton(
                                   key: const Key(
                                     'vocabulary-example-pronunciation',
                                   ),
                                   tooltip: onSpeakExample == null
                                       ? 'Pronunciation audio is disabled in Settings'
                                       : 'Hear example sentence',
-                                  onPressed: onSpeakExample == null
-                                      ? null
-                                      : () => unawaited(onSpeakExample!()),
-                                  icon: const Icon(Icons.volume_up_outlined),
+                                  onPressed: onSpeakExample,
                                 ),
                               ],
                             ),
@@ -770,15 +767,12 @@ class _DetailHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                    IconButton(
+                    PronunciationButton(
                       key: const Key('vocabulary-word-pronunciation'),
                       tooltip: onSpeak == null
                           ? 'Pronunciation audio is disabled in Settings'
                           : 'Hear word pronunciation',
-                      onPressed: onSpeak == null
-                          ? null
-                          : () => unawaited(onSpeak!()),
-                      icon: const Icon(Icons.volume_up_outlined),
+                      onPressed: onSpeak,
                     ),
                   ],
                 ),

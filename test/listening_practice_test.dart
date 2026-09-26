@@ -140,7 +140,7 @@ void main() {
     expect(find.byKey(const Key('listening-sound-disabled')), findsOneWidget);
     expect(
       tester
-          .widget<OutlinedButton>(
+          .widget<PronunciationButton>(
             find.byKey(const Key('listening-slower-playback')),
           )
           .onPressed,
