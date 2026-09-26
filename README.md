@@ -76,6 +76,21 @@ the dashboard or Lessons page. When creating a lesson, choose **Random mix** to
 shuffle vocabulary from across the selected HSK level instead of targeting one
 topic, or **Random topic** to have TingShuo choose one focused topic for you.
 
+New AI lessons open with a **Lesson guide**: a learning objective, a short grammar
+explanation, a connected dialogue with pinyin and English, and two practice
+questions with revealable example answers. Switch to **Flashcards** to rate words;
+you can revisit the guide without losing your card position. Guides are saved
+locally with the lesson and included in exported backups.
+
+Generation uses topic-related bundled vocabulary, reserves candidates at the
+selected HSK level, and favors unstudied words while avoiding the previous deck
+where possible. The app checks target-word usage, repeated sentences, required
+translations and tone-marked pinyin, level balance, and guide structure. These
+checks do not guarantee linguistic accuracy. Invalid lesson content gets one
+repair request (which can incur a second provider charge); connection or provider
+errors fall back immediately. If generation still fails, the app opens the saved
+lesson or creates an offline vocabulary deck and shows a notice.
+
 ### Daily review
 
 Open **Daily Review** or use the dashboard prompt to review today's queue. Due and
@@ -209,7 +224,8 @@ instead of saving a key in ordinary preferences.
 
 Your key, tutor conversation history, and lesson prompts go directly to the
 selected provider when you use AI. Lesson prompts include the topic, HSK level,
-and candidate vocabulary. Your provider's usage limits, charges, and data
+and candidate vocabulary, including whether candidate words have been studied
+or appeared in the previous lesson. Your provider's usage limits, charges, and data
 policies apply. Only enter a custom endpoint you trust. Chat history stays in
 memory until reset or navigation; generated lessons are saved locally.
 

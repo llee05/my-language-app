@@ -82,6 +82,8 @@ class _LessonsPageState extends State<LessonsPage> {
   int? _pendingInitialLessonId;
   List<Flashcard> _cards = const [];
   String _lessonTitle = '';
+  LessonGuide? _lessonGuide;
+  bool _showLessonGuide = false;
   bool _generating = false;
   bool _generationFailed = false;
   int _currentCard = 0;
@@ -342,6 +344,8 @@ class _LessonsPageState extends State<LessonsPage> {
           ? lesson.summary.theme
           : lesson.summary.title;
       _cards = lesson.cards;
+      _lessonGuide = lesson.guide;
+      _showLessonGuide = lesson.guide != null && !resumed && index == 0;
       _currentCard = index;
       _session = active;
       _generating = false;
@@ -480,26 +484,42 @@ class _LessonsPageState extends State<LessonsPage> {
                   )
                   as List<dynamic>)
               .cast<Map<String, dynamic>>();
-      final candidates = vocabulary
-          .where((word) => (word['hskLevel'] as int) <= hskLevel)
-          .toList();
-      if (topic == _randomMixLessonMode) {
-        candidates.shuffle(_random);
-      } else {
-        _rankForTopic(candidates, topic);
-      }
+      final progress = await widget.progressRepository.vocabularyProgress();
+      final studiedWords = {
+        for (final word in progress)
+          if (word.progress.timesSeen > 0) word.chinese,
+      };
+      final previousWords = {
+        for (final card in cached?.cards ?? <Flashcard>[]) card.chinese,
+      };
+      final candidates = const LessonVocabularySelector().select(
+        vocabulary: vocabulary,
+        topic: topic,
+        hskLevel: hskLevel,
+        studiedWords: studiedWords,
+        previousWords: previousWords,
+        randomMix: topic == _randomMixLessonMode,
+        random: _random,
+      );
       if (!mounted) return;
 
       List<Flashcard> cards;
+      LessonGuide? guide;
       String notice;
       try {
-        cards = await _generateWithAi(
-          topic,
-          hskLevel,
-          candidates.take(40).toList(),
+        final generated = await LessonGenerator(widget.aiService).generate(
+          topic: topic,
+          hskLevel: hskLevel,
+          candidates: candidates,
+          studiedWords: studiedWords,
+          previousWords: previousWords,
+          shouldContinue: () => mounted,
         );
+        cards = generated.cards;
+        guide = generated.guide;
         notice = 'Created a new lesson using your AI connection.';
       } catch (error) {
+        if (!mounted) return;
         final reason = switch (error) {
           AiConfigurationException(:final message) => message,
           AiRequestException(:final message) => message,
@@ -512,9 +532,10 @@ class _LessonsPageState extends State<LessonsPage> {
           }
           return;
         }
-        cards = candidates.take(10).map(_fallbackCard).toList();
+        cards = candidates.take(10).map(vocabularyFlashcard).toList();
         notice = '$reason Created a vocabulary lesson offline.';
       }
+      if (!mounted) return;
       if (cards.isEmpty) throw StateError('No vocabulary was available.');
       final title = '$topic · HSK $hskLevel';
       await widget.repository.saveGenerated(
@@ -526,6 +547,7 @@ class _LessonsPageState extends State<LessonsPage> {
             hskLevel: hskLevel,
           ),
           cards: cards,
+          guide: guide,
         ),
       );
       final saved = await widget.repository.findGenerated(
@@ -553,109 +575,6 @@ class _LessonsPageState extends State<LessonsPage> {
       });
     }
   }
-
-  void _rankForTopic(List<Map<String, dynamic>> words, String topic) {
-    final terms = topic.toLowerCase().split(RegExp(r'\s+')).toSet();
-    int relevance(Map<String, dynamic> word) {
-      final text =
-          '${word['simplified']} ${(word['meanings'] as List).join(' ')}'
-              .toLowerCase();
-      return terms.where(text.contains).length;
-    }
-
-    words.sort((a, b) {
-      final score = relevance(b).compareTo(relevance(a));
-      return score != 0
-          ? score
-          : ((a['frequency'] as int?) ?? 999999).compareTo(
-              (b['frequency'] as int?) ?? 999999,
-            );
-    });
-  }
-
-  Future<List<Flashcard>> _generateWithAi(
-    String topic,
-    int hskLevel,
-    List<Map<String, dynamic>> candidates,
-  ) async {
-    final supplied = [
-      for (var i = 0; i < candidates.length; i++)
-        {
-          'index': i,
-          'hanzi': candidates[i]['simplified'],
-          'pinyin': candidates[i]['pinyin'],
-          'meaning': vocabularyStudyMeaning(candidates[i]),
-        },
-    ];
-    final response = await widget.aiService.chatText(
-      maxTokens: 4096,
-      temperature: 0.3,
-      jsonResponse: true,
-      messages: [
-        {
-          'role': 'system',
-          'content':
-              'Create a Mandarin flashcard lesson. Return JSON only: '
-              '{"cards":[{"index":0,"exampleChinese":"...",'
-              '"examplePinyin":"...","exampleEnglish":"..."}]}. '
-              'Choose 8-10 unique indices only from the supplied vocabulary. '
-              'For each word, write a natural Simplified Chinese sentence '
-              'using that word, full sentence pinyin with tone marks, and an '
-              'accurate English translation. Match the requested HSK level '
-              'and topic as closely as the supplied vocabulary allows.',
-        },
-        {
-          'role': 'user',
-          'content':
-              'Topic: $topic\nHSK: $hskLevel\nVocabulary: ${jsonEncode(supplied)}',
-        },
-      ],
-    );
-    final clean = response
-        .replaceFirst(RegExp(r'^```(?:json)?\s*'), '')
-        .replaceFirst(RegExp(r'\s*```$'), '');
-    final generated = jsonDecode(clean);
-    if (generated is! Map<String, dynamic> || generated['cards'] is! List) {
-      throw const FormatException('AI returned an invalid lesson.');
-    }
-    final items = generated['cards'] as List;
-    if (items.length < 8 || items.length > 10) {
-      throw const FormatException('AI returned an incomplete lesson.');
-    }
-    String example(Map<String, dynamic> item, String key) {
-      final value = item[key];
-      if (value is! String || value.trim().isEmpty) {
-        throw const FormatException('AI returned an incomplete example.');
-      }
-      return value.trim();
-    }
-
-    final used = <int>{};
-    return items.map((item) {
-      if (item is! Map<String, dynamic>) {
-        throw const FormatException('AI returned an invalid card.');
-      }
-      final index = item['index'];
-      if (index is! int ||
-          index < 0 ||
-          index >= candidates.length ||
-          !used.add(index)) {
-        throw const FormatException('AI selected invalid vocabulary.');
-      }
-      return _fallbackCard(candidates[index]).copyWith(
-        exampleChinese: example(item, 'exampleChinese'),
-        examplePinyin: example(item, 'examplePinyin'),
-        exampleEnglish: example(item, 'exampleEnglish'),
-      );
-    }).toList();
-  }
-
-  Flashcard _fallbackCard(Map<String, dynamic> word) => Flashcard(
-    chinese: word['simplified'] as String,
-    pinyin: word['pinyin'] as String,
-    englishMeaning: vocabularyStudyMeaning(word),
-    partOfSpeech: (word['partOfSpeech'] as List).join(', '),
-  );
 
   Future<void> _savePosition(int index) async {
     final session = _session;
@@ -875,8 +794,9 @@ class _LessonsPageState extends State<LessonsPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Generate a new lesson with your AI connection from Settings. '
-                'Saved lessons and local vocabulary are available offline.',
+                'Create a guided lesson with a dialogue, examples, and practice '
+                'with your AI connection from Settings. Saved lessons and local '
+                'vocabulary are available offline.',
                 style: TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 20),
@@ -1184,8 +1104,31 @@ class _LessonsPageState extends State<LessonsPage> {
             style: TextStyle(color: AppColors.gold),
           ),
         ),
+      if (_lessonGuide != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                key: const Key('lesson-guide-tab'),
+                label: const Text('Lesson guide'),
+                selected: _showLessonGuide,
+                onSelected: (_) => setState(() => _showLessonGuide = true),
+              ),
+              ChoiceChip(
+                key: const Key('lesson-cards-tab'),
+                label: const Text('Flashcards'),
+                selected: !_showLessonGuide,
+                onSelected: (_) => _showLessonCards(),
+              ),
+            ],
+          ),
+        ),
       Expanded(
-        child: _session?.isComplete == true
+        child: _showLessonGuide && _lessonGuide != null
+            ? _buildLessonGuide()
+            : _session?.isComplete == true
             ? _buildCompletionSummary()
             : PageView.builder(
                 itemCount: _cards.length,
@@ -1212,7 +1155,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 ),
               ),
       ),
-      if (_session?.isComplete != true)
+      if (!_showLessonGuide && _session?.isComplete != true)
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
           child: Wrap(
@@ -1239,6 +1182,89 @@ class _LessonsPageState extends State<LessonsPage> {
         ),
     ],
   );
+
+  void _showLessonCards() {
+    setState(() => _showLessonGuide = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _pageController.hasClients) {
+        _pageController.jumpToPage(_currentCard);
+      }
+    });
+  }
+
+  Widget _buildLessonGuide() {
+    final guide = _lessonGuide!;
+    Widget sentence(LessonSentence line) => Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            line.chinese,
+            style: TextStyle(fontSize: 20, color: AppColors.text),
+          ),
+          Text(line.pinyin, style: TextStyle(color: AppColors.gold)),
+          Text(line.english, style: TextStyle(color: AppColors.muted)),
+        ],
+      ),
+    );
+    return SingleChildScrollView(
+      key: const Key('lesson-guide'),
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                guide.objective,
+                style: TextStyle(fontSize: 22, color: AppColors.text),
+              ),
+              const SizedBox(height: 16),
+              Text(guide.explanation),
+              const SizedBox(height: 24),
+              const Text(
+                'Read the conversation',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              for (final (index, line) in guide.dialogue.indexed) ...[
+                Text(
+                  index.isEven ? 'A' : 'B',
+                  style: TextStyle(color: AppColors.muted),
+                ),
+                sentence(line),
+              ],
+              FilledButton(
+                onPressed: _showLessonCards,
+                child: const Text('Practice the words'),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Try it yourself',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const Text(
+                'Say or write your answer, then reveal an example answer.',
+              ),
+              for (final (index, exercise) in guide.exercises.indexed)
+                Material(
+                  color: Colors.transparent,
+                  child: ExpansionTile(
+                    key: ValueKey('lesson-exercise-$index'),
+                    title: Text(exercise.question),
+                    subtitle: const Text('Reveal example answer'),
+                    childrenPadding: const EdgeInsets.all(16),
+                    children: [sentence(exercise.answer)],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   double get _lessonProgress {
     if (_cards.isEmpty) return 0;

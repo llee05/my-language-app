@@ -25,6 +25,7 @@ import 'package:mylanguageapp/repositories/tutor_context_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 import 'ai_test_support.dart';
+import 'lesson_generation_test_support.dart';
 
 const testProfile = LearnerProfile(
   name: 'Mei',
@@ -1885,7 +1886,8 @@ void main() {
     await tester.pumpAndSettle();
     await _generateLesson(tester);
 
-    expect(random.nextIntCalls, 1);
+    // The topic draw is followed by shuffling equally relevant vocabulary.
+    expect(random.nextIntCalls, greaterThan(1));
     expect(lessons.generated?.summary.theme, 'Daily Life');
     expect(lessons.generated?.summary.title, 'Daily Life · HSK 1');
     expect(lessons.generated?.cards, hasLength(10));
@@ -2255,6 +2257,68 @@ void main() {
     expect(lessons.requestedIds, hasLength(8));
   });
 
+  for (final width in [390.0, 1000.0]) {
+    testWidgets(
+      'saved lesson guide works at width $width and retains card position',
+      (tester) async {
+        await tester.binding.setSurfaceSize(Size(width, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final repository = _GuidedLessonRepository();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LessonsPage(
+                repository: repository,
+                initialLessonId: 7,
+                progressRepository: _MemoryProgressRepository(
+                  hasActiveSession: false,
+                  activeSession: LessonSession(
+                    id: 3,
+                    lessonId: 7,
+                    startedAt: DateTime.utc(2026, 9, 27),
+                  ),
+                ),
+                settingsRepository: _MemorySettingsRepository(),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text(savedLessonGuide.objective), findsOneWidget);
+        final exercise = find.byKey(const ValueKey('lesson-exercise-0'));
+        await tester.ensureVisible(exercise);
+        await tester.tap(exercise);
+        await tester.pumpAndSettle();
+        expect(
+          find.descendant(
+            of: exercise,
+            matching: find.text(
+              savedLessonGuide.exercises.first.answer.english,
+            ),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('lesson-cards-tab')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<PageView>(find.byType(PageView)).controller!.page,
+          1,
+        );
+        await tester.tap(find.byKey(const Key('lesson-guide-tab')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('lesson-cards-tab')));
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<PageView>(find.byType(PageView)).controller!.page,
+          1,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final useAi in [false, true]) {
     testWidgets(
       useAi
@@ -2300,15 +2364,7 @@ void main() {
                     'finish_reason': 'stop',
                     'message': {
                       'content': jsonEncode({
-                        'cards': List.generate(
-                          10,
-                          (index) => {
-                            'index': index,
-                            'exampleChinese': '我学习中文。',
-                            'examplePinyin': 'Wǒ xuéxí Zhōngwén.',
-                            'exampleEnglish': 'I study Chinese.',
-                          },
-                        ),
+                        ...lessonResponseFor(vocabularyFromLessonRequest(body)),
                       }),
                     },
                   },
@@ -2353,7 +2409,7 @@ void main() {
         if (useAi) {
           expect(
             lessons.generated!.cards.every(
-              (card) => card.exampleChinese == '我学习中文。',
+              (card) => card.exampleChinese.contains(card.chinese),
             ),
             isTrue,
           );
@@ -2368,6 +2424,15 @@ void main() {
           ),
           isTrue,
         );
+        if (useAi) {
+          expect(find.byKey(const Key('lesson-guide')), findsOneWidget);
+          expect(
+            find.text(lessons.generated!.guide!.objective),
+            findsOneWidget,
+          );
+          await tester.tap(find.byKey(const Key('lesson-cards-tab')));
+          await tester.pumpAndSettle();
+        }
         expect(find.text(lessons.generated!.cards.first.chinese), findsWidgets);
         expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
         expect(
@@ -2395,7 +2460,10 @@ void main() {
         expect(requests, useAi ? 2 : 1);
         expect(identical(lessons.generated, previous), isFalse);
         expect(lessons.saveCalls, 2);
-        expect(lessons.generated!.cards.first.exampleChinese, '我学习中文。');
+        expect(
+          lessons.generated!.cards.first.exampleChinese,
+          contains(lessons.generated!.cards.first.chinese),
+        );
         expect(find.textContaining('using your AI connection'), findsOneWidget);
       },
     );
@@ -2411,10 +2479,7 @@ void main() {
     'missing pinyin',
     'persistence error',
   ]) {
-    for (final cached in [
-      false,
-      if (failure == 'missing connection' || failure == 'provider error') true,
-    ]) {
+    for (final cached in [false, if (failure != 'persistence error') true]) {
       testWidgets(
         'lesson generation handles $failure (saved lesson: $cached)',
         (tester) async {
@@ -2443,20 +2508,13 @@ void main() {
                 401,
               );
             }
-            final cards = List.generate(
-              10,
-              (index) => {
-                'index': failure == 'duplicate words'
-                    ? 0
-                    : failure == 'out-of-range word'
-                    ? 999
-                    : index,
-                'exampleChinese': '我学习中文。',
-                if (failure != 'missing pinyin')
-                  'examplePinyin': 'Wǒ xuéxí Zhōngwén.',
-                'exampleEnglish': 'I study Chinese.',
-              },
+            final data = lessonResponseFor(
+              vocabularyFromLessonRequest(jsonDecode(request.body)),
             );
+            final cards = data['cards'] as List;
+            if (failure == 'duplicate words') cards[1]['index'] = 0;
+            if (failure == 'out-of-range word') cards[0]['index'] = 999;
+            if (failure == 'missing pinyin') cards[0].remove('examplePinyin');
             return http.Response.bytes(
               utf8.encode(
                 jsonEncode({
@@ -2467,6 +2525,7 @@ void main() {
                         'content': failure == 'invalid JSON'
                             ? 'invalid'
                             : jsonEncode({
+                                ...data,
                                 'cards': failure == 'empty lesson' ? [] : cards,
                               }),
                       },
@@ -2511,7 +2570,14 @@ void main() {
           await tester.pumpAndSettle();
           await _generateLesson(tester);
 
-          expect(requests, failure == 'missing connection' ? 0 : 1);
+          expect(
+            requests,
+            failure == 'missing connection'
+                ? 0
+                : (['provider error', 'persistence error'].contains(failure)
+                      ? 1
+                      : 2),
+          );
           expect(find.textContaining('sensitive'), findsNothing);
           if (failure == 'persistence error') {
             expect(lessons.generated, isNull);
@@ -4426,6 +4492,15 @@ class _MemoryLessonRepository implements LessonRepository {
 
   @override
   Future<List<LessonSummary>> topics() async => [lesson.summary];
+}
+
+class _GuidedLessonRepository extends _MemoryLessonRepository {
+  @override
+  Future<Lesson?> findById(int id) async => Lesson(
+    summary: lesson.summary,
+    cards: lesson.cards,
+    guide: savedLessonGuide,
+  );
 }
 
 class _GeneratedMemoryLessonRepository extends _MemoryLessonRepository {
