@@ -33,6 +33,7 @@ class VocabRushPage extends StatefulWidget {
     this.settingsRepository = const SqliteSettingsRepository(),
     this.pronunciationService,
     this.initialVocabulary,
+    this.vocabularyRepository = const BundledVocabularyRepository(),
   });
 
   final LessonRepository lessonRepository;
@@ -41,6 +42,7 @@ class VocabRushPage extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
   final List<Map<String, dynamic>>? initialVocabulary;
+  final BundledVocabularyRepository vocabularyRepository;
 
   @override
   State<VocabRushPage> createState() => _VocabRushPageState();
@@ -134,12 +136,9 @@ class _VocabRushPageState extends State<VocabRushPage> {
     try {
       final vocabulary =
           widget.initialVocabulary ??
-          (jsonDecode(
-                await DefaultAssetBundle.of(
-                  context,
-                ).loadString('assets/data/hsk_vocabulary.json'),
-              )
-              as List<dynamic>);
+          await widget.vocabularyRepository.load(
+            bundle: DefaultAssetBundle.of(context),
+          );
       if (!mounted) return;
       _cards = vocabulary
           .cast<Map<String, dynamic>>()

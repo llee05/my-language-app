@@ -8,6 +8,9 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'repositories/bundled_vocabulary_repository.dart';
+import 'services/async_lru_cache.dart';
+
 import 'database/flashcard_seed.dart';
 import 'database/migrations.dart';
 import 'database/vocabulary_content.dart';
@@ -22,6 +25,8 @@ class DatabaseResetInProgressException implements Exception {
 typedef DatabaseArtifactDeleter = Future<void> Function(String path);
 typedef DatabaseDirectoryProvider = Future<Directory> Function();
 
+enum DatabaseCacheScope { lessons, statistics }
+
 class LocalDatabase {
   LocalDatabase._();
 
@@ -29,6 +34,12 @@ class LocalDatabase {
   static Future<Database>? _initialization;
   static Future<void>? _resetOperation;
   static Future<void>? _closeOperation;
+  static final _readCaches = {
+    DatabaseCacheScope.lessons: AsyncLruCache<Object, Object?>(maxEntries: 32),
+    DatabaseCacheScope.statistics: AsyncLruCache<Object, Object?>(
+      maxEntries: 1,
+    ),
+  };
   static int _activeOperations = 0;
   static Completer<void>? _operationsDrained;
   static final Object _leaseKey = Object();
@@ -99,6 +110,36 @@ class LocalDatabase {
   }
 
   static Future<void> initialize() => use((_) async {});
+
+  /// Cache hits still hold a database lease, so close/reset cannot be bypassed.
+  static Future<T> readCached<T>(
+    DatabaseCacheScope scope,
+    Object key,
+    Future<T> Function(Database database) load,
+  ) => use((db) async {
+    return await _readCaches[scope]!.get(key, () => load(db)) as T;
+  });
+
+  /// Invalidate only after persistence succeeds, before releasing the lease.
+  static Future<T> write<T>(
+    Future<T> Function(Database database) operation, {
+    Set<DatabaseCacheScope> invalidates = const {
+      DatabaseCacheScope.lessons,
+      DatabaseCacheScope.statistics,
+    },
+  }) => use((db) async {
+    final result = await operation(db);
+    for (final scope in invalidates) {
+      _readCaches[scope]!.clear();
+    }
+    return result;
+  });
+
+  static void _clearReadCaches() {
+    for (final cache in _readCaches.values) {
+      cache.clear();
+    }
+  }
 
   /// Exposes the raw handle for database migration and integration tests.
   /// Production operations should use [use] so resets can wait for them.
@@ -355,14 +396,7 @@ class LocalDatabase {
     );
     if (applied.isNotEmpty) return;
 
-    final vocabulary =
-        (jsonDecode(
-                  await rootBundle.loadString(
-                    'assets/data/hsk_vocabulary.json',
-                  ),
-                )
-                as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final vocabulary = await const BundledVocabularyRepository().load();
     final vocabularyByWord = {
       for (final entry in vocabulary) entry['simplified'] as String: entry,
     };
@@ -459,6 +493,7 @@ class LocalDatabase {
       await _verifyDatabaseArtifactsDeleted(path);
       _openedDatabasePath = null;
     } finally {
+      _clearReadCaches();
       _resetOperation = null;
     }
   }
@@ -486,6 +521,7 @@ class LocalDatabase {
       if (database != null) await database.close();
       _database = null;
     } finally {
+      _clearReadCaches();
       _closeOperation = null;
     }
   }

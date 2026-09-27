@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../local_database.dart';
 import '../models/learner_profile.dart';
+import '../models/dashboard_learning_stats.dart';
 import '../models/learning_progress.dart';
 import '../models/lesson.dart';
 import '../models/lesson_guide.dart';
@@ -231,7 +232,7 @@ class SqliteLearnerRepository implements LearnerRepository {
   });
 
   @override
-  Future<void> resetOnboarding() => LocalDatabase.use((db) async {
+  Future<void> resetOnboarding() => LocalDatabase.write((db) async {
     await db.insert('app_data', {
       'key': _onboardingRequiredKey,
       'value': '1',
@@ -320,41 +321,49 @@ class SqliteLessonRepository implements LessonRepository {
   const SqliteLessonRepository();
 
   @override
-  Future<List<LessonSummary>> topics() => LocalDatabase.use((db) async {
-    final rows = await db.query(
-      'lessons',
-      columns: [
-        'id',
-        'lesson_title',
-        'theme',
-        'hsk_level',
-        'is_sentence_practice',
-      ],
-      where: 'is_listed = ?',
-      whereArgs: [1],
-      orderBy: 'is_sentence_practice ASC, id DESC',
-    );
-    return rows.map(_summaryFromRow).toList(growable: false);
-  });
+  Future<List<LessonSummary>> topics() => LocalDatabase.readCached(
+    DatabaseCacheScope.lessons,
+    'topics',
+    (db) async {
+      final rows = await db.query(
+        'lessons',
+        columns: [
+          'id',
+          'lesson_title',
+          'theme',
+          'hsk_level',
+          'is_sentence_practice',
+        ],
+        where: 'is_listed = ?',
+        whereArgs: [1],
+        orderBy: 'is_sentence_practice ASC, id DESC',
+      );
+      return List.unmodifiable(rows.map(_summaryFromRow));
+    },
+  );
 
   @override
-  Future<Lesson?> findById(int id) => LocalDatabase.use((db) async {
-    final lessons = await db.query(
-      'lessons',
-      columns: [
-        'id',
-        'lesson_title',
-        'theme',
-        'hsk_level',
-        'is_sentence_practice',
-      ],
-      where: 'id = ? AND is_listed = ?',
-      whereArgs: [id, 1],
-      limit: 1,
-    );
-    if (lessons.isEmpty) return null;
-    return _lessonFromSummary(db, _summaryFromRow(lessons.single));
-  });
+  Future<Lesson?> findById(int id) => LocalDatabase.readCached(
+    DatabaseCacheScope.lessons,
+    ('lesson', id),
+    (db) async {
+      final lessons = await db.query(
+        'lessons',
+        columns: [
+          'id',
+          'lesson_title',
+          'theme',
+          'hsk_level',
+          'is_sentence_practice',
+        ],
+        where: 'id = ? AND is_listed = ?',
+        whereArgs: [id, 1],
+        limit: 1,
+      );
+      if (lessons.isEmpty) return null;
+      return _lessonFromSummary(db, _summaryFromRow(lessons.single));
+    },
+  );
 
   @override
   Future<Lesson?> findGenerated({
@@ -385,7 +394,7 @@ class SqliteLessonRepository implements LessonRepository {
   Future<Flashcard> findOrCreateVocabularyCard({
     required Flashcard card,
     required int hskLevel,
-  }) => LocalDatabase.use((db) async {
+  }) => LocalDatabase.write((db) async {
     return db.transaction((txn) async {
       final existing = await txn.query(
         'cards',
@@ -457,7 +466,7 @@ class SqliteLessonRepository implements LessonRepository {
     final guideJson = lessonRows.single['guide_json'] as String?;
     return Lesson(
       summary: summary,
-      cards: rows.map(_cardFromRow).toList(growable: false),
+      cards: List.unmodifiable(rows.map(_cardFromRow)),
       guide: guideJson == null
           ? null
           : LessonGuide.fromJson(jsonDecode(guideJson)),
@@ -465,7 +474,7 @@ class SqliteLessonRepository implements LessonRepository {
   }
 
   @override
-  Future<void> saveGenerated(Lesson lesson) => LocalDatabase.use((db) async {
+  Future<void> saveGenerated(Lesson lesson) => LocalDatabase.write((db) async {
     await db.transaction((txn) async {
       final lessonId = await txn.insert('lessons', {
         'lesson_title': lesson.summary.title,
@@ -515,13 +524,58 @@ class SqliteLessonRepository implements LessonRepository {
     exampleSource: row['example_source'] as String? ?? '',
     exampleSourceId: row['example_source_id'] as String? ?? '',
     exampleTranslationId: row['example_translation_id'] as String? ?? '',
-    quizOptions: (jsonDecode(row['quiz_options'] as String) as List)
-        .cast<String>(),
+    quizOptions: List<String>.unmodifiable(
+      jsonDecode(row['quiz_options'] as String) as List,
+    ),
   );
 }
 
-class SqliteProgressRepository implements ProgressRepository {
+class SqliteProgressRepository
+    implements ProgressRepository, ProgressSummaryRepository {
   const SqliteProgressRepository();
+
+  @override
+  Future<Map<int, LessonSession>> activeLessonSessions() =>
+      LocalDatabase.use((db) async {
+        final rows = await db.rawQuery(
+          '''
+          SELECT lesson_sessions.*
+          FROM lesson_sessions
+          INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
+          WHERE lesson_sessions.learner_id = ?
+            AND lesson_sessions.completed_at IS NULL
+            AND lessons.is_listed = ?
+          ORDER BY lesson_sessions.started_at DESC, lesson_sessions.id DESC
+        ''',
+          [1, 1],
+        );
+        final sessions = <int, LessonSession>{};
+        for (final row in rows) {
+          final session = _sessionFromRow(row);
+          sessions.putIfAbsent(session.lessonId, () => session);
+        }
+        return Map.unmodifiable(sessions);
+      });
+
+  @override
+  Future<DashboardLearningStats> learningStats(DateTime now) {
+    final local = now.toLocal();
+    return LocalDatabase.readCached(
+      DatabaseCacheScope.statistics,
+      (local.year, local.month, local.day, local.timeZoneOffset),
+      (_) async {
+        final results = await Future.wait([
+          reviewHistory(),
+          vocabularyProgress(),
+        ]);
+        return DashboardLearningStats.fromSavedData(
+          reviews: results[0] as List<ReviewRecord>,
+          vocabulary: results[1] as List<VocabularyCardProgress>,
+          now: now,
+        );
+      },
+    );
+  }
 
   @override
   Future<LessonSession> startSession(int lessonId) => LocalDatabase.use((
@@ -742,7 +796,7 @@ class SqliteProgressRepository implements ProgressRepository {
       );
     }
     final submissionKey = lessonSubmissionKey ?? review.submissionKey;
-    await LocalDatabase.use((db) async {
+    await LocalDatabase.write((db) async {
       await db.transaction((txn) async {
         if (submissionKey != null) {
           final existing = await txn.query(
@@ -804,7 +858,7 @@ class SqliteProgressRepository implements ProgressRepository {
               .toIso8601String(),
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       });
-    });
+    }, invalidates: const {DatabaseCacheScope.statistics});
   }
 
   @override
@@ -1058,8 +1112,9 @@ class SqliteProgressRepository implements ProgressRepository {
     exampleSource: row['example_source'] as String? ?? '',
     exampleSourceId: row['example_source_id'] as String? ?? '',
     exampleTranslationId: row['example_translation_id'] as String? ?? '',
-    quizOptions: (jsonDecode(row['quiz_options'] as String) as List)
-        .cast<String>(),
+    quizOptions: List<String>.unmodifiable(
+      jsonDecode(row['quiz_options'] as String) as List,
+    ),
   );
 
   LessonSession _sessionFromRow(Map<String, Object?> row) => LessonSession(

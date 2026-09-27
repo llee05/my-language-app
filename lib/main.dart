@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/services.dart' show rootBundle, Clipboard;
+import 'package:flutter/services.dart' show Clipboard;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'database/flashcard_seed.dart';
@@ -35,8 +35,10 @@ import 'services/review_scheduler.dart';
 import 'services/pronunciation_service_factory.dart';
 import 'services/speech_input_service_factory.dart';
 import 'services/backup_file_service.dart';
-import 'services/study_streak_calculator.dart';
+import 'models/dashboard_learning_stats.dart';
+import 'repositories/bundled_vocabulary_repository.dart';
 
+export 'models/dashboard_learning_stats.dart';
 export 'models/learner_profile.dart';
 export 'models/lesson.dart';
 
@@ -298,6 +300,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             buttonAnimationStyle: _buttonAnimationStyle,
             onButtonAnimationStyleChanged: _applyButtonAnimationStyle,
             lessonRepository: widget.dependencies.lessons,
+            vocabularyRepository: widget.dependencies.vocabulary,
             progressRepository: widget.dependencies.progress,
             dailyReviewSessionRepository: widget.dependencies.dailyReviews,
             settingsRepository: widget.dependencies.settings,

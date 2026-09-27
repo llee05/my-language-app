@@ -49,6 +49,7 @@ class LessonsPage extends StatefulWidget {
     this.onProgressChanged,
     this.aiService = const AiService(),
     this.random,
+    this.vocabularyRepository = const BundledVocabularyRepository(),
   });
 
   final LessonRepository repository;
@@ -61,6 +62,7 @@ class LessonsPage extends StatefulWidget {
   final VoidCallback? onProgressChanged;
   final AiService aiService;
   final Random? random;
+  final BundledVocabularyRepository vocabularyRepository;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
@@ -204,16 +206,10 @@ class _LessonsPageState extends State<LessonsPage> {
     }
     try {
       final topics = await widget.repository.topics();
-      final activeSessions = await Future.wait(
-        topics.map(
-          (topic) => widget.progressRepository.activeSessionForLesson(topic.id),
-        ),
+      final sessions = await widget.progressRepository.activeSessionsForLessons(
+        topics.map((topic) => topic.id),
       );
       if (!mounted || requestId != _topicsRequestId) return;
-      final sessions = <int, LessonSession>{
-        for (var index = 0; index < topics.length; index++)
-          topics[index].id: ?activeSessions[index],
-      };
       setState(() {
         _topics = topics;
         _activeSessions = sessions;
@@ -476,14 +472,7 @@ class _LessonsPageState extends State<LessonsPage> {
               theme: topic,
               hskLevel: hskLevel,
             );
-      final vocabulary =
-          (jsonDecode(
-                    await rootBundle.loadString(
-                      'assets/data/hsk_vocabulary.json',
-                    ),
-                  )
-                  as List<dynamic>)
-              .cast<Map<String, dynamic>>();
+      final vocabulary = await widget.vocabularyRepository.load();
       final progress = await widget.progressRepository.vocabularyProgress();
       final studiedWords = {
         for (final word in progress)

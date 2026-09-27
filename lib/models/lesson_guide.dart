@@ -28,8 +28,8 @@ class LessonGuide {
     return LessonGuide(
       objective: lessonText(map, 'objective', maxLength: 200),
       explanation: lessonText(map, 'explanation', maxLength: 1200),
-      dialogue: dialogue.map(LessonSentence.fromJson).toList(growable: false),
-      exercises: exercises.map(LessonExercise.fromJson).toList(growable: false),
+      dialogue: List.unmodifiable(dialogue.map(LessonSentence.fromJson)),
+      exercises: List.unmodifiable(exercises.map(LessonExercise.fromJson)),
     );
   }
 

@@ -111,6 +111,46 @@ Future<void> _openSettingsResetDialog(
 }
 
 void main() {
+  testWidgets('dashboard refreshes statistics at midnight and on resume', (
+    tester,
+  ) async {
+    var now = DateTime(2026, 9, 27, 23, 59, 58);
+    final progress = _CountingStatsProgress();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          lessonRepository: _MemoryLessonRepository(),
+          progressRepository: progress,
+          settingsRepository: _MemorySettingsRepository(),
+          developmentRepository: _MemoryDevelopmentRepository(),
+          clock: () => now,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(progress.statisticsDates, [now]);
+    now = DateTime(2026, 9, 28, 0, 0, 1);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(progress.statisticsDates.last, now);
+    expect(progress.statisticsDates, hasLength(2));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    now = DateTime(2026, 9, 28, 9);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(progress.statisticsDates.last, now);
+    expect(progress.statisticsDates, hasLength(3));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(days: 1));
+    expect(progress.statisticsDates, hasLength(3));
+  });
+
   for (final (size, textScale) in [
     (const Size(320, 640), 1.0),
     (const Size(320, 640), 1.5),
@@ -5162,5 +5202,21 @@ class _FakeSystemVoiceService extends _FakePronunciationService
   Future<void> openMandarinVoiceInstaller() async {
     openCalls++;
     if (failOpen) throw StateError('No installer');
+  }
+}
+
+class _CountingStatsProgress extends _MemoryProgressRepository
+    implements ProgressSummaryRepository {
+  _CountingStatsProgress() : super(hasActiveSession: false);
+
+  final statisticsDates = <DateTime>[];
+
+  @override
+  Future<Map<int, LessonSession>> activeLessonSessions() async => const {};
+
+  @override
+  Future<DashboardLearningStats> learningStats(DateTime now) async {
+    statisticsDates.add(now);
+    return const DashboardLearningStats();
   }
 }

@@ -23,6 +23,7 @@ class DashboardPage extends StatefulWidget {
     this.speechInputService,
     this.clock,
     this.random,
+    this.vocabularyRepository = const BundledVocabularyRepository(),
     this.backupRepository = const SqliteBackupRepository(),
     this.backupFileService = const FilePickerBackupFileService(),
   });
@@ -36,6 +37,7 @@ class DashboardPage extends StatefulWidget {
   final void Function(AppThemeId themeId) onThemeChanged;
   final ButtonAnimationStyle buttonAnimationStyle;
   final ValueChanged<ButtonAnimationStyle>? onButtonAnimationStyleChanged;
+  final BundledVocabularyRepository vocabularyRepository;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -54,7 +56,8 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage>
+    with WidgetsBindingObserver {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   double _menuSwipeDistance = 0;
   late final PronunciationService _pronunciationService;
@@ -74,6 +77,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Lesson? _activeLesson;
   LessonSession? _activeLessonSession;
   DashboardLearningStats _learningStats = const DashboardLearningStats();
+  Timer? _statisticsRefreshTimer;
+  int _statisticsRequestId = 0;
   bool _loadingLearningStats = true;
   bool _learningStatsLoadError = false;
   List<Lesson> _availableLessons = const [];
@@ -85,6 +90,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -100,6 +106,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _statisticsRefreshTimer?.cancel();
     if (_ownsPronunciationService) {
       unawaited(_pronunciationService.dispose());
     } else {
@@ -205,7 +213,23 @@ class _DashboardPageState extends State<DashboardPage> {
     return selected.take(capacity).toList(growable: false);
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_loadLearningStats());
+  }
+
+  void _scheduleStatisticsRefresh() {
+    _statisticsRefreshTimer?.cancel();
+    final now = (widget.clock?.call() ?? DateTime.now()).toLocal();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    _statisticsRefreshTimer = Timer(tomorrow.difference(now), () {
+      if (mounted) unawaited(_loadLearningStats());
+    });
+  }
+
   Future<void> _loadLearningStats() async {
+    final requestId = ++_statisticsRequestId;
+    _scheduleStatisticsRefresh();
     if (!_loadingLearningStats && mounted) {
       setState(() {
         _loadingLearningStats = true;
@@ -213,26 +237,18 @@ class _DashboardPageState extends State<DashboardPage> {
       });
     }
     try {
-      final results = await Future.wait([
-        widget.progressRepository.reviewHistory(),
-        widget.progressRepository.vocabularyProgress(),
-      ]);
-      final now = widget.clock?.call() ?? DateTime.now();
-      final reviews = results[0] as List<ReviewRecord>;
-      final vocabulary = results[1] as List<VocabularyCardProgress>;
-      if (!mounted) return;
+      final stats = await widget.progressRepository.loadLearningStats(
+        widget.clock?.call() ?? DateTime.now(),
+      );
+      if (!mounted || requestId != _statisticsRequestId) return;
       setState(() {
-        _learningStats = DashboardLearningStats.fromSavedData(
-          reviews: reviews,
-          vocabulary: vocabulary,
-          now: now,
-        );
+        _learningStats = stats;
         _loadingLearningStats = false;
         _learningStatsLoadError = false;
       });
     } catch (error) {
       debugPrint('Learning analytics load failed: $error');
-      if (!mounted) return;
+      if (!mounted || requestId != _statisticsRequestId) return;
       setState(() {
         _learningStats = const DashboardLearningStats();
         _loadingLearningStats = false;
@@ -406,6 +422,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       Expanded(
                         child: _DashboardBody(
+                          vocabularyRepository: widget.vocabularyRepository,
                           selectedNav: selectedNav,
                           resumeLatestLesson: _resumeLatestLesson,
                           initialLessonId: _initialLessonId,
@@ -540,6 +557,7 @@ class _DashboardBody extends StatelessWidget {
     required this.pronunciationService,
     required this.speechInputService,
     this.clock,
+    this.vocabularyRepository = const BundledVocabularyRepository(),
     this.backupRepository = const SqliteBackupRepository(),
     this.backupFileService = const FilePickerBackupFileService(),
   });
@@ -580,6 +598,7 @@ class _DashboardBody extends StatelessWidget {
   final void Function(AppThemeId themeId) onThemeChanged;
   final ButtonAnimationStyle buttonAnimationStyle;
   final ValueChanged<ButtonAnimationStyle>? onButtonAnimationStyleChanged;
+  final BundledVocabularyRepository vocabularyRepository;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -597,6 +616,7 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
       return LessonsPage(
+        vocabularyRepository: vocabularyRepository,
         aiService: AiService(
           configurationRepository: aiConfigurationRepository,
         ),
@@ -632,6 +652,7 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 4) {
       return VocabRushPage(
+        vocabularyRepository: vocabularyRepository,
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,
         dailyReviewSessionRepository: dailyReviewSessionRepository,
@@ -641,6 +662,7 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 5) {
       return VocabularyPage(
+        vocabularyRepository: vocabularyRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
@@ -894,130 +916,6 @@ class DashboardHeader extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class DashboardLearningStats {
-  const DashboardLearningStats({
-    this.totalXp = 0,
-    this.weeklyXp = const [0, 0, 0, 0, 0, 0, 0],
-    this.streakDays = 0,
-    this.wordsSeen = 0,
-    this.wordsLearning = 0,
-    this.wordsLearned = 0,
-    this.reviewCount = 0,
-    this.correctReviewCount = 0,
-    this.activeStudyDays = 0,
-    this.weeklyReviewCount = 0,
-    this.hskWordsLearned = const [0, 0, 0, 0, 0, 0],
-    this.vocabulary = const [],
-  });
-
-  static const hskVocabularyTotals = [150, 147, 298, 598, 1298, 2500];
-
-  final int totalXp;
-  final List<int> weeklyXp;
-  final int streakDays;
-  final int wordsSeen;
-  final int wordsLearning;
-  final int wordsLearned;
-  final int reviewCount;
-  final int correctReviewCount;
-  final int activeStudyDays;
-  final int weeklyReviewCount;
-  final List<int> hskWordsLearned;
-  final List<VocabularyCardProgress> vocabulary;
-
-  double get accuracy =>
-      reviewCount == 0 ? 0 : correctReviewCount / reviewCount;
-
-  int get hskLevelReached {
-    var reached = 0;
-    for (var index = 0; index < hskVocabularyTotals.length; index++) {
-      if (hskWordsLearned[index] < hskVocabularyTotals[index]) break;
-      reached = index + 1;
-    }
-    return reached;
-  }
-
-  int? get nextHskLevel => hskLevelReached >= 6 ? null : hskLevelReached + 1;
-
-  int get nextHskWordsLearned {
-    final next = nextHskLevel;
-    return next == null ? hskVocabularyTotals.last : hskWordsLearned[next - 1];
-  }
-
-  int get nextHskWordTarget {
-    final next = nextHskLevel;
-    return next == null
-        ? hskVocabularyTotals.last
-        : hskVocabularyTotals[next - 1];
-  }
-
-  double get nextHskProgress =>
-      (nextHskWordsLearned / nextHskWordTarget).clamp(0, 1);
-
-  factory DashboardLearningStats.fromSavedData({
-    required List<ReviewRecord> reviews,
-    required List<VocabularyCardProgress> vocabulary,
-    required DateTime now,
-  }) {
-    final localNow = now.toLocal();
-    final today = DateTime(localNow.year, localNow.month, localNow.day);
-    final weekStart = today.subtract(Duration(days: today.weekday - 1));
-    final weeklyXp = List<int>.filled(7, 0);
-    var totalXp = 0;
-    var correctReviewCount = 0;
-    var weeklyReviewCount = 0;
-    final activeDays = <(int, int, int)>{};
-
-    for (final review in reviews) {
-      final xp = review.wasCorrect ? 10 : 5;
-      totalXp += xp;
-      if (review.wasCorrect) correctReviewCount++;
-      final reviewed = review.reviewedAt.toLocal();
-      final day = DateTime(reviewed.year, reviewed.month, reviewed.day);
-      activeDays.add((day.year, day.month, day.day));
-      final offset = day.difference(weekStart).inDays;
-      if (offset >= 0 && offset < 7) {
-        weeklyXp[offset] += xp;
-        weeklyReviewCount++;
-      }
-    }
-
-    final seenVocabulary = vocabulary
-        .where((word) => word.progress.timesSeen > 0)
-        .toList(growable: false);
-    final wordsLearned = seenVocabulary
-        .where((word) => word.progress.mastery >= .8)
-        .length;
-    final learnedWordsByLevel = [
-      for (var level = 0; level < 6; level++) <String>{},
-    ];
-    for (final word in seenVocabulary) {
-      if (word.progress.mastery < .8) continue;
-      learnedWordsByLevel[word.hskLevel - 1].add(word.chinese);
-    }
-
-    return DashboardLearningStats(
-      totalXp: totalXp,
-      weeklyXp: weeklyXp,
-      streakDays: calculateCurrentStudyStreak(
-        studiedAt: reviews.map((review) => review.reviewedAt),
-        now: now,
-      ),
-      wordsSeen: seenVocabulary.length,
-      wordsLearning: seenVocabulary.length - wordsLearned,
-      wordsLearned: wordsLearned,
-      reviewCount: reviews.length,
-      correctReviewCount: correctReviewCount,
-      activeStudyDays: activeDays.length,
-      weeklyReviewCount: weeklyReviewCount,
-      hskWordsLearned: learnedWordsByLevel
-          .map((words) => words.length)
-          .toList(growable: false),
-      vocabulary: seenVocabulary.take(6).toList(growable: false),
     );
   }
 }

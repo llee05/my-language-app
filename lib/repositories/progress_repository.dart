@@ -1,4 +1,5 @@
 import '../models/learning_progress.dart';
+import '../models/dashboard_learning_stats.dart';
 
 abstract interface class ProgressRepository {
   Future<LessonSession> startSession(int lessonId);
@@ -30,4 +31,46 @@ abstract interface class ProgressRepository {
     double weakThreshold = .7,
     int maxHskLevel = 6,
   });
+}
+
+/// Optional aggregate queries for stores that can avoid per-lesson queries and
+/// cache calculated statistics. Other implementations retain the same behavior.
+abstract interface class ProgressSummaryRepository {
+  Future<Map<int, LessonSession>> activeLessonSessions();
+  Future<DashboardLearningStats> learningStats(DateTime now);
+}
+
+extension ProgressRepositoryQueries on ProgressRepository {
+  Future<Map<int, LessonSession>> activeSessionsForLessons(
+    Iterable<int> lessonIds,
+  ) async {
+    final ids = lessonIds.toSet();
+    if (ids.isEmpty) return const {};
+    final repository = this;
+    if (repository is ProgressSummaryRepository) {
+      final sessions = await (repository as ProgressSummaryRepository)
+          .activeLessonSessions();
+      return Map.unmodifiable({for (final id in ids) id: ?sessions[id]});
+    }
+    final sessions = await Future.wait([
+      for (final id in ids) activeSessionForLesson(id),
+    ]);
+    return Map.unmodifiable({
+      for (final session in sessions.whereType<LessonSession>())
+        session.lessonId: session,
+    });
+  }
+
+  Future<DashboardLearningStats> loadLearningStats(DateTime now) async {
+    final repository = this;
+    if (repository is ProgressSummaryRepository) {
+      return (repository as ProgressSummaryRepository).learningStats(now);
+    }
+    final results = await Future.wait([reviewHistory(), vocabularyProgress()]);
+    return DashboardLearningStats.fromSavedData(
+      reviews: results[0] as List<ReviewRecord>,
+      vocabulary: results[1] as List<VocabularyCardProgress>,
+      now: now,
+    );
+  }
 }

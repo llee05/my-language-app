@@ -184,7 +184,7 @@ class SqliteBackupRepository implements BackupRepository {
   @override
   Future<void> restoreBackup(Uint8List bytes) async {
     final snapshot = _decode(bytes);
-    await LocalDatabase.use((db) async {
+    await LocalDatabase.write((db) async {
       await db.transaction((txn) async {
         for (final table in const [
           'daily_review_sessions',

@@ -11,6 +11,7 @@ class VocabularyPage extends StatefulWidget {
     this.initialEntries,
     this.initialProgress,
     this.clock,
+    this.vocabularyRepository = const BundledVocabularyRepository(),
   });
 
   /// Allows focused previews and tests without loading the bundled asset.
@@ -20,6 +21,7 @@ class VocabularyPage extends StatefulWidget {
   final PronunciationService? pronunciationService;
   final List<VocabularyCardProgress>? initialProgress;
   final DateTime Function()? clock;
+  final BundledVocabularyRepository vocabularyRepository;
 
   @override
   State<VocabularyPage> createState() => _VocabularyPageState();
@@ -101,11 +103,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
     }
     try {
       final source =
-          widget.initialEntries ??
-          (jsonDecode(
-                await rootBundle.loadString('assets/data/hsk_vocabulary.json'),
-              )
-              as List<dynamic>);
+          widget.initialEntries ?? await widget.vocabularyRepository.load();
       final progress =
           widget.initialProgress ??
           (widget.initialEntries == null
@@ -120,7 +118,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
       }
       final entries = source
           .map((item) {
-            final json = item as Map<String, dynamic>;
+            final json = item;
             return _VocabularyEntry.fromJson(
               json,
               progress:

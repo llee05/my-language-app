@@ -1,3 +1,4 @@
+import 'bundled_vocabulary_repository.dart';
 import 'development_repository.dart';
 import 'ai_configuration_repository.dart';
 import 'daily_review_session_repository.dart';
@@ -14,6 +15,7 @@ import '../services/backup_file_service.dart';
 
 class AppDependencies {
   const AppDependencies({
+    this.vocabulary = const BundledVocabularyRepository(),
     this.learners = const SqliteLearnerRepository(),
     this.lessons = const SqliteLessonRepository(),
     this.development = const SqliteDevelopmentRepository(),
@@ -28,6 +30,7 @@ class AppDependencies {
     this.backupFiles = const FilePickerBackupFileService(),
   });
 
+  final BundledVocabularyRepository vocabulary;
   final LearnerRepository learners;
   final LessonRepository lessons;
   final DevelopmentRepository development;
