@@ -144,6 +144,20 @@ one is available. Kokoro uses the Apache-2.0-licensed
 
 ### Optional AI tutor
 
+In **Tutor chat → Choose personality**, pick Long Laoshi, Chatty Friend,
+Precision Coach, Travel Guide, Storyteller, Culture Companion, or Quiz Master.
+Each card explains its teaching style. Switching tutors starts a fresh chat;
+the selected style is remembered on this device. Listening dialogues and
+roleplay missions keep their own exercise formats.
+
+Select **Create a personality** to describe your ideal tutor, then **Create with
+AI** to draft a profile using the current connection in Settings. Review or edit
+the name, short description, and teaching style before selecting **Save and
+chat**. You can also fill in the profile manually without making an AI request.
+Custom tutors can be edited or deleted from the picker. Profiles are stored
+locally, survive onboarding reset, and are removed by full data reset. They are
+not included in study-data backup exports.
+
 Open **Settings → AI provider** to configure AI without rebuilding the app:
 
 1. Choose a provider. Gemini is suggested for new users; Gemini, OpenAI, and

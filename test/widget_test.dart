@@ -25,6 +25,7 @@ import 'package:mylanguageapp/repositories/tutor_context_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 import 'ai_test_support.dart';
+import 'tutor_personality_test_support.dart';
 import 'lesson_generation_test_support.dart';
 
 const testProfile = LearnerProfile(
@@ -177,6 +178,7 @@ void main() {
               settings: _MemorySettingsRepository(),
               development: _MemoryDevelopmentRepository(),
               tutorContext: _EmptyTutorContextRepository(),
+              tutorPersonalities: MemoryTutorPersonalityRepository(),
               createPronunciationService: () => pronunciation,
             ),
           ),
@@ -3005,6 +3007,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: AiTutorPage(
+            personalityRepository: MemoryTutorPersonalityRepository(),
             settingsRepository: _MemorySettingsRepository(),
             tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
@@ -3036,6 +3039,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: AiTutorPage(
+            personalityRepository: MemoryTutorPersonalityRepository(),
             settingsRepository: _MemorySettingsRepository(),
             tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
@@ -3055,6 +3059,7 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Practise this sentence');
     await tester.tap(find.byTooltip('Send'));
     await tester.pumpAndSettle();
@@ -3095,6 +3100,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: AiTutorPage(
+            personalityRepository: MemoryTutorPersonalityRepository(),
             settingsRepository: _MemorySettingsRepository(),
             tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
@@ -3106,6 +3112,7 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Help me practise');
     await tester.tap(find.byTooltip('Send'));
     await tester.pumpAndSettle();
@@ -3127,6 +3134,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: AiTutorPage(
+            personalityRepository: MemoryTutorPersonalityRepository(),
             settingsRepository: _MemorySettingsRepository(),
             tutorContextRepository: _EmptyTutorContextRepository(),
             pronunciationService: pronunciation,
@@ -3172,6 +3180,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: AiTutorPage(
+            personalityRepository: MemoryTutorPersonalityRepository(),
             settingsRepository: _MemorySettingsRepository(
               const LearnerSettings(soundEnabled: false),
             ),
@@ -3230,6 +3239,7 @@ void main() {
       MaterialApp(
         theme: ThemeData(platform: TargetPlatform.android),
         home: DashboardPage(
+          personalityRepository: MemoryTutorPersonalityRepository(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,

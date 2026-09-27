@@ -11,12 +11,15 @@ import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/ai_configuration.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
+import 'package:mylanguageapp/models/tutor_personality.dart';
+import 'package:mylanguageapp/repositories/tutor_personality_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/tutor_context_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 import 'package:mylanguageapp/services/speech_input_service.dart';
 
 import 'ai_test_support.dart';
+import 'tutor_personality_test_support.dart';
 
 class _MemorySettingsRepository implements SettingsRepository {
   _MemorySettingsRepository([this.initial = const LearnerSettings()]);
@@ -161,6 +164,7 @@ Future<void> _pumpTutor(
   AiService aiService = const AiService(),
   SettingsRepository? settingsRepository,
   TutorContextRepository? tutorContextRepository,
+  TutorPersonalityRepository? personalityRepository,
   PronunciationService? pronunciationService,
   SpeechInputService? speechInputService,
   DateTime Function()? clock,
@@ -171,6 +175,8 @@ Future<void> _pumpTutor(
     MaterialApp(
       home: Scaffold(
         body: AiTutorPage(
+          personalityRepository:
+              personalityRepository ?? MemoryTutorPersonalityRepository(),
           request: request,
           aiService: aiService,
           settingsRepository: settingsRepository ?? _MemorySettingsRepository(),
@@ -476,6 +482,300 @@ void main() {
     expect(find.textContaining('add your API key in Settings'), findsOneWidget);
   });
 
+  Future<void> openPersonalities(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('choose-personality')));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> openCreator(WidgetTester tester) async {
+    await openPersonalities(tester);
+    await tester.tap(find.text('Create a personality'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('choosing a style saves it and drops the previous chat context', (
+    tester,
+  ) async {
+    final repository = MemoryTutorPersonalityRepository();
+    final requests = <List<Map<String, String>>>[];
+    await _pumpTutor(
+      tester,
+      personalityRepository: repository,
+      request: (messages) async {
+        requests.add(messages);
+        return '{"english":"A reply"}';
+      },
+    );
+    await tester.enterText(find.byType(TextField), 'Old conversation');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+    await openPersonalities(tester);
+    expect(find.text('Chatty Friend'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('personality-precision_coach')));
+    await tester.pumpAndSettle();
+    expect(repository.library.selectedId, 'precision_coach');
+    expect(find.text('Old conversation'), findsNothing);
+    await tester.enterText(find.byType(TextField), 'New practice');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+    expect(requests.last.first['content'], contains('precise coach'));
+    expect(
+      requests.last.first['content'],
+      contains('Return only compact JSON'),
+    );
+    expect(requests.last.toString(), isNot(contains('Old conversation')));
+    await tester.tap(find.text('Reset'));
+    await tester.pumpAndSettle();
+    expect(find.text('Precision Coach'), findsOneWidget);
+  });
+
+  testWidgets('switching tutors discards an in-flight response', (
+    tester,
+  ) async {
+    final pending = Completer<String>();
+    await _pumpTutor(tester, request: (_) => pending.future);
+    await tester.enterText(find.byType(TextField), 'Old question');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('choose-personality')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.byKey(const Key('personality-chatty_friend')));
+    await tester.pumpAndSettle();
+    pending.complete('{"english":"Stale response"}');
+    await tester.pumpAndSettle();
+    expect(find.text('Stale response'), findsNothing);
+    expect(find.text('Chatty Friend'), findsOneWidget);
+  });
+
+  testWidgets(
+    'AI creation is explicit, editable, saved locally, and used for chat',
+    (tester) async {
+      final repository = MemoryTutorPersonalityRepository();
+      final requests = <List<Map<String, String>>>[];
+      await _pumpTutor(
+        tester,
+        personalityRepository: repository,
+        request: (messages) async {
+          requests.add(messages);
+          return jsonEncode({
+            'name': 'Chef Lin',
+            'description': 'Learn through cooking.',
+            'instructions': 'Be a cheerful chef.',
+          });
+        },
+      );
+      await openCreator(tester);
+      expect(requests, isEmpty);
+      await tester.enterText(
+        find.byKey(const Key('personality-idea')),
+        'A chef who teaches through cooking',
+      );
+      await tester.tap(find.text('Create with AI'));
+      await tester.pumpAndSettle();
+      expect(
+        requests.single.last['content'],
+        'A chef who teaches through cooking',
+      );
+      expect(repository.library.custom, isEmpty);
+      await tester.enterText(
+        find.byKey(const Key('personality-name')),
+        'My Chef',
+      );
+      await tester.tap(find.text('Save and chat'));
+      await tester.pumpAndSettle();
+      expect(repository.library.selected.name, 'My Chef');
+      expect(find.text('My Chef'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'Teach me about noodles');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pumpAndSettle();
+      expect(requests.last.first['content'], contains('Be a cheerful chef.'));
+      expect(requests.last.first['content'], contains('My Chef'));
+    },
+  );
+
+  testWidgets(
+    'profile creation uses the saved API connection and handles missing keys',
+    (tester) async {
+      final configuration = MemoryAiConfigurationRepository(
+        const AiConfiguration(
+          provider: AiProvider.custom,
+          apiKey: 'personal-key',
+          model: 'test-model',
+          customEndpoint: 'https://example.com/v1/chat/completions',
+        ),
+      );
+      var requests = 0;
+      final service = AiService(
+        configurationRepository: configuration,
+        client: MockClient((request) async {
+          requests++;
+          expect(request.headers['authorization'], 'Bearer personal-key');
+          return http.Response(
+            jsonEncode({
+              'choices': [
+                {
+                  'message': {
+                    'content': jsonEncode({
+                      'name': 'Chef',
+                      'description': 'Food practice.',
+                      'instructions': 'Teach food vocabulary.',
+                    }),
+                  },
+                  'finish_reason': 'stop',
+                },
+              ],
+            }),
+            200,
+          );
+        }),
+      );
+      await _pumpTutor(tester, aiService: service);
+      await openCreator(tester);
+      expect(requests, 0);
+      await tester.enterText(
+        find.byKey(const Key('personality-idea')),
+        'A chef',
+      );
+      await tester.tap(find.text('Create with AI'));
+      await tester.pumpAndSettle();
+      expect(requests, 1);
+      expect(find.text('Chef'), findsOneWidget);
+      await configuration.clear();
+      await tester.tap(find.text('Create with AI'));
+      await tester.pumpAndSettle();
+      expect(requests, 1);
+      expect(
+        find.textContaining('add your API key in Settings'),
+        findsOneWidget,
+      );
+      expect(find.text('Chef'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'malformed generation and failed save preserve an editable draft',
+    (tester) async {
+      final repository = MemoryTutorPersonalityRepository()
+        ..saveError = StateError('disk full');
+      await _pumpTutor(
+        tester,
+        personalityRepository: repository,
+        request: (_) async => '[]',
+      );
+      await openCreator(tester);
+      await tester.enterText(
+        find.byKey(const Key('personality-idea')),
+        'A friendly chef',
+      );
+      await tester.tap(find.text('Create with AI'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('incomplete profile'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('personality-name')), 'Chef');
+      await tester.enterText(
+        find.byKey(const Key('personality-description')),
+        'Cook and learn',
+      );
+      await tester.enterText(
+        find.byKey(const Key('personality-instructions')),
+        'Teach through cooking.',
+      );
+      await tester.tap(find.text('Save and chat'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Your draft is still here'), findsOneWidget);
+      expect(repository.library.custom, isEmpty);
+      repository.saveError = null;
+      await tester.tap(find.text('Save and chat'));
+      await tester.pumpAndSettle();
+      expect(repository.library.selected.name, 'Chef');
+    },
+  );
+
+  testWidgets(
+    'saved custom tutors restore, edit, and delete without API calls',
+    (tester) async {
+      final repository = MemoryTutorPersonalityRepository()
+        ..library = TutorPersonalityLibrary(
+          selectedId: 'custom_chef',
+          custom: [
+            const TutorPersonality(
+              id: 'custom_chef',
+              name: 'Chef',
+              description: 'Cook and learn.',
+              instructions: 'Teach through cooking.',
+            ),
+          ],
+        );
+      await _pumpTutor(
+        tester,
+        personalityRepository: repository,
+        request: (_) async => fail('Unexpected API request'),
+      );
+      expect(find.text('Chef'), findsOneWidget);
+      await openPersonalities(tester);
+      await tester.ensureVisible(find.text('Edit'));
+      await tester.tap(find.text('Edit'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('personality-name')),
+        'Chef Lin',
+      );
+      await tester.tap(find.text('Save and chat'));
+      await tester.pumpAndSettle();
+      expect(repository.library.custom.single.name, 'Chef Lin');
+      await openPersonalities(tester);
+      await tester.ensureVisible(find.byTooltip('Delete Chef Lin'));
+      await tester.tap(find.byTooltip('Delete Chef Lin'));
+      await tester.pumpAndSettle();
+      expect(repository.library.custom, isEmpty);
+      expect(repository.library.selectedId, 'long_laoshi');
+    },
+  );
+
+  testWidgets(
+    'failed load is retryable and failed selection preserves the tutor',
+    (tester) async {
+      final repository = MemoryTutorPersonalityRepository()
+        ..loadError = StateError('read failed');
+      await _pumpTutor(tester, personalityRepository: repository);
+      expect(
+        find.byTooltip('Could not load saved personalities.'),
+        findsOneWidget,
+      );
+      repository.loadError = null;
+      await tester.tap(find.text('Retry loading tutors'));
+      await tester.pumpAndSettle();
+      repository.saveError = StateError('write failed');
+      await openPersonalities(tester);
+      await tester.tap(find.byKey(const Key('personality-chatty_friend')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Could not save your choice'), findsOneWidget);
+      expect(repository.library.selectedId, 'long_laoshi');
+    },
+  );
+
+  testWidgets('personality selection and creation fit a narrow screen', (
+    tester,
+  ) async {
+    await _pumpTutor(tester);
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpAndSettle();
+    await openCreator(tester);
+    expect(find.text('Save and chat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('personality-quiz_master')),
+    );
+    await tester.tap(find.byKey(const Key('personality-quiz_master')));
+    await tester.pumpAndSettle();
+    expect(find.text('Quiz Master'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('renders the tutor greeting, prompt chips, and composer', (
     tester,
   ) async {
@@ -485,10 +785,7 @@ void main() {
     );
 
     expect(find.text('龙老师 - Long Laoshi'), findsOneWidget);
-    expect(
-      find.text('Optional AI tutor · your chosen provider'),
-      findsOneWidget,
-    );
+    expect(find.text('Choose personality'), findsOneWidget);
     expect(find.textContaining('你想练习什么中文'), findsOneWidget);
     expect(find.text('How do I use 的 correctly?'), findsOneWidget);
     expect(find.text('What are the four tones?'), findsOneWidget);

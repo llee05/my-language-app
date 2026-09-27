@@ -9,6 +9,7 @@ import 'settings_repository.dart';
 import 'backup_repository.dart';
 import 'sqlite_repositories.dart';
 import 'tutor_context_repository.dart';
+import 'tutor_personality_repository.dart';
 import '../services/pronunciation_service_factory.dart';
 import '../services/speech_input_service_factory.dart';
 import '../services/backup_file_service.dart';
@@ -26,6 +27,7 @@ class AppDependencies {
     this.createSpeechInputService = createSystemSpeechInputService,
     this.aiConfiguration = const SecureAiConfigurationRepository(),
     this.tutorContext = const SqliteTutorContextRepository(),
+    this.tutorPersonalities = const SqliteTutorPersonalityRepository(),
     this.backups = const SqliteBackupRepository(),
     this.backupFiles = const FilePickerBackupFileService(),
   });
@@ -41,6 +43,7 @@ class AppDependencies {
   final SpeechInputServiceFactory createSpeechInputService;
   final AiConfigurationRepository aiConfiguration;
   final TutorContextRepository tutorContext;
+  final TutorPersonalityRepository tutorPersonalities;
   final BackupRepository backups;
   final BackupFileService backupFiles;
 }

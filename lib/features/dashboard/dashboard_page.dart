@@ -19,6 +19,7 @@ class DashboardPage extends StatefulWidget {
     required this.developmentRepository,
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
     this.tutorContextRepository = const SqliteTutorContextRepository(),
+    this.personalityRepository = const SqliteTutorPersonalityRepository(),
     this.pronunciationService,
     this.speechInputService,
     this.clock,
@@ -45,6 +46,7 @@ class DashboardPage extends StatefulWidget {
   final DevelopmentRepository developmentRepository;
   final AiConfigurationRepository aiConfigurationRepository;
   final TutorContextRepository tutorContextRepository;
+  final TutorPersonalityRepository personalityRepository;
   final PronunciationService? pronunciationService;
   final SpeechInputService? speechInputService;
   final DateTime Function()? clock;
@@ -470,6 +472,7 @@ class _DashboardPageState extends State<DashboardPage>
                           aiConfigurationRepository:
                               widget.aiConfigurationRepository,
                           tutorContextRepository: widget.tutorContextRepository,
+                          personalityRepository: widget.personalityRepository,
                           pronunciationService: _pronunciationService,
                           speechInputService: _speechInputService,
                           clock: widget.clock,
@@ -554,6 +557,7 @@ class _DashboardBody extends StatelessWidget {
     required this.developmentRepository,
     this.aiConfigurationRepository = const SecureAiConfigurationRepository(),
     this.tutorContextRepository = const SqliteTutorContextRepository(),
+    this.personalityRepository = const SqliteTutorPersonalityRepository(),
     required this.pronunciationService,
     required this.speechInputService,
     this.clock,
@@ -606,6 +610,7 @@ class _DashboardBody extends StatelessWidget {
   final DevelopmentRepository developmentRepository;
   final AiConfigurationRepository aiConfigurationRepository;
   final TutorContextRepository tutorContextRepository;
+  final TutorPersonalityRepository personalityRepository;
   final PronunciationService pronunciationService;
   final SpeechInputService speechInputService;
   final DateTime Function()? clock;
@@ -683,6 +688,7 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 7) {
       return AiTutorPage(
+        personalityRepository: personalityRepository,
         aiService: AiService(
           configurationRepository: aiConfigurationRepository,
         ),

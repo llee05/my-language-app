@@ -23,6 +23,8 @@ import 'models/listening_dialogue.dart';
 import 'models/lesson.dart';
 import 'models/roleplay_mission.dart';
 import 'models/tutor_learner_snapshot.dart';
+import 'models/tutor_personality.dart';
+import 'repositories/tutor_personality_repository.dart';
 import 'repositories/app_dependencies.dart';
 import 'repositories/development_repository.dart';
 import 'repositories/daily_review_session_repository.dart';
@@ -51,6 +53,7 @@ part 'core/widgets/pronunciation_button.dart';
 part 'core/widgets/shared_widgets.dart';
 part 'core/widgets/system_voice_setup.dart';
 part 'features/ai_tutor/ai_tutor_page.dart';
+part 'features/ai_tutor/tutor_personality_picker.dart';
 part 'features/ai_tutor/ai_listening_dialogue.dart';
 part 'features/ai_tutor/ai_roleplay_missions.dart';
 part 'features/dashboard/dashboard_page.dart';
@@ -307,6 +310,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             developmentRepository: widget.dependencies.development,
             aiConfigurationRepository: widget.dependencies.aiConfiguration,
             tutorContextRepository: widget.dependencies.tutorContext,
+            personalityRepository: widget.dependencies.tutorPersonalities,
             backupRepository: widget.dependencies.backups,
             backupFileService: widget.dependencies.backupFiles,
             pronunciationService: _pronunciationService,
