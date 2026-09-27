@@ -38,11 +38,13 @@ import 'services/pronunciation_service_factory.dart';
 import 'services/speech_input_service_factory.dart';
 import 'services/backup_file_service.dart';
 import 'models/dashboard_learning_stats.dart';
+import 'models/weekly_progress_report.dart';
 import 'repositories/bundled_vocabulary_repository.dart';
 
 export 'models/dashboard_learning_stats.dart';
 export 'models/learner_profile.dart';
 export 'models/lesson.dart';
+export 'models/weekly_progress_report.dart';
 
 part 'core/theme/app_colors.dart';
 part 'core/theme/app_button_theme.dart';

@@ -110,6 +110,8 @@ class ProfilePage extends StatelessWidget {
                 const SizedBox(height: 24),
                 _HskProgressAnalytics(stats: stats),
                 const SizedBox(height: 24),
+                _WeeklyProgressReportPanel(report: stats.weeklyReport),
+                const SizedBox(height: 24),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final wide = constraints.maxWidth >= 760;
@@ -490,6 +492,94 @@ class _ProfilePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [SectionLabel(title), const SizedBox(height: 16), child],
+      ),
+    );
+  }
+}
+
+class _WeeklyProgressReportPanel extends StatelessWidget {
+  const _WeeklyProgressReportPanel({required this.report});
+
+  final WeeklyProgressReport report;
+
+  static const _weekdayNames = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  static const _monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _formatDay(DateTime day) => '${_monthNames[day.month - 1]} ${day.day}';
+
+  @override
+  Widget build(BuildContext context) {
+    final start = report.weekStart;
+    final rangeLabel = start == null
+        ? 'No activity recorded yet'
+        : '${_formatDay(start)} – ${_formatDay(report.weekEnd!)}';
+    final bestDay = report.bestDayIndex;
+    return Container(
+      key: const Key('profile-weekly-report'),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SectionLabel('WEEKLY PROGRESS REPORT'),
+          const SizedBox(height: 6),
+          Text(
+            rangeLabel,
+            key: const Key('profile-weekly-report-range'),
+            style: TextStyle(color: AppColors.muted, fontSize: 11),
+          ),
+          const SizedBox(height: 16),
+          _SummaryRow(label: 'XP earned', value: '${report.totalXp}'),
+          const SizedBox(height: 10),
+          _SummaryRow(
+            label: 'Reviews completed',
+            value: '${report.reviewCount}',
+          ),
+          const SizedBox(height: 10),
+          _SummaryRow(
+            label: 'Answer accuracy',
+            value: report.reviewCount == 0
+                ? '—'
+                : '${(report.accuracy * 100).round()}%',
+          ),
+          const SizedBox(height: 10),
+          _SummaryRow(
+            label: 'Days studied',
+            value: '${report.activeDays} of 7',
+          ),
+          const SizedBox(height: 10),
+          _SummaryRow(
+            label: 'Most productive day',
+            value: bestDay == null
+                ? '—'
+                : '${_weekdayNames[bestDay]} · ${report.xpByDay[bestDay]} XP',
+          ),
+        ],
       ),
     );
   }

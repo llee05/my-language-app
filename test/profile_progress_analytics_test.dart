@@ -31,7 +31,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1000, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     var editPresses = 0;
-    const stats = DashboardLearningStats(
+    final stats = DashboardLearningStats(
       totalXp: 245,
       weeklyXp: [10, 20, 0, 15, 30, 0, 0],
       streakDays: 4,
@@ -43,6 +43,12 @@ void main() {
       activeStudyDays: 8,
       weeklyReviewCount: 12,
       hskWordsLearned: [150, 100, 0, 0, 0, 0],
+      weeklyReport: WeeklyProgressReport(
+        weekStart: DateTime(2026, 9, 21),
+        xpByDay: [10, 20, 0, 15, 30, 0, 0],
+        reviewsByDay: [2, 3, 0, 1, 3, 0, 0],
+        correctByDay: [1, 3, 0, 1, 2, 0, 0],
+      ),
     );
 
     await tester.pumpWidget(
@@ -73,6 +79,15 @@ void main() {
     expect(find.text('40'), findsOneWidget);
     expect(find.text('HSK 1 reached'), findsOneWidget);
     expect(find.text('100 of 147 HSK 2 words learned'), findsOneWidget);
+    expect(find.byKey(const Key('profile-weekly-report')), findsOneWidget);
+    expect(find.text('WEEKLY PROGRESS REPORT'), findsOneWidget);
+    expect(find.text('Sep 21 – Sep 27'), findsOneWidget);
+    expect(find.text('XP earned'), findsOneWidget);
+    expect(find.text('75'), findsOneWidget);
+    expect(find.text('9'), findsOneWidget);
+    expect(find.text('78%'), findsOneWidget);
+    expect(find.text('4 of 7'), findsOneWidget);
+    expect(find.text('Friday · 30 XP'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('edit-profile-button')));
     expect(editPresses, 1);

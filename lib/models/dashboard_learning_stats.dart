@@ -1,5 +1,6 @@
 import 'learning_progress.dart';
 import '../services/study_streak_calculator.dart';
+import 'weekly_progress_report.dart';
 
 class DashboardLearningStats {
   const DashboardLearningStats({
@@ -13,6 +14,7 @@ class DashboardLearningStats {
     this.correctReviewCount = 0,
     this.activeStudyDays = 0,
     this.weeklyReviewCount = 0,
+    this.weeklyReport = const WeeklyProgressReport(),
     this.hskWordsLearned = const [0, 0, 0, 0, 0, 0],
     this.vocabulary = const [],
   });
@@ -29,6 +31,7 @@ class DashboardLearningStats {
   final int correctReviewCount;
   final int activeStudyDays;
   final int weeklyReviewCount;
+  final WeeklyProgressReport weeklyReport;
   final List<int> hskWordsLearned;
   final List<VocabularyCardProgress> vocabulary;
 
@@ -70,6 +73,8 @@ class DashboardLearningStats {
     final today = DateTime(localNow.year, localNow.month, localNow.day);
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final weeklyXp = List<int>.filled(7, 0);
+    final weeklyReviews = List<int>.filled(7, 0);
+    final weeklyCorrect = List<int>.filled(7, 0);
     var totalXp = 0;
     var correctReviewCount = 0;
     var weeklyReviewCount = 0;
@@ -85,7 +90,9 @@ class DashboardLearningStats {
       final offset = day.difference(weekStart).inDays;
       if (offset >= 0 && offset < 7) {
         weeklyXp[offset] += xp;
+        weeklyReviews[offset]++;
         weeklyReviewCount++;
+        if (review.wasCorrect) weeklyCorrect[offset]++;
       }
     }
 
@@ -117,6 +124,12 @@ class DashboardLearningStats {
       correctReviewCount: correctReviewCount,
       activeStudyDays: activeDays.length,
       weeklyReviewCount: weeklyReviewCount,
+      weeklyReport: WeeklyProgressReport(
+        weekStart: weekStart,
+        xpByDay: List.unmodifiable(weeklyXp),
+        reviewsByDay: List.unmodifiable(weeklyReviews),
+        correctByDay: List.unmodifiable(weeklyCorrect),
+      ),
       hskWordsLearned: List.unmodifiable(
         learnedWordsByLevel.map((words) => words.length),
       ),
