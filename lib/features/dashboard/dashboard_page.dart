@@ -371,12 +371,12 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   void _openProfile() => setState(() {
-    selectedNav = 9;
+    selectedNav = AppSidebar.items.length + 1;
     _resumeLatestLesson = false;
     _startDailyReview = false;
   });
 
-  void _openSettings() => _selectNavigation(8);
+  void _openSettings() => _selectNavigation(AppSidebar.items.length);
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +419,8 @@ class _DashboardPageState extends State<DashboardPage>
                         showMenu: !showSidebar,
                         profile: widget.profile,
                         totalXp: _learningStats.totalXp,
-                        profileSelected: selectedNav == 9,
+                        profileSelected:
+                            selectedNav == AppSidebar.items.length + 1,
                         onProfilePressed: _openProfile,
                       ),
                       Expanded(
@@ -700,6 +701,14 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 8) {
+      return ExamModePage(
+        initialLevel: profile.hskLevel,
+        vocabularyRepository: vocabularyRepository,
+        settingsRepository: settingsRepository,
+        pronunciationService: pronunciationService,
+      );
+    }
+    if (selectedNav == AppSidebar.items.length) {
       return SettingsPage(
         aiConfigurationRepository: aiConfigurationRepository,
         profile: profile,
@@ -718,7 +727,7 @@ class _DashboardBody extends StatelessWidget {
         backupFileService: backupFileService,
       );
     }
-    if (selectedNav == 9) {
+    if (selectedNav == AppSidebar.items.length + 1) {
       return ProfilePage(
         profile: profile,
         stats: learningStats,

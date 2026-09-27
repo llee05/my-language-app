@@ -107,6 +107,23 @@ practise one randomly selected topic instead. Each prompt plays before its Hanzi
 and pinyin are shown. Choose the English meaning or reveal the answer, and use
 **Replay** or **Slower** whenever you need to hear it again.
 
+### Exam Mode
+
+Open **Exam Mode** in the navigation to take an offline vocabulary assessment
+for any HSK level from 1 to 6. Exams sample distinct words from the selected
+level across reading, pinyin, written recall, and optional listening. With all
+four sections enabled, levels 1–6 contain 40, 48, 56, 64, 72, and 80 questions.
+Choose a timed session (25–50 minutes, depending on level) or an untimed exam.
+Answers can be revisited before submission; the results show section scores and
+a full answer review. Written recall accepts simplified or traditional Chinese.
+
+These are TingShuo practice assessments, not official HSK papers or certification
+scores. Listening requires a working Mandarin voice and enabled sound; failed
+audio questions can be excluded and the result is marked as partial. Unanswered
+questions count as incorrect. Attempts and results stay in memory only and are
+lost when leaving the exam or closing the app. Exams do not change lesson
+ratings or review history.
+
 ### Vocabulary and Vocab Rush
 
 The **Vocabulary** page supports Hanzi, pinyin, and English search, HSK 1–6

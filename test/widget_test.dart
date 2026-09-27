@@ -341,10 +341,14 @@ void main() {
             'Vocabulary' => VocabularyPage,
             'Daily Review' => DailyQueuePage,
             'AI Tutor' => AiTutorPage,
+            'Exam Mode' => ExamModePage,
             'Settings' => SettingsPage,
             _ => MainDashboard,
           };
           expect(find.byType(pageType), findsOneWidget, reason: label);
+          if (label == 'Exam Mode') {
+            expect(find.byKey(const Key('exam-start')), findsOneWidget);
+          }
         }
         await tester.tap(find.byKey(const Key('open-profile-button')));
         await tester.pumpAndSettle();
