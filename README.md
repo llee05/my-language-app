@@ -317,6 +317,25 @@ GitHub Actions, in addition to running the analyzer and tests.
   only and ships without Kokoro, onnxruntime, and soloud native libraries.
 - **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
 
+### In-memory caching
+
+Bundled vocabulary is parsed once per asset bundle and shared as immutable data
+by Lessons, Vocabulary, and Vocab Rush. The database retains up to 32 recent
+lesson reads (including the library summary) and one daily statistics result.
+Lesson sessions are loaded in one bulk query and remain fresh on each load.
+Statistics refresh after saved reviews, at local midnight, and when the app
+resumes. Kokoro retains up to 64 synthesized clips within a 16 MiB sample-data
+budget, keyed by text, speaker, model directory, and model archive version.
+Oversized clips can play without being retained in that cache.
+
+Database cache hits still participate in close/reset coordination. Content
+writes and backup restores invalidate both database caches; saved reviews only
+invalidate statistics. Onboarding reset, full reset, and database close clear
+the database caches. New repository operations that change lessons or progress
+must wrap their transaction in `LocalDatabase.write`, choosing the appropriate
+`DatabaseCacheScope` so invalidation follows a successful commit. These caches never replace SQLite persistence or
+secure storage. Concurrent reads share pending work, and failed loads can retry.
+
 ### Project structure
 
 ```text

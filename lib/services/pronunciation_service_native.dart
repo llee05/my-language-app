@@ -11,6 +11,7 @@ import '../models/learning_progress.dart';
 import 'fallback_pronunciation_service.dart';
 import 'kokoro_voice_pack.dart';
 import 'pronunciation_service.dart';
+import 'pronunciation_audio_cache.dart';
 import 'pronunciation_service_system.dart';
 import 'sherpa_voice_config.dart';
 
@@ -53,11 +54,12 @@ class _SherpaPronunciationService
   late final List<StreamSubscription<OfflineVoiceStatus>>
   _voicePackSubscriptions;
   final _SherpaWorker _worker = _SherpaWorker();
+  final _audioCache = PronunciationAudioCache();
   final math.Random _random = math.Random();
   AudioSource? _audioSource;
   String? _preparedText;
   PronunciationVoice? _preparedVoice;
-  Future<_SherpaAudio>? _preparedAudio;
+  Future<PronunciationAudio>? _preparedAudio;
 
   List<PronunciationVoice> _configuredVoices = kokoroMandarinVoices;
   String? _previousKokoroVoiceId;
@@ -75,7 +77,14 @@ class _SherpaPronunciationService
   Future<OfflineVoiceStatus> checkOfflineVoice() => _kokoroVoicePack.check();
 
   @override
-  Future<void> installOfflineVoice() => _kokoroVoicePack.install();
+  Future<void> installOfflineVoice() async {
+    await stop();
+    _preparedText = null;
+    _preparedVoice = null;
+    _preparedAudio = null;
+    _audioCache.clear();
+    await _kokoroVoicePack.install();
+  }
 
   @override
   Future<OfflineVoiceStatus> checkVoicePack(PronunciationEngine engine) =>
@@ -83,7 +92,7 @@ class _SherpaPronunciationService
 
   @override
   Future<void> installVoicePack(PronunciationEngine engine) =>
-      _kokoroVoicePack.install();
+      installOfflineVoice();
 
   @override
   List<PronunciationVoice> voicesFor(PronunciationEngine engine) =>
@@ -137,17 +146,23 @@ class _SherpaPronunciationService
     }
   }
 
-  Future<_SherpaAudio> _generateAudio(
+  Future<PronunciationAudio> _generateAudio(
     String text,
     PronunciationVoice voice,
   ) async {
     final directory = await _kokoroVoicePack.installedDirectory();
     if (directory == null) throw const OfflineVoiceNotInstalledException();
     if (_disposed) throw StateError('The pronunciation service is closed.');
-    return _worker.generate(
+    return _audioCache.get(
       modelDirectory: directory.path,
+      modelVersion: _kokoroVoicePack.archiveSha256,
       speakerId: voice.speakerId,
       text: text,
+      synthesize: () => _worker.generate(
+        modelDirectory: directory.path,
+        speakerId: voice.speakerId,
+        text: text,
+      ),
     );
   }
 
@@ -201,7 +216,7 @@ class _SherpaPronunciationService
   }
 
   Future<void> _playAudio(
-    _SherpaAudio audio, {
+    PronunciationAudio audio, {
     required int requestId,
     required double rate,
   }) async {
@@ -255,6 +270,7 @@ class _SherpaPronunciationService
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
+    _audioCache.clear();
     _preparedAudio = null;
     _preparedText = null;
     _preparedVoice = null;
@@ -280,14 +296,7 @@ bool _sameVoicePool(
   return true;
 }
 
-class _SherpaAudio {
-  const _SherpaAudio({required this.samples, required this.sampleRate});
-
-  final Float32List samples;
-  final int sampleRate;
-}
-
-_SherpaAudio _joinDialogueAudio(List<_SherpaAudio> parts) {
+PronunciationAudio _joinDialogueAudio(List<PronunciationAudio> parts) {
   if (parts.isEmpty) throw ArgumentError('Dialogue audio cannot be empty.');
   final sampleRate = parts.first.sampleRate;
   if (sampleRate <= 0 || parts.any((part) => part.sampleRate != sampleRate)) {
@@ -306,12 +315,12 @@ _SherpaAudio _joinDialogueAudio(List<_SherpaAudio> parts) {
     offset += samples.length;
     if (index < parts.length - 1) offset += pauseLength;
   }
-  return _SherpaAudio(samples: combined, sampleRate: sampleRate);
+  return PronunciationAudio(samples: combined, sampleRate: sampleRate);
 }
 
 class _SherpaWorker {
   final ReceivePort _responses = ReceivePort();
-  final Map<int, Completer<_SherpaAudio>> _pending = {};
+  final Map<int, Completer<PronunciationAudio>> _pending = {};
   StreamSubscription<dynamic>? _responseSubscription;
   Isolate? _isolate;
   SendPort? _commands;
@@ -321,7 +330,7 @@ class _SherpaWorker {
   int _nextRequestId = 0;
   bool _disposed = false;
 
-  Future<_SherpaAudio> generate({
+  Future<PronunciationAudio> generate({
     required String modelDirectory,
     required int speakerId,
     required String text,
@@ -334,7 +343,7 @@ class _SherpaWorker {
     final startupError = _startupError;
     if (startupError != null) throw startupError;
     final requestId = ++_nextRequestId;
-    final completer = Completer<_SherpaAudio>();
+    final completer = Completer<PronunciationAudio>();
     _pending[requestId] = completer;
     _commands!.send({
       'type': 'generate',
@@ -375,7 +384,7 @@ class _SherpaWorker {
           final bytes = (message['samples'] as TransferableTypedData)
               .materialize();
           completer.complete(
-            _SherpaAudio(
+            PronunciationAudio(
               samples: Float32List.view(bytes),
               sampleRate: message['sampleRate'] as int,
             ),
