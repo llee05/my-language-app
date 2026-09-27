@@ -484,8 +484,8 @@ useful:
     return Column(
       children: [
         Container(
-          height: 68,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          constraints: const BoxConstraints(minHeight: 68),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
@@ -827,22 +827,23 @@ class _TutorComposer extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
                 for (final prompt in prompts)
-                  _AnimatedButtonFeedback(
-                    style: animationStyle,
-                    enabled: !sending,
-                    child: ActionChip(
-                      label: Text(prompt),
-                      onPressed: sending
-                          ? null
-                          : () => onPromptSelected(prompt),
-                      visualDensity: VisualDensity.compact,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _AnimatedButtonFeedback(
+                      style: animationStyle,
+                      enabled: !sending,
+                      child: ActionChip(
+                        label: Text(prompt),
+                        onPressed: sending
+                            ? null
+                            : () => onPromptSelected(prompt),
+                        visualDensity: VisualDensity.compact,
+                      ),
                     ),
                   ),
               ],
@@ -917,11 +918,15 @@ class _TutorComposer extends StatelessWidget {
                 ),
               ),
               border: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF74372F)),
+                borderSide: BorderSide(
+                  color: AppColors.border.withValues(alpha: .6),
+                ),
                 borderRadius: BorderRadius.circular(14),
               ),
               enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF74372F)),
+                borderSide: BorderSide(
+                  color: AppColors.border.withValues(alpha: .6),
+                ),
                 borderRadius: BorderRadius.circular(14),
               ),
               focusedBorder: OutlineInputBorder(

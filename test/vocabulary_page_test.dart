@@ -103,6 +103,70 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('clears search, level, and learning filters together', (
+    tester,
+  ) async {
+    await pumpPage(tester);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'HSK 2'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Learning'));
+    await tester.enterText(
+      find.byKey(const Key('vocabulary-search')),
+      'missing',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('0 words'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('vocabulary-clear-filters')));
+    await tester.pumpAndSettle();
+    expect(find.text('4 words'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('vocabulary-search')))
+          .controller!
+          .text,
+      isEmpty,
+    );
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'All levels'))
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'All states'))
+          .selected,
+      isTrue,
+    );
+    expect(find.byKey(const Key('vocabulary-clear-filters')), findsNothing);
+  });
+
+  testWidgets('search results stay reachable with the phone keyboard open', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 640));
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() async {
+      tester.view.resetDevicePixelRatio();
+      tester.view.resetViewInsets();
+      await tester.binding.setSurfaceSize(null);
+    });
+    await pumpPage(tester);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.enterText(find.byKey(const Key('vocabulary-search')), 'hello');
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.drag(
+      find.byKey(const Key('vocabulary-scroll')),
+      const Offset(0, -260),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('你好').hitTestable(), findsOneWidget);
+    await tester.tap(find.text('你好'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hello, nice to meet you.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('searches vocabulary by Hanzi', (tester) async {
     await pumpPage(tester);
 

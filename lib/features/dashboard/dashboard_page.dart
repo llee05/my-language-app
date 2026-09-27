@@ -830,8 +830,11 @@ class DashboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72,
-      padding: EdgeInsets.symmetric(horizontal: 28),
+      constraints: const BoxConstraints(minHeight: 72),
+      padding: EdgeInsets.symmetric(
+        horizontal: showMenu ? 12 : 28,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
@@ -840,6 +843,7 @@ class DashboardHeader extends StatelessWidget {
           if (showMenu) ...[
             Builder(
               builder: (context) => IconButton(
+                tooltip: 'Open navigation',
                 onPressed: Scaffold.of(context).openDrawer,
                 icon: const Icon(Icons.menu_rounded),
               ),
@@ -871,28 +875,31 @@ class DashboardHeader extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF5D4514)),
-              borderRadius: BorderRadius.circular(20),
+          if (!showMenu)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.gold.withValues(alpha: .4)),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.bolt_rounded, size: 15, color: AppColors.gold),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$totalXp XP',
+                    style: TextStyle(fontSize: 12, color: AppColors.gold),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                Icon(Icons.bolt_rounded, size: 15, color: AppColors.gold),
-                const SizedBox(width: 5),
-                Text(
-                  '$totalXp XP',
-                  style: TextStyle(fontSize: 12, color: AppColors.gold),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(width: 14),
           Tooltip(
             message: 'Open profile',
             child: Material(
-              color: profileSelected ? AppColors.red : AppColors.darkRed,
+              color: profileSelected
+                  ? AppColors.red
+                  : AppColors.red.withValues(alpha: .12),
               shape: CircleBorder(
                 side: BorderSide(
                   color: profileSelected ? AppColors.gold : AppColors.red,
@@ -904,7 +911,7 @@ class DashboardHeader extends StatelessWidget {
                 onTap: onProfilePressed,
                 customBorder: const CircleBorder(),
                 child: SizedBox.square(
-                  dimension: 40,
+                  dimension: 48,
                   child: Center(
                     child: Text(
                       '学',

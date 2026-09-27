@@ -186,164 +186,234 @@ class _VocabularyPageState extends State<VocabularyPage> {
     await _stopPronunciation();
   }
 
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _hskLevel = null;
+      _learningState = null;
+    });
+  }
+
+  bool get _hasFilters =>
+      _searchController.text.isNotEmpty ||
+      _hskLevel != null ||
+      _learningState != null;
+
   @override
   Widget build(BuildContext context) {
+    final results = _results;
     return ColoredBox(
       color: AppColors.background,
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                '词汇',
-                style: TextStyle(
-                  fontFamily: 'serif',
-                  fontSize: 36,
-                  color: AppColors.text,
-                ),
-              ),
-              Text(
-                'Vocabulary',
-                style: TextStyle(fontSize: 16, color: AppColors.muted),
-              ),
-              const SizedBox(height: 22),
-              TextField(
-                key: const Key('vocabulary-search'),
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: 'Search Hanzi, pinyin, or English',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: 'Clear search',
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.close),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: CustomScrollView(
+              key: const Key('vocabulary-scroll'),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '词汇',
+                          style: TextStyle(
+                            fontFamily: 'serif',
+                            fontSize: 36,
+                            color: AppColors.text,
+                          ),
                         ),
-                  filled: true,
-                  fillColor: AppColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: AppColors.border),
+                        Text(
+                          'Vocabulary',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        TextField(
+                          key: const Key('vocabulary-search'),
+                          controller: _searchController,
+                          onChanged: (_) => setState(() {}),
+                          textInputAction: TextInputAction.search,
+                          decoration: InputDecoration(
+                            hintText: 'Search Hanzi, pinyin, or English',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _searchController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Clear search',
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
+                                    icon: const Icon(Icons.close),
+                                  ),
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(color: AppColors.border),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _LevelChip(
+                                label: 'All levels',
+                                selected: _hskLevel == null,
+                                onSelected: () =>
+                                    setState(() => _hskLevel = null),
+                              ),
+                              for (var level = 1; level <= 6; level++) ...[
+                                const SizedBox(width: 8),
+                                _LevelChip(
+                                  label: 'HSK $level',
+                                  selected: _hskLevel == level,
+                                  onSelected: () =>
+                                      setState(() => _hskLevel = level),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _LevelChip(
+                                label: 'All states',
+                                selected: _learningState == null,
+                                onSelected: () =>
+                                    setState(() => _learningState = null),
+                              ),
+                              for (final state
+                                  in VocabularyLearningState.values) ...[
+                                const SizedBox(width: 8),
+                                _LevelChip(
+                                  label: _learningStateLabel(state),
+                                  selected: _learningState == state,
+                                  onSelected: () =>
+                                      setState(() => _learningState = state),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _LevelChip(
-                      label: 'All levels',
-                      selected: _hskLevel == null,
-                      onSelected: () => setState(() => _hskLevel = null),
-                    ),
-                    for (var level = 1; level <= 6; level++) ...[
-                      const SizedBox(width: 8),
-                      _LevelChip(
-                        label: 'HSK $level',
-                        selected: _hskLevel == level,
-                        onSelected: () => setState(() => _hskLevel = level),
+                if (_loading)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_loadFailed)
+                  SliverPadding(
+                    padding: const EdgeInsets.all(24),
+                    sliver: SliverToBoxAdapter(
+                      child: _AppErrorState(
+                        key: const Key('vocabulary-error-state'),
+                        title: _AppErrorCopy.vocabularyTitle,
+                        message: _AppErrorCopy.vocabularyMessage,
+                        onRetry: _loadVocabulary,
+                        retryKey: const Key('vocabulary-retry'),
+                        compact: true,
                       ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _LevelChip(
-                      label: 'All states',
-                      selected: _learningState == null,
-                      onSelected: () => setState(() => _learningState = null),
                     ),
-                    for (final state in VocabularyLearningState.values) ...[
-                      const SizedBox(width: 8),
-                      _LevelChip(
-                        label: _learningStateLabel(state),
-                        selected: _learningState == state,
-                        onSelected: () =>
-                            setState(() => _learningState = state),
+                  )
+                else ...[
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        children: [
+                          Text(
+                            '${results.length} ${results.length == 1 ? 'word' : 'words'}',
+                            key: const Key('vocabulary-result-count'),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                          if (_hasFilters)
+                            TextButton.icon(
+                              key: const Key('vocabulary-clear-filters'),
+                              onPressed: _clearFilters,
+                              icon: const Icon(
+                                Icons.filter_alt_off_outlined,
+                                size: 18,
+                              ),
+                              label: const Text('Clear filters'),
+                            ),
+                        ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(child: _buildContent()),
-            ],
+                    ),
+                  ),
+                  if (results.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 42,
+                              color: AppColors.muted,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No vocabulary found.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppColors.text),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try another Hanzi, pinyin, or English search, or clear your filters.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColors.muted,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      sliver: SliverList.separated(
+                        itemCount: results.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) => _VocabularyListItem(
+                          entry: results[index],
+                          learningState: results[index].learningState(_now()),
+                          onTap: () => unawaited(_openDetails(results[index])),
+                        ),
+                      ),
+                    ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildContent() {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_loadFailed) {
-      return _AppErrorState(
-        key: const Key('vocabulary-error-state'),
-        title: _AppErrorCopy.vocabularyTitle,
-        message: _AppErrorCopy.vocabularyMessage,
-        onRetry: _loadVocabulary,
-        retryKey: const Key('vocabulary-retry'),
-        compact: true,
-      );
-    }
-    final results = _results;
-    if (results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search_off, size: 42, color: AppColors.muted),
-            SizedBox(height: 12),
-            Text(
-              'No vocabulary found.',
-              style: TextStyle(color: AppColors.text),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Try another Hanzi, pinyin, or English search.',
-              style: TextStyle(color: AppColors.muted),
-            ),
-          ],
-        ),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          '${results.length} ${results.length == 1 ? 'word' : 'words'}',
-          key: const Key('vocabulary-result-count'),
-          style: TextStyle(fontSize: 12, color: AppColors.muted),
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: ListView.separated(
-            itemCount: results.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, index) => _VocabularyListItem(
-              entry: results[index],
-              learningState: results[index].learningState(_now()),
-              onTap: () => unawaited(_openDetails(results[index])),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

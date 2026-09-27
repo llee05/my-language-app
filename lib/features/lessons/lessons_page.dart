@@ -68,6 +68,7 @@ class LessonsPage extends StatefulWidget {
 }
 
 class _LessonsPageState extends State<LessonsPage> {
+  final _createLessonKey = GlobalKey();
   final _topicController = TextEditingController();
   final _lessonSearchController = TextEditingController();
   final _pageController = PageController(viewportFraction: .82);
@@ -701,7 +702,8 @@ class _LessonsPageState extends State<LessonsPage> {
   );
 
   Widget _buildSetup() => SingleChildScrollView(
-    padding: const EdgeInsets.all(32),
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 20 : 32),
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
@@ -720,6 +722,26 @@ class _LessonsPageState extends State<LessonsPage> {
               'Lesson Library',
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
+            if (!_sentenceMode) ...[
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.icon(
+                  key: const Key('jump-to-create-lesson'),
+                  onPressed: _generating
+                      ? null
+                      : () {
+                          Scrollable.ensureVisible(
+                            _createLessonKey.currentContext!,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                          );
+                        },
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('New lesson'),
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             Wrap(
               spacing: 8,
@@ -775,6 +797,7 @@ class _LessonsPageState extends State<LessonsPage> {
               const SizedBox(height: 20),
               Text(
                 'Create a lesson',
+                key: _createLessonKey,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -859,7 +882,8 @@ class _LessonsPageState extends State<LessonsPage> {
                 decoration: InputDecoration(
                   labelText: 'Ask AI for a lesson topic',
                   hintText: 'e.g. ordering breakfast in Beijing',
-                  helperText: 'This overrides the selected previous topic.',
+                  helperText:
+                      'Optional. Use your own topic instead of the one above.',
                   border: const OutlineInputBorder(),
                   suffixIcon: _PushToTalkButton(
                     key: const Key('lesson-topic-push-to-talk'),
@@ -1048,6 +1072,7 @@ class _LessonsPageState extends State<LessonsPage> {
         child: Row(
           children: [
             IconButton(
+              tooltip: 'Back to lessons',
               onPressed: _savingAnswer
                   ? null
                   : () => setState(() {
@@ -1785,8 +1810,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         ],
       ),
     );
-    if (!widget.isSentence) return KeyedSubtree(key: key, child: side);
-    // Sentence answers can be several lines long, particularly on phones or
+    // Answers can be several lines long, particularly on phones or
     // with large accessibility text. Keep ratings reachable by scrolling.
     return LayoutBuilder(
       key: key,

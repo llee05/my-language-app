@@ -70,7 +70,9 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
               child: Form(
                 key: _formKey,
                 child: Container(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.all(
+                    MediaQuery.sizeOf(context).width < 600 ? 20 : 32,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     border: Border.all(color: AppColors.border),

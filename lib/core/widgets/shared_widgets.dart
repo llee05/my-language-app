@@ -234,7 +234,7 @@ class _AppInlineError extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.darkRed.withValues(alpha: .55),
+        color: AppColors.red.withValues(alpha: .10),
         border: Border.all(color: AppColors.red.withValues(alpha: .45)),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -284,8 +284,8 @@ class SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: TextStyle(
-        fontSize: 9,
-        letterSpacing: 1.4,
+        fontSize: 11,
+        letterSpacing: 1.2,
         fontWeight: FontWeight.w600,
         color: AppColors.muted,
       ),
@@ -302,7 +302,7 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.darkRed,
+        color: AppColors.red.withValues(alpha: .12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(label, style: TextStyle(fontSize: 9, color: AppColors.red)),

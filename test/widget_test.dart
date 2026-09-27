@@ -112,6 +112,117 @@ Future<void> _openSettingsResetDialog(
 }
 
 void main() {
+  for (final palette in AppThemes.all) {
+    testWidgets('primary buttons have readable contrast in ${palette.label}', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        HanziPathApp(
+          initialProfile: testProfile,
+          dependencies: AppDependencies(
+            lessons: _MemoryLessonRepository(),
+            progress: _MemoryProgressRepository(),
+            dailyReviews: _MemoryDailyReviewSessionRepository(null),
+            settings: _MemorySettingsRepository(
+              LearnerSettings(appThemeId: palette.id.name),
+            ),
+            createPronunciationService: () => _FakePronunciationService(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final scheme = Theme.of(
+        tester.element(find.byType(DashboardPage)),
+      ).colorScheme;
+      final luminances = [
+        scheme.primary.computeLuminance(),
+        scheme.onPrimary.computeLuminance(),
+      ]..sort();
+      expect(
+        (luminances.last + .05) / (luminances.first + .05),
+        greaterThanOrEqualTo(4.5),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      AppColors.apply(AppThemes.classic);
+    });
+  }
+
+  testWidgets('new lesson shortcut reveals the creation form on a phone', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _RotatingLessonRepository(),
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: _FakePronunciationService(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.text('Create a lesson')).dy,
+      greaterThan(640),
+    );
+    await tester.tap(find.byKey(const Key('jump-to-create-lesson')));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.text('Create a lesson')).dy,
+      inInclusiveRange(0, 500),
+    );
+    expect(
+      find
+          .widgetWithText(DropdownButtonFormField<int>, 'HSK level')
+          .hitTestable(),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  for (final size in [const Size(320, 640), const Size(640, 360)]) {
+    testWidgets('lesson answers and ratings scroll at $size', (tester) async {
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final progress = _MemoryProgressRepository();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LessonsPage(
+              repository: _MemoryLessonRepository(),
+              progressRepository: progress,
+              settingsRepository: _MemorySettingsRepository(),
+              pronunciationService: _FakePronunciationService(),
+              resumeLatest: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('学'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final rating = find.widgetWithText(
+        OutlinedButton,
+        'Click if you are already familiar with this word',
+      );
+      await tester.ensureVisible(rating);
+      await tester.tap(rating);
+      await tester.pumpAndSettle();
+      expect(progress.recordReviewCalls, 1);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets('dashboard refreshes statistics at midnight and on resume', (
     tester,
   ) async {
@@ -156,6 +267,7 @@ void main() {
     (const Size(320, 640), 1.0),
     (const Size(320, 640), 1.5),
     (const Size(1280, 900), 1.0),
+    (const Size(640, 360), 1.0),
   ]) {
     testWidgets(
       'main screens remain usable at ${size.width.toInt()}px with $textScale text',
@@ -2190,6 +2302,9 @@ void main() {
     );
     expect(find.textContaining('sensitive database path'), findsNothing);
 
+    await tester.ensureVisible(
+      find.byKey(const Key('available-lessons-retry')),
+    );
     await tester.tap(find.byKey(const Key('available-lessons-retry')));
     await tester.pumpAndSettle();
 

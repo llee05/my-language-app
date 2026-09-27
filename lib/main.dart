@@ -243,7 +243,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
           surface: AppColors.surface,
         ).copyWith(
           primary: AppColors.red,
-          onPrimary: Colors.white,
+          onPrimary: AppColors.background,
           outline: AppColors.border,
           outlineVariant: AppColors.border.withValues(alpha: .65),
         );
@@ -253,6 +253,27 @@ class _HanziPathAppState extends State<HanziPathApp> {
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: colorScheme,
         fontFamily: 'sans-serif',
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.surface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          helperMaxLines: 3,
+          errorMaxLines: 3,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: AppColors.border.withValues(alpha: .6),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.red, width: 2),
+          ),
+        ),
         dividerColor: AppColors.border,
         splashColor: seed.withValues(alpha: .12),
         textTheme: TextTheme(

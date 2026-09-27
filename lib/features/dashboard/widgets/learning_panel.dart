@@ -52,7 +52,12 @@ class MainDashboard extends StatelessWidget {
               .toDouble();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 28, 32, 40),
+      padding: EdgeInsets.fromLTRB(
+        MediaQuery.sizeOf(context).width < 600 ? 20 : 32,
+        28,
+        MediaQuery.sizeOf(context).width < 600 ? 20 : 32,
+        40,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
