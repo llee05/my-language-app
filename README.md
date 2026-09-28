@@ -382,12 +382,17 @@ lib/
 
 ## Release
 
-Current version: **1.0.0-beta.4+4**
+Current version: **1.0.0-beta.5+5**
 
-Beta 4
-- Added guided setup for Gemini, OpenAI, and Claude API keys.
-- Added an Android flow for installing an offline Mandarin system voice.
-- Improved AI key, quota, and billing error messages.
+Beta 5
+
+- Added offline HSK practice exams with a timer, scoring, and answer review.
+- Added Monday-to-Sunday weekly progress reports to the profile.
+- Added built-in AI tutor personalities and custom personality creation.
+- Saved lesson guides with backup support and improved AI lesson selection and recovery.
+- Improved pronunciation controls and reused cached Kokoro audio.
+- Improved responsive study layouts and made the mobile navigation menu follow your swipe.
+- Improved loading performance for vocabulary lessons and learning statistics.
 
 ### Android signing
 
