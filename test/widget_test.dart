@@ -3346,8 +3346,9 @@ void main() {
     },
   );
 
-  testWidgets('Android menu supports swipes across pages and still scrolls', (
-    tester,
+  Future<void> testMobileMenuSwipes(
+    WidgetTester tester,
+    TargetPlatform platform,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -3356,7 +3357,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData(platform: TargetPlatform.android),
+        theme: ThemeData(platform: platform),
         home: DashboardPage(
           personalityRepository: MemoryTutorPersonalityRepository(),
           appThemeId: AppThemeId.classic,
@@ -3375,43 +3376,97 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final scaffold = tester.state<ScaffoldState>(find.byType(Scaffold));
     final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
     await tester.dragFrom(const Offset(200, 600), const Offset(0, -250));
     await tester.pumpAndSettle();
     expect(scrollable.position.pixels, greaterThan(0));
-    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(Drawer), findsNothing);
 
     await tester.dragFrom(const Offset(300, 400), const Offset(-200, 0));
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(Drawer), findsNothing);
 
-    await tester.dragFrom(const Offset(100, 400), const Offset(280, 0));
+    // Inspect the drawer before releasing: it must track the finger, including
+    // reversing direction, rather than starting its animation on pointer-up.
+    final drag = await tester.startGesture(const Offset(100, 400));
+    await drag.moveBy(const Offset(30, 0));
+    await tester.pump();
+    await drag.moveBy(const Offset(80, 0));
+    await tester.pump();
+    final partialX = tester.getTopLeft(find.byType(Drawer)).dx;
+    expect(partialX, lessThan(0));
+    expect(partialX, greaterThan(-tester.getSize(find.byType(Drawer)).width));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.getTopLeft(find.byType(Drawer)).dx, partialX);
+    await drag.moveBy(const Offset(40, 0));
+    await tester.pump();
+    expect(
+      tester.getTopLeft(find.byType(Drawer)).dx,
+      closeTo(partialX + 40, 0.1),
+    );
+    await drag.moveBy(const Offset(-20, 0));
+    await tester.pump();
+    expect(
+      tester.getTopLeft(find.byType(Drawer)).dx,
+      closeTo(partialX + 20, 0.1),
+    );
+    await drag.moveBy(const Offset(150, 0));
+    await tester.pump();
+    await drag.up();
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isTrue);
+    expect(find.byType(Drawer), findsOneWidget);
     expect(tester.getTopLeft(find.byType(Drawer)).dx, 0);
+
+    // Tapping the scrim and the system back action both dismiss the drawer.
+    await tester.tapAt(const Offset(380, 400));
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsNothing);
+    await tester.tap(find.byIcon(Icons.menu_rounded));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsNothing);
+
+    // A short, slow drag settles closed after release or cancellation.
+    for (final cancel in [false, true]) {
+      final shortDrag = await tester.startGesture(const Offset(100, 400));
+      await shortDrag.moveBy(const Offset(30, 0));
+      await tester.pump();
+      await shortDrag.moveBy(const Offset(50, 0));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(Drawer), findsOneWidget);
+      if (cancel) {
+        await shortDrag.cancel();
+      } else {
+        await shortDrag.up();
+      }
+      await tester.pumpAndSettle();
+      expect(find.byType(Drawer), findsNothing);
+    }
+    await tester.tap(find.byIcon(Icons.menu_rounded));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('AI Tutor'));
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(Drawer), findsNothing);
     expect(find.byType(AiTutorPage), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Hello');
     await tester.dragFrom(const Offset(100, 400), const Offset(280, 0));
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isTrue);
+    expect(find.byType(Drawer), findsOneWidget);
 
     await tester.dragFrom(const Offset(280, 400), const Offset(-260, 0));
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(Drawer), findsNothing);
     expect(find.text('Hello'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.menu_rounded));
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isTrue);
+    expect(find.byType(Drawer), findsOneWidget);
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
-    expect(scaffold.isDrawerOpen, isFalse);
+    expect(find.byType(Drawer), findsNothing);
     expect(find.byType(AiTutorPage), findsNothing);
 
     await tester.tap(find.byIcon(Icons.menu_rounded));
@@ -3439,8 +3494,15 @@ void main() {
     await tester.dragFrom(Offset(100, filterY), const Offset(160, 0));
     await tester.pumpAndSettle();
     expect(filterScrollable.position.pixels, lessThan(filterOffset));
-    expect(scaffold.isDrawerOpen, isFalse);
-  });
+    expect(find.byType(Drawer), findsNothing);
+  }
+
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    testWidgets(
+      '${platform.name} menu follows swipes across pages and still scrolls',
+      (tester) => testMobileMenuSwipes(tester, platform),
+    );
+  }
 
   testWidgets('settings edits profile and can reset onboarding', (
     tester,

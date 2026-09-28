@@ -60,8 +60,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage>
     with WidgetsBindingObserver {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-  double _menuSwipeDistance = 0;
+  final _mobileDrawerKey = GlobalKey<_SwipeNavigationDrawerState>();
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   late final SpeechInputService _speechInputService;
@@ -385,11 +384,11 @@ class _DashboardPageState extends State<DashboardPage>
         final showSidebar = constraints.maxWidth >= 760;
         final enableMenuSwipe =
             !showSidebar &&
-            Theme.of(context).platform == TargetPlatform.android;
+            (Theme.of(context).platform == TargetPlatform.android ||
+                Theme.of(context).platform == TargetPlatform.iOS);
 
         final scaffold = Scaffold(
-          key: _scaffoldKey,
-          drawer: showSidebar
+          drawer: showSidebar || enableMenuSwipe
               ? null
               : Drawer(
                   child: AppSidebar(
@@ -417,6 +416,9 @@ class _DashboardPageState extends State<DashboardPage>
                     children: [
                       DashboardHeader(
                         showMenu: !showSidebar,
+                        onMenuPressed: enableMenuSwipe
+                            ? () => _mobileDrawerKey.currentState?.open()
+                            : null,
                         profile: widget.profile,
                         totalXp: _learningStats.totalXp,
                         profileSelected:
@@ -489,22 +491,21 @@ class _DashboardPageState extends State<DashboardPage>
           ),
         );
 
-        // Child controls keep their horizontal scrolling gestures. Swipes on
-        // the rest of the Android page open the menu after a deliberate drag.
-        return GestureDetector(
-          onHorizontalDragStart: enableMenuSwipe
-              ? (_) => _menuSwipeDistance = 0
-              : null,
-          onHorizontalDragUpdate: enableMenuSwipe
-              ? (details) => _menuSwipeDistance += details.primaryDelta ?? 0
-              : null,
-          onHorizontalDragEnd: enableMenuSwipe
-              ? (_) {
-                  if (_menuSwipeDistance >= 64) {
-                    _scaffoldKey.currentState?.openDrawer();
-                  }
-                }
-              : null,
+        if (!enableMenuSwipe) return scaffold;
+
+        return _SwipeNavigationDrawer(
+          key: _mobileDrawerKey,
+          drawer: Drawer(
+            child: AppSidebar(
+              selectedIndex: selectedNav,
+              hskLevel: widget.profile.hskLevel,
+              streakDays: _learningStats.streakDays,
+              onSelected: (index) {
+                _mobileDrawerKey.currentState?.close();
+                _selectNavigation(index);
+              },
+            ),
+          ),
           child: scaffold,
         );
       },
@@ -829,12 +830,14 @@ class DashboardHeader extends StatelessWidget {
     this.totalXp = 0,
     this.profileSelected = false,
     this.onProfilePressed,
+    this.onMenuPressed,
   });
   final bool showMenu;
   final LearnerProfile profile;
   final int totalXp;
   final bool profileSelected;
   final VoidCallback? onProfilePressed;
+  final VoidCallback? onMenuPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -853,7 +856,7 @@ class DashboardHeader extends StatelessWidget {
             Builder(
               builder: (context) => IconButton(
                 tooltip: 'Open navigation',
-                onPressed: Scaffold.of(context).openDrawer,
+                onPressed: onMenuPressed ?? Scaffold.of(context).openDrawer,
                 icon: const Icon(Icons.menu_rounded),
               ),
             ),
