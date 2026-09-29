@@ -100,6 +100,7 @@ void main() {
             'lesson_id IN (SELECT id FROM lessons WHERE is_sentence_practice = 1)',
       );
       await db.delete('lessons', where: 'is_sentence_practice = 1');
+      await db.execute('ALTER TABLE lessons DROP COLUMN is_user_generated');
       await db.execute('ALTER TABLE lessons DROP COLUMN guide_json');
       await db.execute('ALTER TABLE lessons DROP COLUMN is_sentence_practice');
       await db.setVersion(13);
@@ -226,14 +227,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Start'));
       await _waitFor(tester, find.text('1 / 10'));
-      expect(find.text('Nǐ hǎo!'), findsNothing);
+      expect(find.text(lesson.cards.first.pinyin), findsNothing);
       await tester.tap(find.byTooltip('Hear Mandarin pronunciation').first);
       await tester.pumpAndSettle();
-      expect(voice.spoken, ['你好！']);
-      await tester.tap(find.text('你好！'));
+      expect(voice.spoken, ['你好，欢迎来我们家！']);
+      await tester.tap(find.text('你好，欢迎来我们家！'));
       await tester.pumpAndSettle();
-      expect(find.text('Nǐ hǎo!'), findsOneWidget);
-      expect(find.text('Hello!'), findsOneWidget);
+      expect(find.text(lesson.cards.first.pinyin), findsOneWidget);
+      expect(find.text(lesson.cards.first.englishMeaning), findsOneWidget);
       await tester.tap(find.text('Again'));
       await _waitFor(tester, find.text('1 of 10 sentences completed'));
       await tester.pumpWidget(const SizedBox.shrink());
@@ -311,9 +312,9 @@ void main() {
       initialLessonId: summary!.id,
       textScale: 1.5,
     );
-    await _waitFor(tester, find.text('你的电话号码是多少？'));
-    await tester.ensureVisible(find.text('你的电话号码是多少？'));
-    await tester.tap(find.text('你的电话号码是多少？'));
+    await _waitFor(tester, find.text('方便留一下你的电话号码吗？'));
+    await tester.ensureVisible(find.text('方便留一下你的电话号码吗？'));
+    await tester.tap(find.text('方便留一下你的电话号码吗？'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Good'));
     await tester.pumpAndSettle();

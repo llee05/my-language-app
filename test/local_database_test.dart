@@ -185,6 +185,7 @@ void main() {
       expect((await db.query('lessons')).single, {
         ...before,
         'guide_json': null,
+        'is_user_generated': 1,
       });
     },
   );
@@ -1421,7 +1422,7 @@ void main() {
     },
   );
 
-  test('bundled cards use packaged Tatoeba examples', () async {
+  test('bundled cards use complete original examples', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();
     final rows = await db.rawQuery(
@@ -1436,15 +1437,18 @@ void main() {
     );
 
     expect(rows, hasLength(1));
-    expect(rows.single['example_sentence_chinese'], '除了胡萝卜，他没有什么是不吃的。');
+    expect(rows.single['example_sentence_chinese'], '请把胡萝卜切成小块。');
     expect(
       rows.single['example_sentence_english'],
-      "Except for carrots, there is nothing he won't eat.",
+      'Please cut the carrot into small pieces.',
     );
-    expect(rows.single['example_sentence_pinyin'], isEmpty);
-    expect(rows.single['example_source'], 'Tatoeba');
-    expect(rows.single['example_source_id'], '333939');
-    expect(rows.single['example_translation_id'], '35862');
+    expect(
+      rows.single['example_sentence_pinyin'],
+      'Qǐng bǎ húluóbo qiē chéng xiǎo kuài.',
+    );
+    expect(rows.single['example_source'], isEmpty);
+    expect(rows.single['example_source_id'], isEmpty);
+    expect(rows.single['example_translation_id'], isEmpty);
   });
 
   test(

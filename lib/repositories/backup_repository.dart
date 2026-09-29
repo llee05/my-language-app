@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../database/migrations.dart';
+import '../database/bundled_lesson_content.dart';
 import '../local_database.dart';
 import '../models/lesson_guide.dart';
 
@@ -49,6 +50,7 @@ class SqliteBackupRepository implements BackupRepository {
   static const _optionalColumnDefaults = <String, Object?>{
     'lessons.is_sentence_practice': 0,
     'lessons.guide_json': null,
+    'lessons.is_user_generated': 1,
     'learner_settings.button_animation_style': 'combined',
   };
 
@@ -83,6 +85,7 @@ class SqliteBackupRepository implements BackupRepository {
       'is_listed',
       'is_sentence_practice',
       'guide_json',
+      'is_user_generated',
     ],
     'cards': [
       'id',
@@ -214,6 +217,17 @@ class SqliteBackupRepository implements BackupRepository {
           }
         }
 
+        // Backups made before lesson provenance was stored need classification.
+        if (snapshot.needsLessonOriginUpgrade) {
+          await identifyLegacyBundledLessons(txn);
+        }
+        await txn.delete(
+          'content_migrations',
+          where: 'key = ?',
+          whereArgs: [bundledLessonRewriteMarker],
+        );
+        await refreshBundledLessonContent(txn);
+
         // A restored profile should open directly even if onboarding had been
         // reset on this installation before the import.
         await txn.delete(
@@ -326,6 +340,9 @@ class SqliteBackupRepository implements BackupRepository {
 
     return _BackupSnapshot(
       tables: tables,
+      needsLessonOriginUpgrade: (rawData['lessons'] as List).any(
+        (row) => !(row as Map).containsKey('is_user_generated'),
+      ),
       preview: BackupPreview(
         exportedAt: exportedAt,
         learnerName: name.trim(),
@@ -349,8 +366,13 @@ class SqliteBackupRepository implements BackupRepository {
 }
 
 class _BackupSnapshot {
-  const _BackupSnapshot({required this.tables, required this.preview});
+  const _BackupSnapshot({
+    required this.tables,
+    required this.preview,
+    required this.needsLessonOriginUpgrade,
+  });
 
   final Map<String, List<Map<String, Object?>>> tables;
   final BackupPreview preview;
+  final bool needsLessonOriginUpgrade;
 }

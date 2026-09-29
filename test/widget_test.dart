@@ -2052,6 +2052,108 @@ void main() {
     expect(lessons.saveCalls, 1);
   });
 
+  for (final width in [360.0, 1000.0]) {
+    testWidgets(
+      'generated lessons can be cancelled or deleted at width $width',
+      (tester) async {
+        await tester.binding.setSurfaceSize(Size(width, 1000));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final repository = _DeletableLessonRepository();
+        var changed = 0;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LessonsPage(
+                repository: repository,
+                progressRepository: _MemoryProgressRepository(
+                  hasActiveSession: false,
+                ),
+                settingsRepository: _MemorySettingsRepository(),
+                pronunciationService: _FakePronunciationService(),
+                onProgressChanged: () => changed++,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final delete = find.byKey(const Key('delete-lesson-91'));
+        expect(find.byKey(const Key('delete-lesson-7')), findsNothing);
+        await tester.ensureVisible(delete);
+        await tester.tap(delete);
+        await tester.pumpAndSettle();
+        expect(find.text('Delete lesson?'), findsOneWidget);
+        expect(find.textContaining('This cannot be undone.'), findsOneWidget);
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(repository.deleteCalls, 0);
+        expect(find.text('My generated lesson'), findsOneWidget);
+        await tester.tap(delete);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('confirm-delete-lesson')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(repository.deleteCalls, 1);
+        expect(find.text('My generated lesson'), findsOneWidget);
+        expect(find.text('Lesson deleted.'), findsNothing);
+        expect(tester.widget<IconButton>(delete).onPressed, isNull);
+        repository.deletion.complete();
+        await tester.pumpAndSettle();
+        expect(find.text('My generated lesson'), findsNothing);
+        expect(find.text('Saved lesson'), findsOneWidget);
+        expect(find.text('Lesson deleted.'), findsOneWidget);
+        expect(changed, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('failed lesson deletion keeps the lesson and allows a retry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final repository = _DeletableLessonRepository();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: repository,
+            progressRepository: _MemoryProgressRepository(
+              hasActiveSession: false,
+            ),
+            settingsRepository: _MemorySettingsRepository(),
+            pronunciationService: _FakePronunciationService(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final delete = find.byKey(const Key('delete-lesson-91'));
+    await tester.ensureVisible(delete);
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-lesson')));
+    await tester.pump();
+    repository.deletion.completeError(StateError('Disk is full'));
+    await tester.pumpAndSettle();
+    expect(find.text('My generated lesson'), findsOneWidget);
+    expect(
+      find.text('Could not delete the lesson. Please try again.'),
+      findsOneWidget,
+    );
+    expect(tester.widget<IconButton>(delete).onPressed, isNotNull);
+    repository.deletion = Completer<void>();
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-lesson')));
+    await tester.pump();
+    repository.deletion.complete();
+    await tester.pumpAndSettle();
+    expect(repository.deleteCalls, 2);
+    expect(find.text('My generated lesson'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('lesson library filters saved lessons by HSK level', (
     tester,
   ) async {
@@ -4691,6 +4793,11 @@ class _MemoryLearnerRepository implements LearnerRepository {
 }
 
 class _MemoryLessonRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   final lesson = const Lesson(
     summary: LessonSummary(
       id: 7,
@@ -4756,6 +4863,11 @@ class _GeneratedMemoryLessonRepository extends _MemoryLessonRepository {
 }
 
 class _MultiLevelLessonRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   static const hsk1Lesson = LessonSummary(
     id: 41,
     title: 'Morning Greetings',
@@ -4802,6 +4914,11 @@ class _MultiLevelLessonRepository implements LessonRepository {
 }
 
 class _RotatingLessonRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   _RotatingLessonRepository({
     this.missingIds = const {},
     this.emptyIds = const {},
@@ -4872,6 +4989,11 @@ class _RotatingLessonRepository implements LessonRepository {
 }
 
 class _LessonStateRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   _LessonStateRepository({this.firstTopics, this.failFirstTopicsLoad = false});
 
   final Future<List<LessonSummary>>? firstTopics;
@@ -4923,6 +5045,11 @@ class _LessonStateRepository implements LessonRepository {
 }
 
 class _FailOnceGeneratedLookupRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   int findGeneratedCalls = 0;
 
   static const lesson = Lesson(
@@ -5409,5 +5536,32 @@ class _CountingStatsProgress extends _MemoryProgressRepository
   Future<DashboardLearningStats> learningStats(DateTime now) async {
     statisticsDates.add(now);
     return const DashboardLearningStats();
+  }
+}
+
+class _DeletableLessonRepository extends _MemoryLessonRepository {
+  static const generated = LessonSummary(
+    id: 91,
+    title: 'My generated lesson',
+    theme: 'Daily Life',
+    hskLevel: 1,
+    isUserGenerated: true,
+  );
+  bool deleted = false;
+  int deleteCalls = 0;
+  Completer<void> deletion = Completer<void>();
+
+  @override
+  Future<List<LessonSummary>> topics() async => [
+    if (!deleted) generated,
+    lesson.summary,
+  ];
+
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    if (lessonId != generated.id) throw StateError('Bundled lesson');
+    deleteCalls++;
+    await deletion.future;
+    deleted = true;
   }
 }

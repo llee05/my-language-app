@@ -171,7 +171,7 @@ void main() {
           await db.query(
             'content_migrations',
             where: 'key = ?',
-            whereArgs: ['tatoeba_examples_v1'],
+            whereArgs: ['bundled_lessons_rewrite_v1'],
           ),
           hasLength(1),
         );

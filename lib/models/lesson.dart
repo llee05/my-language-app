@@ -7,6 +7,7 @@ class LessonSummary {
     required this.theme,
     required this.hskLevel,
     this.isSentencePractice = false,
+    this.isUserGenerated = false,
   });
 
   final int id;
@@ -14,6 +15,7 @@ class LessonSummary {
   final String theme;
   final int hskLevel;
   final bool isSentencePractice;
+  final bool isUserGenerated;
 }
 
 class Flashcard {

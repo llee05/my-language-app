@@ -15,4 +15,8 @@ abstract interface class LessonRepository {
   /// Saves a new lesson, preserving earlier lessons on the same topic and
   /// their cards, review history, and session positions.
   Future<void> saveGenerated(Lesson lesson);
+
+  /// Deletes a user-created lesson and its cards, reviews, and sessions.
+  /// Bundled lessons and internal vocabulary collections cannot be deleted.
+  Future<void> deleteGenerated(int lessonId);
 }

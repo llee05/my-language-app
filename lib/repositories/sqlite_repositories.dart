@@ -333,6 +333,7 @@ class SqliteLessonRepository implements LessonRepository {
           'theme',
           'hsk_level',
           'is_sentence_practice',
+          'is_user_generated',
         ],
         where: 'is_listed = ?',
         whereArgs: [1],
@@ -355,6 +356,7 @@ class SqliteLessonRepository implements LessonRepository {
           'theme',
           'hsk_level',
           'is_sentence_practice',
+          'is_user_generated',
         ],
         where: 'id = ? AND is_listed = ?',
         whereArgs: [id, 1],
@@ -378,6 +380,7 @@ class SqliteLessonRepository implements LessonRepository {
         'theme',
         'hsk_level',
         'is_sentence_practice',
+        'is_user_generated',
       ],
       where:
           'theme = ? COLLATE NOCASE AND hsk_level = ? AND is_listed = ? AND is_sentence_practice = 0',
@@ -420,6 +423,7 @@ class SqliteLessonRepository implements LessonRepository {
               'theme': 'Vocab Rush',
               'hsk_level': hskLevel,
               'is_listed': 0,
+              'is_user_generated': 0,
             })
           : lessons.single['id'] as int;
       final cardId = await txn.insert('cards', {
@@ -485,6 +489,7 @@ class SqliteLessonRepository implements LessonRepository {
             ? null
             : jsonEncode(lesson.guide!.toJson()),
         'is_listed': 1,
+        'is_user_generated': 1,
       });
       for (final card in lesson.cards) {
         await txn.insert('cards', {
@@ -504,10 +509,62 @@ class SqliteLessonRepository implements LessonRepository {
     });
   });
 
+  @override
+  Future<void> deleteGenerated(int lessonId) => LocalDatabase.write((db) async {
+    await db.transaction((txn) async {
+      final lessons = await txn.query(
+        'lessons',
+        columns: ['id'],
+        where: 'id = ? AND is_user_generated = 1 AND is_listed = 1',
+        whereArgs: [lessonId],
+      );
+      if (lessons.isEmpty) {
+        throw StateError('Only user-generated lessons can be deleted.');
+      }
+      final cards = await txn.query(
+        'cards',
+        columns: ['id'],
+        where: 'lesson_id = ?',
+        whereArgs: [lessonId],
+      );
+      final removedIds = cards.map((card) => card['id'] as int).toSet();
+      // JSON queues have no foreign keys. Keep their resume position aligned
+      // with the surviving cards, including cards already reviewed today.
+      for (final row in await txn.query('daily_review_sessions')) {
+        final ids = (jsonDecode(row['queued_card_ids'] as String) as List)
+            .cast<int>();
+        if (!ids.any(removedIds.contains)) continue;
+        final position = row['current_position'] as int;
+        final kept = ids.where((id) => !removedIds.contains(id)).toList();
+        final nextPosition = ids
+            .take(position)
+            .where((id) => !removedIds.contains(id))
+            .length;
+        await txn.update(
+          'daily_review_sessions',
+          {
+            'queued_card_ids': jsonEncode(kept),
+            'current_position': nextPosition,
+            'completed_at':
+                row['completed_at'] ??
+                (nextPosition == kept.length
+                    ? DateTime.now().toUtc().toIso8601String()
+                    : null),
+          },
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+      // Foreign keys cascade to cards, lesson sessions, and review data.
+      await txn.delete('lessons', where: 'id = ?', whereArgs: [lessonId]);
+    });
+  });
+
   LessonSummary _summaryFromRow(Map<String, Object?> row) => LessonSummary(
     id: row['id'] as int,
     title: row['lesson_title'] as String,
     isSentencePractice: row['is_sentence_practice'] == 1,
+    isUserGenerated: row['is_user_generated'] == 1,
     theme: row['theme'] as String,
     hskLevel: row['hsk_level'] as int,
   );

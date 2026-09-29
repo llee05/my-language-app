@@ -12,6 +12,7 @@ import 'repositories/bundled_vocabulary_repository.dart';
 import 'services/async_lru_cache.dart';
 
 import 'database/flashcard_seed.dart';
+import 'database/bundled_lesson_content.dart';
 import 'database/migrations.dart';
 import 'database/vocabulary_content.dart';
 
@@ -183,8 +184,8 @@ class LocalDatabase {
 
       await _maybeSeedDefaultLessons(openedDatabase);
       await _applyVocabularyContentV2(openedDatabase);
-      await _applyTatoebaExamples(openedDatabase);
       await _seedSentencePractice(openedDatabase);
+      await openedDatabase.transaction(refreshBundledLessonContent);
       _database = openedDatabase;
       _openedDatabasePath = openedDatabase.path;
       return openedDatabase;
@@ -242,8 +243,7 @@ class LocalDatabase {
       final existingRows = await txn.query(
         _lessonTable,
         columns: ['lesson_title'],
-        where: 'is_listed = ?',
-        whereArgs: [1],
+        where: 'is_listed = 1 AND is_user_generated = 0',
       );
       final existingTitles = existingRows
           .map((row) => row['lesson_title'] as String)
@@ -256,6 +256,7 @@ class LocalDatabase {
           'theme': lesson['theme'],
           'hsk_level': lesson['hsk_level'],
           'is_listed': 1,
+          'is_user_generated': 0,
         });
 
         final cards = lesson['cards'] as List<dynamic>;
@@ -289,7 +290,7 @@ class LocalDatabase {
       final existing = await txn.query(
         _lessonTable,
         columns: ['lesson_title'],
-        where: 'is_sentence_practice = 1',
+        where: 'is_sentence_practice = 1 AND is_user_generated = 0',
       );
       final titles = existing.map((row) => row['lesson_title']).toSet();
       for (final deck in decks.cast<Map<String, dynamic>>()) {
@@ -303,6 +304,7 @@ class LocalDatabase {
           // existing storage requires a level; the sentence UI omits it.
           'hsk_level': 3,
           'is_listed': 1,
+          'is_user_generated': 0,
           'is_sentence_practice': 1,
         });
         for (final sentence
@@ -323,65 +325,6 @@ class LocalDatabase {
           });
         }
       }
-    });
-  }
-
-  static Future<void> _applyTatoebaExamples(Database db) async {
-    const marker = 'tatoeba_examples_v1';
-    final applied = await db.query(
-      'content_migrations',
-      columns: ['key'],
-      where: 'key = ?',
-      whereArgs: [marker],
-      limit: 1,
-    );
-    if (applied.isNotEmpty) return;
-
-    final raw = await rootBundle.loadString(
-      'assets/data/tatoeba/flashcard_candidates.json',
-    );
-    final candidates = jsonDecode(raw) as List<dynamic>;
-    final bundledTitles = flashcardLessons
-        .map((lesson) => lesson['lesson_title'] as String)
-        .toList(growable: false);
-    final placeholders = List.filled(bundledTitles.length, '?').join(',');
-
-    await db.transaction((txn) async {
-      final lessonRows = await txn.query(
-        _lessonTable,
-        columns: ['id'],
-        where: 'lesson_title IN ($placeholders)',
-        whereArgs: bundledTitles,
-      );
-      final lessonIds = lessonRows
-          .map((row) => row['id'] as int)
-          .toList(growable: false);
-      if (lessonIds.isNotEmpty) {
-        final lessonPlaceholders = List.filled(lessonIds.length, '?').join(',');
-        for (final rawEntry in candidates) {
-          final entry = rawEntry as Map<String, dynamic>;
-          final matches = entry['candidates'] as List<dynamic>;
-          if (matches.isEmpty) continue;
-          final best = matches.first as Map<String, dynamic>;
-          await txn.update(
-            _cardTable,
-            {
-              'example_sentence_chinese': best['chinese'] as String,
-              'example_sentence_pinyin': '',
-              'example_sentence_english': best['english'] as String,
-              'example_source': 'Tatoeba',
-              'example_source_id': '${best['chineseId']}',
-              'example_translation_id': '${best['englishId']}',
-            },
-            where: 'chinese = ? AND lesson_id IN ($lessonPlaceholders)',
-            whereArgs: [entry['target'], ...lessonIds],
-          );
-        }
-      }
-      await txn.insert('content_migrations', {
-        'key': marker,
-        'applied_at': DateTime.now().toUtc().toIso8601String(),
-      });
     });
   }
 

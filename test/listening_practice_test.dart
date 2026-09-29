@@ -414,6 +414,11 @@ void main() {
 }
 
 class _ListeningLessonRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   _ListeningLessonRepository({this.lessons = defaultLessons});
 
   final List<Lesson> lessons;

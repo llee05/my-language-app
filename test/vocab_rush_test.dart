@@ -639,6 +639,11 @@ class _RushPronunciationService implements PronunciationService {
 }
 
 class _RushLessonRepository implements LessonRepository {
+  @override
+  Future<void> deleteGenerated(int lessonId) async {
+    throw UnimplementedError();
+  }
+
   Flashcard? savedCard;
   final List<Flashcard> attemptedCards = [];
 

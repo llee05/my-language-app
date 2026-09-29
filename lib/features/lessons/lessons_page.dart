@@ -79,6 +79,7 @@ class _LessonsPageState extends State<LessonsPage> {
   bool _sentenceMode = false;
   bool _lessonIsSentence = false;
   bool _loadingTopics = true;
+  final Set<int> _deletingLessonIds = {};
   bool _libraryLoadFailed = false;
   int? _libraryHskFilter;
   int _topicsRequestId = 0;
@@ -191,6 +192,59 @@ class _LessonsPageState extends State<LessonsPage> {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
+  }
+
+  Future<void> _deleteLesson(LessonSummary lesson) async {
+    if (!lesson.isUserGenerated || _deletingLessonIds.contains(lesson.id)) {
+      return;
+    }
+    setState(() => _deletingLessonIds.add(lesson.id));
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Delete lesson?'),
+          content: Text(
+            'Delete “${lesson.title}” and its cards, saved progress, and review history? '
+            'Its cards will also be removed from daily review. This cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const Key('confirm-delete-lesson'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete lesson'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      await widget.repository.deleteGenerated(lesson.id);
+      if (!mounted) return;
+      // Invalidate any in-flight library load before removing the saved row.
+      ++_topicsRequestId;
+      setState(() {
+        _topics = _topics.where((topic) => topic.id != lesson.id).toList();
+        _activeSessions = Map.of(_activeSessions)..remove(lesson.id);
+        _loadingTopics = false;
+      });
+      widget.onProgressChanged?.call();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Lesson deleted.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not delete the lesson. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _deletingLessonIds.remove(lesson.id));
+    }
   }
 
   void _beginTopicsLoad() {
@@ -1057,7 +1111,14 @@ class _LessonsPageState extends State<LessonsPage> {
             _LessonLibraryCard(
               summary: topic,
               isActive: _activeSessions.containsKey(topic.id),
-              onPressed: () => _startLesson(topic),
+              onPressed: _deletingLessonIds.contains(topic.id)
+                  ? null
+                  : () => _startLesson(topic),
+              onDelete:
+                  topic.isUserGenerated &&
+                      !_deletingLessonIds.contains(topic.id)
+                  ? () => _deleteLesson(topic)
+                  : null,
             ),
             if (index != _visibleTopics.length - 1) const SizedBox(height: 10),
           ],
@@ -1493,11 +1554,13 @@ class _LessonLibraryCard extends StatelessWidget {
     required this.summary,
     required this.isActive,
     required this.onPressed,
+    this.onDelete,
   });
 
   final LessonSummary summary;
   final bool isActive;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -1540,7 +1603,14 @@ class _LessonLibraryCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            if (summary.isUserGenerated)
+              IconButton(
+                key: Key('delete-lesson-${summary.id}'),
+                tooltip: 'Delete lesson',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline),
+              ),
+            const SizedBox(width: 8),
             FilledButton(
               onPressed: onPressed,
               child: Text(isActive ? 'Resume' : 'Start'),

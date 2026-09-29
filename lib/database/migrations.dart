@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'bundled_lesson_content.dart';
+
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 15;
+const int databaseSchemaVersion = 16;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -334,6 +336,13 @@ final Map<int, MigrationStep> databaseMigrations = {
   },
   15: (db) async {
     await db.execute('ALTER TABLE lessons ADD COLUMN guide_json TEXT');
+  },
+  16: (db) async {
+    await db.execute(
+      'ALTER TABLE lessons ADD COLUMN is_user_generated INTEGER NOT NULL '
+      'DEFAULT 1 CHECK (is_user_generated IN (0, 1))',
+    );
+    await identifyLegacyBundledLessons(db);
   },
 };
 
