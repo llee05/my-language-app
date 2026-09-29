@@ -28,8 +28,12 @@ copyright (c) 2026 Yanis Zafirópulos.
 ## Tatoeba sentence pairs
 
 `tatoeba/` contains the Mandarin–English sentence-pairs export used for bundled
-flashcard examples. The compact generated candidate list is packaged with the
-application; the full source corpus is not.
+historical flashcard examples. The compact generated candidate list remains
+packaged with the application for reference; the full source corpus is not.
+Current default lessons use original examples in `lib/database/flashcard_seed.dart`
+with matching sentence pinyin and English. Startup no longer automatically picks
+the first corpus candidate. The original corpus attribution is retained in the
+candidate asset; replacement examples do not claim Tatoeba attribution.
 
 Generate a ranked, reviewable shortlist for every bundled flashcard with:
 
@@ -57,6 +61,20 @@ Each entry includes Simplified Chinese, full sentence pinyin with tone marks,
 and an English translation. Pinyin shows common pronunciation changes for 一
 and 不; third-tone sandhi retains the dictionary tone marks. Neutral-tone
 syllables have no tone mark. Keep these conventions consistent when editing.
+
+The vocabulary lesson topics, word order, and sentence deck topics are stable.
+The 2026 wording revision updates all 360 vocabulary examples and all 100 sentence
+cards. Vocabulary quizzes use real meanings from the same topic as alternatives.
+These lesson levels are study groupings, not a claim that every topic word belongs
+to the official HSK list for that level.
+
+`bundled_lessons_rewrite_v1` updates installed content in one transaction while
+preserving lesson/card IDs, ratings, schedules, and session positions. Schema 16
+records lesson origin, so generated lessons (including ones sharing a bundled
+title) are not rewritten. Generated lessons can be deleted from the library;
+confirmation explains that their cards, progress, and reviews are removed too.
+Bundled lessons are protected from deletion. Backups include origin and older
+backups are classified during restore.
 
 Topic titles identify the installed decks. Keep existing topic titles stable:
 new installations seed these cards, and later startups preserve installed card
