@@ -107,7 +107,14 @@ class _DailyReviewCardScreenState extends State<DailyReviewCardScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => _BackNavigationScope(
+    active: widget.onClose != null,
+    blocked: _savingAnswer,
+    onBack: _close,
+    child: _buildContent(context),
+  );
+
+  Widget _buildContent(BuildContext context) {
     if (widget.queue.isEmpty) {
       return ColoredBox(
         color: AppColors.background,

@@ -29,6 +29,30 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
   });
 
+  testWidgets('Android Back ends Vocab Rush and cancels its timer', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: _RushSettingsRepository(),
+            initialVocabulary: _smallVocabulary,
+          ),
+        ),
+      ),
+    );
+    await startGame(tester);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('PICK THE CORRECT MEANING'), findsNothing);
+    await tester.pump(const Duration(minutes: 5));
+    expect(find.text('PICK THE CORRECT MEANING'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('an empty difficulty can recover by choosing available words', (
     tester,
   ) async {

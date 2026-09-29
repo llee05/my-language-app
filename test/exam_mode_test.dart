@@ -223,7 +223,7 @@ void main() {
     );
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.text('Leave this exam?'), findsOneWidget);
     await tester.tap(find.text('Continue exam'));

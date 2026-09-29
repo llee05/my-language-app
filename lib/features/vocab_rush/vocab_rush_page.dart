@@ -323,18 +323,22 @@ class _VocabRushPageState extends State<VocabRushPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.background,
-      child: LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: constraints.maxWidth < 600 ? 20 : 48,
-            vertical: 34,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: _playing ? _buildGame() : _buildLobby(),
+    return _BackNavigationScope(
+      active: _playing,
+      onBack: _finish,
+      child: ColoredBox(
+        color: AppColors.background,
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: constraints.maxWidth < 600 ? 20 : 48,
+              vertical: 34,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: _playing ? _buildGame() : _buildLobby(),
+              ),
             ),
           ),
         ),

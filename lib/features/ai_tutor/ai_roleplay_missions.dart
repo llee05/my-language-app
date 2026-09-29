@@ -478,7 +478,12 @@ Return only compact JSON with this exact shape:
     }
     final mission = _mission;
     if (mission == null) return _buildMissionPicker();
-    return _buildActiveMission(mission);
+    return _BackNavigationScope(
+      active: true,
+      blocked: _sending,
+      onBack: _chooseMission,
+      child: _buildActiveMission(mission),
+    );
   }
 
   Widget _buildMissionPicker() {

@@ -51,6 +51,7 @@ part 'core/theme/app_colors.dart';
 part 'core/theme/app_button_theme.dart';
 part 'core/widgets/app_sidebar.dart';
 part 'core/widgets/swipe_navigation_drawer.dart';
+part 'core/widgets/back_navigation_scope.dart';
 part 'core/widgets/button_animation.dart';
 part 'core/widgets/push_to_talk_button.dart';
 part 'core/widgets/pronunciation_button.dart';

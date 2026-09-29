@@ -449,20 +449,25 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   Future<void> _practiceAgain() => _startPractice();
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    key: const Key('listening-practice-page'),
-    color: AppColors.background,
-    child: _loading
-        ? const Center(child: CircularProgressIndicator())
-        : _loadFailed
-        ? _buildLoadError()
-        : _answerPool.isEmpty
-        ? _buildEmptyState()
-        : !_sessionStarted
-        ? _buildSetup()
-        : _complete
-        ? _buildSummary()
-        : _buildPractice(),
+  Widget build(BuildContext context) => _BackNavigationScope(
+    active: _sessionStarted,
+    blocked: _transitioning,
+    onBack: () => unawaited(_chooseAnotherTopic()),
+    child: ColoredBox(
+      key: const Key('listening-practice-page'),
+      color: AppColors.background,
+      child: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _loadFailed
+          ? _buildLoadError()
+          : _answerPool.isEmpty
+          ? _buildEmptyState()
+          : !_sessionStarted
+          ? _buildSetup()
+          : _complete
+          ? _buildSummary()
+          : _buildPractice(),
+    ),
   );
 
   Widget _buildLoadError() => Center(

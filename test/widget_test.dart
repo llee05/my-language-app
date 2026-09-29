@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -145,6 +145,112 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       AppColors.apply(AppThemes.classic);
     });
+  }
+
+  for (final width in [400.0, 1000.0]) {
+    testWidgets(
+      'Android Back unwinds dialogs, menu, lesson, section, then exits at $width',
+      (tester) async {
+        await tester.binding.setSurfaceSize(Size(width, 1000));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final platformCalls = <String>[];
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (call) async {
+            platformCalls.add(call.method);
+            return null;
+          },
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            SystemChannels.platform,
+            null,
+          ),
+        );
+        final pronunciation = _FakePronunciationService();
+        final progress = _MemoryProgressRepository();
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.android),
+            home: DashboardPage(
+              personalityRepository: MemoryTutorPersonalityRepository(),
+              appThemeId: AppThemeId.classic,
+              onThemeChanged: (_) {},
+              profile: testProfile,
+              onProfileChanged: (_) async {},
+              onResetOnboarding: () async {},
+              onResetAllData: () async {},
+              lessonRepository: _MemoryLessonRepository(),
+              progressRepository: progress,
+              settingsRepository: _MemorySettingsRepository(),
+              developmentRepository: _MemoryDevelopmentRepository(),
+              pronunciationService: pronunciation,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        Future<void> openLessons() async {
+          if (width < 760) {
+            await tester.tap(find.byIcon(Icons.menu_rounded));
+            await tester.pumpAndSettle();
+          }
+          await tester.tap(find.text('Lessons').first);
+          await tester.pumpAndSettle();
+        }
+
+        await openLessons();
+        await tester.ensureVisible(find.text('Resume'));
+        await tester.tap(find.text('Resume'));
+        await tester.pumpAndSettle();
+        expect(find.byTooltip('Back to lessons'), findsOneWidget);
+        if (width < 760) {
+          await tester.tap(find.byIcon(Icons.menu_rounded));
+          await tester.pumpAndSettle();
+          await tester.binding.handlePopRoute();
+          await tester.pumpAndSettle();
+          expect(find.byType(Drawer), findsNothing);
+          expect(find.byTooltip('Back to lessons'), findsOneWidget);
+        }
+        unawaited(
+          showDialog<void>(
+            context: tester.element(find.byType(LessonsPage)),
+            builder: (_) => const AlertDialog(title: Text('Test dialog')),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text('Test dialog'), findsNothing);
+        expect(find.byTooltip('Back to lessons'), findsOneWidget);
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.byType(LessonsPage), findsOneWidget);
+        expect(find.byTooltip('Back to lessons'), findsNothing);
+        expect(pronunciation.stopCalls, greaterThan(0));
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.byType(LessonsPage), findsNothing);
+        expect(platformCalls, isNot(contains('SystemNavigator.pop')));
+        // On-screen navigation must remove the same history entries.
+        await openLessons();
+        await tester.ensureVisible(find.text('Resume'));
+        await tester.tap(find.text('Resume'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Back to lessons'));
+        await tester.pumpAndSettle();
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.byType(LessonsPage), findsNothing);
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(
+          platformCalls.where((call) => call == 'SystemNavigator.pop'),
+          hasLength(1),
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 
   testWidgets('new lesson shortcut reveals the creation form on a phone', (
@@ -827,7 +933,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(reviews.sessions['2026-08-06']?.currentPosition, 1);
 
-      await tester.tap(find.byTooltip('Back to review queue'));
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Resume review'), findsOneWidget);
       await tester.tap(find.text('Home'));
@@ -1718,6 +1824,7 @@ void main() {
     tester,
   ) async {
     final save = Completer<void>();
+    var closes = 0;
     final submittedPositions = <int>[];
     const queue = [
       DailyQueueCard(
@@ -1743,6 +1850,7 @@ void main() {
       MaterialApp(
         home: DailyReviewCardScreen(
           queue: queue,
+          onClose: () => closes++,
           initialPosition: 1,
           onAnswer: (position, _, _) async {
             submittedPositions.add(position);
@@ -1773,6 +1881,9 @@ void main() {
       isNull,
     );
 
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(closes, 0);
     save.complete();
     await tester.pumpAndSettle();
     expect(find.text('2 of 2'), findsOneWidget);
@@ -1790,6 +1901,9 @@ void main() {
     await tester.pump();
     expect(find.text('Confident selected'), findsOneWidget);
     expect(submittedPositions, [1, 0]);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(closes, 1);
   });
 
   testWidgets('daily review retries the exact failed answer', (tester) async {
@@ -3079,10 +3193,16 @@ void main() {
       isNull,
     );
 
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(find.byTooltip('Back to lessons'), findsOneWidget);
     save.complete();
     await tester.pumpAndSettle();
     expect(progress.recordReviewCalls, 1);
     expect(find.text('Lesson complete!'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Back to lessons'), findsNothing);
   });
 
   testWidgets('lesson retries the exact failed answer', (tester) async {

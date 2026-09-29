@@ -10,6 +10,31 @@ import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 void main() {
+  testWidgets('Android Back stops listening and returns to topic selection', (
+    tester,
+  ) async {
+    final pronunciation = _ListeningPronunciationService();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          lessonRepository: _ListeningLessonRepository(),
+          settingsRepository: const _ListeningSettingsRepository(),
+          maxHskLevel: 1,
+          pronunciationService: pronunciation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.pumpAndSettle();
+    final stops = pronunciation.stopCalls;
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Choose what to listen for'), findsOneWidget);
+    expect(pronunciation.stopCalls, greaterThan(stops));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('starting listening freezes topic search until audio stops', (
     tester,
   ) async {

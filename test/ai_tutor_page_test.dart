@@ -1143,6 +1143,29 @@ void main() {
     },
   );
 
+  testWidgets('Android Back returns from roleplay to mission selection', (
+    tester,
+  ) async {
+    await _pumpRoleplay(
+      tester,
+      tutorContextRepository: _MemoryTutorContextRepository(
+        snapshot: _roleplaySnapshot(),
+      ),
+      request: (_) async => _roleplayResponse(),
+    );
+    await tester.ensureVisible(
+      find.byKey(const Key('start-roleplay-food-spicy')),
+    );
+    await tester.tap(find.byKey(const Key('start-roleplay-food-spicy')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('roleplay-reply')), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('start-roleplay-food-spicy')), findsOneWidget);
+    expect(find.byKey(const Key('roleplay-reply')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('sends a typed prompt and renders a parsed JSON reply', (
     tester,
   ) async {

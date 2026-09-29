@@ -379,31 +379,21 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final showSidebar = constraints.maxWidth >= 760;
-        final enableMenuSwipe =
-            !showSidebar &&
-            (Theme.of(context).platform == TargetPlatform.android ||
-                Theme.of(context).platform == TargetPlatform.iOS);
+    return _BackNavigationScope(
+      active: selectedNav != 0,
+      onBack: () => _selectNavigation(0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final showSidebar = constraints.maxWidth >= 760;
+          final enableMenuSwipe =
+              !showSidebar &&
+              (Theme.of(context).platform == TargetPlatform.android ||
+                  Theme.of(context).platform == TargetPlatform.iOS);
 
-        final scaffold = Scaffold(
-          drawer: showSidebar || enableMenuSwipe
-              ? null
-              : Drawer(
-                  child: AppSidebar(
-                    selectedIndex: selectedNav,
-                    hskLevel: widget.profile.hskLevel,
-                    streakDays: _learningStats.streakDays,
-                    onSelected: _selectNavigation,
-                  ),
-                ),
-          body: SafeArea(
-            child: Row(
-              children: [
-                if (showSidebar)
-                  SizedBox(
-                    width: 210,
+          final scaffold = Scaffold(
+            drawer: showSidebar || enableMenuSwipe
+                ? null
+                : Drawer(
                     child: AppSidebar(
                       selectedIndex: selectedNav,
                       hskLevel: widget.profile.hskLevel,
@@ -411,104 +401,120 @@ class _DashboardPageState extends State<DashboardPage>
                       onSelected: _selectNavigation,
                     ),
                   ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      DashboardHeader(
-                        showMenu: !showSidebar,
-                        onMenuPressed: enableMenuSwipe
-                            ? () => _mobileDrawerKey.currentState?.open()
-                            : null,
-                        profile: widget.profile,
-                        totalXp: _learningStats.totalXp,
-                        profileSelected:
-                            selectedNav == AppSidebar.items.length + 1,
-                        onProfilePressed: _openProfile,
+            body: SafeArea(
+              child: Row(
+                children: [
+                  if (showSidebar)
+                    SizedBox(
+                      width: 210,
+                      child: AppSidebar(
+                        selectedIndex: selectedNav,
+                        hskLevel: widget.profile.hskLevel,
+                        streakDays: _learningStats.streakDays,
+                        onSelected: _selectNavigation,
                       ),
-                      Expanded(
-                        child: _DashboardBody(
-                          vocabularyRepository: widget.vocabularyRepository,
-                          selectedNav: selectedNav,
-                          resumeLatestLesson: _resumeLatestLesson,
-                          initialLessonId: _initialLessonId,
-                          startDailyReview: _startDailyReview,
-                          onResumeLesson: _resumeLesson,
-                          onOpenLessons: _openLessons,
-                          onOpenAvailableLesson: _openAvailableLesson,
-                          onStartDailyReview: _openDailyReview,
-                          onRetryDailyReview: _loadDailyReviewPrompt,
-                          onRetryAvailableLessons: _loadAvailableLessons,
-                          onDailyReviewCompleted: _loadDailyReviewPrompt,
-                          onLearningProgressChanged: _loadLearningStats,
-                          onLessonProgressChanged: _refreshDashboardData,
-                          loadingDailyReview: _loadingDailyReview,
-                          dailyReviewLoadError: _dailyReviewLoadError,
-                          pendingReviewCount: _pendingReviewCount,
-                          dailyReviewComplete: _dailyReviewComplete,
-                          resumeDailyReview: _resumeDailyReview,
-                          activeLesson: _activeLesson,
-                          activeLessonSession: _activeLessonSession,
-                          learningStats: _learningStats,
-                          loadingLearningStats: _loadingLearningStats,
-                          learningStatsLoadError: _learningStatsLoadError,
-                          onRetryLearningStats: _loadLearningStats,
-                          onOpenProfileSettings: _openSettings,
-                          availableLessons: _availableLessons,
-                          loadingAvailableLessons: _loadingAvailableLessons,
-                          availableLessonsLoadError: _availableLessonsLoadError,
+                    ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        DashboardHeader(
+                          showMenu: !showSidebar,
+                          onMenuPressed: enableMenuSwipe
+                              ? () => _mobileDrawerKey.currentState?.open()
+                              : null,
                           profile: widget.profile,
-                          onProfileChanged: widget.onProfileChanged,
-                          onResetOnboarding: widget.onResetOnboarding,
-                          onResetAllData: widget.onResetAllData,
-                          onBackupRestored: widget.onBackupRestored,
-                          appThemeId: widget.appThemeId,
-                          onThemeChanged: widget.onThemeChanged,
-                          buttonAnimationStyle: widget.buttonAnimationStyle,
-                          onButtonAnimationStyleChanged:
-                              widget.onButtonAnimationStyleChanged,
-                          lessonRepository: widget.lessonRepository,
-                          progressRepository: widget.progressRepository,
-                          dailyReviewSessionRepository:
-                              widget.dailyReviewSessionRepository,
-                          settingsRepository: widget.settingsRepository,
-                          developmentRepository: widget.developmentRepository,
-                          aiConfigurationRepository:
-                              widget.aiConfigurationRepository,
-                          tutorContextRepository: widget.tutorContextRepository,
-                          personalityRepository: widget.personalityRepository,
-                          pronunciationService: _pronunciationService,
-                          speechInputService: _speechInputService,
-                          clock: widget.clock,
-                          backupRepository: widget.backupRepository,
-                          backupFileService: widget.backupFileService,
+                          totalXp: _learningStats.totalXp,
+                          profileSelected:
+                              selectedNav == AppSidebar.items.length + 1,
+                          onProfilePressed: _openProfile,
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: _DashboardBody(
+                            vocabularyRepository: widget.vocabularyRepository,
+                            selectedNav: selectedNav,
+                            resumeLatestLesson: _resumeLatestLesson,
+                            initialLessonId: _initialLessonId,
+                            startDailyReview: _startDailyReview,
+                            onResumeLesson: _resumeLesson,
+                            onOpenLessons: _openLessons,
+                            onOpenAvailableLesson: _openAvailableLesson,
+                            onStartDailyReview: _openDailyReview,
+                            onRetryDailyReview: _loadDailyReviewPrompt,
+                            onRetryAvailableLessons: _loadAvailableLessons,
+                            onDailyReviewCompleted: _loadDailyReviewPrompt,
+                            onLearningProgressChanged: _loadLearningStats,
+                            onLessonProgressChanged: _refreshDashboardData,
+                            loadingDailyReview: _loadingDailyReview,
+                            dailyReviewLoadError: _dailyReviewLoadError,
+                            pendingReviewCount: _pendingReviewCount,
+                            dailyReviewComplete: _dailyReviewComplete,
+                            resumeDailyReview: _resumeDailyReview,
+                            activeLesson: _activeLesson,
+                            activeLessonSession: _activeLessonSession,
+                            learningStats: _learningStats,
+                            loadingLearningStats: _loadingLearningStats,
+                            learningStatsLoadError: _learningStatsLoadError,
+                            onRetryLearningStats: _loadLearningStats,
+                            onOpenProfileSettings: _openSettings,
+                            availableLessons: _availableLessons,
+                            loadingAvailableLessons: _loadingAvailableLessons,
+                            availableLessonsLoadError:
+                                _availableLessonsLoadError,
+                            profile: widget.profile,
+                            onProfileChanged: widget.onProfileChanged,
+                            onResetOnboarding: widget.onResetOnboarding,
+                            onResetAllData: widget.onResetAllData,
+                            onBackupRestored: widget.onBackupRestored,
+                            appThemeId: widget.appThemeId,
+                            onThemeChanged: widget.onThemeChanged,
+                            buttonAnimationStyle: widget.buttonAnimationStyle,
+                            onButtonAnimationStyleChanged:
+                                widget.onButtonAnimationStyleChanged,
+                            lessonRepository: widget.lessonRepository,
+                            progressRepository: widget.progressRepository,
+                            dailyReviewSessionRepository:
+                                widget.dailyReviewSessionRepository,
+                            settingsRepository: widget.settingsRepository,
+                            developmentRepository: widget.developmentRepository,
+                            aiConfigurationRepository:
+                                widget.aiConfigurationRepository,
+                            tutorContextRepository:
+                                widget.tutorContextRepository,
+                            personalityRepository: widget.personalityRepository,
+                            pronunciationService: _pronunciationService,
+                            speechInputService: _speechInputService,
+                            clock: widget.clock,
+                            backupRepository: widget.backupRepository,
+                            backupFileService: widget.backupFileService,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
+          );
 
-        if (!enableMenuSwipe) return scaffold;
+          if (!enableMenuSwipe) return scaffold;
 
-        return _SwipeNavigationDrawer(
-          key: _mobileDrawerKey,
-          drawer: Drawer(
-            child: AppSidebar(
-              selectedIndex: selectedNav,
-              hskLevel: widget.profile.hskLevel,
-              streakDays: _learningStats.streakDays,
-              onSelected: (index) {
-                _mobileDrawerKey.currentState?.close();
-                _selectNavigation(index);
-              },
+          return _SwipeNavigationDrawer(
+            key: _mobileDrawerKey,
+            drawer: Drawer(
+              child: AppSidebar(
+                selectedIndex: selectedNav,
+                hskLevel: widget.profile.hskLevel,
+                streakDays: _learningStats.streakDays,
+                onSelected: (index) {
+                  _mobileDrawerKey.currentState?.close();
+                  _selectNavigation(index);
+                },
+              ),
             ),
-          ),
-          child: scaffold,
-        );
-      },
+            child: scaffold,
+          );
+        },
+      ),
     );
   }
 }

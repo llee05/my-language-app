@@ -749,10 +749,38 @@ class _LessonsPageState extends State<LessonsPage> {
     return (fromIndex + 1) % _cards.length;
   }
 
+  Future<void> _stopLessonAudio() async {
+    try {
+      await Future.wait([
+        _pronunciationService.stop(),
+        _speechInputService.cancelListening(),
+      ]);
+    } catch (error) {
+      debugPrint('Lesson audio stop failed: $error');
+    }
+  }
+
+  void _backToLessons() {
+    if (_savingAnswer) return;
+    unawaited(_stopLessonAudio());
+    setState(() {
+      _cards = const [];
+      _session = null;
+      _learnedCardIds.clear();
+      _reviewCardIds.clear();
+      _notice = null;
+    });
+  }
+
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.background,
-    child: _cards.isEmpty ? _buildSetup() : _buildFlashcards(),
+  Widget build(BuildContext context) => _BackNavigationScope(
+    active: _cards.isNotEmpty,
+    blocked: _savingAnswer,
+    onBack: _backToLessons,
+    child: ColoredBox(
+      color: AppColors.background,
+      child: _cards.isEmpty ? _buildSetup() : _buildFlashcards(),
+    ),
   );
 
   Widget _buildSetup() => SingleChildScrollView(
@@ -1134,14 +1162,7 @@ class _LessonsPageState extends State<LessonsPage> {
           children: [
             IconButton(
               tooltip: 'Back to lessons',
-              onPressed: _savingAnswer
-                  ? null
-                  : () => setState(() {
-                      _cards = const [];
-                      _session = null;
-                      _learnedCardIds.clear();
-                      _reviewCardIds.clear();
-                    }),
+              onPressed: _savingAnswer ? null : _backToLessons,
               icon: const Icon(Icons.arrow_back),
             ),
             Expanded(
@@ -1417,13 +1438,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   ),
                   const SizedBox(height: 28),
                   FilledButton.icon(
-                    onPressed: () => setState(() {
-                      _cards = const [];
-                      _session = null;
-                      _learnedCardIds.clear();
-                      _reviewCardIds.clear();
-                      _notice = null;
-                    }),
+                    onPressed: _backToLessons,
                     icon: const Icon(Icons.check),
                     label: const Text('Done'),
                   ),
