@@ -449,19 +449,10 @@ The beta milestone delivers a complete local loop:
 Work after Beta 1 is focused on expanded progress analytics, release reliability,
 accessibility, learner-data export, and notification support.
 
-## License
+## Copyright and usage
 
-TingShuo's original source code, documentation, and study content are licensed
-under the [MIT License](LICENSE), copyright (c) 2026 Leon Lee.
+**Copyright © 2026 Leon Lee. All rights reserved.**
 
-Third-party code, datasets, dependencies, and downloaded voice models retain
-their own licenses and attribution requirements:
-
-- HSK vocabulary sources and Tatoeba sentence pairs are documented in
-  [assets/data/README.md](assets/data/README.md). Tatoeba content is licensed
-  under CC BY 2.0 FR and is not covered by the project's MIT license.
-- Vendored `flutter_secure_storage_linux` retains its
-  [BSD 3-Clause license](third_party/flutter_secure_storage_linux/LICENSE)
-  and the notices in its source files. See [third_party/README.md](third_party/README.md).
-- Package dependencies and the optional Kokoro voice model remain subject to
-  their respective upstream licenses.
+This repository is publicly available for portfolio and demonstration purposes.
+No permission is granted to copy, modify, distribute, sublicense, or use this
+source code in other projects without prior written permission.
