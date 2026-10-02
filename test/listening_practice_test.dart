@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -7,9 +9,117 @@ import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
+import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 void main() {
+  for (final width in [390.0, 1000.0]) {
+    testWidgets('default listening decks stay separate at width $width', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(Size(width, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final document =
+          jsonDecode(
+                File('assets/data/vocabulary_lessons.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
+      final vocabulary = {
+        for (final word
+            in jsonDecode(
+                  File('assets/data/hsk_vocabulary.json').readAsStringSync(),
+                )
+                as List)
+          word['id']: word,
+      };
+      final lessons = <Lesson>[
+        for (final (index, row) in (document['lessons'] as List).indexed)
+          Lesson(
+            summary: LessonSummary(
+              id: index + 1,
+              title: row['title'] as String,
+              theme: 'HSK ${row['hskLevel']} vocabulary',
+              hskLevel: row['hskLevel'] as int,
+            ),
+            cards: [
+              for (final card in row['entries'] as List)
+                Flashcard(
+                  chinese:
+                      vocabulary[card['vocabularyId']]['simplified'] as String,
+                  pinyin: vocabulary[card['vocabularyId']]['pinyin'] as String,
+                  englishMeaning:
+                      vocabulary[card['vocabularyId']]['studyMeaning']
+                          as String,
+                ),
+            ],
+          ),
+      ];
+      final pronunciation = _ListeningPronunciationService();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListeningPracticePage(
+            lessonRepository: _ListeningLessonRepository(lessons: lessons),
+            progressRepository: const _ListeningProgressRepository(),
+            settingsRepository: const _ListeningSettingsRepository(),
+            maxHskLevel: 1,
+            pronunciationService: pronunciation,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('8 lessons available'), findsOneWidget);
+      expect(find.text('HSK 1 · Lesson 001'), findsOneWidget);
+      expect(find.text('7/20'), findsOneWidget);
+      expect(find.text('7 of 20 words learned'), findsOneWidget);
+      final picker = tester.widget<DropdownButton<String>>(
+        find.byType(DropdownButton<String>),
+      );
+      expect(picker.items, hasLength(10));
+      expect(picker.items!.map((item) => item.value).toSet(), hasLength(10));
+
+      final start = find.byKey(const Key('listening-start-practice'));
+      await tester.ensureVisible(start);
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+      expect(find.text('HSK 1 · Lesson 001 · 1 of 20'), findsOneWidget);
+      for (var index = 0; index < 20; index++) {
+        expect(
+          pronunciation.requests.last.$1,
+          lessons.first.cards[index].chinese,
+        );
+        final reveal = find.byKey(const Key('listening-reveal-answer'));
+        await tester.ensureVisible(reveal);
+        await tester.tap(reveal);
+        await tester.pump();
+        final next = find.byKey(const Key('listening-next'));
+        await tester.ensureVisible(next);
+        await tester.tap(next);
+        await tester.pumpAndSettle();
+      }
+      expect(pronunciation.requests, hasLength(20));
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      final range = find.byKey(const Key('listening-hsk-range'));
+      await tester.ensureVisible(range);
+      await tester.tap(range);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('All levels').last);
+      await tester.pumpAndSettle();
+      expect(find.text('251 lessons available'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('listening-topic-search')),
+        'HSK 6 · Lesson 125',
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(start);
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+      expect(find.text('HSK 6 · Lesson 125 · 1 of 20'), findsOneWidget);
+      expect(pronunciation.requests.last.$1, lessons.last.cards.first.chinese);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('Android Back stops listening and returns to topic selection', (
     tester,
   ) async {
@@ -436,6 +546,16 @@ void main() {
 
     expect(selected, 3);
   });
+}
+
+class _ListeningProgressRepository extends SqliteProgressRepository {
+  const _ListeningProgressRepository();
+
+  @override
+  Future<Map<int, LessonLearningProgress>> lessonLearningProgress() async => {
+    for (var id = 1; id <= 251; id++)
+      id: LessonLearningProgress(totalCards: 20, learnedCards: id == 1 ? 7 : 0),
+  };
 }
 
 class _ListeningLessonRepository implements LessonRepository {

@@ -102,9 +102,12 @@ continued later the same day.
 ### Listening practice
 
 Open **Listening Practice** to practise words from saved lessons at or below
-your current HSK level. Pick a lesson topic, or choose **Random mix** for a
-shuffled session spanning every available topic. Choose **Random topic** to
-practise one randomly selected topic instead. Each prompt plays before its Hanzi
+your current HSK level, or select **All levels** to access all 251 default decks.
+Each default lesson is selectable individually and includes all 20 words in a
+listening session. Choose **Random mix** for a shuffled session spanning the
+selected HSK range, or **Random topic** to practise one randomly selected lesson.
+Lesson library cards and listening choices show how many words are learned,
+using saved progress with at least 80% mastery. Each prompt plays before its Hanzi
 and pinyin are shown. Choose the English meaning or reveal the answer, and use
 **Replay** or **Slower** whenever you need to hear it again.
 

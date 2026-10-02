@@ -7,7 +7,8 @@ class ListeningPracticePage extends StatefulWidget {
     required this.settingsRepository,
     required this.maxHskLevel,
     this.pronunciationService,
-    this.sessionSize = 10,
+    this.progressRepository,
+    this.sessionSize = 20,
     this.random,
   });
 
@@ -15,6 +16,7 @@ class ListeningPracticePage extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final int maxHskLevel;
   final PronunciationService? pronunciationService;
+  final ProgressRepository? progressRepository;
   final int sessionSize;
   final Random? random;
 
@@ -34,6 +36,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   final _topicSearchController = TextEditingController();
   LearnerSettings _learnerSettings = const LearnerSettings();
   List<_ListeningTopic> _topics = const [];
+  Map<int, LessonLearningProgress> _lessonLearningProgress = const {};
+  int _maxHskLevel = 6;
   List<Flashcard> _answerPool = const [];
   List<Flashcard> _cards = const [];
   bool _loading = true;
@@ -58,6 +62,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   void initState() {
     super.initState();
     _random = widget.random ?? Random();
+    _maxHskLevel = widget.maxHskLevel.clamp(1, 6);
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -95,28 +100,33 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       final summaries = await widget.lessonRepository.topics();
       final eligible = summaries.where(
         (summary) =>
-            !summary.isSentencePractice &&
-            summary.hskLevel <= widget.maxHskLevel,
+            !summary.isSentencePractice && summary.hskLevel <= _maxHskLevel,
       );
       final lessons = await Future.wait(
         eligible.map((summary) => widget.lessonRepository.findById(summary.id)),
       );
+      final learningProgress = await widget.progressRepository
+          ?.learningProgressForLessons(
+            widget.lessonRepository,
+            eligible.map((summary) => summary.id),
+          );
       final allCards = <String, Flashcard>{};
       final topicLabels = <String, String>{};
+      final lessonIds = <String, int>{};
       final cardsByTopic = <String, Map<String, Flashcard>>{};
       for (final lesson in lessons.whereType<Lesson>()) {
-        final rawTopic = lesson.summary.theme.trim();
-        final topicLabel = rawTopic.isEmpty
-            ? lesson.summary.title.trim()
-            : rawTopic;
+        final topicLabel = lesson.summary.title.trim();
         if (topicLabel.isEmpty) continue;
-        final topicKey = topicLabel.toLowerCase();
-        final isRandomMix = topicKey == _randomMixLabel.toLowerCase();
+        final topicKey = 'lesson:${lesson.summary.id}';
+        final isRandomMix =
+            lesson.summary.theme.trim().toLowerCase() ==
+            _randomMixLabel.toLowerCase();
         final topicCards = isRandomMix
             ? null
             : cardsByTopic.putIfAbsent(topicKey, () => {});
         if (!isRandomMix) {
           topicLabels.putIfAbsent(topicKey, () => topicLabel);
+          lessonIds[topicKey] = lesson.summary.id;
         }
         for (final card in lesson.cards) {
           if (card.chinese.trim().isEmpty ||
@@ -135,6 +145,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
           if (entry.value.isNotEmpty)
             _ListeningTopic(
               key: entry.key,
+              lessonId: lessonIds[entry.key]!,
               label: topicLabels[entry.key]!,
               cards: entry.value.values.toList(growable: false),
             ),
@@ -144,6 +155,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       setState(() {
         _learnerSettings = settings;
         _topics = topics;
+        _lessonLearningProgress = learningProgress ?? const {};
         _answerPool = allCards.values.toList(growable: false);
         _selectedTopicKey = topics.isEmpty ? _randomMixKey : topics.first.key;
         _activeTopicLabel = null;
@@ -216,6 +228,15 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       _topics.isNotEmpty &&
       (_topicSearchQuery.isEmpty ||
           _randomTopicLabel.toLowerCase().contains(_topicSearchQuery));
+
+  LessonLearningProgress? get _selectedLearningProgress {
+    for (final topic in _topics) {
+      if (topic.key == _selectedTopicKey) {
+        return _lessonLearningProgress[topic.lessonId];
+      }
+    }
+    return null;
+  }
 
   bool get _showRandomMix =>
       _topicSearchQuery.isEmpty ||
@@ -527,12 +548,47 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Pick one lesson topic, let Random topic choose one for '
-                      'you, or use Random mix to combine every topic.',
+                      'Pick a lesson for a 20-word listening session, let '
+                      'Random topic choose a lesson, or use Random mix to '
+                      'combine lessons.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.muted, height: 1.4),
                     ),
                     const SizedBox(height: 24),
+                    DropdownButtonFormField<int>(
+                      key: const Key('listening-hsk-range'),
+                      initialValue: _maxHskLevel,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'HSK range',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (var level = 1; level <= 6; level++)
+                          DropdownMenuItem(
+                            value: level,
+                            child: Text(
+                              level == 6 ? 'All levels' : 'Up to HSK $level',
+                            ),
+                          ),
+                      ],
+                      onChanged: _transitioning
+                          ? null
+                          : (value) {
+                              if (value == null || value == _maxHskLevel) {
+                                return;
+                              }
+                              _maxHskLevel = value;
+                              unawaited(_loadPractice());
+                            },
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      '${_topics.length} lessons available',
+                      key: const Key('listening-lesson-count'),
+                      style: TextStyle(color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 14),
                     TextField(
                       key: const Key('listening-topic-search'),
                       enabled: !_transitioning,
@@ -540,7 +596,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                       onChanged: _updateTopicSearch,
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
-                        hintText: 'Search topics, Hanzi, pinyin, or English',
+                        hintText: 'Search lessons, Hanzi, pinyin, or English',
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _topicSearchController.text.isEmpty
                             ? null
@@ -571,7 +627,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                             : 'No matching topics',
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Topic',
+                        labelText: 'Lesson or topic',
                         border: OutlineInputBorder(),
                       ),
                       items: [
@@ -600,10 +656,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                         for (final topic in _visibleTopics)
                           DropdownMenuItem(
                             value: topic.key,
-                            child: Text(
-                              topic.label,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: _buildTopicChoice(topic),
                           ),
                       ],
                       onChanged:
@@ -615,6 +668,14 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                           : (value) =>
                                 setState(() => _selectedTopicKey = value),
                     ),
+                    if (_selectedLearningProgress case final progress?) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        '${progress.learnedCards} of ${progress.totalCards} words learned',
+                        key: const Key('listening-learned-count'),
+                        style: TextStyle(color: AppColors.teal),
+                      ),
+                    ],
                     if (!_showRandomTopic &&
                         !_showRandomMix &&
                         _visibleTopics.isEmpty) ...[
@@ -650,6 +711,31 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     ),
   );
 
+  Widget _buildTopicChoice(_ListeningTopic topic) {
+    final progress = _lessonLearningProgress[topic.lessonId];
+    if (progress == null) {
+      return Text(topic.label, overflow: TextOverflow.ellipsis);
+    }
+    return Row(
+      children: [
+        Expanded(
+          flex: 4,
+          child: Text(topic.label, overflow: TextOverflow.ellipsis),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            '${progress.learnedCards}/${progress.totalCards}',
+            overflow: TextOverflow.ellipsis,
+            semanticsLabel:
+                '${progress.learnedCards} of ${progress.totalCards} words learned',
+            style: TextStyle(fontSize: 12, color: AppColors.teal),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildEmptyState() => SingleChildScrollView(
     padding: const EdgeInsets.all(24),
     child: Center(
@@ -672,8 +758,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Add or generate a lesson at your current HSK level, then '
-                  'come back to practise its words by ear.',
+                  'No vocabulary lessons are available in this HSK range. '
+                  'Reload Listening Practice to try again.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppColors.muted),
                 ),
@@ -992,10 +1078,12 @@ class _ListeningTopic {
   const _ListeningTopic({
     required this.key,
     required this.label,
+    required this.lessonId,
     required this.cards,
   });
 
   final String key;
   final String label;
+  final int lessonId;
   final List<Flashcard> cards;
 }

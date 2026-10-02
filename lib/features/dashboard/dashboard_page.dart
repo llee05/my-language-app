@@ -653,6 +653,7 @@ class _DashboardBody extends StatelessWidget {
     if (selectedNav == 3) {
       return ListeningPracticePage(
         lessonRepository: lessonRepository,
+        progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
         maxHskLevel: profile.hskLevel,
