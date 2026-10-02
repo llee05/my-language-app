@@ -607,8 +607,46 @@ class SqliteLessonRepository implements LessonRepository {
 }
 
 class SqliteProgressRepository
-    implements ProgressRepository, ProgressSummaryRepository {
+    implements
+        ProgressRepository,
+        ProgressSummaryRepository,
+        LessonProgressSummaryRepository {
   const SqliteProgressRepository();
+
+  @override
+  Future<Map<int, LessonLearningProgress>> lessonLearningProgress() =>
+      LocalDatabase.use((db) async {
+        final rows = await db.rawQuery(
+          '''
+          WITH members AS (
+            SELECT lesson_id, card_id FROM lesson_cards
+            UNION ALL
+            SELECT cards.lesson_id, cards.id FROM cards
+            WHERE NOT EXISTS (
+              SELECT 1 FROM lesson_cards
+              WHERE lesson_cards.lesson_id = cards.lesson_id
+            )
+          )
+          SELECT lessons.id, COUNT(members.card_id) AS total_cards,
+            SUM(CASE WHEN card_progress.times_seen > 0
+              AND card_progress.mastery >= .8 THEN 1 ELSE 0 END) AS learned_cards
+          FROM lessons
+          LEFT JOIN members ON members.lesson_id = lessons.id
+          LEFT JOIN card_progress ON card_progress.card_id = members.card_id
+            AND card_progress.learner_id = ?
+          WHERE lessons.is_listed = ?
+          GROUP BY lessons.id
+        ''',
+          [1, 1],
+        );
+        return Map.unmodifiable({
+          for (final row in rows)
+            row['id'] as int: LessonLearningProgress(
+              totalCards: row['total_cards'] as int,
+              learnedCards: row['learned_cards'] as int,
+            ),
+        });
+      });
 
   @override
   Future<Map<int, LessonSession>> activeLessonSessions() =>

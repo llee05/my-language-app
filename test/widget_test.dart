@@ -2921,6 +2921,70 @@ void main() {
     expect(progress.recordReviewCalls, 0);
   });
 
+  for (final width in [390.0, 1000.0]) {
+    testWidgets('lesson learned counts refresh after study at width $width', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(Size(width, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final vocabulary = [
+        VocabularyCardProgress(
+          chinese: '你',
+          pinyin: 'nǐ',
+          progress: CardProgress(
+            cardId: 11,
+            dueAt: DateTime.utc(2026, 10, 3),
+            timesSeen: 5,
+            mastery: .8,
+          ),
+        ),
+        VocabularyCardProgress(
+          chinese: '学',
+          pinyin: 'xué',
+          progress: CardProgress(
+            cardId: 12,
+            dueAt: DateTime.utc(2026, 10, 3),
+            timesSeen: 5,
+            mastery: .79,
+          ),
+        ),
+      ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LessonsPage(
+              repository: _MemoryLessonRepository(),
+              progressRepository: _MemoryProgressRepository(
+                hasActiveSession: false,
+                vocabulary: vocabulary,
+              ),
+              settingsRepository: _MemorySettingsRepository(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final count = find.byKey(const Key('lesson-learned-count-7'));
+      expect(tester.widget<Text>(count).data, '1 of 2 words learned');
+      expect(
+        tester
+            .widget<LinearProgressIndicator>(
+              find.byType(LinearProgressIndicator),
+            )
+            .value,
+        .5,
+      );
+      await tester.ensureVisible(find.text('Start'));
+      await tester.tap(find.text('Start'));
+      await tester.pumpAndSettle();
+      vocabulary.clear();
+      await tester.tap(find.byTooltip('Back to lessons'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Text>(count).data, '0 of 2 words learned');
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('saved lesson can be started directly from the lesson library', (
     tester,
   ) async {

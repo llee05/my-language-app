@@ -28,6 +28,7 @@ class _LessonsPageState extends State<LessonsPage> {
   final _pageController = PageController(viewportFraction: .82);
   List<LessonSummary> _topics = const [];
   Map<int, LessonSession> _activeSessions = const {};
+  Map<int, LessonLearningProgress> _lessonLearningProgress = const {};
   bool _sentenceMode = false;
   bool _lessonIsSentence = false;
   bool _loadingTopics = true;
@@ -201,10 +202,16 @@ class _LessonsPageState extends State<LessonsPage> {
       final sessions = await widget.progressRepository.activeSessionsForLessons(
         topics.map((topic) => topic.id),
       );
+      final learningProgress = await widget.progressRepository
+          .learningProgressForLessons(
+            widget.repository,
+            topics.map((topic) => topic.id),
+          );
       if (!mounted || requestId != _topicsRequestId) return;
       setState(() {
         _topics = topics;
         _activeSessions = sessions;
+        _lessonLearningProgress = learningProgress;
         _loadingTopics = false;
         _libraryLoadFailed = false;
       });
@@ -553,6 +560,23 @@ class _LessonsPageState extends State<LessonsPage> {
     }
   }
 
+  Future<void> _refreshLearningProgress() async {
+    final requestId = _topicsRequestId;
+    try {
+      final progress = await widget.progressRepository
+          .learningProgressForLessons(
+            widget.repository,
+            _topics.map((topic) => topic.id),
+          );
+      if (!mounted || requestId != _topicsRequestId) return;
+      setState(() => _lessonLearningProgress = progress);
+    } catch (error) {
+      debugPrint('Lesson progress refresh failed: $error');
+      if (!mounted || requestId != _topicsRequestId) return;
+      setState(() => _libraryLoadFailed = true);
+    }
+  }
+
   void _backToLessons() {
     if (_savingAnswer) return;
     unawaited(_stopLessonAudio());
@@ -563,6 +587,7 @@ class _LessonsPageState extends State<LessonsPage> {
       _reviewCardIds.clear();
       _notice = null;
     });
+    unawaited(_refreshLearningProgress());
   }
 
   @override
@@ -808,6 +833,7 @@ class _LessonsPageState extends State<LessonsPage> {
           for (final (index, topic) in visibleTopics.indexed) ...[
             _LessonLibraryCard(
               summary: topic,
+              learningProgress: _lessonLearningProgress[topic.id],
               isActive: _activeSessions.containsKey(topic.id),
               onPressed: _deletingLessonIds.contains(topic.id)
                   ? null
@@ -1239,10 +1265,12 @@ class _LessonLibraryCard extends StatelessWidget {
     required this.summary,
     required this.isActive,
     required this.onPressed,
+    this.learningProgress,
     this.onDelete,
   });
 
   final LessonSummary summary;
+  final LessonLearningProgress? learningProgress;
   final bool isActive;
   final VoidCallback? onPressed;
   final VoidCallback? onDelete;
@@ -1285,6 +1313,22 @@ class _LessonLibraryCard extends StatelessWidget {
                         : '${summary.theme} · HSK ${summary.hskLevel}',
                     style: TextStyle(fontSize: 12, color: AppColors.muted),
                   ),
+                  if (learningProgress case final progress?) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '${progress.learnedCards} of ${progress.totalCards} '
+                      '${summary.isSentencePractice ? 'sentences' : 'words'} learned',
+                      key: Key('lesson-learned-count-${summary.id}'),
+                      style: TextStyle(fontSize: 12, color: AppColors.teal),
+                    ),
+                    const SizedBox(height: 4),
+                    LinearProgressIndicator(
+                      value: progress.fraction,
+                      semanticsLabel: 'Learned progress for ${summary.title}',
+                      color: AppColors.teal,
+                      backgroundColor: AppColors.border,
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -207,3 +207,15 @@ class VocabularyCardProgress {
   final CardProgress progress;
   final int hskLevel;
 }
+
+class LessonLearningProgress {
+  const LessonLearningProgress({
+    required this.totalCards,
+    required this.learnedCards,
+  });
+
+  final int totalCards;
+  final int learnedCards;
+
+  double get fraction => totalCards == 0 ? 0 : learnedCards / totalCards;
+}

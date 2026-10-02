@@ -87,6 +87,87 @@ void main() {
   );
 
   test(
+    'learned counts track shared cards, legacy ownership, and current mastery',
+    () async {
+      final topics = await lessons.topics();
+      final vocabularyTopics = topics.where(
+        (topic) => !topic.isSentencePractice,
+      );
+      final initial = await progress.lessonLearningProgress();
+      for (final topic in vocabularyTopics) {
+        expect(initial[topic.id]!.totalCards, 20);
+        expect(initial[topic.id]!.learnedCards, 0);
+      }
+      final db = await LocalDatabase.ensureInitialized();
+      final shared =
+          (await db.rawQuery('''
+        SELECT card_id FROM lesson_cards GROUP BY card_id
+        HAVING COUNT(*) > 1 LIMIT 1
+      ''')).single['card_id']
+              as int;
+      final memberships = await db.query(
+        'lesson_cards',
+        where: 'card_id = ?',
+        whereArgs: [shared],
+      );
+      final now = DateTime.utc(2026, 10, 2);
+      Future<void> saveReview(bool wasCorrect) => progress.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: shared,
+          reviewedAt: now,
+          rating: ReviewRating.good,
+          wasCorrect: wasCorrect,
+        ),
+        progress: CardProgress(
+          cardId: shared,
+          dueAt: now.add(const Duration(days: 1)),
+        ),
+      );
+      for (var index = 0; index < 5; index++) {
+        await saveReview(index < 4);
+      }
+      var counts = await progress.lessonLearningProgress();
+      for (final member in memberships) {
+        expect(counts[member['lesson_id']]!.learnedCards, 1);
+        expect(counts[member['lesson_id']]!.totalCards, 20);
+      }
+      await saveReview(false);
+      counts = await progress.lessonLearningProgress();
+      for (final member in memberships) {
+        expect(counts[member['lesson_id']]!.learnedCards, 0);
+      }
+      expect(counts.values.every((count) => count.learnedCards == 0), isTrue);
+
+      final bundled = (await lessons.findById(vocabularyTopics.first.id))!;
+      await lessons.saveGenerated(bundled);
+      final custom = (await lessons.topics()).firstWhere(
+        (topic) => topic.isUserGenerated,
+      );
+      final legacy = (await lessons.findById(custom.id))!;
+      await progress.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: legacy.cards.first.id,
+          reviewedAt: now,
+          rating: ReviewRating.good,
+          wasCorrect: true,
+        ),
+        progress: CardProgress(
+          cardId: legacy.cards.first.id,
+          dueAt: now,
+          timesSeen: 1,
+          mastery: 1,
+        ),
+      );
+      counts = await progress.lessonLearningProgress();
+      expect(counts[custom.id]!.totalCards, 20);
+      expect(counts[custom.id]!.learnedCards, 1);
+      expect(counts[bundled.summary.id]!.learnedCards, 0);
+    },
+  );
+
+  test(
     'version 16 upgrade reuses learned cards and preserves legacy sessions and custom lessons',
     () async {
       final db = await LocalDatabase.ensureInitialized();
