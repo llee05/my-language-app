@@ -215,7 +215,7 @@ void main() {
       await _pumpLessons(tester, voice);
       await tester.tap(find.byKey(const Key('sentence-practice-mode')));
       await tester.pumpAndSettle();
-      expect(find.text('Generate lesson'), findsNothing);
+      expect(find.text('Create lesson'), findsNothing);
       expect(
         find.byKey(const Key('lesson-library-level-filter')),
         findsNothing,

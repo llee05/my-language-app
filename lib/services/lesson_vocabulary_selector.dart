@@ -1,8 +1,9 @@
 import 'dart:math';
 
 import '../database/vocabulary_content.dart';
+import '../models/lesson.dart';
 
-/// Local retrieval keeps both AI and offline lessons grounded in bundled words.
+/// Selects bundled vocabulary for offline lessons.
 class LessonVocabularySelector {
   const LessonVocabularySelector();
 
@@ -184,3 +185,10 @@ final _topicGroups = <Set<String>>[
     'history philosophy historical ancient dynasty civilization thought belief reason 历史 哲学 思想 古代',
   ),
 ];
+
+Flashcard vocabularyFlashcard(Map<String, dynamic> word) => Flashcard(
+  chinese: word['simplified'] as String,
+  pinyin: word['pinyin'] as String,
+  englishMeaning: vocabularyStudyMeaning(word),
+  partOfSpeech: (word['partOfSpeech'] as List).join(', '),
+);

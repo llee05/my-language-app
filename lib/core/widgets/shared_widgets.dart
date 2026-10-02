@@ -20,7 +20,7 @@ abstract final class _AppErrorCopy {
   static const saveProfile = 'We couldn’t save your profile.';
   static const saveChanges = 'We couldn’t save your changes.';
   static const saveAnswer = 'We couldn’t save your answer.';
-  static const generateLesson = 'We couldn’t generate your lesson.';
+  static const generateLesson = 'We couldn’t create your lesson.';
   static const openLesson = 'We couldn’t open this lesson.';
   static const tutor = 'We couldn’t reach Long Laoshi right now.';
   static const addToReview = 'We couldn’t add this word to your review queue.';

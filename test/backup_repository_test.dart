@@ -11,7 +11,7 @@ import 'package:mylanguageapp/repositories/ai_configuration_repository.dart';
 import 'package:mylanguageapp/repositories/backup_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 
-import 'lesson_generation_test_support.dart';
+import 'lesson_guide_test_support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

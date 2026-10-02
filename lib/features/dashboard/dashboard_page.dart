@@ -630,9 +630,6 @@ class _DashboardBody extends StatelessWidget {
     if (selectedNav == 1) {
       return LessonsPage(
         vocabularyRepository: vocabularyRepository,
-        aiService: AiService(
-          configurationRepository: aiConfigurationRepository,
-        ),
         repository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,

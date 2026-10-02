@@ -31,7 +31,7 @@ usable without an account, network access, or an AI provider.
 | `lib/local_database.dart` | SQLite lifecycle, application-support database path, legacy path migration, seeding, content updates, and coordinated close/reset operations. |
 | `lib/database/` | Ordered schema migrations, bundled flashcard seeds, and vocabulary helpers. |
 | `lib/services/` | Review scheduling, study streak calculation, pronunciation abstractions, native/system speech, and Kokoro installation/configuration. |
-| `lib/ai/` | Optional Gemini, Anthropic, and OpenAI-compatible REST adapters and HSK flashcard generation support. |
+| `lib/ai/` | Gemini, Anthropic, and OpenAI-compatible REST adapters for the optional AI tutor. |
 | `assets/data/` | Bundled HSK vocabulary and Tatoeba sentence candidates, with provenance and regeneration instructions. |
 | `test/` | Unit, widget, persistence, dataset, and service tests. |
 | `tool/` | Vocabulary import and sentence-candidate generation scripts. |
@@ -99,7 +99,7 @@ Users select a provider, personal API key, and model in Settings. Keys live in
 or ordinary preferences. Saving does not make a request; the explicit connection
 test does. Full data reset removes the configuration, while onboarding reset
 preserves it. Missing keys and secure-storage failures must fail without network
-requests; generated lessons retain their local vocabulary fallback.
+requests. Custom vocabulary lessons are created locally from bundled HSK words.
 
 Startup never contacts an AI service. When no personal configuration is saved,
 configure a developer Gemini fallback using an ignored `.env.gemini.json` file:

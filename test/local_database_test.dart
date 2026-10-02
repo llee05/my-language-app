@@ -11,7 +11,7 @@ import 'package:mylanguageapp/repositories/daily_review_session_repository.dart'
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'lesson_generation_test_support.dart';
+import 'lesson_guide_test_support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -282,7 +282,7 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
   @override
   Widget build(BuildContext context) => _SettingsCard(
     title: 'AI provider',
-    subtitle: 'Set up optional AI for the tutor and lesson examples.',
+    subtitle: 'Set up optional AI for the tutor.',
     child: _loading
         ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
         : _loadFailed

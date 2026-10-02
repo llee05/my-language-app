@@ -47,7 +47,6 @@ class LessonsPage extends StatefulWidget {
     this.resumeLatest = false,
     this.initialLessonId,
     this.onProgressChanged,
-    this.aiService = const AiService(),
     this.random,
     this.vocabularyRepository = const BundledVocabularyRepository(),
   });
@@ -60,7 +59,6 @@ class LessonsPage extends StatefulWidget {
   final bool resumeLatest;
   final int? initialLessonId;
   final VoidCallback? onProgressChanged;
-  final AiService aiService;
   final Random? random;
   final BundledVocabularyRepository vocabularyRepository;
   @override
@@ -547,39 +545,7 @@ class _LessonsPageState extends State<LessonsPage> {
       );
       if (!mounted) return;
 
-      List<Flashcard> cards;
-      LessonGuide? guide;
-      String notice;
-      try {
-        final generated = await LessonGenerator(widget.aiService).generate(
-          topic: topic,
-          hskLevel: hskLevel,
-          candidates: candidates,
-          studiedWords: studiedWords,
-          previousWords: previousWords,
-          shouldContinue: () => mounted,
-        );
-        cards = generated.cards;
-        guide = generated.guide;
-        notice = 'Created a new lesson using your AI connection.';
-      } catch (error) {
-        if (!mounted) return;
-        final reason = switch (error) {
-          AiConfigurationException(:final message) => message,
-          AiRequestException(:final message) => message,
-          _ => 'AI could not create a complete lesson. Please try again.',
-        };
-        if (cached != null) {
-          await _openLesson(cached);
-          if (mounted) {
-            setState(() => _notice = '$reason Opened your saved lesson.');
-          }
-          return;
-        }
-        cards = candidates.take(10).map(vocabularyFlashcard).toList();
-        notice = '$reason Created a vocabulary lesson offline.';
-      }
-      if (!mounted) return;
+      final cards = candidates.take(10).map(vocabularyFlashcard).toList();
       if (cards.isEmpty) throw StateError('No vocabulary was available.');
       final title = '$topic · HSK $hskLevel';
       await widget.repository.saveGenerated(
@@ -591,7 +557,6 @@ class _LessonsPageState extends State<LessonsPage> {
             hskLevel: hskLevel,
           ),
           cards: cards,
-          guide: guide,
         ),
       );
       final saved = await widget.repository.findGenerated(
@@ -602,7 +567,7 @@ class _LessonsPageState extends State<LessonsPage> {
       await _openLesson(saved);
       if (mounted) {
         setState(() {
-          _notice = notice;
+          _notice = 'Created a vocabulary lesson offline.';
           // Keep the freshly generated lesson visible even when a level
           // filter would otherwise hide it.
           _libraryHskFilter = null;
@@ -888,9 +853,8 @@ class _LessonsPageState extends State<LessonsPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Create a guided lesson with a dialogue, examples, and practice '
-                'with your AI connection from Settings. Saved lessons and local '
-                'vocabulary are available offline.',
+                'Create a vocabulary lesson from bundled HSK words. Choose a '
+                'topic and level, then study offline.',
                 style: TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 20),
@@ -962,7 +926,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 controller: _topicController,
                 enabled: !_generating,
                 decoration: InputDecoration(
-                  labelText: 'Ask AI for a lesson topic',
+                  labelText: 'Custom lesson topic',
                   hintText: 'e.g. ordering breakfast in Beijing',
                   helperText:
                       'Optional. Use your own topic instead of the one above.',
@@ -1000,9 +964,9 @@ class _LessonsPageState extends State<LessonsPage> {
                           dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.auto_awesome),
+                      : const Icon(Icons.add_rounded),
                   label: Text(
-                    _generating ? 'Generating lesson…' : 'Generate lesson',
+                    _generating ? 'Creating lesson…' : 'Create lesson',
                   ),
                 ),
             ],

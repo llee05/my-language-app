@@ -1,16 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle, SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'package:mylanguageapp/ai/ai_service.dart';
 import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
-import 'package:mylanguageapp/models/ai_configuration.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
 import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
@@ -26,7 +21,7 @@ import 'package:mylanguageapp/services/pronunciation_service.dart';
 
 import 'ai_test_support.dart';
 import 'tutor_personality_test_support.dart';
-import 'lesson_generation_test_support.dart';
+import 'lesson_guide_test_support.dart';
 
 const testProfile = LearnerProfile(
   name: 'Mei',
@@ -54,7 +49,7 @@ Future<void> _generateLesson(WidgetTester tester, {bool retry = false}) async {
           of: find.byKey(const Key('lesson-generation-retry')),
           matching: find.byType(FilledButton),
         )
-      : find.widgetWithText(FilledButton, 'Generate lesson');
+      : find.widgetWithText(FilledButton, 'Create lesson');
   await tester.ensureVisible(button);
   // Bundle loading can decode in an isolate, outside the simulated clock.
   final generate =
@@ -2030,7 +2025,7 @@ void main() {
     expect(reset.isUtc, isFalse);
   });
 
-  testWidgets('lessons page exposes level and AI topic options', (
+  testWidgets('lessons page exposes offline level and topic options', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
@@ -2057,9 +2052,9 @@ void main() {
     expect(find.text('Lesson Library'), findsOneWidget);
     expect(find.text('Create a lesson'), findsOneWidget);
     expect(find.text('HSK level'), findsOneWidget);
-    expect(find.text('Ask AI for a lesson topic'), findsOneWidget);
+    expect(find.text('Custom lesson topic'), findsOneWidget);
     expect(find.byKey(const Key('lesson-topic-push-to-talk')), findsOneWidget);
-    expect(find.text('Generate lesson'), findsOneWidget);
+    expect(find.text('Create lesson'), findsOneWidget);
     expect(find.text('Daily Life'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('topics-1')));
@@ -2696,81 +2691,25 @@ void main() {
     );
   }
 
-  for (final useAi in [false, true]) {
+  for (final cached in [false, true]) {
     testWidgets(
-      useAi
-          ? 'saved AI provider generates and opens a lesson with examples'
-          : 'unconfigured AI generates and opens a local vocabulary lesson',
+      'offline lesson creation saves a fresh deck (saved lesson: $cached)',
       (tester) async {
-        // Earlier tests may have cached this future in a different fake clock.
         const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
         rootBundle.evict(vocabularyAsset);
         addTearDown(() => rootBundle.evict(vocabularyAsset));
         await tester.binding.setSurfaceSize(const Size(1000, 1100));
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final lessons = _GeneratedMemoryLessonRepository();
-        final aiRepository = MemoryAiConfigurationRepository(
-          useAi
-              ? const AiConfiguration(
-                  provider: AiProvider.openai,
-                  apiKey: 'personal-key',
-                  model: 'gpt-4.1-mini',
-                )
-              : null,
-        );
-        var requests = 0;
-        final client = MockClient((request) async {
-          requests++;
-          expect(request.url.host, 'api.openai.com');
-          expect(
-            request.headers['authorization'],
-            'Bearer ${aiRepository.configuration!.apiKey}',
-          );
-          final body = jsonDecode(utf8.decode(request.bodyBytes));
-          expect(body['model'], aiRepository.configuration!.model);
-          expect(
-            body['messages'].last['content'],
-            contains('Topic: Daily Life'),
-          );
-          expect(body['messages'].last['content'], contains('HSK: 1'));
-          return http.Response.bytes(
-            utf8.encode(
-              jsonEncode({
-                'choices': [
-                  {
-                    'finish_reason': 'stop',
-                    'message': {
-                      'content': jsonEncode({
-                        ...lessonResponseFor(vocabularyFromLessonRequest(body)),
-                      }),
-                    },
-                  },
-                ],
-              }),
-            ),
-            200,
-          );
-        });
-        addTearDown(client.close);
+        if (cached) lessons.generated = lessons.lesson;
+        final previous = lessons.generated;
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: LessonsPage(
                 repository: lessons,
-                aiService: AiService(
-                  configurationRepository: aiRepository,
-                  client: client,
-                ),
                 progressRepository: _MemoryProgressRepository(
                   hasActiveSession: false,
-                  activeSession: LessonSession(
-                    id: 3,
-                    lessonId: 7,
-                    startedAt: DateTime.utc(2026, 9, 10),
-                    currentCardIndex: 0,
-                    cardsReviewed: 0,
-                    correctAnswers: 0,
-                  ),
                 ),
                 settingsRepository: _MemorySettingsRepository(),
               ),
@@ -2778,22 +2717,16 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(requests, 0);
+        expect(find.textContaining('AI'), findsNothing);
         await _generateLesson(tester);
 
-        expect(lessons.generated, isNotNull);
-        expect(requests, useAi ? 1 : 0);
-        if (useAi) {
-          expect(
-            lessons.generated!.cards.every(
-              (card) => card.exampleChinese.contains(card.chinese),
-            ),
-            isTrue,
-          );
-        }
-        expect(lessons.generated!.cards, hasLength(10));
+        final saved = lessons.generated!;
+        expect(identical(saved, previous), isFalse);
+        expect(lessons.saveCalls, 1);
+        expect(saved.cards, hasLength(10));
+        expect(saved.cards.map((card) => card.chinese).toSet(), hasLength(10));
         expect(
-          lessons.generated!.cards.every(
+          saved.cards.every(
             (card) =>
                 card.chinese.isNotEmpty &&
                 card.pinyin.isNotEmpty &&
@@ -2801,210 +2734,18 @@ void main() {
           ),
           isTrue,
         );
-        if (useAi) {
-          expect(find.byKey(const Key('lesson-guide')), findsOneWidget);
-          expect(
-            find.text(lessons.generated!.guide!.objective),
-            findsOneWidget,
-          );
-          await tester.tap(find.byKey(const Key('lesson-cards-tab')));
-          await tester.pumpAndSettle();
-        }
-        expect(find.text(lessons.generated!.cards.first.chinese), findsWidgets);
-        expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
+        expect(saved.guide, isNull);
+        expect(find.text(saved.cards.first.chinese), findsWidgets);
         expect(
-          find.textContaining(
-            useAi
-                ? 'using your AI connection'
-                : 'Created a vocabulary lesson offline',
-          ),
+          find.text('Created a vocabulary lesson offline.'),
           findsOneWidget,
         );
-
-        // Connecting or replacing the saved settings must take effect even
-        // though this topic already has a saved (possibly offline) lesson.
-        final previous = lessons.generated;
-        await aiRepository.save(
-          const AiConfiguration(
-            provider: AiProvider.openai,
-            apiKey: 'replacement-key',
-            model: 'replacement-model',
-          ),
-        );
-        await tester.tap(find.widgetWithIcon(IconButton, Icons.arrow_back));
-        await tester.pumpAndSettle();
-        await _generateLesson(tester);
-        expect(requests, useAi ? 2 : 1);
-        expect(identical(lessons.generated, previous), isFalse);
-        expect(lessons.saveCalls, 2);
-        expect(
-          lessons.generated!.cards.first.exampleChinese,
-          contains(lessons.generated!.cards.first.chinese),
-        );
-        expect(find.textContaining('using your AI connection'), findsOneWidget);
+        expect(tester.takeException(), isNull);
       },
     );
   }
 
-  for (final failure in [
-    'missing connection',
-    'provider error',
-    'invalid JSON',
-    'empty lesson',
-    'duplicate words',
-    'out-of-range word',
-    'missing pinyin',
-    'persistence error',
-  ]) {
-    for (final cached in [false, if (failure != 'persistence error') true]) {
-      testWidgets(
-        'lesson generation handles $failure (saved lesson: $cached)',
-        (tester) async {
-          const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-          rootBundle.evict(vocabularyAsset);
-          addTearDown(() => rootBundle.evict(vocabularyAsset));
-          await tester.binding.setSurfaceSize(const Size(1000, 1100));
-          addTearDown(() => tester.binding.setSurfaceSize(null));
-          final lessons = _GeneratedMemoryLessonRepository();
-          if (cached) lessons.generated = lessons.lesson;
-          final previous = lessons.generated;
-          if (failure == 'persistence error') {
-            lessons.saveError = StateError('sensitive database path');
-          }
-          var requests = 0;
-          final client = MockClient((request) async {
-            requests++;
-            if (failure == 'provider error') {
-              return http.Response(
-                jsonEncode({
-                  'error': {
-                    'code': 'invalid_api_key',
-                    'message': 'sensitive provider details',
-                  },
-                }),
-                401,
-              );
-            }
-            final data = lessonResponseFor(
-              vocabularyFromLessonRequest(jsonDecode(request.body)),
-            );
-            final cards = data['cards'] as List;
-            if (failure == 'duplicate words') cards[1]['index'] = 0;
-            if (failure == 'out-of-range word') cards[0]['index'] = 999;
-            if (failure == 'missing pinyin') cards[0].remove('examplePinyin');
-            return http.Response.bytes(
-              utf8.encode(
-                jsonEncode({
-                  'choices': [
-                    {
-                      'finish_reason': 'stop',
-                      'message': {
-                        'content': failure == 'invalid JSON'
-                            ? 'invalid'
-                            : jsonEncode({
-                                ...data,
-                                'cards': failure == 'empty lesson' ? [] : cards,
-                              }),
-                      },
-                    },
-                  ],
-                }),
-              ),
-              200,
-            );
-          });
-          addTearDown(client.close);
-          await tester.pumpWidget(
-            MaterialApp(
-              home: Scaffold(
-                body: LessonsPage(
-                  repository: lessons,
-                  aiService: AiService(
-                    configurationRepository: MemoryAiConfigurationRepository(
-                      failure == 'missing connection'
-                          ? null
-                          : const AiConfiguration(
-                              provider: AiProvider.openai,
-                              apiKey: 'personal-key',
-                              model: 'test-model',
-                            ),
-                    ),
-                    client: client,
-                  ),
-                  progressRepository: _MemoryProgressRepository(
-                    hasActiveSession: false,
-                    activeSession: LessonSession(
-                      id: 3,
-                      lessonId: 7,
-                      startedAt: DateTime.utc(2026, 9, 11),
-                    ),
-                  ),
-                  settingsRepository: _MemorySettingsRepository(),
-                ),
-              ),
-            ),
-          );
-          await tester.pumpAndSettle();
-          await _generateLesson(tester);
-
-          expect(
-            requests,
-            failure == 'missing connection'
-                ? 0
-                : (['provider error', 'persistence error'].contains(failure)
-                      ? 1
-                      : 2),
-          );
-          expect(find.textContaining('sensitive'), findsNothing);
-          if (failure == 'persistence error') {
-            expect(lessons.generated, isNull);
-            expect(
-              find.byKey(const Key('lesson-generation-error')),
-              findsOneWidget,
-            );
-            expect(
-              find.textContaining('using your AI connection'),
-              findsNothing,
-            );
-          } else {
-            expect(
-              find.byKey(const Key('lesson-generation-error')),
-              findsNothing,
-            );
-            expect(
-              find.textContaining(
-                cached
-                    ? 'Opened your saved lesson'
-                    : 'Created a vocabulary lesson offline',
-              ),
-              findsOneWidget,
-            );
-            expect(lessons.saveCalls, cached ? 0 : 1);
-            if (cached) {
-              expect(identical(lessons.generated, previous), isTrue);
-            } else {
-              expect(lessons.generated!.cards, hasLength(10));
-              expect(
-                lessons.generated!.cards.every(
-                  (card) => card.exampleChinese.isEmpty,
-                ),
-                isTrue,
-              );
-            }
-            if (failure == 'provider error') {
-              expect(
-                find.textContaining('HTTP 401: invalid_api_key'),
-                findsOneWidget,
-              );
-            }
-          }
-          expect(tester.takeException(), isNull);
-        },
-      );
-    }
-  }
-
-  testWidgets('lesson generation error is friendly and retryable', (
+  testWidgets('offline lesson creation reports persistence failures', (
     tester,
   ) async {
     const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
@@ -3012,8 +2753,8 @@ void main() {
     addTearDown(() => rootBundle.evict(vocabularyAsset));
     await tester.binding.setSurfaceSize(const Size(1000, 1100));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final lessons = _FailOnceGeneratedLookupRepository();
-
+    final lessons = _GeneratedMemoryLessonRepository()
+      ..saveError = StateError('sensitive database path');
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -3028,24 +2769,62 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _generateLesson(tester);
 
-    final generate = find.text('Generate lesson');
-    await tester.ensureVisible(generate);
-    await tester.tap(generate);
-    await tester.pumpAndSettle();
-
+    expect(lessons.generated, isNull);
     expect(find.byKey(const Key('lesson-generation-error')), findsOneWidget);
-    expect(find.text('We couldn’t generate your lesson.'), findsOneWidget);
-    expect(find.textContaining('sensitive database path'), findsNothing);
-    expect(lessons.findGeneratedCalls, 1);
-
+    expect(find.textContaining('sensitive'), findsNothing);
+    expect(find.text('Created a vocabulary lesson offline.'), findsNothing);
+    lessons.saveError = null;
     await _generateLesson(tester, retry: true);
-
-    expect(lessons.findGeneratedCalls, 2);
+    expect(lessons.generated!.cards, hasLength(10));
     expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
-    expect(find.text('Recovered generated lesson'), findsOneWidget);
-    expect(find.text('好'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'offline lesson creation lookup error is friendly and retryable',
+    (tester) async {
+      const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
+      rootBundle.evict(vocabularyAsset);
+      addTearDown(() => rootBundle.evict(vocabularyAsset));
+      await tester.binding.setSurfaceSize(const Size(1000, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final lessons = _FailOnceGeneratedLookupRepository();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LessonsPage(
+              repository: lessons,
+              progressRepository: _MemoryProgressRepository(
+                hasActiveSession: false,
+              ),
+              settingsRepository: _MemorySettingsRepository(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final generate = find.text('Create lesson');
+      await tester.ensureVisible(generate);
+      await tester.tap(generate);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('lesson-generation-error')), findsOneWidget);
+      expect(find.text('We couldn’t create your lesson.'), findsOneWidget);
+      expect(find.textContaining('sensitive database path'), findsNothing);
+      expect(lessons.findGeneratedCalls, 1);
+
+      await _generateLesson(tester, retry: true);
+
+      expect(lessons.findGeneratedCalls, 3);
+      expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
+      expect(find.text('Recovered generated lesson'), findsOneWidget);
+      expect(find.text('好'), findsOneWidget);
+    },
+  );
 
   testWidgets('lesson resumes its position and records a familiar word', (
     tester,

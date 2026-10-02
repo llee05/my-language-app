@@ -15,7 +15,7 @@ and API key.
 
 - First-run setup for the learner's name, HSK level, and daily word target.
 - More than 4,000 bundled vocabulary entries across HSK levels 1–6.
-- Seeded and AI-assisted flashcard lessons with an offline vocabulary fallback.
+- Bundled flashcard lessons and custom offline vocabulary decks.
 - Hanzi, pinyin, English meanings, example sentences, and on-device Mandarin
   pronunciation.
 - Listening practice with hidden Hanzi and pinyin, meaning choices, answer
@@ -76,20 +76,14 @@ the dashboard or Lessons page. When creating a lesson, choose **Random mix** to
 shuffle vocabulary from across the selected HSK level instead of targeting one
 topic, or **Random topic** to have TingShuo choose one focused topic for you.
 
-New AI lessons open with a **Lesson guide**: a learning objective, a short grammar
-explanation, a connected dialogue with pinyin and English, and two practice
-questions with revealable example answers. Switch to **Flashcards** to rate words;
-you can revisit the guide without losing your card position. Guides are saved
-locally with the lesson and included in exported backups.
+Create lessons directly from bundled vocabulary without an AI connection.
+Topic selection favors relevant words, balances the selected HSK level with
+supporting vocabulary, and prefers unstudied words while avoiding the previous
+deck where possible. Each new deck contains up to ten words and is saved locally.
 
-Generation uses topic-related bundled vocabulary, reserves candidates at the
-selected HSK level, and favors unstudied words while avoiding the previous deck
-where possible. The app checks target-word usage, repeated sentences, required
-translations and tone-marked pinyin, level balance, and guide structure. These
-checks do not guarantee linguistic accuracy. Invalid lesson content gets one
-repair request (which can incur a second provider charge); connection or provider
-errors fall back immediately. If generation still fails, the app opens the saved
-lesson or creates an offline vocabulary deck and shows a notice.
+Previously saved lessons with a **Lesson guide** still show their objective,
+grammar explanation, dialogue, and practice questions. Guides remain available
+with the lesson and are included in exported backups.
 
 ### Daily review
 
@@ -253,15 +247,13 @@ separately from the learner SQLite database. A saved key is never redisplayed
 in the form. If secure storage is unavailable, Settings reports the failure
 instead of saving a key in ordinary preferences.
 
-Your key, tutor conversation history, and lesson prompts go directly to the
-selected provider when you use AI. Lesson prompts include the topic, HSK level,
-and candidate vocabulary, including whether candidate words have been studied
-or appeared in the previous lesson. Your provider's usage limits, charges, and data
-policies apply. Only enter a custom endpoint you trust. Chat history stays in
-memory until reset or navigation; generated lessons are saved locally.
+Your key and tutor conversation history go directly to the selected provider
+when you use AI. Your provider's usage limits, charges, and data policies apply.
+Only enter a custom endpoint you trust. Chat history stays in memory until reset
+or navigation; vocabulary lessons are created and saved locally without AI.
 
 No AI service is contacted during startup. Without a configured key, the tutor
-directs you to Settings and lesson generation falls back to bundled vocabulary.
+directs you to Settings. Lessons and review work offline.
 
 #### Developer Gemini fallback
 
@@ -371,7 +363,7 @@ secure storage. Concurrent reads share pending work, and failed loads can retry.
 
 ```text
 lib/
-├── ai/                 # Provider routing, REST adapters, and AI lesson support
+├── ai/                 # Provider routing and REST adapters
 ├── core/               # Theme and shared navigation/widgets
 ├── database/           # Migrations and seeded lessons
 ├── features/           # Dashboard, lessons, review, vocabulary, game, tutor

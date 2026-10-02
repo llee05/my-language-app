@@ -11,7 +11,6 @@ import 'database/flashcard_seed.dart';
 import 'database/vocabulary_content.dart';
 import 'ai/ai_errors.dart';
 import 'ai/ai_service.dart';
-import 'ai/lesson_generator.dart';
 import 'models/lesson_guide.dart';
 import 'models/hsk_exam.dart';
 import 'services/lesson_vocabulary_selector.dart';
