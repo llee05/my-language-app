@@ -15,7 +15,7 @@ and API key.
 
 - First-run setup for the learner's name, HSK level, and daily word target.
 - More than 4,000 bundled vocabulary entries across HSK levels 1–6.
-- Bundled flashcard lessons and custom offline vocabulary decks.
+- Twenty-word bundled vocabulary lessons and previously saved custom decks.
 - Hanzi, pinyin, English meanings, example sentences, and on-device Mandarin
   pronunciation.
 - Listening practice with hidden Hanzi and pinyin, meaning choices, answer
@@ -69,7 +69,7 @@ settings and subsequent learning history are saved in a local SQLite database.
 
 ### Lessons
 
-Open **Lessons** to start a bundled lesson or revisit a locally generated one.
+Open **Lessons** to start a bundled lesson or revisit a previously saved custom deck.
 The default vocabulary library contains 251 lessons covering all 4,991 bundled
 HSK 1–6 entries. Each lesson contains 20 distinct words from one HSK level;
 the final lesson in each level repeats a few words to keep its size at 20.
@@ -78,14 +78,10 @@ and original study sentences fill gaps. Everything is bundled for offline use.
 
 Reveal each answer and rate the word; TingShuo saves every rating immediately
 and schedules the card's next review. An unfinished lesson can be resumed from
-the dashboard or Lessons page. When creating a lesson, choose **Random mix** to
-shuffle vocabulary from across the selected HSK level instead of targeting one
-topic, or **Random topic** to have TingShuo choose one focused topic for you.
-
-Create lessons directly from bundled vocabulary without an AI connection.
-Topic selection favors relevant words, balances the selected HSK level with
-supporting vocabulary, and prefers unstudied words while avoiding the previous
-deck where possible. Each new deck contains up to ten words and is saved locally.
+the dashboard or Lessons page. The library opens at **All levels** and shows
+the total number of lessons. Filtering by HSK 6 shows 125 of the 251 vocabulary
+lessons; **Show all lessons** clears the level filter and search. Custom lesson
+creation has been removed; previously saved decks and their progress remain available.
 
 Previously saved lessons with a **Lesson guide** still show their objective,
 grammar explanation, dialogue, and practice questions. Guides remain available
@@ -261,7 +257,7 @@ instead of saving a key in ordinary preferences.
 Your key and tutor conversation history go directly to the selected provider
 when you use AI. Your provider's usage limits, charges, and data policies apply.
 Only enter a custom endpoint you trust. Chat history stays in memory until reset
-or navigation; vocabulary lessons are created and saved locally without AI.
+or navigation; bundled vocabulary lessons are available offline.
 
 No AI service is contacted during startup. Without a configured key, the tutor
 directs you to Settings. Lessons and review work offline.

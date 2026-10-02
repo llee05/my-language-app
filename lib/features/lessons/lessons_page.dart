@@ -1,41 +1,5 @@
 part of '../../main.dart';
 
-const Map<int, List<String>> _hskTopicPools = {
-  1: [
-    'Daily Life',
-    'Greetings',
-    'Family',
-    'Food and Drinks',
-    'Numbers and Time',
-  ],
-  2: ['School', 'Shopping', 'Weather', 'Hobbies', 'Getting Around'],
-  3: [
-    'Vegetables',
-    'Dining Out',
-    'Work and Study',
-    'Travel Plans',
-    'Daily Routines',
-  ],
-  4: [
-    'Travel',
-    'Chinese Culture',
-    'Technology',
-    'Relationships',
-    'News and Media',
-  ],
-  5: ['Health', 'Society', 'Environment', 'Education', 'Arts and Literature'],
-  6: [
-    'Business',
-    'Economics',
-    'Politics',
-    'Science and Research',
-    'History and Philosophy',
-  ],
-};
-
-const _randomTopicLessonMode = 'Random topic';
-const _randomMixLessonMode = 'Random mix';
-
 class LessonsPage extends StatefulWidget {
   const LessonsPage({
     super.key,
@@ -43,35 +7,25 @@ class LessonsPage extends StatefulWidget {
     required this.progressRepository,
     required this.settingsRepository,
     this.pronunciationService,
-    this.speechInputService,
     this.resumeLatest = false,
     this.initialLessonId,
     this.onProgressChanged,
-    this.random,
-    this.vocabularyRepository = const BundledVocabularyRepository(),
   });
 
   final LessonRepository repository;
   final ProgressRepository progressRepository;
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
-  final SpeechInputService? speechInputService;
   final bool resumeLatest;
   final int? initialLessonId;
   final VoidCallback? onProgressChanged;
-  final Random? random;
-  final BundledVocabularyRepository vocabularyRepository;
   @override
   State<LessonsPage> createState() => _LessonsPageState();
 }
 
 class _LessonsPageState extends State<LessonsPage> {
-  final _createLessonKey = GlobalKey();
-  final _topicController = TextEditingController();
   final _lessonSearchController = TextEditingController();
   final _pageController = PageController(viewportFraction: .82);
-  int _hskLevel = 1;
-  String _selectedTopicTheme = _hskTopicPools[1]!.first;
   List<LessonSummary> _topics = const [];
   Map<int, LessonSession> _activeSessions = const {};
   bool _sentenceMode = false;
@@ -86,8 +40,6 @@ class _LessonsPageState extends State<LessonsPage> {
   String _lessonTitle = '';
   LessonGuide? _lessonGuide;
   bool _showLessonGuide = false;
-  bool _generating = false;
-  bool _generationFailed = false;
   int _currentCard = 0;
   LessonSession? _session;
   String? _notice;
@@ -97,41 +49,28 @@ class _LessonsPageState extends State<LessonsPage> {
   bool _savingAnswer = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
-  late final SpeechInputService _speechInputService;
-  late final bool _ownsSpeechInputService;
   bool _soundEnabled = true;
   LearnerSettings _learnerSettings = const LearnerSettings();
-  late final Random _random;
 
   @override
   void initState() {
     super.initState();
     _ownsPronunciationService = widget.pronunciationService == null;
     _pendingInitialLessonId = widget.initialLessonId;
-    _random = widget.random ?? Random();
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
-    _ownsSpeechInputService = widget.speechInputService == null;
-    _speechInputService =
-        widget.speechInputService ?? createSystemSpeechInputService();
     _beginTopicsLoad();
     unawaited(_loadSoundPreference());
   }
 
   @override
   void dispose() {
-    _topicController.dispose();
     _lessonSearchController.dispose();
     _pageController.dispose();
     if (_ownsPronunciationService) {
       unawaited(_pronunciationService.dispose());
     } else {
       unawaited(_pronunciationService.stop());
-    }
-    if (_ownsSpeechInputService) {
-      unawaited(_speechInputService.dispose());
-    } else {
-      unawaited(_speechInputService.cancelListening());
     }
     super.dispose();
   }
@@ -304,7 +243,6 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> _startLesson(LessonSummary summary) async {
-    if (_generating) return;
     setState(() => _notice = null);
     try {
       final lesson = await widget.repository.findById(summary.id);
@@ -400,8 +338,6 @@ class _LessonsPageState extends State<LessonsPage> {
       _showLessonGuide = lesson.guide != null && !resumed && index == 0;
       _currentCard = index;
       _session = active;
-      _generating = false;
-      _generationFailed = false;
       if (resumed || index > 0) {
         _notice = 'Resumed at card ${index + 1}.';
       }
@@ -453,37 +389,6 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  String _resolveTopic() {
-    final custom = _topicController.text.trim();
-    if (custom.isNotEmpty) return custom;
-    if (_selectedTopicTheme == _randomTopicLessonMode) {
-      final topics = _concreteTopics;
-      return topics[_random.nextInt(topics.length)];
-    }
-    return _selectedTopicTheme;
-  }
-
-  List<String> get _concreteTopics {
-    final themes = <String>{...?_hskTopicPools[_hskLevel]};
-    for (final topic in _topics) {
-      if (!topic.isSentencePractice && topic.hskLevel == _hskLevel) {
-        themes.add(topic.theme);
-      }
-    }
-    themes.removeWhere(
-      (topic) =>
-          topic.toLowerCase() == _randomTopicLessonMode.toLowerCase() ||
-          topic.toLowerCase() == _randomMixLessonMode.toLowerCase(),
-    );
-    return themes.toList(growable: false);
-  }
-
-  List<String> get _availableTopics => [
-    _randomTopicLessonMode,
-    _randomMixLessonMode,
-    ..._concreteTopics,
-  ];
-
   List<LessonSummary> get _modeTopics {
     final topics = _topics
         .where((topic) => topic.isSentencePractice == _sentenceMode)
@@ -509,83 +414,6 @@ class _LessonsPageState extends State<LessonsPage> {
                       topic.hskLevel.toString() == query));
         })
         .toList(growable: false);
-  }
-
-  Future<void> _generateLesson() async {
-    if (_generating) return;
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _generating = true;
-      _generationFailed = false;
-      _notice = null;
-    });
-    try {
-      final topic = _resolveTopic();
-      final hskLevel = _hskLevel;
-      final cached = topic == _randomMixLessonMode
-          ? null
-          : await widget.repository.findGenerated(
-              theme: topic,
-              hskLevel: hskLevel,
-            );
-      final vocabulary = await widget.vocabularyRepository.load();
-      final progress = await widget.progressRepository.vocabularyProgress();
-      final studiedWords = {
-        for (final word in progress)
-          if (word.progress.timesSeen > 0) word.chinese,
-      };
-      final previousWords = {
-        for (final card in cached?.cards ?? <Flashcard>[]) card.chinese,
-      };
-      final candidates = const LessonVocabularySelector().select(
-        vocabulary: vocabulary,
-        topic: topic,
-        hskLevel: hskLevel,
-        studiedWords: studiedWords,
-        previousWords: previousWords,
-        randomMix: topic == _randomMixLessonMode,
-        random: _random,
-      );
-      if (!mounted) return;
-
-      final cards = candidates.take(10).map(vocabularyFlashcard).toList();
-      if (cards.isEmpty) throw StateError('No vocabulary was available.');
-      final title = '$topic · HSK $hskLevel';
-      await widget.repository.saveGenerated(
-        Lesson(
-          summary: LessonSummary(
-            id: 0,
-            title: title,
-            theme: topic,
-            hskLevel: hskLevel,
-          ),
-          cards: cards,
-        ),
-      );
-      final saved = await widget.repository.findGenerated(
-        theme: topic,
-        hskLevel: hskLevel,
-      );
-      if (saved == null) throw StateError('The lesson could not be reloaded.');
-      await _openLesson(saved);
-      if (mounted) {
-        setState(() {
-          _notice = 'Created a vocabulary lesson offline.';
-          // Keep the freshly generated lesson visible even when a level
-          // filter would otherwise hide it.
-          _libraryHskFilter = null;
-        });
-        unawaited(_loadTopics());
-      }
-    } catch (error) {
-      debugPrint('Lesson generation failed: $error');
-      if (!mounted) return;
-      setState(() {
-        _generating = false;
-        _generationFailed = true;
-        _notice = null;
-      });
-    }
   }
 
   Future<void> _savePosition(int index) async {
@@ -719,10 +547,7 @@ class _LessonsPageState extends State<LessonsPage> {
 
   Future<void> _stopLessonAudio() async {
     try {
-      await Future.wait([
-        _pronunciationService.stop(),
-        _speechInputService.cancelListening(),
-      ]);
+      await _pronunciationService.stop();
     } catch (error) {
       debugPrint('Lesson audio stop failed: $error');
     }
@@ -772,26 +597,6 @@ class _LessonsPageState extends State<LessonsPage> {
               'Lesson Library',
               style: TextStyle(fontSize: 16, color: AppColors.muted),
             ),
-            if (!_sentenceMode) ...[
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton.icon(
-                  key: const Key('jump-to-create-lesson'),
-                  onPressed: _generating
-                      ? null
-                      : () {
-                          Scrollable.ensureVisible(
-                            _createLessonKey.currentContext!,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOutCubic,
-                          );
-                        },
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('New lesson'),
-                ),
-              ),
-            ],
             const SizedBox(height: 20),
             Wrap(
               spacing: 8,
@@ -808,171 +613,37 @@ class _LessonsPageState extends State<LessonsPage> {
                       sentenceMode ? 'Sentence practice' : 'Vocabulary lessons',
                     ),
                     selected: _sentenceMode == sentenceMode,
-                    onSelected: _generating
-                        ? null
-                        : (_) => setState(() {
-                            _sentenceMode = sentenceMode;
-                            _lessonSearchController.clear();
-                          }),
+                    onSelected: (_) => setState(() {
+                      _sentenceMode = sentenceMode;
+                      _lessonSearchController.clear();
+                    }),
                   ),
               ],
             ),
-            if (_sentenceMode) ...[
-              const SizedBox(height: 16),
-              Text(
-                '100 everyday Mandarin sentences · 10 short decks',
-                style: TextStyle(
-                  color: AppColors.text,
-                  fontWeight: FontWeight.w600,
-                ),
+            const SizedBox(height: 16),
+            Text(
+              _sentenceMode
+                  ? '100 everyday Mandarin sentences · 10 short decks'
+                  : 'HSK 1–6 · 20 words per bundled lesson',
+              style: TextStyle(
+                color: AppColors.text,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Practice common conversations offline. Tap a card for pinyin '
-                'and English, then rate how well you remember it.',
-                style: TextStyle(color: AppColors.muted),
-              ),
-            ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _sentenceMode
+                  ? 'Practice common conversations offline. Tap a card for pinyin '
+                        'and English, then rate how well you remember it.'
+                  : 'Lessons are numbered within each HSK level. Study offline with Tatoeba '
+                        'examples and original sentences where needed.',
+              style: TextStyle(color: AppColors.muted),
+            ),
             const SizedBox(height: 24),
-            IgnorePointer(
-              ignoring: _generating,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: _buildLessonLibrary(),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: _buildLessonLibrary(),
             ),
-            if (!_sentenceMode) ...[
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 20),
-              Text(
-                'Create a lesson',
-                key: _createLessonKey,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Create a vocabulary lesson from bundled HSK words. Choose a '
-                'topic and level, then study offline.',
-                style: TextStyle(color: AppColors.muted),
-              ),
-              const SizedBox(height: 20),
-              DropdownButtonFormField<int>(
-                key: ValueKey(_hskLevel),
-                initialValue: _hskLevel,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'HSK level',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  for (var level = 1; level <= 6; level++)
-                    DropdownMenuItem(value: level, child: Text('HSK $level')),
-                ],
-                onChanged: _generating
-                    ? null
-                    : (value) {
-                        final level = value ?? 1;
-                        setState(() {
-                          _hskLevel = level;
-                          _selectedTopicTheme = _hskTopicPools[level]!.first;
-                        });
-                      },
-              ),
-              const SizedBox(height: 18),
-              DropdownButtonFormField<String>(
-                key: ValueKey('topics-$_hskLevel'),
-                initialValue: _selectedTopicTheme,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Topic for this HSK level',
-                  helperText:
-                      'Random topic chooses one focus; Random mix combines topics.',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  for (final topic in _availableTopics)
-                    DropdownMenuItem(
-                      value: topic,
-                      child: Row(
-                        children: [
-                          if (topic == _randomTopicLessonMode ||
-                              topic == _randomMixLessonMode) ...[
-                            Icon(
-                              topic == _randomTopicLessonMode
-                                  ? Icons.casino_outlined
-                                  : Icons.shuffle_rounded,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          Expanded(
-                            child: Text(topic, overflow: TextOverflow.ellipsis),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-                onChanged: _generating
-                    ? null
-                    : (value) => setState(
-                        () => _selectedTopicTheme =
-                            value ?? _availableTopics.first,
-                      ),
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: _topicController,
-                enabled: !_generating,
-                decoration: InputDecoration(
-                  labelText: 'Custom lesson topic',
-                  hintText: 'e.g. ordering breakfast in Beijing',
-                  helperText:
-                      'Optional. Use your own topic instead of the one above.',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: _PushToTalkButton(
-                    key: const Key('lesson-topic-push-to-talk'),
-                    controller: _topicController,
-                    speechInputService: _speechInputService,
-                    enabled: !_generating,
-                  ),
-                ),
-              ),
-              if (_notice != null) ...[
-                const SizedBox(height: 14),
-                Text(_notice!, style: TextStyle(color: AppColors.gold)),
-              ],
-              if (_generationFailed) ...[
-                const SizedBox(height: 14),
-                _AppInlineError(
-                  key: const Key('lesson-generation-error'),
-                  message: _AppErrorCopy.generateLesson,
-                ),
-              ],
-              const SizedBox(height: 24),
-              if (_generationFailed)
-                _AppRetryButton(
-                  key: const Key('lesson-generation-retry'),
-                  onPressed: _generateLesson,
-                )
-              else
-                FilledButton.icon(
-                  onPressed: _generating ? null : _generateLesson,
-                  icon: _generating
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add_rounded),
-                  label: Text(
-                    _generating ? 'Creating lesson…' : 'Create lesson',
-                  ),
-                ),
-            ],
           ],
         ),
       ),
@@ -1015,14 +686,46 @@ class _LessonsPageState extends State<LessonsPage> {
             : 'No saved lessons yet',
         message: _sentenceMode
             ? 'Reopen Lessons after restoring your bundled content.'
-            : 'Choose a topic below to create your first lesson. It will appear '
-                  'here when you’re ready to return to it.',
+            : 'Reopen Lessons to load the bundled vocabulary library.',
       );
     }
 
+    final visibleTopics = _visibleTopics;
+    final modeTopics = _modeTopics;
+    final noun = _sentenceMode ? 'sentence deck' : 'vocabulary lesson';
+    final count = visibleTopics.length == modeTopics.length
+        ? '${modeTopics.length}'
+        : '${visibleTopics.length} of ${modeTopics.length}';
     return Column(
       key: const Key('lesson-library-content'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          children: [
+            Text(
+              '$count $noun${modeTopics.length == 1 ? '' : 's'}',
+              key: const Key('lesson-library-count'),
+              style: TextStyle(
+                color: AppColors.text,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if ((!_sentenceMode && _libraryHskFilter != null) ||
+                _lessonSearchController.text.trim().isNotEmpty)
+              TextButton(
+                key: const Key('lesson-library-show-all'),
+                onPressed: () => setState(() {
+                  _libraryHskFilter = null;
+                  _lessonSearchController.clear();
+                }),
+                child: const Text('Show all lessons'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
         TextField(
           key: const Key('lesson-library-search'),
           controller: _lessonSearchController,
@@ -1076,7 +779,7 @@ class _LessonsPageState extends State<LessonsPage> {
             ),
           ),
         const SizedBox(height: 14),
-        if (_visibleTopics.isEmpty &&
+        if (visibleTopics.isEmpty &&
             _lessonSearchController.text.trim().isNotEmpty)
           _LessonLibraryStateCard(
             key: const Key('lesson-library-search-empty-state'),
@@ -1087,7 +790,7 @@ class _LessonsPageState extends State<LessonsPage> {
                 'Try another lesson title, topic, or HSK level, or clear the '
                 'current level filter.',
           )
-        else if (_visibleTopics.isEmpty)
+        else if (visibleTopics.isEmpty)
           _LessonLibraryStateCard(
             key: const Key('lesson-library-filtered-empty-state'),
             accent: AppColors.teal,
@@ -1098,11 +801,11 @@ class _LessonsPageState extends State<LessonsPage> {
             ),
             title: 'No HSK $_libraryHskFilter lessons yet',
             message:
-                'No saved lessons match this level yet. Try another level, or '
-                'create a new lesson below.',
+                'No saved lessons match this level. Select All levels to '
+                'return to the full library.',
           )
         else
-          for (final (index, topic) in _visibleTopics.indexed) ...[
+          for (final (index, topic) in visibleTopics.indexed) ...[
             _LessonLibraryCard(
               summary: topic,
               isActive: _activeSessions.containsKey(topic.id),
@@ -1115,7 +818,7 @@ class _LessonsPageState extends State<LessonsPage> {
                   ? () => _deleteLesson(topic)
                   : null,
             ),
-            if (index != _visibleTopics.length - 1) const SizedBox(height: 10),
+            if (index != visibleTopics.length - 1) const SizedBox(height: 10),
           ],
       ],
     );

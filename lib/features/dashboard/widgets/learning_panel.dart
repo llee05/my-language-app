@@ -228,7 +228,7 @@ class _AvailableLessonsEmpty extends StatelessWidget {
     child: _AvailableLessonsStateCard(
       icon: Icon(Icons.menu_book_outlined, color: AppColors.teal),
       title: 'No saved lessons yet',
-      message: 'Create a lesson to start building your library.',
+      message: 'Open Lessons to load the bundled vocabulary library.',
       action: OutlinedButton.icon(
         onPressed: onBrowse,
         icon: const Icon(Icons.arrow_forward_rounded, size: 17),

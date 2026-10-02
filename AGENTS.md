@@ -99,7 +99,8 @@ Users select a provider, personal API key, and model in Settings. Keys live in
 or ordinary preferences. Saving does not make a request; the explicit connection
 test does. Full data reset removes the configuration, while onboarding reset
 preserves it. Missing keys and secure-storage failures must fail without network
-requests. Custom vocabulary lessons are created locally from bundled HSK words.
+requests. Vocabulary lessons use the bundled curriculum; lesson creation has
+been removed. Preserve previously saved custom lessons and their learning history.
 
 Startup never contacts an AI service. When no personal configuration is saved,
 configure a developer Gemini fallback using an ignored `.env.gemini.json` file:

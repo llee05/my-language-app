@@ -629,12 +629,10 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
       return LessonsPage(
-        vocabularyRepository: vocabularyRepository,
         repository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
-        speechInputService: speechInputService,
         resumeLatest: resumeLatestLesson,
         initialLessonId: initialLessonId,
         onProgressChanged: onLessonProgressChanged,

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -41,21 +43,6 @@ Future<void> _waitForWidget(
       () => Future<void>.delayed(const Duration(milliseconds: 20)),
     );
   }
-}
-
-Future<void> _generateLesson(WidgetTester tester, {bool retry = false}) async {
-  final button = retry
-      ? find.descendant(
-          of: find.byKey(const Key('lesson-generation-retry')),
-          matching: find.byType(FilledButton),
-        )
-      : find.widgetWithText(FilledButton, 'Create lesson');
-  await tester.ensureVisible(button);
-  // Bundle loading can decode in an isolate, outside the simulated clock.
-  final generate =
-      tester.widget<FilledButton>(button).onPressed! as Future<void> Function();
-  await tester.runAsync(generate);
-  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpResetSettings(
@@ -248,7 +235,7 @@ void main() {
     );
   }
 
-  testWidgets('new lesson shortcut reveals the creation form on a phone', (
+  testWidgets('phone lesson library has no lesson creation controls', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
@@ -257,7 +244,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: LessonsPage(
-            repository: _RotatingLessonRepository(),
+            repository: _MemoryLessonRepository(),
             progressRepository: _MemoryProgressRepository(
               hasActiveSession: false,
             ),
@@ -268,24 +255,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(
-      tester.getTopLeft(find.text('Create a lesson')).dy,
-      greaterThan(640),
-    );
-    await tester.tap(find.byKey(const Key('jump-to-create-lesson')));
-    await tester.pumpAndSettle();
-    expect(
-      tester.getTopLeft(find.text('Create a lesson')).dy,
-      inInclusiveRange(0, 500),
-    );
-    expect(
-      find
-          .widgetWithText(DropdownButtonFormField<int>, 'HSK level')
-          .hitTestable(),
-      findsOneWidget,
-    );
+    expect(find.text('1 vocabulary lesson'), findsOneWidget);
+    expect(find.text('Create a lesson'), findsNothing);
+    expect(find.text('Create lesson'), findsNothing);
+    expect(find.text('New lesson'), findsNothing);
+    expect(find.byType(DropdownButtonFormField<int>), findsNothing);
+    expect(find.byKey(const Key('lesson-topic-push-to-talk')), findsNothing);
+    expect(find.text('Saved lesson'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   for (final size in [const Size(320, 640), const Size(640, 360)]) {
@@ -2025,7 +2002,7 @@ void main() {
     expect(reset.isUtc, isFalse);
   });
 
-  testWidgets('lessons page exposes offline level and topic options', (
+  testWidgets('Lessons navigation opens the library without a creator', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
@@ -2041,125 +2018,91 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Lessons'));
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(seconds: 2)),
-    );
     await tester.pumpAndSettle();
-
     expect(find.text('Lesson Library'), findsOneWidget);
-    expect(find.text('Create a lesson'), findsOneWidget);
-    expect(find.text('HSK level'), findsOneWidget);
-    expect(find.text('Custom lesson topic'), findsOneWidget);
-    expect(find.byKey(const Key('lesson-topic-push-to-talk')), findsOneWidget);
-    expect(find.text('Create lesson'), findsOneWidget);
-    expect(find.text('Daily Life'), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('topics-1')));
-    await tester.pumpAndSettle();
-    expect(find.text('Random topic'), findsOneWidget);
-    expect(find.text('Random mix'), findsOneWidget);
-    await tester.tap(find.text('Random mix').last);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('HSK 1').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('HSK 2').last);
-    await tester.pumpAndSettle();
-
-    expect(find.text('School'), findsOneWidget);
-    expect(find.text('Daily Life'), findsNothing);
+    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Create a lesson'), findsNothing);
+    expect(find.text('Custom lesson topic'), findsNothing);
+    expect(find.text('Create lesson'), findsNothing);
+    expect(find.byKey(const Key('lesson-topic-push-to-talk')), findsNothing);
   });
 
-  testWidgets('lessons can generate a random vocabulary mix', (tester) async {
-    const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-    rootBundle.evict(vocabularyAsset);
-    addTearDown(() => rootBundle.evict(vocabularyAsset));
-    await tester.binding.setSurfaceSize(const Size(1000, 1100));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final lessons = _GeneratedMemoryLessonRepository();
-    lessons.generated = const Lesson(
-      summary: LessonSummary(
-        id: 88,
-        title: 'Old random lesson',
-        theme: 'Random mix',
-        hskLevel: 1,
-      ),
-      cards: [
-        Flashcard(id: 89, chinese: '旧', pinyin: 'jiù', englishMeaning: 'old'),
-      ],
-    );
-    final random = _CountingRandom();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: LessonsPage(
-            repository: lessons,
-            progressRepository: _MemoryProgressRepository(
-              hasActiveSession: false,
+  for (final width in [390.0, 1000.0]) {
+    testWidgets('all 251 curriculum lessons are reachable at width $width', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(Size(width, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final document =
+          jsonDecode(
+                File('assets/data/vocabulary_lessons.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
+      final topics = <LessonSummary>[
+        for (final (index, lesson) in (document['lessons'] as List).indexed)
+          LessonSummary(
+            id: index + 100,
+            title: lesson['title'] as String,
+            theme: 'HSK ${lesson['hskLevel']} vocabulary',
+            hskLevel: lesson['hskLevel'] as int,
+          ),
+      ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LessonsPage(
+              repository: _LessonStateRepository(
+                firstTopics: Future.value(topics),
+              ),
+              progressRepository: _MemoryProgressRepository(
+                hasActiveSession: false,
+              ),
+              settingsRepository: _MemorySettingsRepository(),
             ),
-            settingsRepository: _MemorySettingsRepository(),
-            random: random,
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const ValueKey('topics-1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Random mix').last);
-    await tester.pumpAndSettle();
-    await _generateLesson(tester);
-
-    expect(random.nextIntCalls, greaterThan(0));
-    expect(lessons.generated?.summary.theme, 'Random mix');
-    expect(lessons.generated?.summary.title, 'Random mix · HSK 1');
-    expect(lessons.generated?.cards, hasLength(10));
-    expect(lessons.saveCalls, 1);
-  });
-
-  testWidgets('lessons can choose one random topic', (tester) async {
-    const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-    rootBundle.evict(vocabularyAsset);
-    addTearDown(() => rootBundle.evict(vocabularyAsset));
-    await tester.binding.setSurfaceSize(const Size(1000, 1100));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final lessons = _GeneratedMemoryLessonRepository();
-    final random = _ZeroRandom();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: LessonsPage(
-            repository: lessons,
-            progressRepository: _MemoryProgressRepository(
-              hasActiveSession: false,
-            ),
-            settingsRepository: _MemorySettingsRepository(),
-            random: random,
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const ValueKey('topics-1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Random topic').last);
-    await tester.pumpAndSettle();
-    await _generateLesson(tester);
-
-    // The topic draw is followed by shuffling equally relevant vocabulary.
-    expect(random.nextIntCalls, greaterThan(1));
-    expect(lessons.generated?.summary.theme, 'Daily Life');
-    expect(lessons.generated?.summary.title, 'Daily Life · HSK 1');
-    expect(lessons.generated?.cards, hasLength(10));
-    expect(lessons.saveCalls, 1);
-  });
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('251 vocabulary lessons'), findsOneWidget);
+      for (final topic in topics) {
+        expect(find.text(topic.title), findsOneWidget);
+      }
+      await tester.ensureVisible(find.text('HSK 6'));
+      await tester.tap(find.text('HSK 6'));
+      await tester.pumpAndSettle();
+      expect(find.text('125 of 251 vocabulary lessons'), findsOneWidget);
+      expect(find.text('HSK 1 · Lesson 001'), findsNothing);
+      expect(find.text('HSK 6 · Lesson 125'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('lesson-library-search')),
+        '125',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('1 of 251 vocabulary lessons'), findsOneWidget);
+      await tester.ensureVisible(
+        find.byKey(const Key('lesson-library-show-all')),
+      );
+      await tester.tap(find.byKey(const Key('lesson-library-show-all')));
+      await tester.pumpAndSettle();
+      expect(find.text('251 vocabulary lessons'), findsOneWidget);
+      expect(find.text('HSK 1 · Lesson 001'), findsOneWidget);
+      expect(find.text('HSK 6 · Lesson 125'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('lesson-library-search')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      await tester.ensureVisible(find.text('HSK 6 · Lesson 125'));
+      await tester.pumpAndSettle();
+      expect(find.text('HSK 6 · Lesson 125').hitTestable(), findsOneWidget);
+      expect(find.text('Create a lesson'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final width in [360.0, 1000.0]) {
     testWidgets(
@@ -2405,7 +2348,10 @@ void main() {
 
     expect(find.byKey(const Key('lesson-library-empty-state')), findsOneWidget);
     expect(find.text('No saved lessons yet'), findsOneWidget);
-    expect(find.textContaining('create your first lesson'), findsOneWidget);
+    expect(
+      find.text('Reopen Lessons to load the bundled vocabulary library.'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -2483,7 +2429,7 @@ void main() {
     );
     expect(find.text('No saved lessons yet'), findsOneWidget);
     expect(
-      find.text('Create a lesson to start building your library.'),
+      find.text('Open Lessons to load the bundled vocabulary library.'),
       findsOneWidget,
     );
   });
@@ -2690,141 +2636,6 @@ void main() {
       },
     );
   }
-
-  for (final cached in [false, true]) {
-    testWidgets(
-      'offline lesson creation saves a fresh deck (saved lesson: $cached)',
-      (tester) async {
-        const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-        rootBundle.evict(vocabularyAsset);
-        addTearDown(() => rootBundle.evict(vocabularyAsset));
-        await tester.binding.setSurfaceSize(const Size(1000, 1100));
-        addTearDown(() => tester.binding.setSurfaceSize(null));
-        final lessons = _GeneratedMemoryLessonRepository();
-        if (cached) lessons.generated = lessons.lesson;
-        final previous = lessons.generated;
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: LessonsPage(
-                repository: lessons,
-                progressRepository: _MemoryProgressRepository(
-                  hasActiveSession: false,
-                ),
-                settingsRepository: _MemorySettingsRepository(),
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.textContaining('AI'), findsNothing);
-        await _generateLesson(tester);
-
-        final saved = lessons.generated!;
-        expect(identical(saved, previous), isFalse);
-        expect(lessons.saveCalls, 1);
-        expect(saved.cards, hasLength(10));
-        expect(saved.cards.map((card) => card.chinese).toSet(), hasLength(10));
-        expect(
-          saved.cards.every(
-            (card) =>
-                card.chinese.isNotEmpty &&
-                card.pinyin.isNotEmpty &&
-                card.englishMeaning.isNotEmpty,
-          ),
-          isTrue,
-        );
-        expect(saved.guide, isNull);
-        expect(find.text(saved.cards.first.chinese), findsWidgets);
-        expect(
-          find.text('Created a vocabulary lesson offline.'),
-          findsOneWidget,
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
-  }
-
-  testWidgets('offline lesson creation reports persistence failures', (
-    tester,
-  ) async {
-    const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-    rootBundle.evict(vocabularyAsset);
-    addTearDown(() => rootBundle.evict(vocabularyAsset));
-    await tester.binding.setSurfaceSize(const Size(1000, 1100));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final lessons = _GeneratedMemoryLessonRepository()
-      ..saveError = StateError('sensitive database path');
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: LessonsPage(
-            repository: lessons,
-            progressRepository: _MemoryProgressRepository(
-              hasActiveSession: false,
-            ),
-            settingsRepository: _MemorySettingsRepository(),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await _generateLesson(tester);
-
-    expect(lessons.generated, isNull);
-    expect(find.byKey(const Key('lesson-generation-error')), findsOneWidget);
-    expect(find.textContaining('sensitive'), findsNothing);
-    expect(find.text('Created a vocabulary lesson offline.'), findsNothing);
-    lessons.saveError = null;
-    await _generateLesson(tester, retry: true);
-    expect(lessons.generated!.cards, hasLength(10));
-    expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets(
-    'offline lesson creation lookup error is friendly and retryable',
-    (tester) async {
-      const vocabularyAsset = 'assets/data/hsk_vocabulary.json';
-      rootBundle.evict(vocabularyAsset);
-      addTearDown(() => rootBundle.evict(vocabularyAsset));
-      await tester.binding.setSurfaceSize(const Size(1000, 1100));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      final lessons = _FailOnceGeneratedLookupRepository();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: LessonsPage(
-              repository: lessons,
-              progressRepository: _MemoryProgressRepository(
-                hasActiveSession: false,
-              ),
-              settingsRepository: _MemorySettingsRepository(),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final generate = find.text('Create lesson');
-      await tester.ensureVisible(generate);
-      await tester.tap(generate);
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('lesson-generation-error')), findsOneWidget);
-      expect(find.text('We couldn’t create your lesson.'), findsOneWidget);
-      expect(find.textContaining('sensitive database path'), findsNothing);
-      expect(lessons.findGeneratedCalls, 1);
-
-      await _generateLesson(tester, retry: true);
-
-      expect(lessons.findGeneratedCalls, 3);
-      expect(find.byKey(const Key('lesson-generation-error')), findsNothing);
-      expect(find.text('Recovered generated lesson'), findsOneWidget);
-      expect(find.text('好'), findsOneWidget);
-    },
-  );
 
   testWidgets('an archived lesson resumes through its dashboard link', (
     tester,
@@ -4661,23 +4472,6 @@ class _MemoryDevelopmentRepository implements DevelopmentRepository {
   }
 }
 
-class _CountingRandom implements Random {
-  final Random _delegate = Random(1);
-  int nextIntCalls = 0;
-
-  @override
-  bool nextBool() => _delegate.nextBool();
-
-  @override
-  double nextDouble() => _delegate.nextDouble();
-
-  @override
-  int nextInt(int max) {
-    nextIntCalls++;
-    return _delegate.nextInt(max);
-  }
-}
-
 class _ZeroRandom implements Random {
   int nextIntCalls = 0;
 
@@ -4769,25 +4563,6 @@ class _GuidedLessonRepository extends _MemoryLessonRepository {
     cards: lesson.cards,
     guide: savedLessonGuide,
   );
-}
-
-class _GeneratedMemoryLessonRepository extends _MemoryLessonRepository {
-  Lesson? generated;
-  int saveCalls = 0;
-  Object? saveError;
-
-  @override
-  Future<Lesson?> findGenerated({
-    required String theme,
-    required int hskLevel,
-  }) async => generated;
-
-  @override
-  Future<void> saveGenerated(Lesson lesson) async {
-    saveCalls++;
-    if (saveError != null) throw saveError!;
-    generated = lesson;
-  }
 }
 
 class _MultiLevelLessonRepository implements LessonRepository {
@@ -4970,55 +4745,6 @@ class _LessonStateRepository implements LessonRepository {
 
   @override
   Future<void> saveGenerated(Lesson lesson) async {}
-}
-
-class _FailOnceGeneratedLookupRepository implements LessonRepository {
-  @override
-  Future<void> deleteGenerated(int lessonId) async {
-    throw UnimplementedError();
-  }
-
-  int findGeneratedCalls = 0;
-
-  static const lesson = Lesson(
-    summary: LessonSummary(
-      id: 91,
-      title: 'Recovered generated lesson',
-      theme: 'Daily Life',
-      hskLevel: 1,
-    ),
-    cards: [
-      Flashcard(id: 911, chinese: '好', pinyin: 'hǎo', englishMeaning: 'good'),
-    ],
-  );
-
-  @override
-  Future<Lesson?> findGenerated({
-    required String theme,
-    required int hskLevel,
-  }) async {
-    findGeneratedCalls++;
-    if (findGeneratedCalls == 1) {
-      throw StateError('sensitive database path /private/generated.db');
-    }
-    return lesson;
-  }
-
-  @override
-  Future<Lesson?> findById(int id) async =>
-      id == lesson.summary.id ? lesson : null;
-
-  @override
-  Future<Flashcard> findOrCreateVocabularyCard({
-    required Flashcard card,
-    required int hskLevel,
-  }) async => card;
-
-  @override
-  Future<void> saveGenerated(Lesson lesson) async {}
-
-  @override
-  Future<List<LessonSummary>> topics() async => const [];
 }
 
 class _MemoryProgressRepository implements ProgressRepository {

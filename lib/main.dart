@@ -13,7 +13,6 @@ import 'ai/ai_errors.dart';
 import 'ai/ai_service.dart';
 import 'models/lesson_guide.dart';
 import 'models/hsk_exam.dart';
-import 'services/lesson_vocabulary_selector.dart';
 import 'models/ai_configuration.dart';
 import 'repositories/ai_configuration_repository.dart';
 import 'repositories/backup_repository.dart';
