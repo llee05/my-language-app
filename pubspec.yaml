@@ -96,6 +96,7 @@ flutter:
 
   assets:
     - assets/data/sentence_practice.json
+    - assets/data/vocabulary_lessons.json
     - assets/data/hsk_vocabulary.json
     - assets/data/tatoeba/flashcard_candidates.json
 

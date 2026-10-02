@@ -1,0 +1,78 @@
+{
+  "hsk-old-3-口": {
+    "chineseId": "2879789",
+    "englishId": "240541",
+    "reason": "Uses the actual mouth sense, rather than 口 as part of 门口."
+  },
+  "hsk-old-5-节": {
+    "omit": true,
+    "reason": "The intended class-section matches have incorrect jie1 transcriptions. Other matches use 节食 (dieting)."
+  },
+  "hsk-old-6-做主": {
+    "omit": true,
+    "reason": "The only source match uses 做主角 (play a leading role), not 做主 (decide)."
+  },
+  "hsk-old-5-漏": {
+    "chineseId": "336599",
+    "englishId": "41125",
+    "reason": "Short natural example with the intended leak meaning and complete source pinyin."
+  },
+  "hsk-old-4-挺": {
+    "chineseId": "358977",
+    "englishId": "63615",
+    "reason": "Simple accurate example for the adverb quite; avoids a tense mismatch."
+  },
+  "hsk-old-6-不像话": {
+    "omit": true,
+    "reason": "Available translation does not convey the unreasonable/outrageous sense."
+  },
+  "hsk-old-6-迈": {
+    "omit": true,
+    "reason": "Available matches are proper-name transliterations, not the verb to step."
+  },
+  "hsk-old-4-所有": {
+    "chineseId": "340129",
+    "englishId": "32112",
+    "reason": "Simple example; avoids incorrect Hua1du1 reading of 花都 in the automatic selection."
+  },
+  "hsk-old-5-表现": {
+    "chineseId": "5933783",
+    "englishId": "5659246",
+    "reason": "Natural example of showing something; avoids an ungrammatical translation."
+  },
+  "hsk-old-5-政府": {
+    "chineseId": "669099",
+    "englishId": "271439",
+    "reason": "Concrete, natural example about transporting supplies."
+  },
+  "hsk-old-5-是否": {
+    "chineseId": "333812",
+    "englishId": "323257",
+    "reason": "Straightforward whether construction about the weather."
+  },
+  "hsk-old-6-交易": {
+    "chineseId": "1776568",
+    "englishId": "2304",
+    "reason": "Short natural example of a business deal."
+  },
+  "hsk-old-6-事件": {
+    "chineseId": "335527",
+    "englishId": "55578",
+    "reason": "Simple natural example of an event."
+  },
+  "hsk-old-6-客户": {
+    "chineseId": "13911352",
+    "englishId": "2247886",
+    "reason": "Short natural example of a client."
+  },
+  "hsk-old-6-死亡": {
+    "chineseId": "1179156",
+    "englishId": "307726",
+    "reason": "Uses the verb reading and a direct accurate translation."
+  },
+  "hsk-old-3-把": {
+    "chineseId": "332433",
+    "englishId": "259388",
+    "reason": "Uses the classifier for an object with a handle, matching the study meaning."
+  }
+}
