@@ -29,7 +29,7 @@ usable without an account, network access, or an AI provider.
 | `lib/models/` | Learner, lesson, settings, review, and progress data types. |
 | `lib/repositories/` | Persistence interfaces, `AppDependencies` constructor injection, and SQLite implementations. |
 | `lib/local_database.dart` | SQLite lifecycle, application-support database path, legacy path migration, seeding, content updates, and coordinated close/reset operations. |
-| `lib/database/` | Ordered schema migrations, bundled flashcard seeds, and vocabulary helpers. |
+| `lib/database/` | Ordered schema migrations, bundled curriculum installation, historical flashcard seeds, and vocabulary helpers. |
 | `lib/services/` | Review scheduling, study streak calculation, pronunciation abstractions, native/system speech, and Kokoro installation/configuration. |
 | `lib/ai/` | Gemini, Anthropic, and OpenAI-compatible REST adapters for the optional AI tutor. |
 | `assets/data/` | Bundled HSK vocabulary and Tatoeba sentence candidates, with provenance and regeneration instructions. |
@@ -190,7 +190,7 @@ setup; release builds must not fall back to debug signing.
 SQLite uses `sqflite_common_ffi`; the database is `local_app.db` in the application
 support directory. Existing code safely migrates the legacy documents-directory
 database. Schema versioning lives in `lib/database/migrations.dart` (currently
-version 11): each map entry upgrades from the previous version. Add a new ordered
+version 17): each map entry upgrades from the previous version. Add a new ordered
 migration and increment the version for schema changes instead of rewriting an
 already-applied migration. Test upgrades as well as fresh initialization.
 
@@ -199,6 +199,12 @@ operation coordination during close/reset. Content changes must retain learner
 history and be safe on repeated startup. Onboarding reset and full data reset
 have different semantics; do not conflate them. There is no cloud backup, and
 full reset permanently removes local learning data.
+
+The vocabulary curriculum uses ordered `lesson_cards` memberships to share card
+IDs and progress between 20-word decks. Historical defaults are archived rather
+than deleted so old sessions retain their card order and can resume. Preserve
+memberships and archive flags in backup exports/restores; custom decks still use
+their direct `cards.lesson_id` ownership.
 
 ### Voice packs and native platforms
 

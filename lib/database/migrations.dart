@@ -6,7 +6,7 @@ import 'bundled_lesson_content.dart';
 
 typedef MigrationStep = Future<void> Function(Database db);
 
-const int databaseSchemaVersion = 16;
+const int databaseSchemaVersion = 17;
 
 /// Each entry upgrades the database from `version - 1` to `version`.
 final Map<int, MigrationStep> databaseMigrations = {
@@ -343,6 +343,26 @@ final Map<int, MigrationStep> databaseMigrations = {
       'DEFAULT 1 CHECK (is_user_generated IN (0, 1))',
     );
     await identifyLegacyBundledLessons(db);
+  },
+  17: (db) async {
+    await db.execute(
+      'ALTER TABLE lessons ADD COLUMN is_archived INTEGER NOT NULL '
+      'DEFAULT 0 CHECK (is_archived IN (0, 1))',
+    );
+    await db.execute('''
+      CREATE TABLE lesson_cards (
+        lesson_id INTEGER NOT NULL,
+        card_id INTEGER NOT NULL,
+        position INTEGER NOT NULL CHECK (position >= 0),
+        PRIMARY KEY (lesson_id, position),
+        UNIQUE (lesson_id, card_id),
+        FOREIGN KEY (lesson_id) REFERENCES lessons (id) ON DELETE CASCADE,
+        FOREIGN KEY (card_id) REFERENCES cards (id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX idx_lesson_cards_card ON lesson_cards(card_id)',
+    );
   },
 };
 

@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/database/migrations.dart';
+import 'package:mylanguageapp/database/vocabulary_lesson_content.dart';
 import 'package:mylanguageapp/local_database.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
@@ -89,10 +91,31 @@ void main() {
     'version 13 upgrade and repeated startup preserve sentence progress',
     () async {
       final db = await LocalDatabase.ensureInitialized();
-      final original = (await _lessons.topics()).firstWhere(
-        (s) => !s.isSentencePractice,
+      await db.execute(
+        'DELETE FROM lessons WHERE id IN (SELECT lesson_id FROM lesson_cards)',
       );
-      final originalLesson = await _lessons.findById(original.id);
+      await db.delete(
+        'content_migrations',
+        where: 'key = ?',
+        whereArgs: [vocabularyCurriculumMarker],
+      );
+      final definition = flashcardLessons.first;
+      final originalId = await db.insert('lessons', {
+        'lesson_title': definition['lesson_title'],
+        'theme': definition['theme'],
+        'hsk_level': definition['hsk_level'],
+        'is_user_generated': 0,
+      });
+      for (final card
+          in (definition['cards'] as List).cast<Map<String, dynamic>>()) {
+        await db.insert('cards', {
+          ...card,
+          'lesson_id': originalId,
+          'hsk_level': definition['hsk_level'],
+          'quiz_options': jsonEncode(card['quiz_options']),
+        });
+      }
+      final originalLesson = await _lessons.findById(originalId);
       // Reconstruct schema 13 in this temporary database.
       await db.delete(
         'cards',
@@ -100,6 +123,8 @@ void main() {
             'lesson_id IN (SELECT id FROM lessons WHERE is_sentence_practice = 1)',
       );
       await db.delete('lessons', where: 'is_sentence_practice = 1');
+      await db.execute('DROP TABLE lesson_cards');
+      await db.execute('ALTER TABLE lessons DROP COLUMN is_archived');
       await db.execute('ALTER TABLE lessons DROP COLUMN is_user_generated');
       await db.execute('ALTER TABLE lessons DROP COLUMN guide_json');
       await db.execute('ALTER TABLE lessons DROP COLUMN is_sentence_practice');
@@ -108,7 +133,7 @@ void main() {
       final upgraded = await LocalDatabase.ensureInitialized();
       expect(await upgraded.getVersion(), databaseSchemaVersion);
       expect(
-        (await _lessons.findById(original.id))!.cards.first.id,
+        (await _lessons.findById(originalId))!.cards.first.id,
         originalLesson!.cards.first.id,
       );
       final summary = (await _lessons.topics()).firstWhere(

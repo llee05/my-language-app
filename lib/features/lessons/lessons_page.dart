@@ -278,6 +278,9 @@ class _LessonsPageState extends State<LessonsPage> {
         );
         if (summary != null) {
           await _startLesson(summary);
+        } else {
+          final lesson = await widget.repository.findById(initialLessonId);
+          if (lesson != null && mounted) await _openLesson(lesson);
         }
         return;
       }
@@ -1780,7 +1783,9 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         ),
         if (widget.card.exampleSource.isNotEmpty)
           Text(
-            '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
+            widget.card.exampleSource == 'Original'
+                ? 'Original study example'
+                : '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 10, color: AppColors.faint),
           ),

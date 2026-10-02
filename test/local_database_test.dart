@@ -186,6 +186,7 @@ void main() {
         ...before,
         'guide_json': null,
         'is_user_generated': 1,
+        'is_archived': 0,
       });
     },
   );
@@ -598,53 +599,28 @@ void main() {
   });
 
   test(
-    'bundled library offers four extra lessons for every HSK level',
+    'bundled library offers twenty-word lessons for every HSK level',
     () async {
       await LocalDatabase.resetForTesting();
-
-      const extraThemesByLevel = <int, List<String>>{
-        1: ['Greetings', 'Family', 'Food and Drinks', 'Numbers and Time'],
-        2: ['Shopping', 'Weather', 'Hobbies', 'Getting Around'],
-        3: ['Dining Out', 'Work and Study', 'Travel Plans', 'Daily Routines'],
-        4: ['Chinese Culture', 'Technology', 'Relationships', 'News and Media'],
-        5: ['Society', 'Environment', 'Education', 'Arts and Literature'],
-        6: [
-          'Economics',
-          'Politics',
-          'Science and Research',
-          'History and Philosophy',
-        ],
-      };
-
       final topics = await lessons.topics();
-      for (final entry in extraThemesByLevel.entries) {
-        final level = entry.key;
-        for (final theme in entry.value) {
-          final lesson = await lessons.findGenerated(
-            theme: theme,
-            hskLevel: level,
-          );
-          expect(
-            lesson,
-            isNotNull,
-            reason: 'Missing bundled lesson "$theme" for HSK $level.',
-          );
-          expect(lesson!.summary.title, '$theme HSK$level Flashcards');
-          expect(lesson.cards, hasLength(10));
-          for (final card in lesson.cards) {
-            expect(card.chinese, isNotEmpty);
-            expect(card.pinyin, isNotEmpty);
-            expect(card.englishMeaning, isNotEmpty);
-            expect(card.partOfSpeech, isNotEmpty);
-            expect(card.exampleChinese, isNotEmpty);
-            expect(card.exampleEnglish, isNotEmpty);
-            expect(card.quizOptions, contains(card.englishMeaning));
-          }
-        }
+      const counts = [8, 8, 15, 30, 65, 125];
+      for (var level = 1; level <= 6; level++) {
+        final atLevel = topics
+            .where(
+              (topic) => !topic.isSentencePractice && topic.hskLevel == level,
+            )
+            .toList();
+        expect(atLevel, hasLength(counts[level - 1]));
+        final deck = (await lessons.findById(atLevel.first.id))!;
+        expect(deck.cards, hasLength(20));
         expect(
-          topics.where((topic) => topic.hskLevel == level),
-          hasLength(greaterThanOrEqualTo(entry.value.length + 1)),
-          reason: 'HSK $level should keep its original bundled lesson too.',
+          deck.cards.every(
+            (card) =>
+                card.chinese.isNotEmpty &&
+                card.pinyin.isNotEmpty &&
+                card.englishMeaning.isNotEmpty,
+          ),
+          isTrue,
         );
       }
     },
@@ -899,7 +875,12 @@ void main() {
     await learners.save(
       const LearnerProfile(name: 'Mei', hskLevel: 2, dailyWordTarget: 3),
     );
-    final cardRows = await db.query('cards', columns: ['id'], limit: 3);
+    final cardRows = await db.query(
+      'cards',
+      columns: ['id'],
+      where: "part_of_speech <> 'sentence'",
+      limit: 3,
+    );
     final dueCardId = cardRows[0]['id'] as int;
     final weakCardId = cardRows[1]['id'] as int;
     final newCardId = cardRows[2]['id'] as int;
@@ -1422,33 +1403,27 @@ void main() {
     },
   );
 
-  test('bundled cards use complete original examples', () async {
+  test('bundled vocabulary uses attributed Tatoeba examples', () async {
     await LocalDatabase.resetForTesting();
     final db = await LocalDatabase.ensureInitialized();
-    final rows = await db.rawQuery(
-      '''
-      SELECT cards.*
-      FROM cards
-      INNER JOIN lessons ON lessons.id = cards.lesson_id
-      WHERE cards.chinese = ? AND lessons.lesson_title = ?
-      LIMIT 1
-    ''',
-      ['胡萝卜', 'Vegetables HSK3 Flashcards'],
+    final rows = await db.query(
+      'cards',
+      where: 'chinese = ?',
+      whereArgs: ['谢谢'],
     );
-
     expect(rows, hasLength(1));
-    expect(rows.single['example_sentence_chinese'], '请把胡萝卜切成小块。');
+    expect(rows.single['example_sentence_chinese'], contains('谢谢'));
+    expect(rows.single['example_sentence_pinyin'], isNotEmpty);
+    expect(rows.single['example_sentence_english'], isNotEmpty);
+    expect(rows.single['example_source'], 'Tatoeba');
     expect(
-      rows.single['example_sentence_english'],
-      'Please cut the carrot into small pieces.',
+      int.tryParse(rows.single['example_source_id'] as String),
+      greaterThan(0),
     );
     expect(
-      rows.single['example_sentence_pinyin'],
-      'Qǐng bǎ húluóbo qiē chéng xiǎo kuài.',
+      int.tryParse(rows.single['example_translation_id'] as String),
+      greaterThan(0),
     );
-    expect(rows.single['example_source'], isEmpty);
-    expect(rows.single['example_source_id'], isEmpty);
-    expect(rows.single['example_translation_id'], isEmpty);
   });
 
   test(

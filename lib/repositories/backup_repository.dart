@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../database/migrations.dart';
 import '../database/bundled_lesson_content.dart';
+import '../database/vocabulary_lesson_content.dart';
 import '../local_database.dart';
 import '../models/lesson_guide.dart';
 
@@ -51,6 +52,7 @@ class SqliteBackupRepository implements BackupRepository {
     'lessons.is_sentence_practice': 0,
     'lessons.guide_json': null,
     'lessons.is_user_generated': 1,
+    'lessons.is_archived': 0,
     'learner_settings.button_animation_style': 'combined',
   };
 
@@ -86,6 +88,7 @@ class SqliteBackupRepository implements BackupRepository {
       'is_sentence_practice',
       'guide_json',
       'is_user_generated',
+      'is_archived',
     ],
     'cards': [
       'id',
@@ -104,6 +107,7 @@ class SqliteBackupRepository implements BackupRepository {
       'example_source_id',
       'example_translation_id',
     ],
+    'lesson_cards': ['lesson_id', 'card_id', 'position'],
     'lesson_sessions': [
       'id',
       'learner_id',
@@ -190,6 +194,7 @@ class SqliteBackupRepository implements BackupRepository {
     await LocalDatabase.write((db) async {
       await db.transaction((txn) async {
         for (final table in const [
+          'lesson_cards',
           'daily_review_sessions',
           'review_history',
           'card_progress',
@@ -205,6 +210,7 @@ class SqliteBackupRepository implements BackupRepository {
         for (final table in const [
           'lessons',
           'cards',
+          'lesson_cards',
           'learner_profiles',
           'learner_settings',
           'lesson_sessions',
@@ -220,6 +226,7 @@ class SqliteBackupRepository implements BackupRepository {
         // Backups made before lesson provenance was stored need classification.
         if (snapshot.needsLessonOriginUpgrade) {
           await identifyLegacyBundledLessons(txn);
+          await identifyVocabularyCurriculumLessons(txn);
         }
         await txn.delete(
           'content_migrations',
@@ -227,6 +234,12 @@ class SqliteBackupRepository implements BackupRepository {
           whereArgs: [bundledLessonRewriteMarker],
         );
         await refreshBundledLessonContent(txn);
+        await txn.delete(
+          'content_migrations',
+          where: 'key = ?',
+          whereArgs: [vocabularyCurriculumMarker],
+        );
+        await installVocabularyCurriculum(txn);
 
         // A restored profile should open directly even if onboarding had been
         // reset on this installation before the import.
@@ -274,7 +287,13 @@ class SqliteBackupRepository implements BackupRepository {
 
     final tables = <String, List<Map<String, Object?>>>{};
     for (final entry in _columns.entries) {
-      final rawRows = rawData[entry.key];
+      final rawRows =
+          rawData[entry.key] ??
+          (entry.key == 'lesson_cards' &&
+                  decoded['databaseSchemaVersion'] is int &&
+                  (decoded['databaseSchemaVersion'] as int) < 17
+              ? const []
+              : null);
       if (rawRows is! List) {
         throw const BackupFormatException(
           'This TingShuo backup is incomplete.',
@@ -311,6 +330,24 @@ class SqliteBackupRepository implements BackupRepository {
       } on FormatException {
         throw const BackupFormatException(
           'This backup contains an invalid lesson guide.',
+        );
+      }
+    }
+    final lessonIds = tables['lessons']!.map((row) => row['id']).toSet();
+    final cardIds = tables['cards']!.map((row) => row['id']).toSet();
+    final positions = <(Object?, Object?)>{};
+    final memberships = <(Object?, Object?)>{};
+    for (final row in tables['lesson_cards']!) {
+      if (row['lesson_id'] is! int ||
+          row['card_id'] is! int ||
+          row['position'] is! int ||
+          (row['position'] as int) < 0 ||
+          !lessonIds.contains(row['lesson_id']) ||
+          !cardIds.contains(row['card_id']) ||
+          !positions.add((row['lesson_id'], row['position'])) ||
+          !memberships.add((row['lesson_id'], row['card_id']))) {
+        throw const BackupFormatException(
+          'This backup contains invalid lesson memberships.',
         );
       }
     }
@@ -358,6 +395,7 @@ class SqliteBackupRepository implements BackupRepository {
   }
 
   static String _orderByFor(String table) {
+    if (table == 'lesson_cards') return 'lesson_id ASC, position ASC';
     if (table == 'card_progress' || table == 'learner_settings') {
       return 'learner_id ASC';
     }

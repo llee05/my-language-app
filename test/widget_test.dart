@@ -2826,6 +2826,30 @@ void main() {
     },
   );
 
+  testWidgets('an archived lesson resumes through its dashboard link', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LessonsPage(
+            repository: _ArchivedLessonRepository(),
+            initialLessonId: 7,
+            progressRepository: _MemoryProgressRepository(),
+            settingsRepository: _MemorySettingsRepository(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Saved lesson'), findsOneWidget);
+    expect(find.text('Resumed at card 2.'), findsOneWidget);
+    expect(tester.widget<PageView>(find.byType(PageView)).controller?.page, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('lesson resumes its position and records a familiar word', (
     tester,
   ) async {
@@ -4731,6 +4755,11 @@ class _MemoryLessonRepository implements LessonRepository {
 
   @override
   Future<List<LessonSummary>> topics() async => [lesson.summary];
+}
+
+class _ArchivedLessonRepository extends _MemoryLessonRepository {
+  @override
+  Future<List<LessonSummary>> topics() async => [];
 }
 
 class _GuidedLessonRepository extends _MemoryLessonRepository {

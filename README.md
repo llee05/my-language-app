@@ -70,6 +70,12 @@ settings and subsequent learning history are saved in a local SQLite database.
 ### Lessons
 
 Open **Lessons** to start a bundled lesson or revisit a locally generated one.
+The default vocabulary library contains 251 lessons covering all 4,991 bundled
+HSK 1–6 entries. Each lesson contains 20 distinct words from one HSK level;
+the final lesson in each level repeats a few words to keep its size at 20.
+Examples use attributed Tatoeba Mandarin–English pairs with source pinyin,
+and original study sentences fill gaps. Everything is bundled for offline use.
+
 Reveal each answer and rate the word; TingShuo saves every rating immediately
 and schedules the card's next review. An unfinished lesson can be resumed from
 the dashboard or Lessons page. When creating a lesson, choose **Random mix** to
@@ -84,6 +90,11 @@ deck where possible. Each new deck contains up to ten words and is saved locally
 Previously saved lessons with a **Lesson guide** still show their objective,
 grammar explanation, dialogue, and practice questions. Guides remain available
 with the lesson and are included in exported backups.
+
+Upgrading replaces the old default library while retaining saved reviews,
+schedules, custom lessons, and unfinished sessions. Historical lessons remain
+available when resuming a session. Shared cards keep the same progress across
+the new decks. Sentence practice retains its ten decks of ten sentences.
 
 ### Daily review
 

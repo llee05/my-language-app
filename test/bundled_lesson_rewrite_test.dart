@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/database/bundled_lesson_content.dart';
 import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/database/migrations.dart';
+import 'package:mylanguageapp/database/vocabulary_lesson_content.dart';
 import 'package:mylanguageapp/local_database.dart';
 import 'package:mylanguageapp/models/learner_profile.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
@@ -37,7 +38,7 @@ void main() {
   });
 
   test(
-    'all 30 vocabulary lessons have complete original examples and real quiz choices',
+    'historical seed definitions retain complete original examples and real quiz choices',
     () async {
       expect(flashcardLessons, hasLength(30));
       var count = 0;
@@ -67,6 +68,32 @@ void main() {
     'version 15 content upgrade preserves IDs, reviews, progress, and same-title generated lessons',
     () async {
       final db = await LocalDatabase.ensureInitialized();
+      // Recreate an actual pre-curriculum installation, with the old decks.
+      await db.execute(
+        'DELETE FROM lessons WHERE id IN (SELECT lesson_id FROM lesson_cards)',
+      );
+      await db.delete(
+        'content_migrations',
+        where: 'key = ?',
+        whereArgs: [vocabularyCurriculumMarker],
+      );
+      for (final definition in flashcardLessons) {
+        final id = await db.insert('lessons', {
+          'lesson_title': definition['lesson_title'],
+          'theme': definition['theme'],
+          'hsk_level': definition['hsk_level'],
+          'is_user_generated': 0,
+        });
+        for (final card
+            in (definition['cards'] as List).cast<Map<String, dynamic>>()) {
+          await db.insert('cards', {
+            ...card,
+            'quiz_options': jsonEncode(card['quiz_options']),
+            'hsk_level': definition['hsk_level'],
+            'lesson_id': id,
+          });
+        }
+      }
       final originalTopics = await lessons.topics();
       final vocabulary = (await lessons.findById(
         originalTopics.firstWhere((t) => !t.isSentencePractice).id,
@@ -131,6 +158,8 @@ void main() {
         where: 'key = ?',
         whereArgs: [bundledLessonRewriteMarker],
       );
+      await db.execute('DROP TABLE lesson_cards');
+      await db.execute('ALTER TABLE lessons DROP COLUMN is_archived');
       await db.execute('ALTER TABLE lessons DROP COLUMN is_user_generated');
       await db.setVersion(15);
       await LocalDatabase.close();
@@ -155,13 +184,13 @@ void main() {
         (await lessons.findById(
           vocabulary.summary.id,
         ))!.cards.first.exampleChinese,
-        vocabulary.cards.first.exampleChinese,
+        contains(vocabulary.cards.first.chinese),
       );
       expect(
         (await lessons.findById(
           vocabulary.summary.id,
-        ))!.cards.first.exampleSource,
-        isEmpty,
+        ))!.cards.firstWhere((card) => card.chinese == '谢谢').exampleSource,
+        'Tatoeba',
       );
       expect(
         (await lessons.findById(sentence.summary.id))!.cards.first.chinese,
@@ -179,7 +208,7 @@ void main() {
       await LocalDatabase.close();
       final reopened = await LocalDatabase.ensureInitialized();
       expect(await reopened.query('cards'), snapshot);
-      expect(await lessons.topics(), hasLength(41));
+      expect(await lessons.topics(), hasLength(262));
     },
   );
 
@@ -264,7 +293,7 @@ void main() {
       expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
       await LocalDatabase.close();
       expect((await lessons.topics()).where((s) => s.isUserGenerated), isEmpty);
-      expect(await lessons.topics(), hasLength(40));
+      expect(await lessons.topics(), hasLength(261));
     },
   );
 
@@ -326,7 +355,7 @@ void main() {
       throwsStateError,
     );
     await expectLater(lessons.deleteGenerated(-1), throwsStateError);
-    expect(await lessons.topics(), hasLength(40));
+    expect(await lessons.topics(), hasLength(261));
   });
 
   test(
@@ -372,7 +401,7 @@ void main() {
         isTrue,
       );
       await lessons.deleteGenerated(generated.id);
-      expect(await lessons.topics(), hasLength(40));
+      expect(await lessons.topics(), hasLength(261));
     },
   );
 }

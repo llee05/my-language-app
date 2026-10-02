@@ -15,6 +15,7 @@ import 'database/flashcard_seed.dart';
 import 'database/bundled_lesson_content.dart';
 import 'database/migrations.dart';
 import 'database/vocabulary_content.dart';
+import 'database/vocabulary_lesson_content.dart';
 
 class DatabaseResetInProgressException implements Exception {
   const DatabaseResetInProgressException();
@@ -173,7 +174,6 @@ class LocalDatabase {
         onCreate: (db, version) async {
           await _createSchema(db);
           await migrateDatabase(db, fromVersion: 1, toVersion: version);
-          await _seedDefaultLessons(db);
         },
         onUpgrade: (db, oldVersion, newVersion) =>
             migrateDatabase(db, fromVersion: oldVersion, toVersion: newVersion),
@@ -182,10 +182,10 @@ class LocalDatabase {
         ),
       );
 
-      await _maybeSeedDefaultLessons(openedDatabase);
       await _applyVocabularyContentV2(openedDatabase);
       await _seedSentencePractice(openedDatabase);
       await openedDatabase.transaction(refreshBundledLessonContent);
+      await openedDatabase.transaction(installVocabularyCurriculum);
       _database = openedDatabase;
       _openedDatabasePath = openedDatabase.path;
       return openedDatabase;
@@ -232,52 +232,6 @@ class LocalDatabase {
         FOREIGN KEY (lesson_id) REFERENCES $_lessonTable (id) ON DELETE CASCADE
       )
     ''');
-  }
-
-  static Future<void> _maybeSeedDefaultLessons(Database db) async {
-    await _seedDefaultLessons(db);
-  }
-
-  static Future<void> _seedDefaultLessons(Database db) async {
-    await db.transaction((txn) async {
-      final existingRows = await txn.query(
-        _lessonTable,
-        columns: ['lesson_title'],
-        where: 'is_listed = 1 AND is_user_generated = 0',
-      );
-      final existingTitles = existingRows
-          .map((row) => row['lesson_title'] as String)
-          .toSet();
-      for (final lesson in flashcardLessons) {
-        final title = lesson['lesson_title'] as String;
-        if (existingTitles.contains(title)) continue;
-        final lessonId = await txn.insert(_lessonTable, {
-          'lesson_title': title,
-          'theme': lesson['theme'],
-          'hsk_level': lesson['hsk_level'],
-          'is_listed': 1,
-          'is_user_generated': 0,
-        });
-
-        final cards = lesson['cards'] as List<dynamic>;
-        for (final rawCard in cards) {
-          final card = rawCard as Map<String, dynamic>;
-          await txn.insert(_cardTable, {
-            'lesson_id': lessonId,
-            'chinese': card['chinese'],
-            'pinyin': card['pinyin'],
-            'english_meaning': card['english_meaning'],
-            'part_of_speech': card['part_of_speech'],
-            'hsk_level': lesson['hsk_level'],
-            'example_sentence_chinese': card['example_sentence_chinese'],
-            'example_sentence_pinyin': card['example_sentence_pinyin'],
-            'example_sentence_english': card['example_sentence_english'],
-            'quiz_options': jsonEncode(card['quiz_options']),
-            'correct_answer': card['correct_answer'],
-          });
-        }
-      }
-    });
   }
 
   static Future<void> _seedSentencePractice(Database db) async {

@@ -109,7 +109,7 @@ class SqliteTutorContextRepository implements TutorContextRepository {
             lesson_sessions.cards_reviewed, lesson_sessions.correct_answers
           FROM lesson_sessions
           INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
-          WHERE lesson_sessions.learner_id = ? AND lessons.is_listed = 1
+          WHERE lesson_sessions.learner_id = ? AND (lessons.is_listed = 1 OR lessons.is_archived = 1)
           ORDER BY COALESCE(
             lesson_sessions.completed_at,
             lesson_sessions.started_at
@@ -321,27 +321,27 @@ class SqliteLessonRepository implements LessonRepository {
   const SqliteLessonRepository();
 
   @override
-  Future<List<LessonSummary>> topics() => LocalDatabase.readCached(
-    DatabaseCacheScope.lessons,
-    'topics',
-    (db) async {
-      final rows = await db.query(
-        'lessons',
-        columns: [
-          'id',
-          'lesson_title',
-          'theme',
-          'hsk_level',
-          'is_sentence_practice',
-          'is_user_generated',
-        ],
-        where: 'is_listed = ?',
-        whereArgs: [1],
-        orderBy: 'is_sentence_practice ASC, id DESC',
-      );
-      return List.unmodifiable(rows.map(_summaryFromRow));
-    },
-  );
+  Future<List<LessonSummary>>
+  topics() => LocalDatabase.readCached(DatabaseCacheScope.lessons, 'topics', (
+    db,
+  ) async {
+    final rows = await db.query(
+      'lessons',
+      columns: [
+        'id',
+        'lesson_title',
+        'theme',
+        'hsk_level',
+        'is_sentence_practice',
+        'is_user_generated',
+      ],
+      where: 'is_listed = ?',
+      whereArgs: [1],
+      orderBy:
+          'is_sentence_practice ASC, is_user_generated DESC, hsk_level ASC, lesson_title ASC, id DESC',
+    );
+    return List.unmodifiable(rows.map(_summaryFromRow));
+  });
 
   @override
   Future<Lesson?> findById(int id) => LocalDatabase.readCached(
@@ -358,8 +358,8 @@ class SqliteLessonRepository implements LessonRepository {
           'is_sentence_practice',
           'is_user_generated',
         ],
-        where: 'id = ? AND is_listed = ?',
-        whereArgs: [id, 1],
+        where: 'id = ? AND (is_listed = 1 OR is_archived = 1)',
+        whereArgs: [id],
         limit: 1,
       );
       if (lessons.isEmpty) return null;
@@ -436,6 +436,9 @@ class SqliteLessonRepository implements LessonRepository {
         'example_sentence_chinese': card.exampleChinese,
         'example_sentence_pinyin': card.examplePinyin,
         'example_sentence_english': card.exampleEnglish,
+        'example_source': card.exampleSource,
+        'example_source_id': card.exampleSourceId,
+        'example_translation_id': card.exampleTranslationId,
         'quiz_options': jsonEncode(card.quizOptions),
         'correct_answer': card.englishMeaning,
       });
@@ -448,18 +451,31 @@ class SqliteLessonRepository implements LessonRepository {
         exampleChinese: card.exampleChinese,
         examplePinyin: card.examplePinyin,
         exampleEnglish: card.exampleEnglish,
+        exampleSource: card.exampleSource,
+        exampleSourceId: card.exampleSourceId,
+        exampleTranslationId: card.exampleTranslationId,
         quizOptions: card.quizOptions,
       );
     });
   });
 
   Future<Lesson?> _lessonFromSummary(Database db, LessonSummary summary) async {
-    final rows = await db.query(
-      'cards',
-      where: 'lesson_id = ?',
-      whereArgs: [summary.id],
-      orderBy: 'id ASC',
+    final members = await db.rawQuery(
+      '''
+      SELECT cards.* FROM lesson_cards
+      INNER JOIN cards ON cards.id = lesson_cards.card_id
+      WHERE lesson_cards.lesson_id = ? ORDER BY lesson_cards.position ASC
+    ''',
+      [summary.id],
     );
+    final rows = members.isNotEmpty
+        ? members
+        : await db.query(
+            'cards',
+            where: 'lesson_id = ?',
+            whereArgs: [summary.id],
+            orderBy: 'id ASC',
+          );
     if (rows.isEmpty) return null;
     final lessonRows = await db.query(
       'lessons',
@@ -502,6 +518,9 @@ class SqliteLessonRepository implements LessonRepository {
           'example_sentence_chinese': card.exampleChinese,
           'example_sentence_pinyin': card.examplePinyin,
           'example_sentence_english': card.exampleEnglish,
+          'example_source': card.exampleSource,
+          'example_source_id': card.exampleSourceId,
+          'example_translation_id': card.exampleTranslationId,
           'quiz_options': jsonEncode(card.quizOptions),
           'correct_answer': card.englishMeaning,
         });
@@ -601,7 +620,7 @@ class SqliteProgressRepository
           INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
           WHERE lesson_sessions.learner_id = ?
             AND lesson_sessions.completed_at IS NULL
-            AND lessons.is_listed = ?
+            AND (lessons.is_listed = ? OR lessons.is_archived = 1)
           ORDER BY lesson_sessions.started_at DESC, lesson_sessions.id DESC
         ''',
           [1, 1],
@@ -642,7 +661,7 @@ class SqliteProgressRepository
       final lesson = await txn.query(
         'lessons',
         columns: ['id'],
-        where: 'id = ? AND is_listed = ?',
+        where: 'id = ? AND (is_listed = ? OR is_archived = 1)',
         whereArgs: [lessonId, 1],
         limit: 1,
       );
@@ -753,7 +772,7 @@ class SqliteProgressRepository
       WHERE lesson_sessions.learner_id = ?
         AND lesson_sessions.lesson_id = ?
         AND lesson_sessions.completed_at IS NULL
-        AND lessons.is_listed = ?
+        AND (lessons.is_listed = ? OR lessons.is_archived = 1)
       ORDER BY lesson_sessions.started_at DESC
       LIMIT 1
       ''',
@@ -771,7 +790,7 @@ class SqliteProgressRepository
       INNER JOIN lessons ON lessons.id = lesson_sessions.lesson_id
       WHERE lesson_sessions.learner_id = ?
         AND lesson_sessions.completed_at IS NULL
-        AND lessons.is_listed = ?
+        AND (lessons.is_listed = ? OR lessons.is_archived = 1)
       ORDER BY lesson_sessions.started_at DESC, lesson_sessions.id DESC
       LIMIT 1
       ''',
@@ -1053,7 +1072,10 @@ class SqliteProgressRepository
       LEFT JOIN card_progress
         ON card_progress.card_id = cards.id
         AND card_progress.learner_id = ?
-      WHERE (lessons.is_sentence_practice = 0 AND cards.hsk_level <= ?)
+      WHERE (lessons.is_sentence_practice = 0 AND cards.hsk_level <= ?
+        AND (lessons.is_listed = 1 OR lessons.theme = 'Vocab Rush'
+          OR card_progress.card_id IS NOT NULL
+          OR EXISTS (SELECT 1 FROM lesson_cards WHERE lesson_cards.card_id = cards.id)))
         OR (lessons.is_sentence_practice = 1 AND card_progress.card_id IS NOT NULL)
       ORDER BY cards.id ASC
     ''',

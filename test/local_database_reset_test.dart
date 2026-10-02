@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mylanguageapp/database/flashcard_seed.dart';
 import 'package:mylanguageapp/local_database.dart';
 import 'package:mylanguageapp/models/learner_profile.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
@@ -150,10 +149,6 @@ void main() {
       expect(await progress.progressForCard(generatedCardId), isNull);
       expect(await dailyReviews.load(reviewDate), isNull);
 
-      final expectedCardCount = flashcardLessons.fold<int>(
-        0,
-        (total, lesson) => total + (lesson['cards'] as List<dynamic>).length,
-      );
       await LocalDatabase.use<void>((db) async {
         expect(await _rowCount(db, 'learner_profiles'), 0);
         expect(await _rowCount(db, 'learner_settings'), 0);
@@ -161,8 +156,8 @@ void main() {
         expect(await _rowCount(db, 'review_history'), 0);
         expect(await _rowCount(db, 'card_progress'), 0);
         expect(await _rowCount(db, 'daily_review_sessions'), 0);
-        expect(await _rowCount(db, 'lessons'), flashcardLessons.length + 10);
-        expect(await _rowCount(db, 'cards'), expectedCardCount + 100);
+        expect(await _rowCount(db, 'lessons'), 261);
+        expect(await _rowCount(db, 'cards'), 5091);
         expect(
           await db.query('lessons', where: 'is_sentence_practice = 1'),
           hasLength(10),
