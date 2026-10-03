@@ -97,8 +97,12 @@ Examples use attributed Tatoeba Mandarin–English pairs with source pinyin,
 and original study sentences fill gaps. Everything is bundled for offline use.
 
 Reveal each answer and rate the word; TingShuo saves every rating immediately
-and schedules the card's next review. An unfinished lesson can be resumed from
-the dashboard or Lessons page. The library opens at **All levels** and shows
+and schedules the card's next review. Completing a lesson shows a short
+celebration, the XP earned from saved ratings, accuracy, and new/revisited word
+counts. Expand the recap to revisit cards rated Again or Hard, or start the next
+lesson at the same HSK level. Sentence practice offers the next sentence deck.
+An unfinished lesson can be resumed from the dashboard or Lessons page.
+The library opens at **All levels** and shows
 the total number of lessons. Filtering by HSK 6 shows 125 of the 251 vocabulary
 lessons; **Show all lessons** clears the level filter and search. Custom lesson
 creation has been removed; previously saved decks and their progress remain available.

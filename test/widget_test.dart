@@ -2729,8 +2729,8 @@ void main() {
     expect(lessonProgressChanges, 1);
     expect(find.text('Lesson complete!'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
-    expect(find.text('Learned words'), findsOneWidget);
-    expect(find.text('Review words'), findsOneWidget);
+    expect(find.text('New words'), findsOneWidget);
+    expect(find.text('Words revisited'), findsOneWidget);
     expect(find.text('+20 XP'), findsOneWidget);
 
     await tester.tap(find.text('Done'));

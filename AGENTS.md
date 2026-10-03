@@ -174,7 +174,7 @@ For a normal local suite run, `flutter test` is sufficient; coverage output is
 flutter test test/review_scheduler_test.dart test/study_streak_calculator_test.dart
 flutter test test/local_database_test.dart test/local_database_path_test.dart test/local_database_reset_test.dart test/sqlite_repository_validation_test.dart
 flutter test test/kokoro_voice_pack_test.dart test/sherpa_voice_config_test.dart test/pronunciation_service_test.dart
-flutter test test/startup_test.dart test/widget_test.dart
+flutter test test/startup_test.dart test/widget_test.dart test/lesson_completion_test.dart
 flutter test test/gemini_service_test.dart test/ai_tutor_page_test.dart
 flutter test test/ai_service_test.dart test/ai_settings_card_test.dart test/ai_configuration_repository_test.dart
 flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart

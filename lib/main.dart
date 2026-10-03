@@ -63,6 +63,7 @@ part 'features/dashboard/dashboard_page.dart';
 part 'features/dashboard/widgets/learning_panel.dart';
 part 'features/dashboard/widgets/progress_rail.dart';
 part 'features/lessons/lessons_page.dart';
+part 'features/lessons/lesson_completion_summary.dart';
 part 'features/exam/exam_mode_page.dart';
 part 'features/listening/listening_practice_page.dart';
 part 'features/onboarding/learner_setup_page.dart';

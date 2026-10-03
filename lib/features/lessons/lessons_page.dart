@@ -46,8 +46,10 @@ class _LessonsPageState extends State<LessonsPage> {
   String? _notice;
   final Set<int> _learnedCardIds = {};
   final Set<int> _reviewCardIds = {};
+  final Map<int, ReviewRating> _sessionRatings = {};
   final Set<String> _pendingAnswerKeys = {};
   bool _savingAnswer = false;
+  bool _startingNextLesson = false;
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   bool _soundEnabled = true;
@@ -94,6 +96,7 @@ class _LessonsPageState extends State<LessonsPage> {
     final service = _pronunciationService;
     if (!_soundEnabled ||
         _cards.isEmpty ||
+        _session?.isComplete == true ||
         service is! PreparedPronunciationService) {
       return;
     }
@@ -249,7 +252,10 @@ class _LessonsPageState extends State<LessonsPage> {
     }
   }
 
-  Future<void> _startLesson(LessonSummary summary) async {
+  Future<void> _startLesson(
+    LessonSummary summary, {
+    VoidCallback? retry,
+  }) async {
     setState(() => _notice = null);
     try {
       final lesson = await widget.repository.findById(summary.id);
@@ -267,7 +273,7 @@ class _LessonsPageState extends State<LessonsPage> {
           content: const Text(_AppErrorCopy.openLesson),
           action: SnackBarAction(
             label: 'Try again',
-            onPressed: () => unawaited(_startLesson(summary)),
+            onPressed: retry ?? () => unawaited(_startLesson(summary)),
           ),
         ),
       );
@@ -293,7 +299,10 @@ class _LessonsPageState extends State<LessonsPage> {
             savedReviews.reviewed >= lesson.cards.length)) {
       final expectedCardsReviewed = active.cardsReviewed;
       final expectedCorrectAnswers = active.correctAnswers;
-      final reviewedCardIds = {..._learnedCardIds, ..._reviewCardIds};
+      final reviewedCardIds = {
+        ...savedReviews.learnedCardIds,
+        ...savedReviews.reviewCardIds,
+      };
       final isComplete = savedReviews.reviewed >= lesson.cards.length;
       var nextIndex = lesson.cards.length;
       if (!isComplete) {
@@ -345,7 +354,17 @@ class _LessonsPageState extends State<LessonsPage> {
       _showLessonGuide = lesson.guide != null && !resumed && index == 0;
       _currentCard = index;
       _session = active;
-      if (resumed || index > 0) {
+      _learnedCardIds
+        ..clear()
+        ..addAll(savedReviews.learnedCardIds);
+      _reviewCardIds
+        ..clear()
+        ..addAll(savedReviews.reviewCardIds);
+      _sessionRatings
+        ..clear()
+        ..addAll(savedReviews.ratings);
+      _notice = null;
+      if (!active.isComplete && (resumed || index > 0)) {
         _notice = 'Resumed at card ${index + 1}.';
       }
     });
@@ -355,10 +374,20 @@ class _LessonsPageState extends State<LessonsPage> {
     });
   }
 
-  Future<({int reviewed, int correct, DateTime? lastReviewedAt})>
+  Future<
+    ({
+      int reviewed,
+      int correct,
+      DateTime? lastReviewedAt,
+      Set<int> learnedCardIds,
+      Set<int> reviewCardIds,
+      Map<int, ReviewRating> ratings,
+    })
+  >
   _loadSessionWordCounts(LessonSession session, List<Flashcard> cards) async {
     final learned = <int>{};
     final review = <int>{};
+    final ratings = <int, ReviewRating>{};
     var correct = 0;
     DateTime? lastReviewedAt;
     for (final card in cards.where((card) => card.id != 0)) {
@@ -373,6 +402,7 @@ class _LessonsPageState extends State<LessonsPage> {
         }
       }
       if (sessionReview == null) continue;
+      ratings[card.id] = sessionReview.rating;
       if (sessionReview.wasCorrect) correct++;
       if (lastReviewedAt == null ||
           sessionReview.reviewedAt.isAfter(lastReviewedAt)) {
@@ -383,16 +413,13 @@ class _LessonsPageState extends State<LessonsPage> {
       );
       (hadEarlierReview ? review : learned).add(card.id);
     }
-    _learnedCardIds
-      ..clear()
-      ..addAll(learned);
-    _reviewCardIds
-      ..clear()
-      ..addAll(review);
     return (
       reviewed: learned.length + review.length,
       correct: correct,
       lastReviewedAt: lastReviewedAt,
+      learnedCardIds: learned,
+      reviewCardIds: review,
+      ratings: ratings,
     );
   }
 
@@ -524,14 +551,20 @@ class _LessonsPageState extends State<LessonsPage> {
       );
       setState(() {
         (hadEarlierReview ? _reviewCardIds : _learnedCardIds).add(card.id);
+        _sessionRatings[card.id] =
+            savedReview?.rating ?? existing?.rating ?? rating;
         if (isComplete) {
           _activeSessions = {..._activeSessions}..remove(session.lessonId);
-          _notice = 'Lesson complete — your reviews were saved.';
+          _notice = null;
         } else {
           _activeSessions = {..._activeSessions, session.lessonId: updated};
         }
       });
-      if (!isComplete) _goToCard(nextIndex);
+      if (isComplete) {
+        unawaited(_stopLessonAudio());
+      } else {
+        _goToCard(nextIndex);
+      }
     } catch (error) {
       debugPrint('Lesson answer save failed: $error');
       rethrow;
@@ -578,13 +611,14 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   void _backToLessons() {
-    if (_savingAnswer) return;
+    if (_savingAnswer || _startingNextLesson) return;
     unawaited(_stopLessonAudio());
     setState(() {
       _cards = const [];
       _session = null;
       _learnedCardIds.clear();
       _reviewCardIds.clear();
+      _sessionRatings.clear();
       _notice = null;
     });
     unawaited(_refreshLearningProgress());
@@ -593,7 +627,7 @@ class _LessonsPageState extends State<LessonsPage> {
   @override
   Widget build(BuildContext context) => _BackNavigationScope(
     active: _cards.isNotEmpty,
-    blocked: _savingAnswer,
+    blocked: _savingAnswer || _startingNextLesson,
     onBack: _backToLessons,
     child: ColoredBox(
       color: AppColors.background,
@@ -858,7 +892,9 @@ class _LessonsPageState extends State<LessonsPage> {
           children: [
             IconButton(
               tooltip: 'Back to lessons',
-              onPressed: _savingAnswer ? null : _backToLessons,
+              onPressed: _savingAnswer || _startingNextLesson
+                  ? null
+                  : _backToLessons,
               icon: const Icon(Icons.arrow_back),
             ),
             Expanded(
@@ -1063,87 +1099,61 @@ class _LessonsPageState extends State<LessonsPage> {
     return ((_session?.cardsReviewed ?? 0) / _cards.length).clamp(0, 1);
   }
 
-  int get _xpEarned =>
-      (_learnedCardIds.length * 10) + (_reviewCardIds.length * 5);
+  LessonSummary? get _nextLesson {
+    final topics = _modeTopics;
+    final index = topics.indexWhere((topic) => topic.id == _session?.lessonId);
+    if (index < 0) return null;
+    for (final topic in topics.skip(index + 1)) {
+      if (_sentenceMode || topic.hskLevel == topics[index].hskLevel) {
+        return topic;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _startNextLesson() async {
+    if (_savingAnswer || _startingNextLesson) return;
+    final next = _nextLesson;
+    if (next == null) return;
+    setState(() => _startingNextLesson = true);
+    try {
+      await _stopLessonAudio();
+      if (!mounted) return;
+      await _startLesson(next, retry: () => unawaited(_startNextLesson()));
+    } finally {
+      if (mounted) setState(() => _startingNextLesson = false);
+    }
+  }
 
   Widget _buildCompletionSummary() {
-    final reviewed = _session?.cardsReviewed ?? 0;
-    final correct = _session?.correctAnswers ?? 0;
-    final accuracy = reviewed == 0 ? 0 : ((correct / reviewed) * 100).round();
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.emoji_events_outlined,
-                    size: 52,
-                    color: AppColors.gold,
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Lesson complete!',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _lessonTitle,
-                    style: TextStyle(color: AppColors.muted),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _SummaryStat(
-                        icon: Icons.track_changes,
-                        label: 'Accuracy',
-                        value: '$accuracy%',
-                      ),
-                      _SummaryStat(
-                        icon: Icons.school_outlined,
-                        label: _lessonIsSentence
-                            ? 'Learned sentences'
-                            : 'Learned words',
-                        value: '${_learnedCardIds.length}',
-                      ),
-                      _SummaryStat(
-                        icon: Icons.replay_outlined,
-                        label: _lessonIsSentence
-                            ? 'Review sentences'
-                            : 'Review words',
-                        value: '${_reviewCardIds.length}',
-                      ),
-                      _SummaryStat(
-                        icon: Icons.bolt,
-                        label: 'XP earned',
-                        value: '+$_xpEarned XP',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  FilledButton.icon(
-                    onPressed: _backToLessons,
-                    icon: const Icon(Icons.check),
-                    label: const Text('Done'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    final session = _session!;
+    final next = _nextLesson;
+    return _LessonCompletionSummary(
+      key: ValueKey('lesson-completion-${session.id}'),
+      title: _lessonTitle,
+      isSentence: _lessonIsSentence,
+      reviewed: session.cardsReviewed,
+      correct: session.correctAnswers,
+      newCards: _learnedCardIds.length,
+      revisitedCards: _reviewCardIds.length,
+      cardsToRevisit: [
+        for (final card in _cards)
+          if (_sessionRatings[card.id] == ReviewRating.again ||
+              _sessionRatings[card.id] == ReviewRating.hard)
+            card,
+      ],
+      ratings: _sessionRatings,
+      nextLessonTitle: next == null
+          ? null
+          : next.isSentencePractice
+          ? next.theme
+          : next.title,
+      openingNextLesson: _startingNextLesson,
+      onNextLesson: next == null || _savingAnswer || _startingNextLesson
+          ? null
+          : _startNextLesson,
+      onDone: _savingAnswer || _startingNextLesson ? null : _backToLessons,
+      onSpeak: _soundEnabled ? _speak : null,
     );
   }
 }
