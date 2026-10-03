@@ -21,20 +21,27 @@ The Dart package is `mylanguageapp`; the root widget retains the historical name
 `HanziPathApp`. Core lessons, vocabulary, ratings, and daily review must remain
 usable without an account, network access, or an AI provider.
 
+The package version is `1.0.0-beta.6+6` in `pubspec.yaml`. The current app includes
+251 twenty-word vocabulary decks covering 4,991 HSK 2.0 entries across levels
+1–6, ten sentence-practice decks, Listening Practice, Vocab Rush, offline Exam
+Mode, Profile analytics, appearance settings, manual backup/restore, and optional
+AI chat, listening dialogues, roleplay missions, and custom tutor personalities.
+Check implementation and tests before describing an existing feature as planned.
+
 | Location | Responsibility |
 | --- | --- |
-| `lib/main.dart` | Entry point, database initialization, app theme, onboarding, navigation, and shared UI library. |
-| `lib/features/` | Dashboard, lessons, daily review, vocabulary, Vocab Rush, settings, onboarding, and Long Laoshi AI tutor screens. |
+| `lib/main.dart` | Entry point, startup/profile loading, app theme, onboarding, navigation, and shared UI library; repositories initialize SQLite while the loading screen is visible. |
+| `lib/features/` | Dashboard, Profile analytics, lessons, listening, daily review, vocabulary, Vocab Rush, exams, settings, onboarding, and AI tutor screens. |
 | `lib/core/` | Shared colors, sidebar, and reusable widgets. |
-| `lib/models/` | Learner, lesson, settings, review, and progress data types. |
-| `lib/repositories/` | Persistence interfaces, `AppDependencies` constructor injection, and SQLite implementations. |
+| `lib/models/` | Learner, lesson, settings, review, progress/weekly analytics, exam, and AI exercise/personality data types. |
+| `lib/repositories/` | Persistence interfaces, `AppDependencies` constructor injection, immutable bundled vocabulary, SQLite implementations, secure AI configuration, and backup validation/restore. |
 | `lib/local_database.dart` | SQLite lifecycle, application-support database path, legacy path migration, seeding, content updates, and coordinated close/reset operations. |
 | `lib/database/` | Ordered schema migrations, bundled curriculum installation, historical flashcard seeds, and vocabulary helpers. |
-| `lib/services/` | Review scheduling, study streak calculation, pronunciation abstractions, native/system speech, and Kokoro installation/configuration. |
+| `lib/services/` | Review scheduling, study streak calculation, pronunciation, speech input, Kokoro installation/configuration, memory caches, and backup file selection. |
 | `lib/ai/` | Gemini, Anthropic, and OpenAI-compatible REST adapters for the optional AI tutor. |
 | `assets/data/` | Bundled HSK vocabulary and Tatoeba sentence candidates, with provenance and regeneration instructions. |
 | `test/` | Unit, widget, persistence, dataset, and service tests. |
-| `tool/` | Vocabulary import and sentence-candidate generation scripts. |
+| `tool/` | Vocabulary import, Tatoeba candidate selection, original-example generation, and vocabulary curriculum generation scripts. |
 | `.github/workflows/flutter.yml` | Validation, four-platform builds, and coordinated tagged releases. |
 | `tool/ci/` | Offline release metadata validation, asset checks, checksums, and regression tests. |
 
@@ -47,18 +54,31 @@ usable without an account, network access, or an AI provider.
 - State is managed with Flutter stateful widgets, callbacks, and futures.
   Follow existing patterns rather than introducing a state-management framework
   for a small change.
-- `AppDependencies` supplies repository interfaces and a pronunciation factory,
-  with SQLite defaults and a secure AI configuration repository. Use these seams
-  for test doubles and feature dependencies.
+- `AppDependencies` supplies repositories, pronunciation and speech-input
+  factories, and backup file access, with SQLite and secure-storage defaults.
+  Use these seams for test doubles and feature dependencies.
   Keep SQL in persistence code and scheduling logic in services.
 - Ratings feed saved review history and card progress; lesson and daily-review
   sessions persist position for resumption. Vocab Rush mistakes also enter review
-  data. Preserve this flow across UI changes.
+  data. Preserve this flow across UI changes. Listening Practice scores and exam
+  attempts/results stay in memory and do not change ratings or review history.
+- Dashboard and Profile use `DashboardLearningStats.fromSavedData`, including
+  XP, streaks, accuracy, HSK vocabulary mastery, and `WeeklyProgressReport`.
+  Learned words require at least 80% mastery; HSK progress is independent of the
+  learner's selected HSK level. Refresh statistics after reviews, at local
+  midnight, and when the app resumes. Home samples available lessons across
+  HSK levels rather than generating personalized recommendations.
+- Appearance uses five `AppThemes` palettes and shared `AppColors`. Theme
+  choices apply immediately and persist automatically; button-animation choices
+  require Save settings and remain experimental. Preserve appearance restoration,
+  backup support, and the default appearance after full reset.
 - Pronunciation uses a platform-selecting factory: native Kokoro synthesis through
   `sherpa_onnx`, playback through `flutter_soloud`, and `flutter_tts` system fallback.
   Android always uses the system `zh-CN` voice instead: its APK ships no Kokoro,
   onnxruntime, or soloud native libraries (see `third_party/README.md`).
-  Keep optional audio failures from preventing study.
+  Android's voice installer opens the speech engine's installer/settings and
+  rechecks availability on resume or Check again; opening it is not installation
+  success. Keep optional audio and dictation failures from preventing study.
 
 ## Development workflow
 
@@ -71,7 +91,7 @@ the local pin together with intentional CI SDK upgrades.
 ```sh
 flutter --version
 flutter doctor -v
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter run
 ```
 
@@ -97,13 +117,30 @@ Make sure to split jobs into reasonably sized commits with a commit message of t
 
 AI requests use `lib/ai/ai_service.dart`, which reads the current configuration
 for every request and routes to Gemini, Anthropic, or an OpenAI-compatible API.
-Users select a provider, personal API key, and model in Settings. Keys live in
-`SecureAiConfigurationRepository` through platform secure storage, never SQLite
-or ordinary preferences. Saving does not make a request; the explicit connection
-test does. Full data reset removes the configuration, while onboarding reset
-preserves it. Missing keys and secure-storage failures must fail without network
-requests. Vocabulary lessons use the bundled curriculum; lesson creation has
-been removed. Preserve previously saved custom lessons and their learning history.
+Users select Gemini, OpenAI, Claude, or Other / OpenAI-compatible, a personal
+API key, and a model in Settings. Custom endpoints must be full HTTPS Chat
+Completions URLs. Keys live in `SecureAiConfigurationRepository` through
+platform secure storage, never SQLite or ordinary preferences. Test and save
+makes a request and saves only after a successful test; Advanced → Save without
+testing only stores configuration, and Test connection makes a request without
+saving. Failed tests preserve the prior
+configuration. Clipboard reads and provider key-page launches require the
+corresponding explicit button action. Full data reset removes configuration,
+while onboarding reset and backup restore preserve it. Missing keys and
+secure-storage failures must fail without network requests.
+
+Tutor chat includes a bounded, read-only learner snapshot: HSK level, up to
+80 studied words, 8 words each for weak/due/recent-mistake categories, and
+5 lesson sessions, excluding the learner's name. Snapshot failures allow chat
+without personalization. Preserve local vocabulary validation for generated
+listening dialogues and roleplay turns. Chat and AI exercise state are not
+persisted. Built-in and custom tutor personalities are managed through
+`TutorPersonalityRepository`; custom profiles and the selection live in
+`app_data`, survive onboarding reset, and are excluded from study backups.
+AI profile generation is optional; manual profile creation works without AI.
+
+Vocabulary lessons use the bundled curriculum; lesson creation has been removed.
+Preserve previously saved custom lessons, lesson guides, and learning history.
 
 Startup never contacts an AI service. When no personal configuration is saved,
 configure a developer Gemini fallback using an ignored `.env.gemini.json` file:
@@ -141,6 +178,12 @@ flutter test test/startup_test.dart test/widget_test.dart
 flutter test test/gemini_service_test.dart test/ai_tutor_page_test.dart
 flutter test test/ai_service_test.dart test/ai_settings_card_test.dart test/ai_configuration_repository_test.dart
 flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart
+flutter test test/vocabulary_lesson_content_test.dart test/vocabulary_lesson_dataset_test.dart test/bundled_lesson_rewrite_test.dart test/sentence_practice_test.dart test/listening_practice_test.dart
+flutter test test/hsk_exam_test.dart test/exam_mode_test.dart test/profile_progress_analytics_test.dart test/weekly_progress_report_test.dart
+flutter test test/tutor_context_repository_test.dart test/tutor_personality_test.dart test/listening_dialogue_test.dart test/roleplay_mission_test.dart
+flutter test test/backup_repository_test.dart test/backup_settings_test.dart test/appearance_theme_test.dart test/app_button_theme_test.dart
+flutter test test/android_pronunciation_test.dart test/system_pronunciation_service_test.dart test/pronunciation_button_test.dart
+flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
 ```
 
 - `test/flutter_test_config.dart` defaults the database to in-memory SQLite and
@@ -148,10 +191,11 @@ flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart
   Persistence/path tests use temporary directories and explicit overrides.
   Never run reset tests against a real learner database; close test databases,
   restore overrides, and clean temporary resources in teardown.
-- Use injected repositories, HTTP clients, pronunciation doubles, and explicit
-  times where existing tests provide those seams. Tests should not require a
-  provider API key or network access, actual speech playback, or a full voice-pack
-  download.
+- Use injected repositories, HTTP clients, pronunciation/speech-input doubles,
+  backup file services, and explicit clocks/random sources where existing tests
+  provide those seams. Tests should not require a provider API key or network
+  access, actual speech playback/recognition, native file pickers, or a full
+  voice-pack download.
 - Add regression coverage for changed behavior, especially migrations, resume
   state, ratings, failed downloads, and asynchronous failures. Follow existing
   `flutter_test` patterns and restore widget surface sizes after layout tests.
@@ -165,7 +209,9 @@ flutter build macos --release
 flutter build windows --release
 ```
 
-CI runs validation on main-branch pushes and pull requests, and on `v*` tags.
+CI runs validation on main-branch pushes and pull requests, `v*` tags, and manual
+workflow runs. Validation also checks release tooling, tag metadata, and workflow
+syntax; platform jobs install dependencies with `--enforce-lockfile`.
 Tags also trigger signed Android APK/AAB builds and one coordinated release
 containing Linux x64, universal macOS, Windows x64, and Android packages. All
 platforms must succeed before publication. Tags must match the pubspec version
@@ -212,11 +258,43 @@ history and be safe on repeated startup. Onboarding reset and full data reset
 have different semantics; do not conflate them. There is no cloud backup, and
 full reset permanently removes local learning data.
 
+Settings exposes manual JSON backup export/restore through `BackupRepository`
+and `BackupFileService`. Validate the document and linked records, show the
+preview before replacement, and restore transactionally. Backups contain learner
+profiles/settings, lessons/guides/cards, memberships, progress, review history,
+and resumable sessions; they exclude API keys, tutor personalities/selection,
+in-memory chats/exams, and downloaded voices. Restore leaves secure AI
+configuration intact and upgrades older bundled content.
+
+Reset account requires a deletion warning followed by typing `RESET`. Await
+secure AI configuration removal before deleting the learner database, and keep
+reset/backup/settings operations coordinated. Full reset also removes custom
+tutors and restores default appearance; bundled content is recreated and voice
+files remain. Debug-only Reset onboarding only sets the setup-required marker,
+preserving the profile row, learning history, settings, tutors, and API key.
+
 The vocabulary curriculum uses ordered `lesson_cards` memberships to share card
 IDs and progress between 20-word decks. Historical defaults are archived rather
 than deleted so old sessions retain their card order and can resume. Preserve
 memberships and archive flags in backup exports/restores; custom decks still use
 their direct `cards.lesson_id` ownership.
+
+### Memory caches
+
+`BundledVocabularyRepository` shares immutable vocabulary through the asset
+bundle's structured-data cache, including Exam Mode. Database reads use
+`LocalDatabase.readCached`: up to 32 lesson/library entries and one statistics
+result keyed by local day. Session reads remain fresh. New operations that
+change lesson content or review progress must use `LocalDatabase.write` and
+appropriate `DatabaseCacheScope` invalidation after a successful commit.
+Reviews invalidate statistics; content writes and restores invalidate both
+scopes. Cache hits must retain database leases for close/reset coordination.
+Onboarding reset, full reset, and close clear both database caches.
+
+Kokoro's `PronunciationAudioCache` holds up to 64 clips within a 16 MiB sample
+budget, keyed by text, speaker, model directory, and archive version. Preserve
+pending-work sharing, retry after failures, and playback of uncached oversized
+clips. Caches supplement persistence rather than replacing it.
 
 ### Voice packs and native platforms
 
@@ -232,6 +310,13 @@ web support: core database code imports `dart:io`, and there is no web
 runner in this checkout. Changes involving native plugins need platform-aware
 verification beyond widget tests.
 
+`pubspec.yaml` intentionally overrides the four sherpa-onnx Android ABI packages
+with empty plugins and vendors `flutter_secure_storage_linux` 3.0.2 with schema
+lifetime and write/readback fixes. Android Gradle also excludes soloud libraries.
+Preserve these changes during dependency upgrades unless their replacement has
+been verified; see `third_party/README.md`. Older Linux keys saved under the
+broken schema need to be re-entered once.
+
 ### Bundled content, secrets, and generated files
 
 - `assets/data/README.md` documents HSK import and Tatoeba candidate-generation
@@ -244,8 +329,8 @@ verification beyond widget tests.
 - Never commit learner databases, `.env` files, keystores, signing passwords,
   `android/key.properties`, downloaded models, or build/cache artifacts.
   Keep dependency changes intentional, including associated lockfile updates.
-- The README contains some outdated beta descriptions: dashboard XP, weekly XP,
-  streaks, and vocabulary statistics already derive from saved data in
-  `DashboardLearningStats.fromSavedData`. Check code and tests before treating
-  a feature as a placeholder. Reminder settings are saved, but system notification
-  scheduling is still outside the implemented workflow.
+- Keep README feature descriptions, the package version, SDK pins, asset counts,
+  and focused test commands aligned with the implementation. Reminder preferences
+  are stored, but Settings currently has no reminder controls and system
+  notification scheduling is not implemented. Exam results, chat history, and
+  listening scores are not saved; button-animation settings remain experimental.

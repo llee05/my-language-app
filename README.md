@@ -2,9 +2,10 @@
 
 **TingShuo v1.0.0 Beta 6** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
-listening practice, spaced daily review, a searchable vocabulary library,
-Vocab Rush, and an optional AI tutor named Long Laoshi, using your own provider
-and API key.
+sentence and listening practice, spaced daily review, a searchable vocabulary
+library, Vocab Rush, offline vocabulary exams, and saved progress analytics.
+An optional AI tutor offers chat, listening dialogues, roleplay missions, and
+custom teaching personalities using your own provider and API key.
 
 > [!IMPORTANT]
 > This is a beta release. Learning data is stored only on the device. Dashboard
@@ -14,8 +15,9 @@ and API key.
 ## Beta Highlights
 
 - First-run setup for the learner's name, HSK level, and daily word target.
-- More than 4,000 bundled vocabulary entries across HSK levels 1–6.
-- Twenty-word bundled vocabulary lessons and previously saved custom decks.
+- All 4,991 bundled HSK 2.0 vocabulary entries across levels 1–6, arranged in
+  251 twenty-word lessons, plus previously saved custom decks.
+- Ten offline sentence-practice decks with 100 everyday expressions.
 - Hanzi, pinyin, English meanings, example sentences, and on-device Mandarin
   pronunciation.
 - Listening practice with hidden Hanzi and pinyin, meaning choices, answer
@@ -29,11 +31,14 @@ and API key.
   filters plus word detail views.
 - Vocab Rush timed and survival modes; incorrect answers are added to the
   learner's review data.
-- Long Laoshi, an optional AI tutor with chat, generated listening dialogues,
-  and short goal-oriented roleplay missions using personal API keys configured
-  in Settings.
-- Responsive desktop and mobile layouts, local settings, and versioned SQLite
-  migrations.
+- Offline Exam Mode with reading, pinyin, written recall, optional listening,
+  section scores, and answer review.
+- Dashboard and Profile analytics from saved reviews, including XP, streaks,
+  vocabulary mastery, HSK vocabulary progress, and a weekly report.
+- Seven built-in AI tutor personalities, including Long Laoshi, plus custom
+  profiles, generated listening dialogues, and goal-oriented roleplay missions.
+- Five colour themes, local settings, manual JSON backup/restore, safeguarded
+  data reset, and responsive desktop and mobile layouts.
 
 The core study and review flow works without an account, internet connection,
 or an AI API key.
@@ -66,6 +71,8 @@ and make the lockfile incompatible with CI.
 Install the committed dependencies:
 
 ```sh
+flutter --version
+flutter doctor -v
 flutter pub get --enforce-lockfile
 ```
 
@@ -103,7 +110,32 @@ with the lesson and are included in exported backups.
 Upgrading replaces the old default library while retaining saved reviews,
 schedules, custom lessons, and unfinished sessions. Historical lessons remain
 available when resuming a session. Shared cards keep the same progress across
-the new decks. Sentence practice retains its ten decks of ten sentences.
+the new decks.
+
+Open **Lessons → Sentence practice** for ten themed decks of ten everyday
+sentences and short expressions. Each includes Hanzi, sentence pinyin, English,
+and pronunciation. These original study sentences follow the same rating and
+review flow as vocabulary cards; they are an everyday-language selection rather
+than an HSK-aligned sentence curriculum. See [Content provenance](assets/data/README.md)
+for dataset sources, attribution, and regeneration instructions.
+
+### Home and Profile
+
+**Home** shows today's saved review queue, the latest unfinished lesson, weekly
+XP, and vocabulary statistics. **Available HSK lessons** samples up to six
+lessons across HSK levels; use **Refresh lessons** for another selection.
+
+Open **Profile** through the user icon in the dashboard header to see total XP,
+current streak, answer accuracy, review counts, active study days, and vocabulary
+mastery. The weekly report covers Monday through Sunday in local time and shows
+XP, reviews, accuracy, days studied, and the most productive day. Saved correct
+reviews earn 10 XP and incorrect reviews earn 5 XP.
+
+Words count as learned at 80% mastery. HSK vocabulary progress counts distinct
+learned words in each level and marks a level reached when that level and all
+lower levels are complete. This progress is separate from the HSK level you
+choose in learner settings and is not an official proficiency score. Analytics
+refresh after saved reviews, at local midnight, and when the app resumes.
 
 ### Daily review
 
@@ -123,6 +155,9 @@ Lesson library cards and listening choices show how many words are learned,
 using saved progress with at least 80% mastery. Each prompt plays before its Hanzi
 and pinyin are shown. Choose the English meaning or reveal the answer, and use
 **Replay** or **Slower** whenever you need to hear it again.
+
+Listening scores last for the current session only. This practice does not save
+ratings, update mastery, or add reviews to the daily queue.
 
 ### Exam Mode
 
@@ -148,14 +183,33 @@ filters, and unseen, learning, learned, and due states. **Vocab Rush** provides
 timed and survival challenges; missed vocabulary is recorded as weak and can
 return in daily review.
 
+### Appearance and preferences
+
+Open **Settings → Appearance** to choose Classic Ember, Ocean, Forest, Violet,
+or Midnight. Colour changes apply immediately and save automatically. The
+experimental **Press feedback** selector includes a preview button; select
+**Save settings** to keep that choice.
+
+Use **Save settings** after editing your name, HSK level, daily word target,
+Show pinyin, Sound, or Kokoro voice selection. These preferences are stored
+locally and restored on the next launch.
+
 ### Pronunciation audio
 
 The speaker button on lesson cards does not require an AI provider. Sound can be
 enabled or disabled under **Settings → Sound**.
 
-For consistent mobile and desktop pronunciation, open **Settings → Offline
-Mandarin voices**. TingShuo can download and verify this pack into the app's
-private support directory; no manual model-file setup is needed:
+On **Android**, pronunciation uses the device's Simplified Chinese (`zh-CN`)
+speech engine. Open **Settings → Mandarin voice → Install Mandarin voice**,
+or **Install voice** after a missing-voice error, and select Chinese
+(Mandarin / China) in the speech engine's installer. The app checks again when
+you return; use **Check again** if the download finishes later. Voice downloads
+are managed by the device's speech engine and may require internet access.
+Android does not offer Kokoro and ships without its native libraries.
+
+On **iOS and desktop**, open **Settings → Offline Mandarin voices**. TingShuo
+downloads and verifies this pack into the app's private support directory;
+no manual model-file setup is needed:
 
 - **Kokoro int8 v1.1:** a 147 MB download (about 215 MB installed) with 100
   Mandarin voices. Extraction needs about 600 MB of temporary free space.
@@ -166,7 +220,7 @@ of restarting the 147 MB (via HTTP Range requests). Settings surfaces the
 progress with a **Resume download** button and shows how much is already on
 the device after an interruption.
 
-Kokoro is the default pronunciation engine. After installing it, the default
+Kokoro is the default engine on these platforms. After installing it, the default
 voice pool includes all 100 voices and chooses one randomly for each phrase
 without immediately repeating a voice. The searchable voice picker can limit
 that pool to any subset; selecting one voice keeps pronunciation consistent.
@@ -175,6 +229,15 @@ locally through sherpa-onnx, including on Linux. Until the pack is ready, the
 app falls back to a compatible Simplified Chinese (`zh-CN`) system voice where
 one is available. Kokoro uses the Apache-2.0-licensed
 [Kokoro int8 multilingual v1.1 model](https://huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1).
+
+### Speech input
+
+Hold the microphone button to dictate a tutor message, a listening-dialogue
+topic, or a roleplay reply; release it to stop. The transcript stays in the text
+field for review before sending or generating an exercise. Dictation uses the
+platform's speech recognition, requires microphone and speech permissions where
+applicable, and may need network access. Typing remains available when
+recognition is unsupported or unavailable.
 
 ### Optional AI tutor
 
@@ -307,15 +370,52 @@ authenticate requests; that backend is outside this implementation. See Google's
 [API key guidance](https://ai.google.dev/gemini-api/docs/api-key). Release artifacts
 contain no shared AI key; users can add their own through Settings.
 
+### Backup, restore, and reset
+
+Open **Settings → Backup and restore → Export backup** to save a JSON snapshot
+of your learner profile, learning and appearance settings, lessons and guides,
+cards, deck memberships, review history, mastery/schedules, and resumable lesson
+and daily-review sessions. Keep a copy outside the app's data directory before
+upgrading, moving to another device, or resetting.
+
+Select **Restore backup** to choose a file and review its learner name, HSK
+level, export date, and lesson/card/review/session counts. Confirming replaces
+the local study data and settings with the snapshot. Restore validates linked
+records and applies the replacement in one database transaction, so an invalid
+backup leaves existing study data intact. Older backups receive the current
+bundled curriculum while retaining learning history.
+
+Backups exclude API keys, tutor personalities and the selected tutor, chat and
+AI exercise history, exam/listening results, and downloaded voice files. Restore
+preserves the installation's saved AI configuration; configure it separately
+when moving to another device. Tutor profiles and installed voices stay local
+to each installation.
+
+To start over, open **Settings → Reset account**. Read the deletion warning,
+select **Continue**, then type `RESET` and select **Reset account permanently**.
+You can cancel either confirmation without changing your data. Reset removes
+the local learner profile, study progress, review history, custom lessons and
+tutors, settings, and saved AI configuration, including API keys, then returns
+to learner setup with the default appearance. Bundled lessons are recreated;
+downloaded voices remain available. Deleted study data can only be recovered
+from a previously exported backup, which does not restore keys or tutor profiles.
+
+Debug builds also expose **Reset onboarding only** in the Development section.
+This returns to learner setup while preserving learning data, settings, tutor
+profiles, and AI configuration.
+
 ## Beta Limitations
 
-- Dashboard recommended lessons and recent activity are not yet personalized
-  from stored learning history.
-- The daily reminder preference is saved locally but does not yet schedule a
-  system notification.
+- Home's available lesson selection is randomized across HSK levels; it is not
+  personalized from learning history.
+- Reminder preferences are stored, but Settings currently has no reminder
+  controls and system notifications are not scheduled.
+- Button press animations remain experimental, as indicated in Settings.
 - There are no accounts, cloud sync, or automatic cloud backups. Manual backup
   export and restore are available in Settings. Resetting all local data is
   permanent unless you restore a previously exported backup.
+- Exam attempts, listening scores, tutor chats, and AI exercises are not saved
+  between visits or launches.
 - AI responses require internet access and a valid provider, key, and model,
   are subject to API usage limits and charges, and may vary in quality. Provider
   contracts and failures are tested with mocked HTTP responses; live access
@@ -324,29 +424,35 @@ contain no shared AI key; users can add their own through Settings.
 - Pronunciation grading and handwriting recognition are outside this beta's
   scope. Dictation depends on platform support and speech permissions.
 
-Export a backup before upgrading or resetting the app, and keep a copy outside
-the app's data directory.
-
-To start over, open **Settings → Reset account**. Read the deletion warning,
-select **Continue**, then type `RESET` and select **Reset account permanently**.
-You can cancel either confirmation without changing your data. Resetting removes
-your local learner profile, study progress, review history, custom lessons,
-settings, and saved AI configuration, including API keys, then returns you to
-learner setup. Bundled lessons and downloaded voices remain available. Backups
-do not include API keys.
-
 ## Development
 
-Run static analysis and the test suite:
+Run formatting validation, static analysis, and the test suite from the
+repository root:
 
 ```sh
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
 ```
 
+CI runs `flutter test --coverage` and uploads `coverage/lcov.info`. Release
+tooling has a separate offline suite:
+
+```sh
+python3 -m unittest discover -s tool/ci -p 'test_*.py' -v
+```
+
 The suite covers startup and onboarding, database migrations and persistence,
-lesson and daily-review flows, spaced scheduling, vocabulary data and search,
-Vocab Rush review integration, AI request contracts, and personal-key settings.
+curriculum upgrades, lesson and daily-review resumption, spaced scheduling,
+vocabulary data/search, listening practice, Vocab Rush review integration,
+exam generation/results, Profile analytics, AI contracts and tutor profiles,
+personal-key settings, voice installation/fallback, backup/reset, appearance,
+and cache invalidation. Tests use in-memory or temporary SQLite databases,
+mock secure storage and provider responses, and injected audio/file services.
+They require no provider API keys or production voice-pack downloads.
+
+Read [AGENTS.md](AGENTS.md) for architecture boundaries, data-preservation rules,
+and focused checks before changing the app.
 
 ### Platform builds
 
@@ -377,18 +483,32 @@ platform testing, signing requirements, and failed-run recovery.
 - **Framework:** Flutter
 - **Language:** Dart
 - **Storage:** SQLite via `sqflite_common_ffi`; personal AI keys via `flutter_secure_storage`
+- **Schema:** version 17, with ordered migrations and separate bundled-content
+  updates that preserve learner history
 - **AI:** Gemini, Anthropic, and OpenAI-compatible REST APIs through an HTTP client
 - **Audio:** offline Kokoro via `sherpa_onnx` and `flutter_soloud`, with a
   `flutter_tts` system-voice fallback. Android uses the system `zh-CN` voice
   only and ships without Kokoro, onnxruntime, and soloud native libraries.
-- **Content:** bundled HSK 1–6 JSON vocabulary and seeded lessons
+- **Speech input:** platform recognition via `speech_to_text`
+- **Backups:** validated local JSON snapshots through `file_picker`
+- **UI:** a shared `main.dart` library with feature/core `part` files, stateful
+  widgets, callbacks, futures, and dependencies supplied by `AppDependencies`
+- **Content:** bundled HSK 2.0 levels 1–6 vocabulary, twenty-word decks, and
+  original sentence practice
+
+Native dependency overrides keep Android's sherpa-onnx plugins empty and vendor
+Linux secure storage with schema-lifetime and write/readback fixes. Linux keys
+saved by older builds under the broken schema need to be entered again once.
+See [Native dependency notes](third_party/README.md) before updating these plugins.
+Android, iOS, Linux, macOS, and Windows runners are present; CI currently builds
+Android and the three desktop platforms. There is no web runner.
 
 ### In-memory caching
 
 Bundled vocabulary is parsed once per asset bundle and shared as immutable data
-by Lessons, Vocabulary, and Vocab Rush. The database retains up to 32 recent
-lesson reads (including the library summary) and one daily statistics result.
-Lesson sessions are loaded in one bulk query and remain fresh on each load.
+by Lessons, Vocabulary, Vocab Rush, and Exam Mode. The database retains up to
+32 recent lesson reads (including the library summary) and one daily statistics
+result. Lesson sessions are loaded in one bulk query and remain fresh on each load.
 Statistics refresh after saved reviews, at local midnight, and when the app
 resumes. Kokoro retains up to 64 synthesized clips within a 16 MiB sample-data
 budget, keyed by text, speaker, model directory, and model archive version.
@@ -399,21 +519,27 @@ writes and backup restores invalidate both database caches; saved reviews only
 invalidate statistics. Onboarding reset, full reset, and database close clear
 the database caches. New repository operations that change lessons or progress
 must wrap their transaction in `LocalDatabase.write`, choosing the appropriate
-`DatabaseCacheScope` so invalidation follows a successful commit. These caches never replace SQLite persistence or
-secure storage. Concurrent reads share pending work, and failed loads can retry.
+`DatabaseCacheScope` so invalidation follows a successful commit. These caches
+never replace SQLite persistence or secure storage. Concurrent reads share
+pending work, and failed loads can retry.
 
 ### Project structure
 
 ```text
 lib/
+├── main.dart           # Entry point, shared UI library, theme, navigation
+├── local_database.dart # SQLite lifecycle, content installation, caches/reset
 ├── ai/                 # Provider routing and REST adapters
 ├── core/               # Theme and shared navigation/widgets
-├── database/           # Migrations and seeded lessons
-├── features/           # Dashboard, lessons, review, vocabulary, game, tutor
-├── models/             # Learner, lesson, and progress models
-├── repositories/       # Persistence interfaces and SQLite implementations
-└── services/           # Spaced-review scheduler
+├── database/           # Schema/content migrations and bundled curriculum
+├── features/           # Home/profile, study, review, games, exams, AI, settings
+├── models/             # Learner, lessons, analytics, exams, AI exercises
+├── repositories/       # Persistence, bundled vocabulary, AI keys, backups
+└── services/           # Review/streak logic, pronunciation, dictation, caches
 ```
+
+Bundled runtime content and provenance live in `assets/data/`; regeneration and
+release tools live in `tool/`; automated coverage lives in `test/`.
 
 ## Release
 
