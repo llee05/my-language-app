@@ -49,8 +49,11 @@ Future<void> _pumpResetSettings(
   WidgetTester tester,
   _MemoryDevelopmentRepository developmentRepository, {
   Future<void> Function()? onResetOnboarding,
+  Future<void> Function(LearnerProfile)? onProfileChanged,
+  SettingsRepository? settingsRepository,
+  Size surfaceSize = const Size(1000, 900),
 }) async {
-  await tester.binding.setSurfaceSize(const Size(1000, 900));
+  await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     MaterialApp(
@@ -59,11 +62,11 @@ Future<void> _pumpResetSettings(
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
-          onProfileChanged: (_) async {},
+          onProfileChanged: onProfileChanged ?? (_) async {},
           onResetOnboarding: onResetOnboarding ?? () async {},
           onResetAllData: developmentRepository.resetAllData,
           developmentRepository: developmentRepository,
-          settingsRepository: _MemorySettingsRepository(),
+          settingsRepository: settingsRepository ?? _MemorySettingsRepository(),
         ),
       ),
     ),
@@ -71,10 +74,7 @@ Future<void> _pumpResetSettings(
   await tester.pumpAndSettle();
 }
 
-Future<void> _openSettingsResetDialog(
-  WidgetTester tester,
-  Key buttonKey,
-) async {
+Future<void> _revealSettingsControl(WidgetTester tester, Key buttonKey) async {
   final button = find.byKey(buttonKey);
   await tester.scrollUntilVisible(
     button,
@@ -86,11 +86,29 @@ Future<void> _openSettingsResetDialog(
         )
         .first,
   );
+  await Scrollable.ensureVisible(tester.element(button), alignment: .5);
   await tester.pumpAndSettle();
-  await tester.ensureVisible(button);
-  await tester.pumpAndSettle();
+}
+
+Future<void> _openSettingsResetDialog(
+  WidgetTester tester,
+  Key buttonKey,
+) async {
+  await _revealSettingsControl(tester, buttonKey);
+  final button = find.byKey(buttonKey);
   await tester.tap(button);
   await tester.pumpAndSettle();
+}
+
+Future<void> _confirmAccountReset(WidgetTester tester) async {
+  await tester.tap(find.text('Continue'));
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.byKey(const Key('account-reset-confirmation-input')),
+    'RESET',
+  );
+  await tester.pump();
+  await tester.tap(find.byKey(const Key('account-reset-confirm')));
 }
 
 void main() {
@@ -3512,17 +3530,38 @@ void main() {
 
     await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
 
-    expect(find.text('Reset all local data?'), findsOneWidget);
+    expect(find.text('Reset your account?'), findsOneWidget);
     expect(developmentRepository.resetAllDataCalls, 0);
 
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 
     expect(developmentRepository.resetAllDataCalls, 0);
-    expect(find.text('Reset all local data?'), findsNothing);
+    expect(find.text('Reset your account?'), findsNothing);
   });
 
-  testWidgets('settings reset-all confirmation invokes once with clear copy', (
+  testWidgets('settings account reset is outside developer tools', (
+    tester,
+  ) async {
+    await _pumpResetSettings(tester, _MemoryDevelopmentRepository());
+    final reset = find.byKey(const Key('settings-reset-all'));
+    await tester.scrollUntilVisible(
+      reset,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('settings-account-reset')),
+        matching: reset,
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Export a backup above'), findsOneWidget);
+  });
+
+  testWidgets('settings reset-all needs both confirmations and exact text', (
     tester,
   ) async {
     final developmentRepository = _MemoryDevelopmentRepository();
@@ -3530,22 +3569,103 @@ void main() {
 
     await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
 
-    expect(find.text('Reset all local data?'), findsOneWidget);
+    expect(find.text('Reset your account?'), findsOneWidget);
     expect(
-      find.text(
-        'This permanently removes the learner profile, generated lessons, '
-        'and all other local app data.',
-      ),
+      find.textContaining('study progress, review history'),
       findsOneWidget,
     );
-    expect(find.text('Reset everything'), findsOneWidget);
+    expect(find.textContaining('including API keys'), findsOneWidget);
+    expect(find.textContaining('cannot be undone'), findsOneWidget);
     expect(developmentRepository.resetAllDataCalls, 0);
 
-    await tester.tap(find.text('Reset everything'));
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm account reset'), findsOneWidget);
+    expect(developmentRepository.resetAllDataCalls, 0);
+    final confirm = find.byKey(const Key('account-reset-confirm'));
+    final input = find.byKey(const Key('account-reset-confirmation-input'));
+    expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+
+    for (final text in ['reset', 'RESE', ' RESET ', 'RESET', '']) {
+      await tester.enterText(input, text);
+      await tester.pump();
+      if (text == 'RESET') {
+        expect(tester.widget<FilledButton>(confirm).onPressed, isNotNull);
+      } else {
+        expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+      }
+      expect(developmentRepository.resetAllDataCalls, 0);
+    }
+
+    await tester.enterText(input, 'RESET');
+    await tester.pump();
+    await tester.tap(confirm);
     await tester.pumpAndSettle();
 
     expect(developmentRepository.resetAllDataCalls, 1);
-    expect(find.text('Reset all local data?'), findsNothing);
+    expect(find.text('Confirm account reset'), findsNothing);
+  });
+
+  testWidgets(
+    'final account reset cancellation clears confirmation on reopen',
+    (tester) async {
+      final development = _MemoryDevelopmentRepository();
+      await _pumpResetSettings(tester, development);
+      await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('account-reset-confirmation-input')),
+        'RESET',
+      );
+      await tester.pump();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(development.resetAllDataCalls, 0);
+
+      await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const Key('account-reset-confirm')),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(development.resetAllDataCalls, 0);
+      expect(find.text('Confirm account reset'), findsNothing);
+    },
+  );
+
+  testWidgets('account reset confirmations fit a narrow screen with keyboard', (
+    tester,
+  ) async {
+    final development = _MemoryDevelopmentRepository();
+    await _pumpResetSettings(
+      tester,
+      development,
+      surfaceSize: const Size(390, 700),
+    );
+    await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.enterText(
+      find.byKey(const Key('account-reset-confirmation-input')),
+      'RESET',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(development.resetAllDataCalls, 0);
   });
 
   testWidgets('settings reset-all failure retries directly and safely', (
@@ -3563,7 +3683,7 @@ void main() {
     await _pumpResetSettings(tester, developmentRepository);
 
     await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
-    await tester.tap(find.text('Reset everything'));
+    await _confirmAccountReset(tester);
     await tester.pumpAndSettle();
 
     expect(developmentRepository.resetAllDataCalls, 1);
@@ -3575,7 +3695,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(developmentRepository.resetAllDataCalls, 2);
-    expect(find.text('Reset all local data?'), findsNothing);
+    expect(find.text('Reset your account?'), findsNothing);
     expect(find.text('We couldn’t reset your local data.'), findsNothing);
   });
 
@@ -3624,11 +3744,34 @@ void main() {
       await _pumpResetSettings(tester, developmentRepository);
 
       await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
-      await tester.tap(find.text('Reset everything'));
+      await _confirmAccountReset(tester);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(developmentRepository.resetAllDataCalls, 1);
+      expect(find.text('Resetting account…'), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(find.byKey(const Key('settings-save')))
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const Key('settings-export-backup')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.byKey(const Key('settings-import-backup')),
+            )
+            .onPressed,
+        isNull,
+      );
       expect(
         tester
             .widget<OutlinedButton>(
@@ -3664,6 +3807,58 @@ void main() {
     },
   );
 
+  testWidgets('account reset waits for a pending profile save', (tester) async {
+    final gate = Completer<void>();
+    addTearDown(() {
+      if (!gate.isCompleted) gate.complete();
+    });
+    final development = _MemoryDevelopmentRepository();
+    await _pumpResetSettings(
+      tester,
+      development,
+      onProfileChanged: (_) => gate.future,
+    );
+    await _revealSettingsControl(tester, const Key('settings-reset-all'));
+    final reset = find.byKey(const Key('settings-reset-all'));
+    final resetAction = tester.widget<OutlinedButton>(reset).onPressed!;
+    await _revealSettingsControl(tester, const Key('settings-save'));
+    await tester.tap(find.byKey(const Key('settings-save')));
+    await tester.pump();
+
+    expect(tester.widget<OutlinedButton>(reset).onPressed, isNull);
+    resetAction();
+    await tester.pump();
+    expect(find.text('Reset your account?'), findsNothing);
+    expect(development.resetAllDataCalls, 0);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(tester.widget<OutlinedButton>(reset).onPressed, isNotNull);
+  });
+
+  testWidgets('account reset waits for an immediate theme save', (
+    tester,
+  ) async {
+    final settings = _PendingSettingsRepository();
+    addTearDown(() {
+      if (!settings.saveGate.isCompleted) settings.saveGate.complete();
+    });
+    final development = _MemoryDevelopmentRepository();
+    await _pumpResetSettings(tester, development, settingsRepository: settings);
+    await _revealSettingsControl(tester, const Key('theme-choice-ocean'));
+    await tester.tap(find.byKey(const Key('theme-choice-ocean')));
+    await tester.pumpAndSettle();
+    expect(settings.saveStarted, isTrue);
+    await _revealSettingsControl(tester, const Key('settings-reset-all'));
+    final reset = find.byKey(const Key('settings-reset-all'));
+    expect(tester.widget<OutlinedButton>(reset).onPressed, isNull);
+    expect(development.resetAllDataCalls, 0);
+
+    settings.saveGate.complete();
+    await tester.pumpAndSettle();
+    expect(tester.widget<OutlinedButton>(reset).onPressed, isNotNull);
+  });
+
   testWidgets('reset-all returns the app root to learner setup', (
     tester,
   ) async {
@@ -3690,11 +3885,11 @@ void main() {
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Manage your learning preferences and local test data.'),
+      find.text('Manage your learning preferences and local data.'),
       findsOneWidget,
     );
     await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
-    await tester.tap(find.text('Reset everything'));
+    await _confirmAccountReset(tester);
     await tester.pumpAndSettle();
 
     expect(developmentRepository.resetAllDataCalls, 1);
@@ -3729,7 +3924,7 @@ void main() {
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     await _openSettingsResetDialog(tester, const Key('settings-reset-all'));
-    await tester.tap(find.text('Reset everything'));
+    await _confirmAccountReset(tester);
     await tester.pumpAndSettle();
     expect(development.resetAllDataCalls, 0);
     expect(aiRepository.configuration, testAiConfiguration);
@@ -3770,7 +3965,7 @@ void main() {
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Manage your learning preferences and local test data.'),
+      find.text('Manage your learning preferences and local data.'),
       findsOneWidget,
     );
     await _openSettingsResetDialog(
@@ -4431,6 +4626,18 @@ class _MemorySettingsRepository implements SettingsRepository {
   @override
   Future<void> save(LearnerSettings settings) async {
     this.settings = settings;
+  }
+}
+
+class _PendingSettingsRepository extends _MemorySettingsRepository {
+  final saveGate = Completer<void>();
+  bool saveStarted = false;
+
+  @override
+  Future<void> save(LearnerSettings settings) async {
+    saveStarted = true;
+    await saveGate.future;
+    await super.save(settings);
   }
 }
 

@@ -49,7 +49,9 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _preferencesLoadFailed = false;
   bool _saveFailed = false;
   bool _resetting = false;
+  bool _deletingAccount = false;
   bool _transferringBackup = false;
+  int _pendingThemeSaves = 0;
   bool _showPinyin = true;
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
@@ -67,6 +69,9 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _checkingKokoroVoice = false;
 
   static const _targets = [5, 10, 15, 20, 30];
+
+  bool get _dataOperationInProgress =>
+      _resetting || _saving || _transferringBackup || _pendingThemeSaves > 0;
 
   @override
   void initState() {
@@ -207,7 +212,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _save() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _saving) return;
+    if (name.isEmpty || _dataOperationInProgress) return;
     setState(() {
       _saving = true;
       _saveFailed = false;
@@ -256,7 +261,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _selectTheme(AppThemeId themeId) {
-    if (themeId == _selectedThemeId) return;
+    if (_resetting || _transferringBackup || themeId == _selectedThemeId) {
+      return;
+    }
     setState(() {
       _selectedThemeId = themeId;
       _themeSaveFailed = false;
@@ -268,6 +275,8 @@ class _SettingsPageState extends State<SettingsPage> {
   /// Themes apply immediately; persistence merges into the currently saved
   /// settings so unrelated preference values are not overwritten.
   Future<void> _persistTheme(AppThemeId themeId) async {
+    if (!mounted || _resetting || _transferringBackup) return;
+    setState(() => _pendingThemeSaves++);
     try {
       final settings = await widget.settingsRepository.load();
       await widget.settingsRepository.save(
@@ -279,6 +288,8 @@ class _SettingsPageState extends State<SettingsPage> {
       debugPrint('Colour theme could not be saved: $error');
       if (!mounted) return;
       setState(() => _themeSaveFailed = true);
+    } finally {
+      if (mounted) setState(() => _pendingThemeSaves--);
     }
   }
 
@@ -298,6 +309,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
+            scrollable: true,
             title: Text(title),
             content: Text(message),
             actions: [
@@ -322,7 +334,7 @@ class _SettingsPageState extends State<SettingsPage> {
           'Your learner profile will be removed. Lessons and other local data will be kept.',
       action: 'Reset setup',
     );
-    if (confirmed) await _performOnboardingReset();
+    if (confirmed && mounted) await _performOnboardingReset();
   });
 
   Future<void> _retryOnboardingReset() =>
@@ -344,17 +356,26 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _resetAllData() => _withResetGuard(() async {
     final confirmed = await _confirm(
-      title: 'Reset all local data?',
+      title: 'Reset your account?',
       message:
-          'This permanently removes the learner profile, generated lessons, and all other local app data.',
-      action: 'Reset everything',
+          'This permanently deletes your learner profile, study progress, review history, custom lessons, settings, and saved AI configuration (including API keys) from this device. '
+          'Export a backup first if you want to restore your learning data later. API keys are not included in backups. '
+          'This cannot be undone without a backup.',
+      action: 'Continue',
     );
-    if (confirmed) await _performAllDataReset();
+    if (!confirmed || !mounted) return;
+    final finalConfirmation = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _AccountResetConfirmationDialog(),
+    );
+    if (finalConfirmation == true && mounted) await _performAllDataReset();
   });
 
   Future<void> _retryAllDataReset() => _withResetGuard(_performAllDataReset);
 
   Future<void> _performAllDataReset() async {
+    setState(() => _deletingAccount = true);
     try {
       await widget.onResetAllData();
     } catch (error) {
@@ -365,11 +386,13 @@ class _SettingsPageState extends State<SettingsPage> {
           onRetry: _retryAllDataReset,
         );
       }
+    } finally {
+      if (mounted) setState(() => _deletingAccount = false);
     }
   }
 
   Future<void> _withResetGuard(Future<void> Function() action) async {
-    if (!mounted || _resetting) return;
+    if (!mounted || _dataOperationInProgress) return;
     setState(() => _resetting = true);
     try {
       await action();
@@ -379,7 +402,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _exportBackup() async {
-    if (_transferringBackup) return;
+    if (_dataOperationInProgress) return;
     setState(() => _transferringBackup = true);
     try {
       final bytes = await widget.backupRepository.exportBackup();
@@ -402,7 +425,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _importBackup() async {
-    if (_transferringBackup) return;
+    if (_dataOperationInProgress) return;
     var restoreCompleted = false;
     setState(() => _transferringBackup = true);
     try {
@@ -507,7 +530,7 @@ class _SettingsPageState extends State<SettingsPage> {
         Text('Settings', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 6),
         Text(
-          'Manage your learning preferences and local test data.',
+          'Manage your learning preferences and local data.',
           style: TextStyle(color: AppColors.muted),
         ),
         const SizedBox(height: 24),
@@ -746,13 +769,13 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               FilledButton.icon(
                 key: const Key('settings-export-backup'),
-                onPressed: _transferringBackup ? null : _exportBackup,
+                onPressed: _dataOperationInProgress ? null : _exportBackup,
                 icon: const Icon(Icons.upload_file_rounded),
                 label: const Text('Export backup'),
               ),
               OutlinedButton.icon(
                 key: const Key('settings-import-backup'),
-                onPressed: _transferringBackup ? null : _importBackup,
+                onPressed: _dataOperationInProgress ? null : _importBackup,
                 icon: const Icon(Icons.file_open_outlined),
                 label: const Text('Restore backup'),
               ),
@@ -765,6 +788,32 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
             ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        _SettingsCard(
+          key: const Key('settings-account-reset'),
+          title: 'Reset account',
+          subtitle:
+              'Start over by deleting your learner profile and all saved learning data on this device. Export a backup above before continuing.',
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              key: const Key('settings-reset-all'),
+              onPressed: _dataOperationInProgress ? null : _resetAllData,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              icon: _deletingAccount
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_outline_rounded),
+              label: Text(
+                _deletingAccount ? 'Resetting account…' : 'Reset account',
+              ),
+            ),
           ),
         ),
         if (kDebugMode) ...[
@@ -784,23 +833,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    OutlinedButton.icon(
-                      key: const Key('settings-reset-onboarding'),
-                      onPressed: _resetting ? null : _resetOnboarding,
-                      icon: const Icon(Icons.replay_rounded),
-                      label: const Text('Reset onboarding only'),
-                    ),
-                    OutlinedButton.icon(
-                      key: const Key('settings-reset-all'),
-                      onPressed: _resetting ? null : _resetAllData,
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      label: const Text('Reset all local data'),
-                    ),
-                  ],
+                OutlinedButton.icon(
+                  key: const Key('settings-reset-onboarding'),
+                  onPressed: _dataOperationInProgress ? null : _resetOnboarding,
+                  icon: const Icon(Icons.replay_rounded),
+                  label: const Text('Reset onboarding only'),
                 ),
               ],
             ),
@@ -820,8 +857,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: FilledButton.icon(
               key: const Key('settings-save'),
               onPressed:
-                  _saving ||
-                      _transferringBackup ||
+                  _dataOperationInProgress ||
                       _loadingPreferences ||
                       _preferencesLoadFailed
                   ? null
@@ -1082,6 +1118,68 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _formatMegabytes(int bytes) =>
       (bytes / (1000 * 1000)).toStringAsFixed(1);
+}
+
+class _AccountResetConfirmationDialog extends StatefulWidget {
+  const _AccountResetConfirmationDialog();
+
+  @override
+  State<_AccountResetConfirmationDialog> createState() =>
+      _AccountResetConfirmationDialogState();
+}
+
+class _AccountResetConfirmationDialogState
+    extends State<_AccountResetConfirmationDialog> {
+  bool _confirmationMatches = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return AlertDialog(
+      key: const Key('account-reset-confirmation-dialog'),
+      scrollable: true,
+      title: const Text('Confirm account reset'),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Type RESET to permanently delete your local account data. '
+            'You will return to learner setup. Bundled lessons and downloaded voices will still be available.',
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            key: const Key('account-reset-confirmation-input'),
+            autofocus: true,
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Type RESET to confirm',
+            ),
+            onChanged: (value) =>
+                setState(() => _confirmationMatches = value == 'RESET'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('account-reset-confirm'),
+          onPressed: _confirmationMatches
+              ? () => Navigator.pop(context, true)
+              : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: colors.error,
+            foregroundColor: colors.onError,
+          ),
+          child: const Text('Reset account permanently'),
+        ),
+      ],
+    );
+  }
 }
 
 extension on ButtonAnimationStyle {
@@ -1362,6 +1460,7 @@ class _ThemeSwatch extends StatelessWidget {
 
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.child,

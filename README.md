@@ -327,6 +327,14 @@ contain no shared AI key; users can add their own through Settings.
 Export a backup before upgrading or resetting the app, and keep a copy outside
 the app's data directory.
 
+To start over, open **Settings → Reset account**. Read the deletion warning,
+select **Continue**, then type `RESET` and select **Reset account permanently**.
+You can cancel either confirmation without changing your data. Resetting removes
+your local learner profile, study progress, review history, custom lessons,
+settings, and saved AI configuration, including API keys, then returns you to
+learner setup. Bundled lessons and downloaded voices remain available. Backups
+do not include API keys.
+
 ## Development
 
 Run static analysis and the test suite:

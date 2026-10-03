@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ void main() {
     required _MemoryBackupRepository backups,
     required _MemoryBackupFileService files,
     Future<void> Function()? onBackupRestored,
+    Future<void> Function()? onResetAllData,
   }) async {
     await tester.binding.setSurfaceSize(const Size(1000, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -31,7 +33,7 @@ void main() {
             profile: profile,
             onProfileChanged: (_) async {},
             onResetOnboarding: () async {},
-            onResetAllData: () async {},
+            onResetAllData: onResetAllData ?? () async {},
             onBackupRestored: onBackupRestored,
             appThemeId: AppThemeId.classic,
             onThemeChanged: (_) {},
@@ -51,6 +53,10 @@ void main() {
       find.byKey(key),
       400,
       scrollable: find.byType(Scrollable).first,
+    );
+    await Scrollable.ensureVisible(
+      tester.element(find.byKey(key)),
+      alignment: .5,
     );
     await tester.pumpAndSettle();
   }
@@ -108,6 +114,47 @@ void main() {
     expect(files.savedName, endsWith('.json'));
     expect(find.text('Backup exported.'), findsOneWidget);
   });
+
+  for (final action in ['export', 'import']) {
+    testWidgets('account reset waits for a pending backup $action', (
+      tester,
+    ) async {
+      final gate = Completer<void>();
+      addTearDown(() {
+        if (!gate.isCompleted) gate.complete();
+      });
+      final backups = _MemoryBackupRepository();
+      final files = _MemoryBackupFileService()..fileOperationGate = gate;
+      var resets = 0;
+      await pumpSettings(
+        tester,
+        backups: backups,
+        files: files,
+        onResetAllData: () async => resets++,
+      );
+      await reveal(tester, const Key('settings-reset-all'));
+      final reset = find.byKey(const Key('settings-reset-all'));
+      final resetAction = tester.widget<OutlinedButton>(reset).onPressed!;
+      await reveal(tester, Key('settings-$action-backup'));
+      await tester.tap(find.byKey(Key('settings-$action-backup')));
+      await tester.pump();
+
+      expect(tester.widget<OutlinedButton>(reset).onPressed, isNull);
+      resetAction();
+      await tester.pump();
+      expect(find.text('Reset your account?'), findsNothing);
+      expect(resets, 0);
+
+      gate.complete();
+      if (action == 'import') {
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.tap(find.text('Cancel'));
+      }
+      await tester.pumpAndSettle();
+      expect(tester.widget<OutlinedButton>(reset).onPressed, isNotNull);
+      expect(resets, 0);
+    });
+  }
 }
 
 class _MemoryBackupRepository implements BackupRepository {
@@ -137,17 +184,22 @@ class _MemoryBackupRepository implements BackupRepository {
 }
 
 class _MemoryBackupFileService implements BackupFileService {
+  Completer<void>? fileOperationGate;
   Uint8List? savedBytes;
   String? savedName;
 
   @override
-  Future<Uint8List?> chooseBackup() async => Uint8List.fromList([4, 5, 6]);
+  Future<Uint8List?> chooseBackup() async {
+    await fileOperationGate?.future;
+    return Uint8List.fromList([4, 5, 6]);
+  }
 
   @override
   Future<bool> saveBackup({
     required String fileName,
     required Uint8List bytes,
   }) async {
+    await fileOperationGate?.future;
     savedName = fileName;
     savedBytes = bytes;
     return true;
