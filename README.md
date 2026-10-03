@@ -1,6 +1,6 @@
 # 听说 TingShuo
 
-**TingShuo v1.0.0 Beta 1** is a local-first Flutter app for building a
+**TingShuo v1.0.0 Beta 6** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
 listening practice, spaced daily review, a searchable vocabulary library,
 Vocab Rush, and an optional AI tutor named Long Laoshi, using your own provider
@@ -298,21 +298,21 @@ contain no shared AI key; users can add their own through Settings.
 
 - Dashboard recommended lessons and recent activity are not yet personalized
   from stored learning history.
-- A dedicated progress analytics view is planned.
 - The daily reminder preference is saved locally but does not yet schedule a
   system notification.
-- There are no accounts, cloud sync, or cross-device backup. Resetting all
-  local data is permanent.
+- There are no accounts, cloud sync, or automatic cloud backups. Manual backup
+  export and restore are available in Settings. Resetting all local data is
+  permanent unless you restore a previously exported backup.
 - AI responses require internet access and a valid provider, key, and model,
   are subject to API usage limits and charges, and may vary in quality. Provider
   contracts and failures are tested with mocked HTTP responses; live access
   depends on the user's account and selected model. A backend for a shared
   app-owned key is not included.
-- Speech recognition, pronunciation grading, and handwriting recognition are
-  outside this beta's scope.
+- Pronunciation grading and handwriting recognition are outside this beta's
+  scope. Dictation depends on platform support and speech permissions.
 
-Please treat beta learning data as non-critical until export and backup tools
-are available.
+Export a backup before upgrading or resetting the app, and keep a copy outside
+the app's data directory.
 
 ## Development
 
@@ -396,17 +396,22 @@ lib/
 
 ## Release
 
-Current version: **1.0.0-beta.5+5**
+Current version: **1.0.0-beta.6+6**
 
-Beta 5
+Beta 6
 
-- Added offline HSK practice exams with a timer, scoring, and answer review.
-- Added Monday-to-Sunday weekly progress reports to the profile.
-- Added built-in AI tutor personalities and custom personality creation.
-- Saved lesson guides with backup support and improved AI lesson selection and recovery.
-- Improved pronunciation controls and reused cached Kokoro audio.
-- Improved responsive study layouts and made the mobile navigation menu follow your swipe.
-- Improved loading performance for vocabulary lessons and learning statistics.
+- Replaced AI lesson creation with 251 bundled twenty-word vocabulary decks
+  covering all 4,991 HSK 1–6 entries, available offline.
+- Added attributed Tatoeba examples and original study sentences, and refreshed
+  sentence-practice content.
+- Preserved saved custom decks, review history, and unfinished sessions during
+  the curriculum upgrade; shared words retain their progress across decks.
+- Added learned-word counts to lessons and expanded listening practice to use
+  the new curriculum decks.
+- Improved Android back navigation across study screens.
+- Added coordinated Linux x64, universal macOS, Windows x64, and signed Android
+  APK/AAB release packages with checksums. macOS beta packages use ad-hoc signing
+  and are labeled unsigned; Windows packages are unsigned portable bundles.
 
 ### Android signing
 
@@ -464,8 +469,8 @@ The beta milestone delivers a complete local loop:
 
 `Learn → Rate → Save → Schedule review → Return tomorrow`
 
-Work after Beta 1 is focused on expanded progress analytics, release reliability,
-accessibility, learner-data export, and notification support.
+Further work focuses on release reliability, accessibility, and reminder
+notification support.
 
 ## Copyright and usage
 
