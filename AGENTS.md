@@ -35,7 +35,8 @@ usable without an account, network access, or an AI provider.
 | `assets/data/` | Bundled HSK vocabulary and Tatoeba sentence candidates, with provenance and regeneration instructions. |
 | `test/` | Unit, widget, persistence, dataset, and service tests. |
 | `tool/` | Vocabulary import and sentence-candidate generation scripts. |
-| `.github/workflows/flutter.yml` | Validation, Android/Windows compile checks, and tagged Android releases. |
+| `.github/workflows/flutter.yml` | Validation, four-platform builds, and coordinated tagged releases. |
+| `tool/ci/` | Offline release metadata validation, asset checks, checksums, and regression tests. |
 
 ### UI library and dependency boundaries
 
@@ -157,13 +158,21 @@ Platform compile checks, when the appropriate toolchain is available:
 
 ```sh
 flutter build apk --debug
+flutter build linux --release
+flutter build macos --release
 flutter build windows --release
 ```
 
 CI runs validation on main-branch pushes and pull requests, and on `v*` tags.
-Tags also trigger signed Android release publication. Do not create a release
-tag as a routine verification step. See `README.md` for signing and release
-setup; release builds must not fall back to debug signing.
+Tags also trigger signed Android APK/AAB builds and one coordinated release
+containing Linux x64, universal macOS, Windows x64, and Android packages. All
+platforms must succeed before publication. Tags must match the pubspec version
+without its `+BUILD` suffix. macOS beta downloads use ad-hoc signing and are
+explicitly labeled unsigned; Windows packages are unsigned portable bundles.
+Do not create a release tag as a routine verification step. See
+`docs/beta-releases.md` and `README.md` for signing and release setup; Android
+release builds must not fall back to debug signing. When changing release tools,
+run `python3 -m unittest discover -s tool/ci -p 'test_*.py' -v` too.
 
 ## Coding conventions
 

@@ -336,8 +336,20 @@ for the selected MSVC toolset (required by secure storage). Keep `nuget.exe` on
 `PATH`; the Windows text-to-speech plugin downloads its C++/WinRT dependency
 during the first build.
 
-Pull requests compile an Android debug APK and a Windows x64 release bundle in
-GitHub Actions, in addition to running the analyzer and tests.
+Pull requests, main-branch pushes, and manual GitHub Actions runs validate the
+workflow, formatting, analyzer, and tests, then build Linux x64, universal macOS
+(Intel and Apple Silicon), Windows x64, and an Android debug APK. Desktop
+packages and the debug APK are downloadable from each run's artifacts.
+
+Linux CI builds on Ubuntu 22.04 with GTK, ALSA, and libsecret headers. The macOS
+app targets macOS 11 or later and builds on macOS 15 with Xcode, CocoaPods, and
+CMake. Windows builds use the Windows 2022 runner. CI pins Flutter 3.44.4 and
+installs dependencies from the committed lockfile.
+
+Matching version tags produce signed Android APK/AAB downloads and all three
+desktop packages in one GitHub Release, only after every platform succeeds.
+See [Beta release workflow](docs/beta-releases.md) for preparation, installation,
+platform testing, signing requirements, and failed-run recovery.
 
 ### Technical snapshot
 
@@ -441,8 +453,12 @@ a release tag:
 | `ANDROID_KEY_ALIAS` | The upload-key alias, normally `upload` |
 | `ANDROID_KEY_PASSWORD` | The upload-key password |
 
-The workflow fails rather than publishing an unsigned or debug-signed bundle
-when any signing secret is missing.
+The workflow fails rather than publishing an unsigned or debug-signed Android
+artifact when any signing secret is missing. It also verifies APK and AAB
+signatures before uploading them. Beta tags are marked as GitHub prereleases;
+macOS downloads are explicitly labeled unsigned and Windows downloads are
+unsigned portable bundles. See [Beta release workflow](docs/beta-releases.md)
+before tagging the next beta.
 
 The beta milestone delivers a complete local loop:
 
