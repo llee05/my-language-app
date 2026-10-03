@@ -74,9 +74,13 @@ obsolete branch and PR checks are cancelled.
 1. Finish and commit the intended app changes. Set the next version/build in
    `pubspec.yaml`, for example `1.0.0-beta.6+6` after beta 5. Increase the Android
    build number for each uploaded release and update the README release notes.
-2. Run the normal local checks and the release-tool checks:
+2. Select **Flutter 3.44.4**, matching CI, before resolving dependencies or
+   running checks. With mise, run `mise trust` and `mise install`; the repository's
+   `mise.toml` pins this version. Other SDK managers and the IDE must select the
+   same SDK. Check `flutter --version`, then run:
 
    ```sh
+   flutter --version
    flutter pub get --enforce-lockfile
    dart format --output=none --set-exit-if-changed lib test
    flutter analyze
@@ -204,6 +208,13 @@ entry in `SHA256SUMS`. The checksums detect changed or incomplete downloads.
 
 ## Failed runs and retries
 
+- **Lockfile cannot be satisfied:** check `flutter --version`. Flutter pins some
+  transitive dependencies, so resolving with a different SDK can produce a
+  lockfile that CI rejects. Select the repository's Flutter 3.44.4, run
+  `flutter pub get` once to regenerate `pubspec.lock`, review and commit its
+  changes, then verify `flutter pub get --enforce-lockfile`. Keep enforcement
+  enabled in CI. Intentional Flutter upgrades must update CI, `mise.toml`, the
+  documentation, and the lockfile together.
 - **Wrong tag:** update the app version before creating the correct release tag.
   Do not retag an already published release. The `+BUILD` suffix belongs only
   in `pubspec.yaml`, not in the tag.

@@ -64,7 +64,9 @@ usable without an account, network access, or an AI provider.
 
 Run commands from the repository root. `pubspec.yaml` requires Dart `^3.12.2`;
 CI currently pins Flutter **3.44.4 stable**. Use the workflow and pubspec as the
-source of truth when these versions change.
+source of truth when these versions change. `mise.toml` pins the same SDK for
+local development; use Flutter 3.44.4 when regenerating `pubspec.lock` and update
+the local pin together with intentional CI SDK upgrades.
 
 ```sh
 flutter --version

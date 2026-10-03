@@ -1,0 +1,3 @@
+# Match .github/workflows/flutter.yml when resolving the committed lockfile.
+[tools]
+flutter = "3.44.4"

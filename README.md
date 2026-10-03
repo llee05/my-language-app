@@ -42,7 +42,7 @@ or an AI API key.
 
 ### Requirements
 
-- A Flutter SDK compatible with Dart `^3.12.2`
+- Flutter **3.44.4** (Dart **3.12.2**), matching CI and the committed lockfile
 - A Flutter desktop or mobile toolchain for the target platform; web is not supported
 - Linux builds: ALSA and libsecret development headers
   (`sudo apt install libasound2-dev libsecret-1-dev` on Ubuntu/Debian).
@@ -50,10 +50,23 @@ or an AI API key.
   as GNOME Keyring, in the desktop session.
 - Optional: a personal API key for one of the supported AI providers below
 
-Install dependencies:
+If you use mise, the repository's `mise.toml` selects Flutter 3.44.4:
 
 ```sh
-flutter pub get
+mise trust
+mise install
+```
+
+Otherwise, select Flutter 3.44.4 from the
+[Flutter SDK archive](https://docs.flutter.dev/install/archive), including in
+your IDE's Flutter SDK setting. Confirm `flutter --version` before resolving
+dependencies: a newer SDK can select different Flutter-pinned dependencies
+and make the lockfile incompatible with CI.
+
+Install the committed dependencies:
+
+```sh
+flutter pub get --enforce-lockfile
 ```
 
 Run TingShuo:
