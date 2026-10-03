@@ -18,20 +18,21 @@ required by this document or supplied alongside it.
 
 TingShuo is a local-first Mandarin learning app built with Flutter and Dart.
 The Dart package is `mylanguageapp`; the root widget retains the historical name
-`HanziPathApp`. Core lessons, vocabulary, ratings, and daily review must remain
+`HanziPathApp`. Core lessons, dictionary, word discovery, and ratings must remain
 usable without an account, network access, or an AI provider.
 
 The package version is `1.0.0-beta.6+6` in `pubspec.yaml`. The current app includes
 251 twenty-word vocabulary decks covering 4,991 HSK 2.0 entries across levels
-1–6, ten sentence-practice decks, Listening Practice, Vocab Rush, offline Exam
-Mode, Profile analytics, appearance settings, manual backup/restore, and optional
-AI chat, listening dialogues, roleplay missions, and custom tutor personalities.
+1–6, ten sentence-practice decks, Dictionary, Doom Scrolling, Listening Practice,
+Vocab Rush, offline Exam Mode, Profile analytics, appearance settings, manual
+backup/restore, and optional AI chat, listening dialogues, roleplay missions,
+and custom tutor personalities.
 Check implementation and tests before describing an existing feature as planned.
 
 | Location | Responsibility |
 | --- | --- |
 | `lib/main.dart` | Entry point, startup/profile loading, app theme, onboarding, navigation, and shared UI library; repositories initialize SQLite while the loading screen is visible. |
-| `lib/features/` | Dashboard, Profile analytics, lessons, listening, daily review, vocabulary, Vocab Rush, exams, settings, onboarding, and AI tutor screens. |
+| `lib/features/` | Dashboard, Profile analytics, lessons, listening, word discovery, dictionary, Vocab Rush, exams, settings, onboarding, and AI tutor screens. |
 | `lib/core/` | Shared colors, sidebar, and reusable widgets. |
 | `lib/models/` | Learner, lesson, settings, review, progress/weekly analytics, exam, and AI exercise/personality data types. |
 | `lib/repositories/` | Persistence interfaces, `AppDependencies` constructor injection, immutable bundled vocabulary, SQLite implementations, secure AI configuration, and backup validation/restore. |
@@ -58,10 +59,22 @@ Check implementation and tests before describing an existing feature as planned.
   factories, and backup file access, with SQLite and secure-storage defaults.
   Use these seams for test doubles and feature dependencies.
   Keep SQL in persistence code and scheduling logic in services.
-- Ratings feed saved review history and card progress; lesson and daily-review
-  sessions persist position for resumption. Vocab Rush mistakes also enter review
-  data. Preserve this flow across UI changes. Listening Practice scores and exam
-  attempts/results stay in memory and do not change ratings or review history.
+- Ratings feed saved review history and card progress; lesson sessions persist
+  position for resumption. `VocabularyStudyService` records explicit word ratings
+  and assessed answers from Dictionary, Doom Scrolling, Listening Practice,
+  Vocab Rush, and Exam Mode against shared vocabulary cards. Sentence recaps,
+  AI chat, dialogues, and roleplay expose explicit practice controls for locally
+  matched bundled words. Browsing, skipping, pronunciation, and AI generation
+  do not award mastery. Preserve stable submission keys on retries and refresh
+  statistics after saves. Listening scores and exam results remain in memory,
+  while their answered vocabulary assessments persist. Excluded and unanswered
+  exam questions do not change vocabulary progress. Whole sentence cards are
+  excluded from HSK vocabulary totals but retain review history and XP.
+- Doom Scrolling replaces the Daily Review navigation entry and Home prompt.
+  Its vertical feed shuffles vocabulary below 80% mastery across HSK 1–6;
+  learned words stay excluded even when due. Save ratings before advancing;
+  support swipes, mouse-wheel scrolling, keyboard navigation, and save retries.
+  Preserve legacy daily-review sessions and backup compatibility.
 - Dashboard and Profile use `DashboardLearningStats.fromSavedData`, including
   XP, streaks, accuracy, HSK vocabulary mastery, and `WeeklyProgressReport`.
   Learned words require at least 80% mastery; HSK progress is independent of the
@@ -177,7 +190,7 @@ flutter test test/kokoro_voice_pack_test.dart test/sherpa_voice_config_test.dart
 flutter test test/startup_test.dart test/widget_test.dart test/lesson_completion_test.dart
 flutter test test/gemini_service_test.dart test/ai_tutor_page_test.dart
 flutter test test/ai_service_test.dart test/ai_settings_card_test.dart test/ai_configuration_repository_test.dart
-flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart
+flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart test/vocabulary_study_test.dart
 flutter test test/vocabulary_lesson_content_test.dart test/vocabulary_lesson_dataset_test.dart test/bundled_lesson_rewrite_test.dart test/sentence_practice_test.dart test/listening_practice_test.dart
 flutter test test/hsk_exam_test.dart test/exam_mode_test.dart test/profile_progress_analytics_test.dart test/weekly_progress_report_test.dart
 flutter test test/tutor_context_repository_test.dart test/tutor_personality_test.dart test/listening_dialogue_test.dart test/roleplay_mission_test.dart
@@ -333,4 +346,5 @@ broken schema need to be re-entered once.
   and focused test commands aligned with the implementation. Reminder preferences
   are stored, but Settings currently has no reminder controls and system
   notification scheduling is not implemented. Exam results, chat history, and
-  listening scores are not saved; button-animation settings remain experimental.
+  listening scores are not saved, but explicit vocabulary assessments are;
+  button-animation settings remain experimental.

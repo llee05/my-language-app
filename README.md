@@ -2,8 +2,8 @@
 
 **TingShuo v1.0.0 Beta 6** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
-sentence and listening practice, spaced daily review, a searchable vocabulary
-library, Vocab Rush, offline vocabulary exams, and saved progress analytics.
+sentence and listening practice, a swipe-based word feed, a searchable
+dictionary, Vocab Rush, offline vocabulary exams, and saved progress analytics.
 An optional AI tutor offers chat, listening dialogues, roleplay missions, and
 custom teaching personalities using your own provider and API key.
 
@@ -24,13 +24,13 @@ custom teaching personalities using your own provider and API key.
   reveal, replay, and slower playback.
 - Immediate card ratings, persisted lesson position, completion summaries, and
   the ability to resume an unfinished lesson after restarting the app.
-- A daily review queue that prioritises due and weak cards before new words.
-- Spaced-review scheduling, resumable daily sessions, and a daily completion
-  summary.
-- Vocabulary search by Hanzi, pinyin, or English, with HSK and learning-state
-  filters plus word detail views.
-- Vocab Rush timed and survival modes; incorrect answers are added to the
-  learner's review data.
+- Doom Scrolling: a vertical, random feed of vocabulary below 80% mastery,
+  with pronunciation, examples, and explicit word ratings.
+- Spaced-review scheduling and saved progress shared across study modes.
+- Dictionary search by Hanzi, pinyin, or English, with HSK and learning-state
+  filters, word details, and word-rating controls.
+- Vocab Rush timed and survival modes; correct and incorrect answers contribute
+  to vocabulary statistics.
 - Offline Exam Mode with reading, pinyin, written recall, optional listening,
   section scores, and answer review.
 - Dashboard and Profile analytics from saved reviews, including XP, streaks,
@@ -125,9 +125,9 @@ for dataset sources, attribution, and regeneration instructions.
 
 ### Home and Profile
 
-**Home** shows today's saved review queue, the latest unfinished lesson, weekly
-XP, and vocabulary statistics. **Available HSK lessons** samples up to six
-lessons across HSK levels; use **Refresh lessons** for another selection.
+**Home** shows the unlearned-word discovery prompt, the latest unfinished
+lesson, weekly XP, and vocabulary statistics. **Available HSK lessons** samples
+up to six lessons across HSK levels; use **Refresh lessons** for another selection.
 
 Open **Profile** through the user icon in the dashboard header to see total XP,
 current streak, answer accuracy, review counts, active study days, and vocabulary
@@ -141,12 +141,31 @@ lower levels are complete. This progress is separate from the HSK level you
 choose in learner settings and is not an official proficiency score. Analytics
 refresh after saved reviews, at local midnight, and when the app resumes.
 
-### Daily review
+Lessons, Dictionary, Doom Scrolling, Listening Practice, Vocab Rush, and Exam
+Mode share the same saved word progress. Sentence recaps, AI chat, generated
+dialogues, and roleplay turns offer **Practise these words** controls for locally
+matched bundled vocabulary. Only explicit ratings and assessed answers update
+statistics; browsing, listening to audio, and generating AI content do not.
+Whole sentence cards earn study XP but are excluded from HSK word totals.
 
-Open **Daily Review** or use the dashboard prompt to review today's queue. Due and
-weak vocabulary is shown first, followed by new words up to the configured
-daily target. Session position and answers are persisted, so a review can be
-continued later the same day.
+### Doom Scrolling
+
+Open **Doom Scrolling** or select **Start scrolling** on Home for a vertical feed
+of random HSK 1–6 words you have not learned yet. Words at 80% mastery or above
+are excluded, including learned words whose spaced review is due. Each card
+shows Hanzi, optional pinyin, a study meaning, pronunciation, and an example
+where one is available. On smaller screens, **Word details** shows the full
+readings, meanings, and examples.
+
+Swipe up, scroll with the mouse wheel, use the arrow keys, or select **Swipe up
+for another word**. Browsing and skipping do not change progress. **Got it**
+saves a correct rating; **Still learning** saves an incorrect rating. Saving
+finishes before the feed advances, and failed saves can be retried. At the end
+of a mix, **Refresh word feed** reshuffles the remaining unlearned vocabulary.
+
+Legacy daily-review sessions remain in local storage and backups; navigation
+now opens the word feed. Spaced-review dates and the Dictionary's **To review**
+filter remain available.
 
 ### Listening practice
 
@@ -160,8 +179,10 @@ using saved progress with at least 80% mastery. Each prompt plays before its Han
 and pinyin are shown. Choose the English meaning or reveal the answer, and use
 **Replay** or **Slower** whenever you need to hear it again.
 
-Listening scores last for the current session only. This practice does not save
-ratings, update mastery, or add reviews to the daily queue.
+Listening scores last for the current session only. Choosing a meaning saves
+a correct or incorrect vocabulary rating; revealing an answer without choosing
+a meaning saves an incorrect rating. These responses update vocabulary mastery,
+XP, streaks, and review schedules.
 
 ### Exam Mode
 
@@ -177,15 +198,19 @@ These are TingShuo practice assessments, not official HSK papers or certificatio
 scores. Listening requires a working Mandarin voice and enabled sound; failed
 audio questions can be excluded and the result is marked as partial. Unanswered
 questions count as incorrect. Attempts and results stay in memory only and are
-lost when leaving the exam or closing the app. Exams do not change lesson
-ratings or review history.
+lost when leaving the exam or closing the app. On submission or timeout,
+answered, scored questions save correct or incorrect vocabulary ratings.
+Unanswered and excluded audio questions do not change vocabulary progress.
+Failed progress saves can be retried without counting answers twice.
 
-### Vocabulary and Vocab Rush
+### Dictionary and Vocab Rush
 
-The **Vocabulary** page supports Hanzi, pinyin, and English search, HSK 1–6
-filters, and unseen, learning, learned, and due states. **Vocab Rush** provides
-timed and survival challenges; missed vocabulary is recorded as weak and can
-return in daily review.
+The **Dictionary** page supports Hanzi, pinyin, and English search, HSK 1–6
+filters, and unseen, learning, learned, and due states. Open word details and
+expand **Practise these words** to save a **Got it** or **Still learning** rating.
+Looking up a word or playing its pronunciation does not award mastery.
+**Vocab Rush** provides timed and survival challenges; every answer contributes
+to shared vocabulary statistics, with mistakes recorded as weak words.
 
 ### Appearance and preferences
 
@@ -448,7 +473,7 @@ python3 -m unittest discover -s tool/ci -p 'test_*.py' -v
 
 The suite covers startup and onboarding, database migrations and persistence,
 curriculum upgrades, lesson and daily-review resumption, spaced scheduling,
-vocabulary data/search, listening practice, Vocab Rush review integration,
+dictionary search, unlearned-word discovery, cross-mode vocabulary statistics,
 exam generation/results, Profile analytics, AI contracts and tutor profiles,
 personal-key settings, voice installation/fallback, backup/reset, appearance,
 and cache invalidation. Tests use in-memory or temporary SQLite databases,
@@ -510,8 +535,8 @@ Android and the three desktop platforms. There is no web runner.
 ### In-memory caching
 
 Bundled vocabulary is parsed once per asset bundle and shared as immutable data
-by Lessons, Vocabulary, Vocab Rush, and Exam Mode. The database retains up to
-32 recent lesson reads (including the library summary) and one daily statistics
+by Lessons, Dictionary, Doom Scrolling, Vocab Rush, and Exam Mode. The database
+retains up to 32 recent lesson reads (including the library summary) and one daily statistics
 result. Lesson sessions are loaded in one bulk query and remain fresh on each load.
 Statistics refresh after saved reviews, at local midnight, and when the app
 resumes. Kokoro retains up to 64 synthesized clips within a 16 MiB sample-data
