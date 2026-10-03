@@ -61,15 +61,13 @@ class MainDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SectionLabel('DAILY REVIEW'),
+          const SectionLabel('DOOM SCROLLING'),
           const SizedBox(height: 12),
-          _DailyReviewPrompt(
+          _DiscoveryPrompt(
             loading: loadingReview,
             hasError: reviewLoadError,
             pendingCount: pendingReviewCount,
             complete: reviewComplete,
-            resume: resumeReview,
-            newLearner: isNewLearner,
             onPressed: onStartReview,
             onRetry: onRetryReview,
           ),
@@ -307,14 +305,12 @@ class _AvailableLessonsStateCard extends StatelessWidget {
   );
 }
 
-class _DailyReviewPrompt extends StatelessWidget {
-  const _DailyReviewPrompt({
+class _DiscoveryPrompt extends StatelessWidget {
+  const _DiscoveryPrompt({
     required this.loading,
     required this.hasError,
     required this.pendingCount,
     required this.complete,
-    required this.resume,
-    required this.newLearner,
     required this.onPressed,
     required this.onRetry,
   });
@@ -323,8 +319,6 @@ class _DailyReviewPrompt extends StatelessWidget {
   final bool hasError;
   final int pendingCount;
   final bool complete;
-  final bool resume;
-  final bool newLearner;
   final VoidCallback onPressed;
   final VoidCallback? onRetry;
 
@@ -340,66 +334,45 @@ class _DailyReviewPrompt extends StatelessWidget {
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 180),
         child: loading
-            ? const _DailyReviewPromptLoading()
+            ? const _DiscoveryPromptLoading()
             : hasError
-            ? _DailyReviewPromptError(onRetry: onRetry)
+            ? _DiscoveryPromptError(onRetry: onRetry)
             : complete
-            ? const _DailyReviewPromptComplete()
+            ? const _DiscoveryPromptComplete()
             : _buildPending(),
       ),
     );
   }
 
-  Widget _buildPending() => Row(
-    key: const ValueKey('daily-review-prompt-pending'),
+  Widget _buildPending() => Column(
+    key: const ValueKey('discovery-prompt-pending'),
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(Icons.style_outlined, color: AppColors.gold),
-      const SizedBox(width: 12),
-      Expanded(
-        child: newLearner
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Learn your first $pendingCount word${pendingCount == 1 ? '' : 's'}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Reveal each meaning and rate how well you knew it. We’ll schedule the next review for you.',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
-                  ),
-                ],
-              )
-            : Text(
-                '$pendingCount card${pendingCount == 1 ? '' : 's'} pending today',
-                style: TextStyle(color: AppColors.text),
-              ),
+      Text(
+        '$pendingCount unlearned word${pendingCount == 1 ? '' : 's'} to discover',
+        style: TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
       ),
-      const SizedBox(width: 12),
-      FilledButton(
-        onPressed: pendingCount == 0 ? null : onPressed,
-        child: Text(
-          resume
-              ? 'Resume review'
-              : newLearner
-              ? 'Begin first review'
-              : 'Start review',
-        ),
+      const SizedBox(height: 8),
+      Text(
+        'Swipe through a random mix. Rate a word when you practise it.',
+        style: TextStyle(color: AppColors.muted),
+      ),
+      const SizedBox(height: 12),
+      FilledButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.swipe_up_rounded),
+        label: const Text('Start scrolling'),
       ),
     ],
   );
 }
 
-class _DailyReviewPromptLoading extends StatelessWidget {
-  const _DailyReviewPromptLoading();
+class _DiscoveryPromptLoading extends StatelessWidget {
+  const _DiscoveryPromptLoading();
 
   @override
   Widget build(BuildContext context) => Semantics(
-    key: const ValueKey('daily-review-prompt-loading'),
+    key: const ValueKey('discovery-prompt-loading'),
     container: true,
     liveRegion: true,
     child: Row(
@@ -409,7 +382,7 @@ class _DailyReviewPromptLoading extends StatelessWidget {
           child: CircularProgressIndicator(
             color: AppColors.red,
             strokeWidth: 2.5,
-            semanticsLabel: 'Loading daily review',
+            semanticsLabel: 'Loading word feed',
           ),
         ),
         SizedBox(width: 14),
@@ -418,7 +391,7 @@ class _DailyReviewPromptLoading extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Checking today’s review',
+                'Finding words to discover',
                 style: TextStyle(
                   color: AppColors.text,
                   fontWeight: FontWeight.w600,
@@ -426,7 +399,7 @@ class _DailyReviewPromptLoading extends StatelessWidget {
               ),
               SizedBox(height: 3),
               Text(
-                'Finding due, weak, and new cards for you.',
+                'Checking your vocabulary progress.',
                 style: TextStyle(fontSize: 11, color: AppColors.muted),
               ),
             ],
@@ -437,12 +410,12 @@ class _DailyReviewPromptLoading extends StatelessWidget {
   );
 }
 
-class _DailyReviewPromptComplete extends StatelessWidget {
-  const _DailyReviewPromptComplete();
+class _DiscoveryPromptComplete extends StatelessWidget {
+  const _DiscoveryPromptComplete();
 
   @override
   Widget build(BuildContext context) => Semantics(
-    key: const ValueKey('daily-review-prompt-complete'),
+    key: const ValueKey('discovery-prompt-complete'),
     container: true,
     liveRegion: true,
     child: Row(
@@ -451,7 +424,7 @@ class _DailyReviewPromptComplete extends StatelessWidget {
         SizedBox(width: 12),
         Expanded(
           child: Text(
-            'Daily review complete — you’re all done!',
+            'You’ve learned every bundled word!',
             style: TextStyle(color: AppColors.text),
           ),
         ),
@@ -460,18 +433,18 @@ class _DailyReviewPromptComplete extends StatelessWidget {
   );
 }
 
-class _DailyReviewPromptError extends StatelessWidget {
-  const _DailyReviewPromptError({required this.onRetry});
+class _DiscoveryPromptError extends StatelessWidget {
+  const _DiscoveryPromptError({required this.onRetry});
 
   final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) => _AppErrorState(
-    key: const ValueKey('daily-review-prompt-error'),
-    title: _AppErrorCopy.dailyReviewTitle,
-    message: _AppErrorCopy.dailyReviewMessage,
+    key: const ValueKey('discovery-prompt-error'),
+    title: 'The word feed could not be loaded',
+    message: 'Please try again.',
     onRetry: onRetry,
-    retryKey: const Key('daily-review-prompt-retry'),
+    retryKey: const Key('discovery-prompt-retry'),
     compact: true,
   );
 }

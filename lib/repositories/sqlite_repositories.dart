@@ -1026,7 +1026,8 @@ class SqliteProgressRepository
         card_progress.*
       FROM card_progress
       INNER JOIN cards ON cards.id = card_progress.card_id
-      WHERE card_progress.learner_id = ?
+      INNER JOIN lessons ON lessons.id = cards.lesson_id
+      WHERE card_progress.learner_id = ? AND lessons.is_sentence_practice = 0
       ORDER BY card_progress.last_reviewed_at DESC, cards.id ASC
     ''',
           [1],

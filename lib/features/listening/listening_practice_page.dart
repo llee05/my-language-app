@@ -10,7 +10,12 @@ class ListeningPracticePage extends StatefulWidget {
     this.progressRepository,
     this.sessionSize = 20,
     this.random,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final LessonRepository lessonRepository;
   final SettingsRepository settingsRepository;
@@ -51,6 +56,9 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   int _correctAnswers = 0;
   String? _selectedMeaning;
   String? _audioError;
+  String? _saveError;
+  String? _pendingMeaning;
+  String _practiceRunId = '';
   String? _selectedTopicKey;
   String? _activeTopicLabel;
   int _audioRequestId = 0;
@@ -180,6 +188,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   }
 
   void _resetSessionState() {
+    _practiceRunId = DateTime.now().microsecondsSinceEpoch.toString();
+    _saveError = null;
     _position = 0;
     _correctAnswers = 0;
     _selectedMeaning = null;
@@ -417,23 +427,43 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     return options;
   }
 
-  void _chooseMeaning(String meaning) {
-    if (_answerRevealed) return;
-    final correct =
-        meaning.toLowerCase() == _card.englishMeaning.trim().toLowerCase();
-    setState(() {
-      _selectedMeaning = meaning;
-      _answerRevealed = true;
-      if (correct) _correctAnswers++;
-    });
-  }
+  Future<void> _chooseMeaning(String meaning) => _saveAnswer(meaning);
 
-  void _revealAnswer() {
-    if (_answerRevealed) return;
+  Future<void> _revealAnswer() => _saveAnswer(null);
+
+  Future<void> _saveAnswer(String? meaning) async {
+    if (_answerRevealed || _transitioning) return;
+    final correct =
+        meaning?.toLowerCase() == _card.englishMeaning.trim().toLowerCase();
+    _pendingMeaning = meaning;
     setState(() {
-      _selectedMeaning = null;
-      _answerRevealed = true;
+      _transitioning = true;
+      _saveError = null;
     });
+    try {
+      await widget.studyService?.recordCard(
+        _card,
+        hskLevel: _maxHskLevel,
+        rating: correct ? ReviewRating.good : ReviewRating.again,
+        submissionKey: 'listening:$_practiceRunId:$_position',
+      );
+      if (!mounted) return;
+      setState(() {
+        _selectedMeaning = meaning;
+        _answerRevealed = true;
+        if (correct) _correctAnswers++;
+      });
+      widget.onProgressChanged?.call();
+    } catch (error) {
+      debugPrint('Listening answer save failed: $error');
+      if (mounted) {
+        setState(
+          () => _saveError = 'Your answer could not be saved. Try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _transitioning = false);
+    }
   }
 
   Future<void> _next() async {
@@ -920,7 +950,9 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       for (var index = 0; index < _meaningOptions.length; index++) ...[
         OutlinedButton(
           key: Key('listening-choice-$index'),
-          onPressed: () => _chooseMeaning(_meaningOptions[index]),
+          onPressed: _transitioning || _saveError != null
+              ? null
+              : () => _chooseMeaning(_meaningOptions[index]),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           ),
@@ -928,10 +960,16 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         ),
         if (index != _meaningOptions.length - 1) const SizedBox(height: 10),
       ],
+      if (_saveError != null)
+        _AppInlineError(
+          message: _saveError!,
+          onRetry: () => _saveAnswer(_pendingMeaning),
+          retryKey: const Key('listening-save-retry'),
+        ),
       const SizedBox(height: 18),
       TextButton(
         key: const Key('listening-reveal-answer'),
-        onPressed: _revealAnswer,
+        onPressed: _transitioning || _saveError != null ? null : _revealAnswer,
         child: const Text('Reveal answer'),
       ),
     ],

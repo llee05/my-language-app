@@ -708,7 +708,7 @@ class _ProfileEmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Complete reviews to build your accuracy, XP, streak, and mastery trends.',
+                  'Practise words in any study mode to build your accuracy, XP, streak, and mastery trends.',
                   style: TextStyle(color: AppColors.muted, fontSize: 11),
                 ),
               ],
@@ -717,7 +717,7 @@ class _ProfileEmptyState extends StatelessWidget {
           const SizedBox(width: 12),
           FilledButton(
             onPressed: onStartReview,
-            child: const Text('Start review'),
+            child: const Text('Discover words'),
           ),
         ],
       ),

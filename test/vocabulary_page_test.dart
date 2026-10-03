@@ -303,6 +303,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Hear word pronunciation'));
     await tester.pump();
+    await tester.ensureVisible(find.byTooltip('Hear example sentence'));
     await tester.tap(find.byTooltip('Hear example sentence'));
     await tester.pump();
 

@@ -114,7 +114,7 @@ void main() {
     );
 
     expect(find.text('Your progress story starts here'), findsOneWidget);
-    final startReview = find.text('Start review');
+    final startReview = find.text('Discover words');
     await tester.ensureVisible(startReview);
     await tester.pumpAndSettle();
     await tester.tap(startReview);

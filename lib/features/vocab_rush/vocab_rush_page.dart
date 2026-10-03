@@ -34,7 +34,12 @@ class VocabRushPage extends StatefulWidget {
     this.pronunciationService,
     this.initialVocabulary,
     this.vocabularyRepository = const BundledVocabularyRepository(),
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
@@ -241,10 +246,8 @@ class _VocabRushPageState extends State<VocabRushPage> {
       }
     });
 
-    if (!correct) {
-      final submissionKey = 'vocab-rush:$_gameRunId:attempt:$_attempts';
-      unawaited(_addMistakeToReviewQueue(source, submissionKey));
-    }
+    final submissionKey = 'vocab-rush:$_gameRunId:attempt:$_attempts';
+    unawaited(_savePractice(source, submissionKey, correct));
 
     Future<void>.delayed(const Duration(milliseconds: 450), () {
       if (!mounted || !_playing) return;
@@ -256,55 +259,50 @@ class _VocabRushPageState extends State<VocabRushPage> {
     });
   }
 
-  Future<void> _addMistakeToReviewQueue(
+  Future<void> _savePractice(
     Map<String, dynamic> source,
     String submissionKey,
+    bool correct,
   ) async {
     try {
-      final card = await widget.lessonRepository.findOrCreateVocabularyCard(
-        card: Flashcard(
+      final service =
+          widget.studyService ??
+          VocabularyStudyService(
+            lessons: widget.lessonRepository,
+            progress: widget.progressRepository,
+          );
+      final card = await service.recordCard(
+        Flashcard(
           chinese: source['chinese'] as String,
           pinyin: source['pinyin'] as String,
           englishMeaning: source['english_meaning'] as String,
           partOfSpeech: source['part_of_speech'] as String,
         ),
         hskLevel: source['hsk_level'] as int,
+        rating: correct ? ReviewRating.good : ReviewRating.again,
+        submissionKey: submissionKey,
       );
-      final previous = await widget.progressRepository.progressForCard(card.id);
-      final now = DateTime.now().toUtc();
-      await widget.progressRepository.recordReview(
-        review: ReviewRecord(
-          id: 0,
+      if (!correct) {
+        await widget.dailyReviewSessionRepository?.enqueueCard(
+          date: DateTime.now(),
           cardId: card.id,
-          submissionKey: submissionKey,
-          reviewedAt: now,
-          rating: ReviewRating.again,
-          wasCorrect: false,
-        ),
-        progress: CardProgress(
-          cardId: card.id,
-          repetitions: 0,
-          lapses: (previous?.lapses ?? 0) + 1,
-          reviewInterval: 1,
-          easeFactor: max(1.3, (previous?.easeFactor ?? 2.5) - .2),
-          nextReview: now.add(const Duration(days: 1)),
-          lastReview: now,
-        ),
-      );
-      await widget.dailyReviewSessionRepository?.enqueueCard(
-        date: DateTime.now(),
-        cardId: card.id,
-      );
+        );
+      }
+      widget.onProgressChanged?.call();
     } catch (error) {
       debugPrint('Vocab Rush review queue update failed: $error');
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
-          content: const Text(_AppErrorCopy.addToReview),
+          content: Text(
+            correct
+                ? 'Your vocabulary progress could not be saved.'
+                : _AppErrorCopy.addToReview,
+          ),
           action: SnackBarAction(
             label: 'Try again',
             onPressed: () =>
-                unawaited(_addMistakeToReviewQueue(source, submissionKey)),
+                unawaited(_savePractice(source, submissionKey, correct)),
           ),
         ),
       );

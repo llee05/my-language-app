@@ -10,7 +10,12 @@ class _AiListeningDialogueMode extends StatefulWidget {
     required this.speechInputService,
     required this.aiService,
     this.clock,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final bool active;
   final AiTutorRequest? request;
@@ -490,6 +495,13 @@ Return only compact JSON with this exact shape:
         ],
         const SizedBox(height: 18),
         _buildNewWords(dialogue),
+        if (widget.studyService != null)
+          _VocabularyPracticePanel(
+            key: ObjectKey(dialogue),
+            service: widget.studyService!,
+            text: dialogue.lines.map((line) => line.chinese).join('。'),
+            onProgressChanged: widget.onProgressChanged,
+          ),
         const SizedBox(height: 18),
         for (var index = 0; index < dialogue.questions.length; index++)
           _buildQuestion(dialogue, index),

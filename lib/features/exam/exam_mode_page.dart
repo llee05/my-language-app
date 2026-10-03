@@ -8,7 +8,12 @@ class ExamModePage extends StatefulWidget {
     required this.settingsRepository,
     required this.pronunciationService,
     this.random,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final int initialLevel;
   final BundledVocabularyRepository vocabularyRepository;
@@ -73,6 +78,8 @@ class _ExamModePageState extends State<ExamModePage> {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ExamSessionPage(
+            studyService: widget.studyService,
+            onProgressChanged: widget.onProgressChanged,
             exam: exam,
             timed: _timed,
             pronunciationService: widget.pronunciationService,
@@ -222,7 +229,12 @@ class ExamSessionPage extends StatefulWidget {
     required this.pronunciationService,
     this.timed = true,
     this.clock,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final HskExam exam;
   final PronunciationService pronunciationService;
@@ -251,6 +263,9 @@ class _ExamSessionPageState extends State<ExamSessionPage>
   bool _dialogOpen = false;
   bool _allowExit = false;
   ExamResult? _result;
+  bool _savingProgress = false;
+  String? _progressError;
+  final _studyRunId = DateTime.now().microsecondsSinceEpoch.toString();
   DateTime _now() => widget.clock?.call() ?? DateTime.now();
   ExamQuestion get _question => widget.exam.questions[_position];
 
@@ -343,6 +358,48 @@ class _ExamSessionPageState extends State<ExamSessionPage>
       ),
     );
     if (_scroll.hasClients) _scroll.jumpTo(0);
+    unawaited(_saveResult());
+  }
+
+  Future<void> _saveResult() async {
+    final service = widget.studyService;
+    final result = _result;
+    if (service == null || result == null || _savingProgress) return;
+    setState(() {
+      _savingProgress = true;
+      _progressError = null;
+    });
+    try {
+      for (final (index, question) in widget.exam.questions.indexed) {
+        if (result.excluded.contains(index) ||
+            result.responses[index]?.trim().isNotEmpty != true) {
+          continue;
+        }
+        await service.recordCard(
+          Flashcard(
+            chinese: question.word.hanzi,
+            pinyin: question.word.pinyin,
+            englishMeaning: question.word.meaning,
+          ),
+          hskLevel: widget.exam.level,
+          rating: question.isCorrect(result.responses[index])
+              ? ReviewRating.good
+              : ReviewRating.again,
+          submissionKey: 'exam:$_studyRunId:$index',
+        );
+      }
+      widget.onProgressChanged?.call();
+    } catch (error) {
+      debugPrint('Exam vocabulary progress save failed: $error');
+      if (mounted) {
+        setState(
+          () => _progressError =
+              'Your vocabulary progress could not be saved. Try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _savingProgress = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -377,13 +434,17 @@ class _ExamSessionPageState extends State<ExamSessionPage>
   }
 
   Future<void> _exit() async {
-    if (_dialogOpen) return;
+    if (_dialogOpen || _savingProgress) return;
     _dialogOpen = true;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Leave this exam?'),
-        content: const Text('This attempt and its answers will be lost.'),
+        content: Text(
+          _progressError != null
+              ? 'Some vocabulary progress has not been saved. Leave anyway?'
+              : 'This attempt and its answers will be lost.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -416,7 +477,9 @@ class _ExamSessionPageState extends State<ExamSessionPage>
 
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: _result != null || _allowExit,
+    canPop:
+        (_result != null && !_savingProgress && _progressError == null) ||
+        _allowExit,
     onPopInvokedWithResult: (didPop, _) {
       if (!didPop) unawaited(_exit());
     },
@@ -638,9 +701,22 @@ class _ExamSessionPageState extends State<ExamSessionPage>
             ),
           ),
       const SizedBox(height: 12),
+      if (_savingProgress) const Text('Saving vocabulary progress…'),
+      if (_progressError != null)
+        _AppInlineError(
+          message: _progressError!,
+          onRetry: _saveResult,
+          retryKey: const Key('exam-progress-retry'),
+        ),
+      if (widget.studyService != null &&
+          !_savingProgress &&
+          _progressError == null)
+        const Text('Vocabulary progress saved for your answered questions.'),
       FilledButton(
         key: const Key('exam-done'),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: _savingProgress || _progressError != null
+            ? null
+            : () => Navigator.of(context).pop(),
         child: const Text('Choose another exam'),
       ),
       const SizedBox(height: 24),

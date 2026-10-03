@@ -14,7 +14,12 @@ class AiTutorPage extends StatefulWidget {
     this.speechInputService,
     this.aiService = const AiService(),
     this.clock,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
@@ -85,6 +90,8 @@ class _AiTutorPageState extends State<AiTutorPage> {
             index: _mode.index,
             children: [
               _TutorChat(
+                studyService: widget.studyService,
+                onProgressChanged: widget.onProgressChanged,
                 request: widget.request,
                 personalityRepository: widget.personalityRepository,
                 settingsRepository: widget.settingsRepository,
@@ -96,6 +103,8 @@ class _AiTutorPageState extends State<AiTutorPage> {
               ),
               if (_dialogueOpened)
                 _AiListeningDialogueMode(
+                  studyService: widget.studyService,
+                  onProgressChanged: widget.onProgressChanged,
                   active: _mode == _AiTutorMode.listeningDialogue,
                   request: widget.request,
                   settingsRepository: widget.settingsRepository,
@@ -166,7 +175,12 @@ class _TutorChat extends StatefulWidget {
     required this.speechInputService,
     required this.aiService,
     this.clock,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
@@ -570,6 +584,8 @@ useful:
             tutorName: _personalities.selected.id == 'long_laoshi'
                 ? '龙老师'
                 : _personalities.selected.name,
+            studyService: widget.studyService,
+            onProgressChanged: widget.onProgressChanged,
             messages: _messages,
             sending: _sending,
             controller: _scrollController,
@@ -598,6 +614,8 @@ useful:
 class _Conversation extends StatelessWidget {
   const _Conversation({
     required this.tutorName,
+    this.studyService,
+    this.onProgressChanged,
     required this.messages,
     required this.sending,
     required this.controller,
@@ -605,6 +623,8 @@ class _Conversation extends StatelessWidget {
   });
 
   final String tutorName;
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
   final List<_ChatMessage> messages;
   final bool sending;
   final ScrollController controller;
@@ -632,6 +652,13 @@ class _Conversation extends StatelessWidget {
                     : () => onSpeak!(message.chinese),
               ),
               if (message.tip.isNotEmpty) _TipBubble(message.tip),
+              if (studyService != null && message != messages.first)
+                _VocabularyPracticePanel(
+                  key: ObjectKey(message),
+                  service: studyService!,
+                  text: message.chinese,
+                  onProgressChanged: onProgressChanged,
+                ),
             ],
           ],
           if (sending) _TypingMessage(tutorName: tutorName),

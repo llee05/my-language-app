@@ -3,6 +3,7 @@ part of '../../main.dart';
 class _LessonCompletionSummary extends StatelessWidget {
   const _LessonCompletionSummary({
     super.key,
+    this.vocabularyPractice,
     required this.title,
     required this.isSentence,
     required this.reviewed,
@@ -18,6 +19,7 @@ class _LessonCompletionSummary extends StatelessWidget {
     required this.onSpeak,
   });
 
+  final Widget? vocabularyPractice;
   final String title;
   final bool isSentence;
   final int reviewed;
@@ -332,6 +334,7 @@ class _LessonCompletionSummary extends StatelessWidget {
                     ),
                   ),
                 ],
+                ?vocabularyPractice,
                 if (!compact && nextLessonTitle != null) ...[
                   const SizedBox(height: 24),
                   const SectionLabel('UP NEXT'),

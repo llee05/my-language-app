@@ -10,8 +10,10 @@ class LessonsPage extends StatefulWidget {
     this.resumeLatest = false,
     this.initialLessonId,
     this.onProgressChanged,
+    this.studyService,
   });
 
+  final VocabularyStudyService? studyService;
   final LessonRepository repository;
   final ProgressRepository progressRepository;
   final SettingsRepository settingsRepository;
@@ -1130,6 +1132,13 @@ class _LessonsPageState extends State<LessonsPage> {
     final next = _nextLesson;
     return _LessonCompletionSummary(
       key: ValueKey('lesson-completion-${session.id}'),
+      vocabularyPractice: _lessonIsSentence && widget.studyService != null
+          ? _VocabularyPracticePanel(
+              service: widget.studyService!,
+              text: _cards.map((card) => card.chinese).join("。"),
+              onProgressChanged: widget.onProgressChanged,
+            )
+          : null,
       title: _lessonTitle,
       isSentence: _lessonIsSentence,
       reviewed: session.cardsReviewed,

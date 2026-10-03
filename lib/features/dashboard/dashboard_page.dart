@@ -65,16 +65,15 @@ class _DashboardPageState extends State<DashboardPage>
   late final bool _ownsPronunciationService;
   late final SpeechInputService _speechInputService;
   late final bool _ownsSpeechInputService;
+  late final VocabularyStudyService _studyService;
   int selectedNav = 0;
   bool _resumeLatestLesson = false;
   int? _initialLessonId;
-  bool _startDailyReview = false;
-  bool _loadingDailyReview = true;
-  bool _dailyReviewLoadError = false;
-  int _dailyReviewRequestId = 0;
-  int _pendingReviewCount = 0;
-  bool _dailyReviewComplete = false;
-  bool _resumeDailyReview = false;
+  bool _loadingDiscovery = true;
+  bool _discoveryLoadError = false;
+  int _discoveryRequestId = 0;
+  int _unlearnedCount = 0;
+  bool _discoveryComplete = false;
   Lesson? _activeLesson;
   LessonSession? _activeLessonSession;
   DashboardLearningStats _learningStats = const DashboardLearningStats();
@@ -99,7 +98,13 @@ class _DashboardPageState extends State<DashboardPage>
     _speechInputService =
         widget.speechInputService ?? createSystemSpeechInputService();
     _random = widget.random ?? Random();
-    _loadDailyReviewPrompt();
+    _studyService = VocabularyStudyService(
+      lessons: widget.lessonRepository,
+      progress: widget.progressRepository,
+      vocabulary: widget.vocabularyRepository,
+      clock: widget.clock,
+    );
+    _loadDiscoveryPrompt();
     _loadActiveLesson();
     _loadLearningStats();
     _loadAvailableLessons();
@@ -278,43 +283,33 @@ class _DashboardPageState extends State<DashboardPage>
     }
   }
 
-  Future<void> _loadDailyReviewPrompt() async {
-    final requestId = ++_dailyReviewRequestId;
-    if (!_loadingDailyReview && mounted) {
+  Future<void> _loadDiscoveryPrompt() async {
+    final requestId = ++_discoveryRequestId;
+    if (!_loadingDiscovery && mounted) {
       setState(() {
-        _loadingDailyReview = true;
-        _dailyReviewLoadError = false;
+        _loadingDiscovery = true;
+        _discoveryLoadError = false;
       });
     }
     try {
-      final now = widget.clock?.call() ?? DateTime.now();
-      final queue = await widget.progressRepository.dailyQueue(
-        forDay: now,
-        limit: widget.profile.dailyWordTarget,
-        maxHskLevel: widget.profile.hskLevel,
-      );
-      final session = await widget.dailyReviewSessionRepository?.load(now);
-      if (!mounted || requestId != _dailyReviewRequestId) return;
+      final words = await widget.vocabularyRepository.load();
+      final progress = await widget.progressRepository.vocabularyProgress();
+      final count = unlearnedVocabulary(words, progress).length;
+      if (!mounted || requestId != _discoveryRequestId) return;
       setState(() {
-        _pendingReviewCount = queue.length;
-        _dailyReviewComplete = session?.isComplete == true || queue.isEmpty;
-        _resumeDailyReview =
-            queue.isNotEmpty &&
-            session != null &&
-            !session.isComplete &&
-            session.currentPosition > 0;
-        _loadingDailyReview = false;
-        _dailyReviewLoadError = false;
+        _unlearnedCount = count;
+        _discoveryComplete = count == 0;
+        _loadingDiscovery = false;
+        _discoveryLoadError = false;
       });
     } catch (error) {
-      debugPrint('Daily review prompt load failed: $error');
-      if (!mounted || requestId != _dailyReviewRequestId) return;
+      debugPrint('Discovery prompt load failed: $error');
+      if (!mounted || requestId != _discoveryRequestId) return;
       setState(() {
-        _pendingReviewCount = 0;
-        _dailyReviewComplete = false;
-        _resumeDailyReview = false;
-        _loadingDailyReview = false;
-        _dailyReviewLoadError = true;
+        _unlearnedCount = 0;
+        _discoveryComplete = false;
+        _loadingDiscovery = false;
+        _discoveryLoadError = true;
       });
     }
   }
@@ -324,15 +319,15 @@ class _DashboardPageState extends State<DashboardPage>
       selectedNav = value;
       _resumeLatestLesson = false;
       _initialLessonId = null;
-      _startDailyReview = false;
     });
+    if (value == AppSidebar.items.length + 1) unawaited(_loadLearningStats());
     if (value == 0) {
       _refreshDashboardData();
     }
   }
 
   void _refreshDashboardData() {
-    unawaited(_loadDailyReviewPrompt());
+    unawaited(_loadDiscoveryPrompt());
     unawaited(_loadActiveLesson());
     unawaited(_loadLearningStats());
     unawaited(_loadAvailableLessons());
@@ -362,18 +357,19 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  void _openDailyReview() {
+  void _openDiscovery() {
     setState(() {
       selectedNav = 6;
-      _startDailyReview = true;
     });
   }
 
-  void _openProfile() => setState(() {
-    selectedNav = AppSidebar.items.length + 1;
-    _resumeLatestLesson = false;
-    _startDailyReview = false;
-  });
+  void _openProfile() {
+    unawaited(_loadLearningStats());
+    setState(() {
+      selectedNav = AppSidebar.items.length + 1;
+      _resumeLatestLesson = false;
+    });
+  }
 
   void _openSettings() => _selectNavigation(AppSidebar.items.length);
 
@@ -431,24 +427,22 @@ class _DashboardPageState extends State<DashboardPage>
                         Expanded(
                           child: _DashboardBody(
                             vocabularyRepository: widget.vocabularyRepository,
+                            studyService: _studyService,
                             selectedNav: selectedNav,
                             resumeLatestLesson: _resumeLatestLesson,
                             initialLessonId: _initialLessonId,
-                            startDailyReview: _startDailyReview,
                             onResumeLesson: _resumeLesson,
                             onOpenLessons: _openLessons,
                             onOpenAvailableLesson: _openAvailableLesson,
-                            onStartDailyReview: _openDailyReview,
-                            onRetryDailyReview: _loadDailyReviewPrompt,
+                            onOpenDiscovery: _openDiscovery,
+                            onRetryDiscovery: _loadDiscoveryPrompt,
                             onRetryAvailableLessons: _loadAvailableLessons,
-                            onDailyReviewCompleted: _loadDailyReviewPrompt,
                             onLearningProgressChanged: _loadLearningStats,
                             onLessonProgressChanged: _refreshDashboardData,
-                            loadingDailyReview: _loadingDailyReview,
-                            dailyReviewLoadError: _dailyReviewLoadError,
-                            pendingReviewCount: _pendingReviewCount,
-                            dailyReviewComplete: _dailyReviewComplete,
-                            resumeDailyReview: _resumeDailyReview,
+                            loadingDiscovery: _loadingDiscovery,
+                            discoveryLoadError: _discoveryLoadError,
+                            unlearnedCount: _unlearnedCount,
+                            discoveryComplete: _discoveryComplete,
                             activeLesson: _activeLesson,
                             activeLessonSession: _activeLessonSession,
                             learningStats: _learningStats,
@@ -524,21 +518,19 @@ class _DashboardBody extends StatelessWidget {
     required this.selectedNav,
     required this.resumeLatestLesson,
     this.initialLessonId,
-    required this.startDailyReview,
+    required this.studyService,
     required this.onResumeLesson,
     required this.onOpenLessons,
     required this.onOpenAvailableLesson,
-    required this.onStartDailyReview,
-    required this.onRetryDailyReview,
+    required this.onOpenDiscovery,
+    required this.onRetryDiscovery,
     required this.onRetryAvailableLessons,
-    required this.onDailyReviewCompleted,
     required this.onLearningProgressChanged,
     required this.onLessonProgressChanged,
-    required this.loadingDailyReview,
-    required this.dailyReviewLoadError,
-    required this.pendingReviewCount,
-    required this.dailyReviewComplete,
-    required this.resumeDailyReview,
+    required this.loadingDiscovery,
+    required this.discoveryLoadError,
+    required this.unlearnedCount,
+    required this.discoveryComplete,
     required this.activeLesson,
     required this.activeLessonSession,
     required this.learningStats,
@@ -573,24 +565,22 @@ class _DashboardBody extends StatelessWidget {
     this.backupRepository = const SqliteBackupRepository(),
     this.backupFileService = const FilePickerBackupFileService(),
   });
+  final VocabularyStudyService studyService;
   final int selectedNav;
   final bool resumeLatestLesson;
   final int? initialLessonId;
-  final bool startDailyReview;
   final VoidCallback onResumeLesson;
   final VoidCallback onOpenLessons;
   final ValueChanged<Lesson> onOpenAvailableLesson;
-  final VoidCallback onStartDailyReview;
-  final VoidCallback onRetryDailyReview;
+  final VoidCallback onOpenDiscovery;
+  final VoidCallback onRetryDiscovery;
   final VoidCallback onRetryAvailableLessons;
-  final VoidCallback onDailyReviewCompleted;
   final VoidCallback onLearningProgressChanged;
   final VoidCallback onLessonProgressChanged;
-  final bool loadingDailyReview;
-  final bool dailyReviewLoadError;
-  final int pendingReviewCount;
-  final bool dailyReviewComplete;
-  final bool resumeDailyReview;
+  final bool loadingDiscovery;
+  final bool discoveryLoadError;
+  final int unlearnedCount;
+  final bool discoveryComplete;
   final Lesson? activeLesson;
   final LessonSession? activeLessonSession;
   final DashboardLearningStats learningStats;
@@ -629,6 +619,7 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     if (selectedNav == 1) {
       return LessonsPage(
+        studyService: studyService,
         repository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
@@ -640,6 +631,8 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 2) {
       return AiRoleplayMissionsPage(
+        studyService: studyService,
+        onProgressChanged: onLearningProgressChanged,
         aiService: AiService(
           configurationRepository: aiConfigurationRepository,
         ),
@@ -652,6 +645,8 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 3) {
       return ListeningPracticePage(
+        studyService: studyService,
+        onProgressChanged: onLearningProgressChanged,
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
@@ -661,6 +656,8 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 4) {
       return VocabRushPage(
+        studyService: studyService,
+        onProgressChanged: onLearningProgressChanged,
         vocabularyRepository: vocabularyRepository,
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,
@@ -671,6 +668,8 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 5) {
       return VocabularyPage(
+        studyService: studyService,
+        onProgressChanged: onLearningProgressChanged,
         vocabularyRepository: vocabularyRepository,
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
@@ -678,20 +677,17 @@ class _DashboardBody extends StatelessWidget {
       );
     }
     if (selectedNav == 6) {
-      return DailyQueuePage(
-        profile: profile,
-        progressRepository: progressRepository,
-        sessionRepository: dailyReviewSessionRepository,
+      return DoomScrollingPage(
+        studyService: studyService,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
-        startImmediately: startDailyReview,
-        onSessionCompleted: onDailyReviewCompleted,
         onProgressChanged: onLearningProgressChanged,
-        clock: clock,
       );
     }
     if (selectedNav == 7) {
       return AiTutorPage(
+        studyService: studyService,
+        onProgressChanged: onLearningProgressChanged,
         personalityRepository: personalityRepository,
         aiService: AiService(
           configurationRepository: aiConfigurationRepository,
@@ -705,6 +701,8 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 8) {
       return ExamModePage(
+        studyService: studyService,
+        onProgressChanged: onLearningProgressChanged,
         initialLevel: profile.hskLevel,
         vocabularyRepository: vocabularyRepository,
         settingsRepository: settingsRepository,
@@ -737,7 +735,7 @@ class _DashboardBody extends StatelessWidget {
         loading: loadingLearningStats,
         loadError: learningStatsLoadError,
         onRetry: onRetryLearningStats,
-        onStartReview: onStartDailyReview,
+        onStartReview: onOpenDiscovery,
         onEditProfile: onOpenProfileSettings,
       );
     }
@@ -754,15 +752,15 @@ class _DashboardBody extends StatelessWidget {
                       child: MainDashboard(
                         onResume: onResumeLesson,
                         onStartLearning: onOpenLessons,
-                        onStartReview: onStartDailyReview,
-                        onRetryReview: onRetryDailyReview,
+                        onStartReview: onOpenDiscovery,
+                        onRetryReview: onRetryDiscovery,
                         onRetryLessons: onRetryAvailableLessons,
                         onLessonSelected: onOpenAvailableLesson,
-                        loadingReview: loadingDailyReview,
-                        reviewLoadError: dailyReviewLoadError,
-                        pendingReviewCount: pendingReviewCount,
-                        reviewComplete: dailyReviewComplete,
-                        resumeReview: resumeDailyReview,
+                        loadingReview: loadingDiscovery,
+                        reviewLoadError: discoveryLoadError,
+                        pendingReviewCount: unlearnedCount,
+                        reviewComplete: discoveryComplete,
+                        resumeReview: false,
                         activeLesson: activeLesson,
                         activeLessonSession: activeLessonSession,
                         isNewLearner:
@@ -780,7 +778,7 @@ class _DashboardBody extends StatelessWidget {
                     width: 300,
                     child: RightRail(
                       stats: learningStats,
-                      onReviewAll: onStartDailyReview,
+                      onReviewAll: onOpenDiscovery,
                     ),
                   ),
                 ],
@@ -791,15 +789,15 @@ class _DashboardBody extends StatelessWidget {
                     MainDashboard(
                       onResume: onResumeLesson,
                       onStartLearning: onOpenLessons,
-                      onStartReview: onStartDailyReview,
-                      onRetryReview: onRetryDailyReview,
+                      onStartReview: onOpenDiscovery,
+                      onRetryReview: onRetryDiscovery,
                       onRetryLessons: onRetryAvailableLessons,
                       onLessonSelected: onOpenAvailableLesson,
-                      loadingReview: loadingDailyReview,
-                      reviewLoadError: dailyReviewLoadError,
-                      pendingReviewCount: pendingReviewCount,
-                      reviewComplete: dailyReviewComplete,
-                      resumeReview: resumeDailyReview,
+                      loadingReview: loadingDiscovery,
+                      reviewLoadError: discoveryLoadError,
+                      pendingReviewCount: unlearnedCount,
+                      reviewComplete: discoveryComplete,
+                      resumeReview: false,
                       activeLesson: activeLesson,
                       activeLessonSession: activeLessonSession,
                       isNewLearner:
@@ -814,7 +812,7 @@ class _DashboardBody extends StatelessWidget {
                     RightRail(
                       compact: true,
                       stats: learningStats,
-                      onReviewAll: onStartDailyReview,
+                      onReviewAll: onOpenDiscovery,
                     ),
                   ],
                 ),

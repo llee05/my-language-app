@@ -4,7 +4,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle, SystemChannels;
+import 'package:flutter/services.dart'
+    show rootBundle, SystemChannels, AssetBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/ai/gemini_service.dart';
 import 'package:mylanguageapp/main.dart';
@@ -13,6 +14,7 @@ import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
 import 'package:mylanguageapp/repositories/development_repository.dart';
 import 'package:mylanguageapp/repositories/daily_review_session_repository.dart';
 import 'package:mylanguageapp/repositories/app_dependencies.dart';
+import 'package:mylanguageapp/repositories/bundled_vocabulary_repository.dart';
 import 'package:mylanguageapp/repositories/learner_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
@@ -120,6 +122,7 @@ void main() {
         HanziPathApp(
           initialProfile: testProfile,
           dependencies: AppDependencies(
+            vocabulary: const _TestVocabulary(),
             lessons: _MemoryLessonRepository(),
             progress: _MemoryProgressRepository(),
             dailyReviews: _MemoryDailyReviewSessionRepository(null),
@@ -173,6 +176,7 @@ void main() {
           MaterialApp(
             theme: ThemeData(platform: TargetPlatform.android),
             home: DashboardPage(
+              vocabularyRepository: const _TestVocabulary(),
               personalityRepository: MemoryTutorPersonalityRepository(),
               appThemeId: AppThemeId.classic,
               onThemeChanged: (_) {},
@@ -327,6 +331,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -380,6 +385,7 @@ void main() {
           HanziPathApp(
             initialProfile: testProfile,
             dependencies: AppDependencies(
+              vocabulary: const _TestVocabulary(),
               lessons: _MemoryLessonRepository(),
               progress: _MemoryProgressRepository(),
               dailyReviews: _MemoryDailyReviewSessionRepository(null),
@@ -421,7 +427,7 @@ void main() {
           }
           await tester.pumpAndSettle();
           await tester.tap(navigation);
-          if (label == 'Vocabulary') {
+          if (label == 'Dictionary') {
             await _waitForWidget(
               tester,
               find.byKey(const Key('vocabulary-result-count')),
@@ -434,8 +440,8 @@ void main() {
             'Roleplay Missions' => AiRoleplayMissionsPage,
             'Listening Practice' => ListeningPracticePage,
             'Vocab Rush' => VocabRushPage,
-            'Vocabulary' => VocabularyPage,
-            'Daily Review' => DailyQueuePage,
+            'Dictionary' => VocabularyPage,
+            'Doom Scrolling' => DoomScrollingPage,
             'AI Tutor' => AiTutorPage,
             'Exam Mode' => ExamModePage,
             'Settings' => SettingsPage,
@@ -460,6 +466,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(),
@@ -479,6 +486,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(hasActiveSession: false),
@@ -503,6 +511,7 @@ void main() {
     await tester.pumpWidget(
       HanziPathApp(
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           learners: _MemoryLearnerRepository(testProfile),
           lessons: _MemoryLessonRepository(),
           settings: _MemorySettingsRepository(
@@ -573,6 +582,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -618,6 +628,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -648,8 +659,8 @@ void main() {
 
     expect(find.text('Start your first lesson'), findsOneWidget);
     expect(find.text('Browse lessons'), findsOneWidget);
-    expect(find.text('Begin first review'), findsOneWidget);
-    expect(find.text('Learn your first 1 word'), findsOneWidget);
+    expect(find.text('Start scrolling'), findsOneWidget);
+    expect(find.text('4991 unlearned words to discover'), findsOneWidget);
     expect(find.text('Resume'), findsNothing);
 
     await tester.tap(find.text('Browse lessons'));
@@ -701,7 +712,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Review all'));
+    await tester.tap(find.text('Discover words'));
     await tester.pump();
 
     expect(reviewAllPressed, isTrue);
@@ -716,6 +727,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -748,72 +760,56 @@ void main() {
     expect(find.text('1 of 2 words completed'), findsOneWidget);
   });
 
-  testWidgets('dashboard shows pending daily review and resumes it', (
+  testWidgets(
+    'dashboard opens discovery and preserves legacy review sessions',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final sessions = _MemoryDailyReviewSessionRepository(
+        DailyReviewSession(
+          id: 9,
+          date: DateTime.now(),
+          queuedCardIds: const [1, 2],
+          currentPosition: 1,
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DashboardPage(
+            vocabularyRepository: const _TestVocabulary(),
+            appThemeId: AppThemeId.classic,
+            onThemeChanged: (_) {},
+            profile: testProfile,
+            onProfileChanged: (_) async {},
+            onResetOnboarding: () async {},
+            onResetAllData: () async {},
+            lessonRepository: _MemoryLessonRepository(),
+            progressRepository: _MemoryProgressRepository(),
+            dailyReviewSessionRepository: sessions,
+            settingsRepository: _MemorySettingsRepository(),
+            developmentRepository: _MemoryDevelopmentRepository(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('4991 unlearned words to discover'), findsOneWidget);
+      expect(find.text('Start scrolling'), findsOneWidget);
+      expect(find.text('Daily Review'), findsNothing);
+      await tester.tap(find.text('Start scrolling'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DoomScrollingPage), findsOneWidget);
+      expect(sessions.session?.currentPosition, 1);
+    },
+  );
+
+  testWidgets('dashboard explains discovery loading and an empty dictionary', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(1280, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    const queue = [
-      DailyQueueCard(
-        card: Flashcard(
-          id: 2,
-          chinese: '二',
-          pinyin: 'èr',
-          englishMeaning: 'two',
-        ),
-        reason: DailyQueueReason.newWord,
-      ),
-    ];
-    final sessions = _MemoryDailyReviewSessionRepository(
-      DailyReviewSession(
-        id: 9,
-        date: DateTime.now(),
-        queuedCardIds: const [1, 2],
-        currentPosition: 1,
-      ),
-    );
+    final result = Completer<List<Map<String, dynamic>>>();
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
-          appThemeId: AppThemeId.classic,
-          onThemeChanged: (_) {},
-          profile: testProfile,
-          onProfileChanged: (_) async {},
-          onResetOnboarding: () async {},
-          onResetAllData: () async {},
-          lessonRepository: _MemoryLessonRepository(),
-          progressRepository: _MemoryProgressRepository(queue: queue),
-          dailyReviewSessionRepository: sessions,
-          settingsRepository: _MemorySettingsRepository(),
-          developmentRepository: _MemoryDevelopmentRepository(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('1 card pending today'), findsOneWidget);
-    expect(find.text('Resume review'), findsOneWidget);
-    await tester.tap(find.text('Resume review'));
-    await tester.pumpAndSettle();
-    expect(find.text('Daily review'), findsOneWidget);
-    expect(find.text('二'), findsOneWidget);
-  });
-
-  testWidgets('dashboard replaces completed review with all-done state', (
-    tester,
-  ) async {
-    final sessions = _MemoryDailyReviewSessionRepository(
-      DailyReviewSession(
-        id: 10,
-        date: DateTime.now(),
-        queuedCardIds: const [1],
-        currentPosition: 1,
-        completedAt: DateTime.now(),
-      ),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        home: DashboardPage(
+          vocabularyRepository: _DeferredVocabulary(result),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -822,148 +818,18 @@ void main() {
           onResetAllData: () async {},
           lessonRepository: _MemoryLessonRepository(),
           progressRepository: _MemoryProgressRepository(),
-          dailyReviewSessionRepository: sessions,
-          settingsRepository: _MemorySettingsRepository(),
-          developmentRepository: _MemoryDevelopmentRepository(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Daily review complete — you’re all done!'),
-      findsOneWidget,
-    );
-    expect(find.text('Start review'), findsNothing);
-    expect(find.text('Resume review'), findsNothing);
-  });
-
-  testWidgets('dashboard explains review loading and an empty queue', (
-    tester,
-  ) async {
-    final result = Completer<List<DailyQueueCard>>();
-    final progress = _DeferredDailyQueueRepository(result);
-    final sessions = _MemoryDailyReviewSessionRepository(
-      DailyReviewSession(id: 11, date: DateTime.now(), queuedCardIds: const []),
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: DashboardPage(
-          appThemeId: AppThemeId.classic,
-          onThemeChanged: (_) {},
-          profile: testProfile,
-          onProfileChanged: (_) async {},
-          onResetOnboarding: () async {},
-          onResetAllData: () async {},
-          lessonRepository: _MemoryLessonRepository(),
-          progressRepository: progress,
-          dailyReviewSessionRepository: sessions,
           settingsRepository: _MemorySettingsRepository(),
           developmentRepository: _MemoryDevelopmentRepository(),
         ),
       ),
     );
     await tester.pump();
-
-    expect(find.text('Checking today’s review'), findsOneWidget);
-    expect(
-      find.text('Finding due, weak, and new cards for you.'),
-      findsOneWidget,
-    );
-
+    expect(find.text('Finding words to discover'), findsOneWidget);
     result.complete(const []);
     await tester.pumpAndSettle();
-
-    expect(
-      find.text('Daily review complete — you’re all done!'),
-      findsOneWidget,
-    );
-    expect(find.text('0 cards pending today'), findsNothing);
+    expect(find.text('You’ve learned every bundled word!'), findsOneWidget);
+    expect(find.text('Start scrolling'), findsNothing);
   });
-
-  testWidgets(
-    'daily review journey creates, resumes, completes, and resets next day',
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1280, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      var now = DateTime(2026, 8, 6, 9);
-      final reviews = _JourneyReviewRepository();
-      await tester.pumpWidget(
-        MaterialApp(
-          home: DashboardPage(
-            appThemeId: AppThemeId.classic,
-            onThemeChanged: (_) {},
-            profile: testProfile,
-            onProfileChanged: (_) async {},
-            onResetOnboarding: () async {},
-            onResetAllData: () async {},
-            lessonRepository: _MemoryLessonRepository(),
-            progressRepository: reviews,
-            dailyReviewSessionRepository: reviews,
-            settingsRepository: _MemorySettingsRepository(),
-            developmentRepository: _MemoryDevelopmentRepository(),
-            clock: () => now,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(reviews.createdSessionCount, 1);
-      expect(find.text('Learn your first 2 words'), findsOneWidget);
-      expect(find.text('Begin first review'), findsOneWidget);
-
-      await tester.tap(find.text('Begin first review'));
-      await tester.pumpAndSettle();
-      expect(find.text('一'), findsOneWidget);
-      await tester.tap(find.text('Reveal meaning'));
-      await tester.pump();
-      await tester.ensureVisible(find.text('Confident'));
-      await tester.tap(find.text('Confident'));
-      await tester.pumpAndSettle();
-      expect(reviews.sessions['2026-08-06']?.currentPosition, 1);
-
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.text('Resume review'), findsOneWidget);
-      await tester.tap(find.text('Home'));
-      await tester.pumpAndSettle();
-      expect(find.text('1 card pending today'), findsOneWidget);
-      expect(find.text('Resume review'), findsOneWidget);
-
-      await tester.tap(find.text('Resume review'));
-      await tester.pumpAndSettle();
-      expect(find.text('二'), findsOneWidget);
-      await tester.tap(find.text('Reveal meaning'));
-      await tester.pump();
-      await tester.ensureVisible(find.text('No idea'));
-      await tester.tap(find.text('No idea'));
-      await tester.pumpAndSettle();
-      expect(reviews.sessions['2026-08-06']?.isComplete, isTrue);
-      expect(reviews.reviewCount, 2);
-
-      await tester.tap(find.text('Finish'));
-      await tester.pumpAndSettle();
-      expect(find.text('Daily review complete!'), findsOneWidget);
-      await tester.tap(find.text('Done'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Home'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Daily review complete — you’re all done!'),
-        findsOneWidget,
-      );
-
-      now = DateTime(2026, 8, 7, 8);
-      await tester.tap(find.text('Lessons'));
-      await tester.pump();
-      await tester.tap(find.text('Home'));
-      await tester.pumpAndSettle();
-      expect(reviews.createdSessionCount, 2);
-      expect(find.text('2 cards pending today'), findsOneWidget);
-      expect(find.text('Start review'), findsOneWidget);
-    },
-  );
 
   testWidgets(
     'app sidebar invokes onSelected callback when an item is tapped',
@@ -1008,6 +874,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(),
@@ -1039,6 +906,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(),
@@ -1072,6 +940,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           progress: _MemoryProgressRepository(),
           dailyReviews: _MemoryDailyReviewSessionRepository(null),
         ),
@@ -1091,38 +960,15 @@ void main() {
     expect(find.text('180s'), findsOneWidget);
   });
 
-  testWidgets('daily review tab shows the prioritized review queue', (
+  testWidgets('Doom Scrolling navigation opens the vertical word feed', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final progress = _MemoryProgressRepository(
-      queue: [
-        DailyQueueCard(
-          card: const Flashcard(
-            id: 1,
-            chinese: '复习',
-            pinyin: 'fùxí',
-            englishMeaning: 'to review',
-          ),
-          reason: DailyQueueReason.due,
-          progress: CardProgress(cardId: 1, dueAt: DateTime.utc(2026, 8, 5)),
-        ),
-        const DailyQueueCard(
-          card: Flashcard(
-            id: 2,
-            chinese: '新',
-            pinyin: 'xīn',
-            englishMeaning: 'new',
-          ),
-          reason: DailyQueueReason.newWord,
-        ),
-      ],
-    );
-
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -1130,21 +976,22 @@ void main() {
           onResetOnboarding: () async {},
           onResetAllData: () async {},
           lessonRepository: _MemoryLessonRepository(),
-          progressRepository: progress,
+          progressRepository: _MemoryProgressRepository(),
           settingsRepository: _MemorySettingsRepository(),
           developmentRepository: _MemoryDevelopmentRepository(),
         ),
       ),
     );
-    await tester.tap(find.text('Daily Review'));
     await tester.pumpAndSettle();
-
-    expect(find.text('Today’s review queue'), findsOneWidget);
-    expect(find.text('1 To review'), findsOneWidget);
-    expect(find.text('1 New'), findsOneWidget);
-    expect(find.text('复习'), findsOneWidget);
-    expect(find.text('新'), findsOneWidget);
-    expect(find.text('Start review'), findsOneWidget);
+    await tester.tap(find.text('Doom Scrolling'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DoomScrollingPage), findsOneWidget);
+    expect(
+      tester
+          .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+          .scrollDirection,
+      Axis.vertical,
+    );
   });
 
   testWidgets('daily queue explains loading and empty states', (tester) async {
@@ -1463,23 +1310,12 @@ void main() {
     expect(pronunciation.spoken, isEmpty);
   });
 
-  testWidgets('dashboard daily review error can be retried', (tester) async {
-    const queue = [
-      DailyQueueCard(
-        card: Flashcard(
-          id: 33,
-          chinese: '习',
-          pinyin: 'xí',
-          englishMeaning: 'practise',
-        ),
-        reason: DailyQueueReason.weak,
-      ),
-    ];
-    final progress = _FailOnceDailyQueueRepository(queue: queue);
-
+  testWidgets('dashboard discovery error can be retried', (tester) async {
+    final vocabulary = _FailOnceVocabulary();
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: vocabulary,
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -1487,23 +1323,20 @@ void main() {
           onResetOnboarding: () async {},
           onResetAllData: () async {},
           lessonRepository: _MemoryLessonRepository(),
-          progressRepository: progress,
+          progressRepository: _MemoryProgressRepository(),
           settingsRepository: _MemorySettingsRepository(),
           developmentRepository: _MemoryDevelopmentRepository(),
         ),
       ),
     );
     await tester.pumpAndSettle();
-
-    expect(find.text('We couldn’t load today’s review'), findsOneWidget);
+    expect(find.text('The word feed could not be loaded'), findsOneWidget);
     expect(find.textContaining('sensitive database path'), findsNothing);
-
-    await tester.tap(find.byKey(const Key('daily-review-prompt-retry')));
+    await tester.tap(find.byKey(const Key('discovery-prompt-retry')));
     await tester.pumpAndSettle();
-
-    expect(progress.dailyQueueCalls, 2);
-    expect(find.text('1 card pending today'), findsOneWidget);
-    expect(find.text('Start review'), findsOneWidget);
+    expect(vocabulary.calls, 2);
+    expect(find.text('4991 unlearned words to discover'), findsOneWidget);
+    expect(find.text('Start scrolling'), findsOneWidget);
   });
 
   testWidgets('daily queue reloads at local midnight', (tester) async {
@@ -2029,6 +1862,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           settings: _MemorySettingsRepository(),
           progress: _MemoryProgressRepository(),
@@ -2415,6 +2249,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -2458,6 +2293,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -2506,6 +2342,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -2566,6 +2403,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
           profile: testProfile,
@@ -3277,6 +3115,7 @@ void main() {
       MaterialApp(
         theme: ThemeData(platform: platform),
         home: DashboardPage(
+          vocabularyRepository: const _TestVocabulary(),
           personalityRepository: MemoryTutorPersonalityRepository(),
           appThemeId: AppThemeId.classic,
           onThemeChanged: (_) {},
@@ -3389,7 +3228,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.menu_rounded));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Vocabulary'));
+    await tester.tap(find.text('Dictionary'));
     await _waitForWidget(
       tester,
       find.byKey(const Key('vocabulary-result-count')),
@@ -3871,6 +3710,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           development: developmentRepository,
           aiConfiguration: aiRepository,
@@ -3911,6 +3751,7 @@ void main() {
       HanziPathApp(
         initialProfile: testProfile,
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           lessons: _MemoryLessonRepository(),
           development: development,
           aiConfiguration: aiRepository,
@@ -3950,6 +3791,7 @@ void main() {
     await tester.pumpWidget(
       HanziPathApp(
         dependencies: AppDependencies(
+          vocabulary: const _TestVocabulary(),
           learners: learnerRepository,
           aiConfiguration: aiRepository,
           lessons: _MemoryLessonRepository(),
@@ -5488,5 +5330,34 @@ class _DeletableLessonRepository extends _MemoryLessonRepository {
     deleteCalls++;
     await deletion.future;
     deleted = true;
+  }
+}
+
+final _testVocabularyEntries =
+    (jsonDecode(File('assets/data/hsk_vocabulary.json').readAsStringSync())
+            as List)
+        .cast<Map<String, dynamic>>();
+
+class _TestVocabulary extends BundledVocabularyRepository {
+  const _TestVocabulary();
+  @override
+  Future<List<Map<String, dynamic>>> load({AssetBundle? bundle}) async =>
+      _testVocabularyEntries;
+}
+
+class _DeferredVocabulary extends BundledVocabularyRepository {
+  _DeferredVocabulary(this.result);
+  final Completer<List<Map<String, dynamic>>> result;
+  @override
+  Future<List<Map<String, dynamic>>> load({AssetBundle? bundle}) =>
+      result.future;
+}
+
+class _FailOnceVocabulary extends _TestVocabulary {
+  int calls = 0;
+  @override
+  Future<List<Map<String, dynamic>>> load({AssetBundle? bundle}) async {
+    if (++calls == 1) throw StateError('sensitive database path');
+    return super.load(bundle: bundle);
   }
 }

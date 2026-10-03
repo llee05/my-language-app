@@ -10,7 +10,12 @@ class AiRoleplayMissionsPage extends StatelessWidget {
     required this.speechInputService,
     this.aiService = const AiService(),
     this.clock,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
@@ -22,6 +27,8 @@ class AiRoleplayMissionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _AiRoleplayMissionsMode(
+    studyService: studyService,
+    onProgressChanged: onProgressChanged,
     request: request,
     settingsRepository: settingsRepository,
     tutorContextRepository: tutorContextRepository,
@@ -41,7 +48,12 @@ class _AiRoleplayMissionsMode extends StatefulWidget {
     required this.speechInputService,
     required this.aiService,
     this.clock,
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   final AiTutorRequest? request;
   final SettingsRepository settingsRepository;
@@ -609,6 +621,13 @@ Return only compact JSON with this exact shape:
                       onReveal: () => _showHint(index),
                     ),
                   if (turn.missionComplete) _RoleplayCompletion(turn: turn),
+                  if (widget.studyService != null)
+                    _VocabularyPracticePanel(
+                      key: ObjectKey(turn),
+                      service: widget.studyService!,
+                      text: turn.npcReply.chinese,
+                      onProgressChanged: widget.onProgressChanged,
+                    ),
                 ],
               if (_sending) const _TypingMessage(),
               if (_requestError != null) ...[

@@ -19,8 +19,8 @@ class AppSidebar extends StatelessWidget {
     (Icons.flag_outlined, 'Roleplay Missions'),
     (Icons.hearing_rounded, 'Listening Practice'),
     (Icons.sports_martial_arts_rounded, 'Vocab Rush'),
-    (Icons.language_rounded, 'Vocabulary'),
-    (Icons.bar_chart_rounded, 'Daily Review'),
+    (Icons.language_rounded, 'Dictionary'),
+    (Icons.swipe_up_rounded, 'Doom Scrolling'),
     (Icons.chat_bubble_outline_rounded, 'AI Tutor'),
     (Icons.assignment_outlined, 'Exam Mode'),
   ];

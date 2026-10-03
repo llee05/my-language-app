@@ -182,7 +182,7 @@ class VocabularyPanel extends StatelessWidget {
             TextButton(
               onPressed: onReviewAll,
               child: Text(
-                'Review all',
+                'Discover words',
                 style: TextStyle(fontSize: 10, color: AppColors.red),
               ),
             ),

@@ -12,7 +12,12 @@ class VocabularyPage extends StatefulWidget {
     this.initialProgress,
     this.clock,
     this.vocabularyRepository = const BundledVocabularyRepository(),
+    this.studyService,
+    this.onProgressChanged,
   });
+
+  final VocabularyStudyService? studyService;
+  final VoidCallback? onProgressChanged;
 
   /// Allows focused previews and tests without loading the bundled asset.
   final List<Map<String, dynamic>>? initialEntries;
@@ -176,6 +181,15 @@ class _VocabularyPageState extends State<VocabularyPage> {
       MaterialPageRoute<void>(
         builder: (_) => _VocabularyDetailPage(
           entry: entry,
+          studyService:
+              widget.studyService ??
+              VocabularyStudyService(
+                lessons: const SqliteLessonRepository(),
+                progress: widget.progressRepository,
+                vocabulary: widget.vocabularyRepository,
+                clock: widget.clock,
+              ),
+          onProgressChanged: widget.onProgressChanged,
           onSpeakWord: _soundEnabled ? () => _speak(entry.simplified) : null,
           onSpeakExample: _soundEnabled && entry.hasExample
               ? () => _speak(entry.exampleChinese)
@@ -184,6 +198,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
       ),
     );
     await _stopPronunciation();
+    if (mounted) await _loadVocabulary();
   }
 
   void _clearFilters() {
@@ -228,7 +243,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                           ),
                         ),
                         Text(
-                          'Vocabulary',
+                          'Dictionary',
                           style: TextStyle(
                             fontSize: 16,
                             color: AppColors.muted,
@@ -420,6 +435,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
 
 class _VocabularyEntry {
   const _VocabularyEntry({
+    required this.source,
     required this.simplified,
     required this.traditional,
     required this.pinyin,
@@ -439,8 +455,9 @@ class _VocabularyEntry {
     final simplified = json['simplified'] as String;
     final example = _seededVocabularyExamples[simplified];
     return _VocabularyEntry(
+      source: json,
       simplified: simplified,
-      traditional: json['traditional'] as String,
+      traditional: (json['traditional'] ?? simplified) as String,
       pinyin: json['pinyin'] as String,
       meanings: vocabularyDisplayMeanings(json),
       hskLevel: json['hskLevel'] as int,
@@ -468,6 +485,7 @@ class _VocabularyEntry {
     );
   }
 
+  final Map<String, dynamic> source;
   final String simplified;
   final String traditional;
   final String pinyin;
@@ -650,11 +668,15 @@ class _VocabularyStateBadge extends StatelessWidget {
 class _VocabularyDetailPage extends StatelessWidget {
   const _VocabularyDetailPage({
     required this.entry,
+    required this.studyService,
+    this.onProgressChanged,
     this.onSpeakWord,
     this.onSpeakExample,
   });
 
   final _VocabularyEntry entry;
+  final VocabularyStudyService studyService;
+  final VoidCallback? onProgressChanged;
   final Future<void> Function()? onSpeakWord;
   final Future<void> Function()? onSpeakExample;
 
@@ -790,6 +812,12 @@ class _VocabularyDetailPage extends StatelessWidget {
                             ),
                           ],
                         ),
+                ),
+                _VocabularyPracticePanel(
+                  service: studyService,
+                  text: entry.simplified,
+                  words: [entry.source],
+                  onProgressChanged: onProgressChanged,
                 ),
               ],
             ),
