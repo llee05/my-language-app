@@ -3,35 +3,63 @@ name: Flutter CI/CD
 on:
   pull_request:
     branches: [main]
-
   push:
     branches: [main]
     tags:
       - "v*"
-
   workflow_dispatch:
 
+# New commits cancel obsolete checks; an in-flight tagged release is allowed to finish.
 concurrency:
-  group: flutter-${{ github.ref }}
-  cancel-in-progress: true
+  group: flutter-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 permissions:
   contents: read
 
+env:
+  FLUTTER_VERSION: "3.44.4"
+
 jobs:
   validate:
     name: Validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      release_version: ${{ steps.release.outputs.release_version }}
+      is_release: ${{ steps.release.outputs.is_release }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Check release tooling
+        run: python3 -m unittest discover -s tool/ci -p 'test_*.py' -v
+
+      - name: Read version and verify release tag
+        id: release
+        run: python3 tool/ci/release_metadata.py
+
+      - name: Check workflow syntax
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+        run: |
+          lint_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$lint_dir"
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          base_url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}"
+          curl --fail --location --retry 3 "$base_url/$archive" -o "$lint_dir/$archive"
+          curl --fail --location --retry 3 "$base_url/actionlint_${ACTIONLINT_VERSION}_checksums.txt" -o "$lint_dir/checksums.txt"
+          (cd "$lint_dir" && sha256sum --check --ignore-missing checksums.txt)
+          tar -xzf "$lint_dir/$archive" -C "$lint_dir" actionlint
+          "$lint_dir/actionlint" .github/workflows/flutter.yml
+
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.4"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -41,7 +69,7 @@ jobs:
           dart --version
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed lib test
@@ -60,43 +88,143 @@ jobs:
           path: coverage/lcov.info
           if-no-files-found: ignore
           retention-days: 14
+          overwrite: true
 
-  build-android:
-    name: Android compile smoke
-    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+  build-linux:
+    name: Linux x64 release
     needs: validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Build against an older glibc baseline rather than whichever Ubuntu is latest.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    env:
+      RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: gradle
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev libasound2-dev libsecret-1-dev
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.4"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
-      - name: Compile debug APK
-        run: flutter build apk --debug
+      - name: Compile Linux release
+        run: flutter build linux --release
+
+      - name: Check native library dependencies
+        run: |
+          bundle="$GITHUB_WORKSPACE/build/linux/x64/release/bundle"
+          export LD_LIBRARY_PATH="$bundle/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          test -x "$bundle/tingshuo"
+          while IFS= read -r -d '' binary; do
+            dependencies="$(ldd "$binary")"
+            if [[ "$dependencies" == *"not found"* ]]; then
+              printf '%s\n%s\n' "Unresolved dependencies in $binary" "$dependencies"
+              exit 1
+            fi
+          done < <(find "$bundle" -type f \( -name 'tingshuo' -o -name '*.so' -o -name '*.so.*' \) -print0)
+
+      - name: Package Linux bundle with executable permissions
+        run: |
+          mkdir -p dist
+          tar -czf "dist/tingshuo-${RELEASE_VERSION}-linux-x64.tar.gz" -C build/linux/x64/release/bundle .
+
+      - name: Upload Linux package
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-linux-x64
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+          overwrite: true
+
+  build-macos:
+    name: macOS universal beta
+    needs: validate
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+      # Preserve the sandbox and entitlements, with ad-hoc signing for this beta.
+      # Developer ID signing and notarization require a separate Apple setup.
+      FLUTTER_XCODE_CODE_SIGN_IDENTITY: "-"
+      FLUTTER_XCODE_CODE_SIGN_STYLE: Manual
+      COCOAPODS_DISABLE_STATS: "true"
+      NO_XIPH_LIBS: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Check native build tools
+        run: |
+          xcodebuild -version
+          pod --version
+          cmake --version
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Select CocoaPods plugin integration
+        # Use the committed Podfile for plugins that still need CocoaPods.
+        run: flutter config --no-enable-swift-package-manager
+
+      - name: Install dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Compile universal macOS release
+        run: flutter build macos --release
+
+      - name: Verify architectures and ad-hoc signature
+        run: |
+          app="build/macos/Build/Products/Release/TingShuo.app"
+          test -d "$app"
+          lipo "$app/Contents/MacOS/TingShuo" -verify_arch x86_64 arm64
+          while IFS= read -r -d '' binary; do
+            if [[ "$(file -b "$binary")" == *"Mach-O"* ]]; then
+              lipo "$binary" -verify_arch x86_64 arm64
+            fi
+          done < <(find "$app/Contents/Frameworks" -type f -print0)
+          codesign --force --deep --sign - --entitlements macos/Runner/Release.entitlements "$app"
+          codesign --verify --deep --strict "$app"
+
+      - name: Package macOS app preserving bundle links and permissions
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/TingShuo.app "dist/tingshuo-${RELEASE_VERSION}-macos-universal-unsigned.zip"
+
+      - name: Upload macOS package
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-macos-universal
+          path: dist/*.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+          overwrite: true
 
   build-windows:
-    name: Windows x64 compile smoke
+    name: Windows x64 release
     needs: validate
-    runs-on: windows-latest
-    timeout-minutes: 30
+    runs-on: windows-2022
+    timeout-minutes: 40
+    env:
+      RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
 
     steps:
       - name: Check out repository
@@ -110,33 +238,41 @@ jobs:
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.4"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Compile Windows x64 release
         run: flutter build windows --release
 
-      - name: Upload Windows build as workflow artifact
+      - name: Package complete Windows bundle
+        shell: pwsh
+        run: |
+          $bundle = 'build/windows/x64/runner/Release'
+          if (!(Test-Path "$bundle/tingshuo.exe")) { throw 'Windows executable is missing' }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path "$bundle/*" -DestinationPath "dist/tingshuo-$env:RELEASE_VERSION-windows-x64.zip"
+
+      - name: Upload Windows package
         uses: actions/upload-artifact@v7
         with:
-          name: tingshuo-windows-x64-${{ github.run_id }}
-          path: build/windows/x64/runner/Release/
+          name: release-windows-x64
+          path: dist/*.zip
           if-no-files-found: error
+          compression-level: 0
           retention-days: 14
+          overwrite: true
 
-  release-android:
-    name: Build signed Android release
-    if: startsWith(github.ref, 'refs/tags/v')
+  build-android:
+    name: Android debug / signed release
     needs: validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    permissions:
-      contents: write
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    env:
+      RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
 
     steps:
       - name: Check out repository
@@ -152,14 +288,30 @@ jobs:
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.4"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
+
+      - name: Compile debug APK
+        if: needs.validate.outputs.is_release != 'true'
+        run: flutter build apk --debug
+
+      - name: Upload debug APK for testing
+        if: needs.validate.outputs.is_release != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-android-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+          overwrite: true
 
       - name: Prepare Android signing credentials
+        if: needs.validate.outputs.is_release == 'true'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -210,12 +362,15 @@ jobs:
           } > android/key.properties
           chmod 600 "$keystore_path" android/key.properties
 
-      - name: Build signed release app bundle
-        # Users configure personal AI keys in Settings. Never embed a shared
-        # key in release artifacts.
-        run: flutter build appbundle --release
+      - name: Build signed APK and app bundle
+        if: needs.validate.outputs.is_release == 'true'
+        # Users configure personal AI keys in Settings. Never embed a shared key.
+        run: |
+          flutter build apk --release
+          flutter build appbundle --release
 
-      - name: Verify app bundle signature
+      - name: Verify Android signatures
+        if: needs.validate.outputs.is_release == 'true'
         run: |
           verification="$(jarsigner -verify build/app/outputs/bundle/release/app-release.aab)"
           printf '%s\n' "$verification"
@@ -223,26 +378,90 @@ jobs:
             echo "::error::The Android app bundle does not have a valid JAR signature"
             exit 1
           fi
+          sdk_path="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          apksigner="$(find "$sdk_path/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          if [[ -z "$apksigner" ]]; then
+            echo "::error::Could not find Android apksigner"
+            exit 1
+          fi
+          "$apksigner" verify --verbose build/app/outputs/flutter-apk/app-release.apk
 
       - name: Remove Android signing credentials
-        if: always()
+        if: always() && needs.validate.outputs.is_release == 'true'
         run: |
           rm -f android/key.properties
           rm -f "$RUNNER_TEMP/tingshuo-upload-keystore.jks"
 
-      - name: Upload app bundle as workflow artifact
+      - name: Package Android release files
+        if: needs.validate.outputs.is_release == 'true'
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/tingshuo-${RELEASE_VERSION}-android.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "dist/tingshuo-${RELEASE_VERSION}-android.aab"
+
+      - name: Upload signed Android packages
+        if: needs.validate.outputs.is_release == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: tingshuo-android-${{ github.run_id }}
-          path: build/app/outputs/bundle/release/app-release.aab
+          name: release-android
+          path: dist/*
           if-no-files-found: error
+          compression-level: 0
           retention-days: 30
+          overwrite: true
+
+  publish-release:
+    name: Publish complete release
+    if: needs.validate.outputs.is_release == 'true'
+    needs: [validate, build-linux, build-macos, build-windows, build-android]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ needs.validate.outputs.release_version }}
+      PRERELEASE: ${{ needs.validate.outputs.prerelease }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Download this run's platform packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Require all platforms and generate checksums
+        run: |
+          python3 tool/ci/prepare_release.py \
+            --directory dist \
+            --ref "$GITHUB_REF" \
+            --commit "$GITHUB_SHA" \
+            --flutter-version "$FLUTTER_VERSION" \
+            --notes "$RUNNER_TEMP/release-notes.md"
+          (cd dist && sha256sum --check SHA256SUMS)
+
+      - name: Upload verified release set
+        uses: actions/upload-artifact@v7
+        with:
+          name: verified-release
+          path: dist/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+          overwrite: true
 
       - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
+        # gh stages assets in a draft and publishes only after all uploads succeed.
+        # Existing releases are never overwritten by a rerun.
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            build/app/outputs/bundle/release/app-release.aab \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes
+          args=(--verify-tag --title "TingShuo $RELEASE_VERSION" --generate-notes --notes-file "$RUNNER_TEMP/release-notes.md")
+          if [[ "$PRERELEASE" == 'true' ]]; then
+            args+=(--prerelease --latest=false)
+          else
+            args+=(--latest)
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* "${args[@]}"
