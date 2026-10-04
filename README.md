@@ -506,6 +506,8 @@ Matching version tags produce signed Android APK/AAB downloads and all three
 desktop packages in one GitHub Release, only after every platform succeeds.
 See [Beta release workflow](docs/beta-releases.md) for preparation, installation,
 platform testing, signing requirements, and failed-run recovery.
+The [October 4 stability report](docs/stability-check-2026-10-04.md) records the
+automated checks, fixes, and remaining device checks for the next beta.
 
 ### Technical snapshot
 

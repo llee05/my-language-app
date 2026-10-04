@@ -54,17 +54,30 @@ native services. No real learner database was reset and no provider was contacte
 Only Linux was connected; this pass did not launch the native app or exercise a
 physical phone. Automated success is not a substitute for the remaining checks.
 
-## Curriculum sample follow-ups
+## Curriculum sample follow-ups resolved
 
 The sample was the first entry in the first, middle and last vocabulary deck of
 each HSK level. Coverage/provenance checks passed, but source attribution does
-not guarantee suitable teaching examples. Two items merit editorial review:
+not guarantee suitable teaching examples. Both findings were corrected in the
+follow-up pass:
 
-- `hsk-old-3-一会儿`: “我休息了一会儿再要出去。” has awkward tense/word order for
-  the English “I'll go out after I've rested for a while.” Select a more natural
-  source sentence with verified pinyin through the generator overrides.
-- `hsk-old-2-最`: “得不到的东西就最想得到。” is grammatical but relatively abstract
-  for a beginner example. Consider a simpler example at this level.
+- `hsk-old-3-一会儿`: replaced the awkward “我休息了一会儿再要出去。” with
+  “一会儿见！” / “See you soon!” (Tatoeba Chinese 337874, English 32672).
+- `hsk-old-2-最`: replaced the abstract “得不到的东西就最想得到。” with
+  “你最喜欢的饮料是什么？” / “What's your favorite drink?” (Tatoeba Chinese
+  2186246, English 906749).
 
-These are sample findings, not a comprehensive linguistic audit. The generated
-curriculum was not rewritten during this stability pass.
+Both selections use recorded Tatoeba pinyin and generator overrides. Regeneration
+changed only these two examples; deck, vocabulary and source counts are unchanged.
+The transactional `bundled_hsk_examples_v2` content update applies the corrections
+to existing installations without rebuilding memberships or replacing card IDs.
+Three added persistence tests cover upgrades/repeated startup with saved reviews,
+session position and custom copies, rollback/retry, and restoring older examples
+after the update has already been applied.
+
+Follow-up validation passed: formatting, static analysis, all **530 tests** with
+coverage, and the Android debug APK build. Source/provenance and backup tests are
+included in the full suite.
+
+These are sample findings, not a comprehensive linguistic audit. The remaining
+device checks above still apply.
