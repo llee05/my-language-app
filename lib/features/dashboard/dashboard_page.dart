@@ -402,7 +402,7 @@ class _DashboardPageState extends State<DashboardPage>
                 children: [
                   if (showSidebar)
                     SizedBox(
-                      width: 210,
+                      width: 240,
                       child: AppSidebar(
                         selectedIndex: selectedNav,
                         hskLevel: widget.profile.hskLevel,
@@ -849,7 +849,7 @@ class DashboardHeader extends StatelessWidget {
         vertical: 10,
       ),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
@@ -880,10 +880,10 @@ class DashboardHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'HSK ${profile.hskLevel}  ·  ${profile.dailyWordTarget} words today',
+                  'HSK ${profile.hskLevel}  ·  ${profile.dailyWordTarget}-word daily goal',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
               ],
             ),
@@ -907,32 +907,39 @@ class DashboardHeader extends StatelessWidget {
               ),
             ),
           const SizedBox(width: 14),
-          Tooltip(
-            message: 'Open profile',
-            child: Material(
-              color: profileSelected
-                  ? AppColors.red
-                  : AppColors.red.withValues(alpha: .12),
-              shape: CircleBorder(
-                side: BorderSide(
-                  color: profileSelected ? AppColors.gold : AppColors.red,
-                  width: profileSelected ? 2 : 1,
+          Semantics(
+            button: true,
+            selected: profileSelected,
+            label: 'Open profile',
+            onTap: onProfilePressed,
+            excludeSemantics: true,
+            child: Tooltip(
+              message: 'Open profile',
+              child: Material(
+                color: profileSelected
+                    ? AppColors.red
+                    : AppColors.red.withValues(alpha: .12),
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: profileSelected ? AppColors.gold : AppColors.red,
+                    width: profileSelected ? 2 : 1,
+                  ),
                 ),
-              ),
-              child: InkWell(
-                key: const Key('open-profile-button'),
-                onTap: onProfilePressed,
-                customBorder: const CircleBorder(),
-                child: SizedBox.square(
-                  dimension: 48,
-                  child: Center(
-                    child: Text(
-                      '学',
-                      style: TextStyle(
-                        color: profileSelected
-                            ? AppColors.background
-                            : AppColors.red,
-                        fontFamily: 'serif',
+                child: InkWell(
+                  key: const Key('open-profile-button'),
+                  onTap: onProfilePressed,
+                  customBorder: const CircleBorder(),
+                  child: SizedBox.square(
+                    dimension: 48,
+                    child: Center(
+                      child: Text(
+                        '学',
+                        style: TextStyle(
+                          color: profileSelected
+                              ? AppColors.background
+                              : AppColors.red,
+                          fontFamily: 'serif',
+                        ),
                       ),
                     ),
                   ),

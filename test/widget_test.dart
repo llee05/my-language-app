@@ -755,7 +755,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Saved lesson'), findsNWidgets(2));
-    expect(find.text('Saved · 2 cards · 60 XP reward'), findsOneWidget);
+    expect(find.text('Saved · 2 cards · Up to 20 XP'), findsOneWidget);
+    expect(find.text('50% complete'), findsOneWidget);
+    expect(find.text('Lesson 1'), findsNothing);
     expect(find.text('50%'), findsOneWidget);
     expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
     expect(find.text('Saved · HSK 1 · 2 cards'), findsOneWidget);
@@ -858,13 +860,16 @@ void main() {
       );
 
       expect(find.text('Vocab Rush'), findsOneWidget);
-      expect(find.text('Roleplay Missions'), findsOneWidget);
       await tester.tap(find.text('Vocab Rush'));
       await tester.pumpAndSettle();
 
       expect(selected, 4);
 
-      await tester.ensureVisible(find.text('Roleplay Missions'));
+      await tester.scrollUntilVisible(
+        find.text('Roleplay Missions'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('Roleplay Missions'));
       await tester.pumpAndSettle();
 
@@ -1342,6 +1347,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('The word feed could not be loaded'), findsOneWidget);
     expect(find.textContaining('sensitive database path'), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('discovery-prompt-retry')));
     await tester.tap(find.byKey(const Key('discovery-prompt-retry')));
     await tester.pumpAndSettle();
     expect(vocabulary.calls, 2);
@@ -3292,7 +3298,21 @@ void main() {
     await tester.tap(find.byIcon(Icons.menu_rounded));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('AI Tutor'));
+    final aitutorNav = find.descendant(
+      of: find.byType(AppSidebar),
+      matching: find.text('AI Tutor'),
+    );
+    await tester.scrollUntilVisible(
+      aitutorNav,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(AppSidebar),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(aitutorNav);
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsNothing);
     expect(find.byType(AiTutorPage), findsOneWidget);
@@ -3310,14 +3330,42 @@ void main() {
     await tester.tap(find.byIcon(Icons.menu_rounded));
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsOneWidget);
-    await tester.tap(find.text('Home'));
+    final homeNav = find.descendant(
+      of: find.byType(AppSidebar),
+      matching: find.text('Home'),
+    );
+    await tester.scrollUntilVisible(
+      homeNav,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(AppSidebar),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(homeNav);
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsNothing);
     expect(find.byType(AiTutorPage), findsNothing);
 
     await tester.tap(find.byIcon(Icons.menu_rounded));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Dictionary'));
+    final dictionaryNav = find.descendant(
+      of: find.byType(AppSidebar),
+      matching: find.text('Dictionary'),
+    );
+    await tester.scrollUntilVisible(
+      dictionaryNav,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(AppSidebar),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(dictionaryNav);
     await _waitForWidget(
       tester,
       find.byKey(const Key('vocabulary-result-count')),
@@ -3391,7 +3439,11 @@ void main() {
     expect(updatedProfile?.hskLevel, 4);
     expect(updatedProfile?.dailyWordTarget, 20);
 
-    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.scrollUntilVisible(
+      find.text('Reset onboarding only'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Reset onboarding only'));
     await tester.pumpAndSettle();

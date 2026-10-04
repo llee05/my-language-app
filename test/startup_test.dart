@@ -177,7 +177,7 @@ void main() {
     expect(find.text('Build your learning path'), findsNothing);
     expect(find.text('你好，Persistent Mei'), findsOneWidget);
     expect(find.textContaining('HSK 3'), findsWidgets);
-    expect(find.textContaining('20 words today'), findsOneWidget);
+    expect(find.textContaining('20-word daily goal'), findsOneWidget);
   });
 }
 

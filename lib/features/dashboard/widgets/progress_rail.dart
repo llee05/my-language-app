@@ -16,10 +16,10 @@ class RightRail extends StatelessWidget {
     return Container(
       decoration: compact
           ? BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.border)),
+              border: Border(top: BorderSide(color: AppColors.outline)),
             )
           : BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.border)),
+              border: Border(left: BorderSide(color: AppColors.outline)),
             ),
       padding: EdgeInsets.fromLTRB(
         compact ? 32 : 20,
@@ -86,7 +86,7 @@ class WeeklyXp extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 13, 14, 12),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.divider),
             borderRadius: BorderRadius.circular(13),
           ),
           child: Column(
@@ -107,7 +107,7 @@ class WeeklyXp extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: i == 6
                                     ? AppColors.red
-                                    : const Color(0xFF5B1A16),
+                                    : AppColors.red.withValues(alpha: .28),
                                 borderRadius: BorderRadius.circular(7),
                               ),
                             ),
@@ -194,7 +194,7 @@ class VocabularyPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.divider),
             borderRadius: BorderRadius.circular(13),
           ),
           child: Row(
@@ -306,7 +306,7 @@ class _VocabularyCardState extends State<VocabularyCard> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(13, 11, 13, 9),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.divider),
             borderRadius: BorderRadius.circular(13),
           ),
           child: Column(
@@ -351,7 +351,7 @@ class _VocabularyCardState extends State<VocabularyCard> {
                   value: widget.mastery,
                   minHeight: 4,
                   color: widget.color,
-                  backgroundColor: const Color(0xFF3B2A28),
+                  backgroundColor: AppColors.surfaceLight,
                 ),
               ),
               const SizedBox(height: 5),

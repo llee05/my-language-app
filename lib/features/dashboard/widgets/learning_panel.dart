@@ -61,18 +61,14 @@ class MainDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SectionLabel('DOOM SCROLLING'),
-          const SizedBox(height: 12),
-          _DiscoveryPrompt(
-            loading: loadingReview,
-            hasError: reviewLoadError,
-            pendingCount: pendingReviewCount,
-            complete: reviewComplete,
-            onPressed: onStartReview,
-            onRetry: onRetryReview,
+          const _AppPageHeader(
+            title: 'Today’s practice',
+            hanzi: '每天进步',
+            description:
+                'A few words today. A little more confidence tomorrow.',
           ),
           if (isNewLearner) ...[
-            const SizedBox(height: 26),
+            const SizedBox(height: 24),
             _NewLearnerPrompt(onPressed: onStartLearning),
           ],
           if (lesson != null && session != null) ...[
@@ -84,11 +80,22 @@ class MainDashboard extends StatelessWidget {
               theme: lesson.summary.theme,
               level: lesson.summary.hskLevel,
               duration: '${lesson.cards.length} cards',
-              xpReward: 60,
+              xpReward: lesson.cards.length * 10,
               progress: lessonProgress,
               onResume: onResume,
             ),
           ],
+          const SizedBox(height: 26),
+          const SectionLabel('DOOM SCROLLING'),
+          const SizedBox(height: 12),
+          _DiscoveryPrompt(
+            loading: loadingReview,
+            hasError: reviewLoadError,
+            pendingCount: pendingReviewCount,
+            complete: reviewComplete,
+            onPressed: onStartReview,
+            onRetry: onRetryReview,
+          ),
           const SizedBox(height: 26),
           Row(
             children: [
@@ -137,11 +144,11 @@ class _NewLearnerPrompt extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF1A1310), Color(0xFF25120F)],
+      gradient: LinearGradient(
+        colors: [AppColors.red.withValues(alpha: .12), AppColors.surface],
       ),
-      border: Border.all(color: const Color(0xFF5D4514)),
-      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: AppColors.red.withValues(alpha: .3)),
+      borderRadius: BorderRadius.circular(18),
     ),
     child: LayoutBuilder(
       builder: (context, constraints) {
@@ -164,7 +171,11 @@ class _NewLearnerPrompt extends StatelessWidget {
                   SizedBox(height: 5),
                   Text(
                     'Learn a few words to begin building your streak, XP, and vocabulary mastery.',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.5,
+                      color: AppColors.muted,
+                    ),
                   ),
                 ],
               ),
@@ -211,7 +222,7 @@ class _AvailableLessonsLoading extends StatelessWidget {
         ),
       ),
       title: 'Loading available lessons',
-      message: 'Finding lessons that match your current HSK level.',
+      message: 'Loading a selection of lessons across HSK levels.',
     ),
   );
 }
@@ -347,8 +358,8 @@ class _DiscoveryPrompt extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: hasError ? AppColors.red : AppColors.border),
-        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: hasError ? AppColors.red : AppColors.divider),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 180),
@@ -365,7 +376,7 @@ class _DiscoveryPrompt extends StatelessWidget {
 
   Widget _buildPending() => Column(
     key: const ValueKey('discovery-prompt-pending'),
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Text(
         '$pendingCount unlearned word${pendingCount == 1 ? '' : 's'} to discover',
@@ -377,10 +388,13 @@ class _DiscoveryPrompt extends StatelessWidget {
         style: TextStyle(color: AppColors.muted),
       ),
       const SizedBox(height: 12),
-      FilledButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.swipe_up_rounded),
-        label: const Text('Start scrolling'),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilledButton.icon(
+          onPressed: onPressed,
+          icon: const Icon(Icons.swipe_up_rounded),
+          label: const Text('Start scrolling'),
+        ),
       ),
     ],
   );
@@ -493,13 +507,13 @@ class ContinueCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF261111), Color(0xFF351311)],
+        gradient: LinearGradient(
+          colors: [AppColors.red.withValues(alpha: .12), AppColors.surface],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
-        border: Border.all(color: const Color(0xFF632019)),
-        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.red.withValues(alpha: .3)),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -531,9 +545,9 @@ class ContinueCard extends StatelessWidget {
                       children: [
                         _Pill(label: 'HSK $level'),
                         Text(
-                          'Lesson 1',
+                          '${(progress * 100).round()}% complete',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: AppColors.muted,
                           ),
                         ),
@@ -546,8 +560,8 @@ class ContinueCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$theme · $duration · $xpReward XP reward',
-                      style: TextStyle(fontSize: 11, color: AppColors.muted),
+                      '$theme · $duration · Up to $xpReward XP',
+                      style: TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
                   ],
                 ),
@@ -637,10 +651,17 @@ class LessonTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Material(
-          color: active ? const Color(0xFF1B0D0C) : AppColors.surface,
+          color: active
+              ? Color.alphaBlend(
+                  AppColors.red.withValues(alpha: .10),
+                  AppColors.surface,
+                )
+              : AppColors.surface,
           shape: RoundedRectangleBorder(
             side: BorderSide(
-              color: active ? const Color(0xFF711C14) : AppColors.border,
+              color: active
+                  ? AppColors.red.withValues(alpha: .4)
+                  : AppColors.divider,
             ),
             borderRadius: BorderRadius.circular(13),
           ),
@@ -654,7 +675,7 @@ class LessonTile extends StatelessWidget {
                   final compact = constraints.maxWidth < 380;
                   final xpLabel = Text(
                     xp,
-                    style: TextStyle(fontSize: 10, color: AppColors.muted),
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
                   );
                   return Row(
                     children: [
@@ -680,7 +701,7 @@ class LessonTile extends StatelessWidget {
                                 Text(
                                   title,
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     color: contentColor,
                                   ),
                                 ),
@@ -691,7 +712,7 @@ class LessonTile extends StatelessWidget {
                             Text(
                               '$chinese · $unit · $duration',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 12,
                                 color: AppColors.muted,
                               ),
                             ),

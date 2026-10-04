@@ -25,6 +25,12 @@ class AppSidebar extends StatelessWidget {
     (Icons.assignment_outlined, 'Exam Mode'),
   ];
 
+  static const _groups = [
+    ('STUDY', [0, 1, 3, 6]),
+    ('PRACTICE & REFERENCE', [4, 8, 5]),
+    ('AI CONVERSATION', [2, 7]),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
@@ -57,31 +63,47 @@ class AppSidebar extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 31, top: 4, bottom: 24),
+                padding: const EdgeInsets.only(left: 31, top: 6, bottom: 22),
                 child: Text(
                   'Mandarin · HSK $hskLevel',
-                  style: TextStyle(fontSize: 10, color: AppColors.muted),
+                  style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
               ),
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    for (var i = 0; i < items.length; i++)
+                    for (final group in _groups) ...[
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: _NavItem(
-                          icon: items[i].$1,
-                          label: items[i].$2,
-                          selected: selectedIndex == i,
-                          onTap: () {
-                            onSelected?.call(i);
-                            if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
-                              Navigator.pop(context);
-                            }
-                          },
+                        padding: const EdgeInsets.fromLTRB(12, 8, 0, 10),
+                        child: Text(
+                          group.$1,
+                          style: TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.faint,
+                          ),
                         ),
                       ),
+                      for (final index in group.$2)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _NavItem(
+                            icon: items[index].$1,
+                            label: items[index].$2,
+                            selected: selectedIndex == index,
+                            onTap: () {
+                              onSelected?.call(index);
+                              if (Scaffold.maybeOf(context)?.hasDrawer ??
+                                  false) {
+                                Navigator.pop(context);
+                              }
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                    ],
                   ],
                 ),
               ),
@@ -119,13 +141,15 @@ class AppSidebar extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '加油！ Keep going today.',
-                      style: TextStyle(fontSize: 10, color: AppColors.muted),
+                      streakDays == 0
+                          ? 'Practise a word to start your streak.'
+                          : '加油！ Keep going today.',
+                      style: TextStyle(fontSize: 12, color: AppColors.muted),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               const Divider(),
               _NavItem(
                 icon: Icons.settings_outlined,
@@ -172,7 +196,7 @@ class _NavItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
             child: Row(
               children: [
                 Icon(
@@ -184,9 +208,8 @@ class _NavItem extends StatelessWidget {
                 Flexible(
                   child: Text(
                     label,
-                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                       color: selected ? AppColors.red : AppColors.muted,
                     ),
