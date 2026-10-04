@@ -163,6 +163,9 @@ saves a correct rating; **Still learning** saves an incorrect rating. Saving
 finishes before the feed advances, and failed saves can be retried. At the end
 of a mix, **Refresh word feed** reshuffles the remaining unlearned vocabulary.
 
+With enlarged text or a short window, scroll within the word card to reach its
+content and ratings, then select **Next word** to advance.
+
 Legacy daily-review sessions remain in local storage and backups; navigation
 now opens the word feed. Spaced-review dates and the Dictionary's **To review**
 filter remain available.
@@ -206,11 +209,17 @@ Failed progress saves can be retried without counting answers twice.
 ### Dictionary and Vocab Rush
 
 The **Dictionary** page supports Hanzi, pinyin, and English search, HSK 1–6
-filters, and unseen, learning, learned, and due states. Open word details and
-expand **Practise these words** to save a **Got it** or **Still learning** rating.
+filters, and unseen, learning, learned, and due states. Pinyin search accepts
+tone marks, plain letters, or tone numbers such as `xue2xi2`; `ü`, `v`, and `u:`
+spellings are supported. Open word details and expand **Practise these words**
+to save a **Got it** or **Still learning** rating.
 Looking up a word or playing its pronunciation does not award mastery.
 **Vocab Rush** provides timed and survival challenges; every answer contributes
 to shared vocabulary statistics, with mistakes recorded as weak words.
+
+Three mistakes end a Vocab Rush game. Timed games keep counting while the app
+is in the background; Survival has no time limit. **Show pinyin** in Settings
+also controls the pronunciation hint during a game.
 
 ### Appearance and preferences
 
@@ -510,6 +519,8 @@ See [Beta release workflow](docs/beta-releases.md) for preparation, installation
 platform testing, signing requirements, and failed-run recovery.
 The [October 4 stability report](docs/stability-check-2026-10-04.md) records the
 automated checks, fixes, and remaining device checks for the next beta.
+The [app runthrough](docs/app-runthrough.md) records the subsequent Linux
+screen review, usability improvements, and full validation pass.
 
 ### Technical snapshot
 
