@@ -109,6 +109,7 @@ class _FakeSpeechInputService implements SpeechInputService {
   int cancelCalls = 0;
   int disposeCalls = 0;
   Object? startError;
+  Future<void>? startGate;
 
   @override
   Future<void> startListening({
@@ -118,6 +119,7 @@ class _FakeSpeechInputService implements SpeechInputService {
   }) async {
     startCalls++;
     this.preferredLocaleId = preferredLocaleId;
+    await startGate;
     if (startError != null) throw startError!;
     if (transcript.isNotEmpty) onResult(transcript);
   }
@@ -849,6 +851,114 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller!.text,
         '龙老师， 我想练习中文',
       );
+    },
+  );
+
+  for (final leavePage in [false, true]) {
+    testWidgets(
+      'pending audio stop cannot start dictation after ${leavePage ? 'leaving' : 'releasing'}',
+      (tester) async {
+        final gate = Completer<void>();
+        addTearDown(() {
+          if (!gate.isCompleted) gate.complete();
+        });
+        final speech = _FakeSpeechInputService();
+        final voice = _FakePronunciationService()..stopGate = gate.future;
+        await _pumpTutor(
+          tester,
+          speechInputService: speech,
+          pronunciationService: voice,
+        );
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(const Key('ai-tutor-push-to-talk'))),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(voice.stopCalls, 1);
+        expect(speech.startCalls, 0);
+        if (leavePage) await tester.pumpWidget(const SizedBox.shrink());
+        await gesture.up();
+        gate.complete();
+        await tester.pumpAndSettle();
+        expect(speech.startCalls, 0);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'releasing during speech setup cancels immediately and ignores late words',
+    (tester) async {
+      final gate = Completer<void>();
+      addTearDown(() {
+        if (!gate.isCompleted) gate.complete();
+      });
+      final speech = _FakeSpeechInputService()
+        ..startGate = gate.future
+        ..transcript = '迟到的文字';
+      await _pumpTutor(
+        tester,
+        speechInputService: speech,
+        pronunciationService: _FakePronunciationService(),
+      );
+      await tester.enterText(find.byType(TextField), 'Keep this text');
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('ai-tutor-push-to-talk'))),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(speech.startCalls, 1);
+      await gesture.up();
+      await tester.pump();
+      expect(speech.cancelCalls, 1);
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(find.text('Keep this text'), findsOneWidget);
+      expect(find.textContaining('迟到的文字'), findsNothing);
+      speech.startGate = null;
+      speech.transcript = '你好';
+      await tester.longPress(find.byKey(const Key('ai-tutor-push-to-talk')));
+      await tester.pumpAndSettle();
+      expect(find.text('Keep this text 你好'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a cancelled start from an old page cannot cancel a new dictation',
+    (tester) async {
+      final gate = Completer<void>();
+      addTearDown(() {
+        if (!gate.isCompleted) gate.complete();
+      });
+      final speech = _FakeSpeechInputService()..startGate = gate.future;
+      await _pumpTutor(
+        tester,
+        speechInputService: speech,
+        pronunciationService: _FakePronunciationService(),
+      );
+      final firstPress = await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('ai-tutor-push-to-talk'))),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(speech.startCalls, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await firstPress.up();
+      speech.startGate = null;
+      await _pumpTutor(
+        tester,
+        speechInputService: speech,
+        pronunciationService: _FakePronunciationService(),
+      );
+      final secondPress = await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('ai-tutor-push-to-talk'))),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(speech.startCalls, 2);
+      final cancellations = speech.cancelCalls;
+      gate.complete();
+      await tester.pump();
+      expect(speech.cancelCalls, cancellations);
+      await secondPress.up();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
     },
   );
 

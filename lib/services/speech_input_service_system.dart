@@ -1,5 +1,4 @@
 import 'package:speech_to_text/speech_recognition_error.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import 'speech_input_service.dart';
@@ -10,6 +9,9 @@ class SystemSpeechInputService implements SpeechInputService {
 
   final SpeechToText _speechToText;
   bool _initialized = false;
+  bool _disposed = false;
+  int _startRequest = 0;
+  int _resultSession = 0;
   Future<bool>? _initialization;
   SpeechInputResult? _onResult;
   SpeechInputError? _onError;
@@ -20,10 +22,14 @@ class SystemSpeechInputService implements SpeechInputService {
     SpeechInputError? onError,
     String? preferredLocaleId,
   }) async {
+    if (_disposed) return;
+    final request = ++_startRequest;
+    final session = ++_resultSession;
     _onResult = onResult;
     _onError = onError;
 
     final available = await _ensureInitialized();
+    if (_disposed || request != _startRequest) return;
     if (!available) {
       throw const SpeechInputException(
         'Speech input is unavailable. Check microphone and speech recognition permissions.',
@@ -32,10 +38,16 @@ class SystemSpeechInputService implements SpeechInputService {
 
     if (_speechToText.isListening) {
       await _speechToText.cancel();
+      if (_disposed || request != _startRequest) return;
     }
     final localeId = await _resolveLocale(preferredLocaleId);
+    if (_disposed || request != _startRequest) return;
     await _speechToText.listen(
-      onResult: _handleResult,
+      onResult: (result) {
+        if (!_disposed && session == _resultSession) {
+          _onResult?.call(result.recognizedWords);
+        }
+      },
       listenOptions: SpeechListenOptions(
         cancelOnError: true,
         partialResults: true,
@@ -99,10 +111,6 @@ class SystemSpeechInputService implements SpeechInputService {
   String _normalizeLocale(String localeId) =>
       localeId.trim().toLowerCase().replaceAll('-', '_');
 
-  void _handleResult(SpeechRecognitionResult result) {
-    _onResult?.call(result.recognizedWords);
-  }
-
   void _handleError(SpeechRecognitionError error) {
     _onError?.call(_friendlyError(error.errorMsg));
   }
@@ -126,6 +134,8 @@ class SystemSpeechInputService implements SpeechInputService {
 
   @override
   Future<void> stopListening() async {
+    // Invalidate pending setup, but keep this session's final transcript.
+    _startRequest++;
     if (_initialized) {
       await _speechToText.stop();
     }
@@ -133,11 +143,18 @@ class SystemSpeechInputService implements SpeechInputService {
 
   @override
   Future<void> cancelListening() async {
+    _startRequest++;
+    _resultSession++;
+    _onResult = null;
+    _onError = null;
     if (_initialized) {
       await _speechToText.cancel();
     }
   }
 
   @override
-  Future<void> dispose() => cancelListening();
+  Future<void> dispose() async {
+    _disposed = true;
+    await cancelListening();
+  }
 }

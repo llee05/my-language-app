@@ -39,7 +39,12 @@ class _PushToTalkButtonState extends State<_PushToTalkButton> {
 
   void _release() {
     _pressed = false;
-    if (_listening) unawaited(_stopListening());
+    if (_starting) {
+      _session++;
+      unawaited(_cancelListening());
+    } else if (_listening) {
+      unawaited(_stopListening());
+    }
   }
 
   Future<void> _startListening(int session) async {
@@ -47,15 +52,19 @@ class _PushToTalkButtonState extends State<_PushToTalkButton> {
     setState(() => _starting = true);
     try {
       await widget.beforeListening?.call();
+      if (!mounted || session != _session) return;
+      if (!_pressed || !widget.enabled) {
+        setState(() => _starting = false);
+        return;
+      }
       await widget.speechInputService.startListening(
         preferredLocaleId: widget.preferredLocaleId,
         onResult: (transcript) => _applyTranscript(session, transcript),
         onError: (message) => _showError(session, message),
       );
-      if (!mounted || session != _session) {
-        await widget.speechInputService.cancelListening();
-        return;
-      }
+      // Release/dispose already cancelled this request. Cancelling again here
+      // could stop a newer dictation on another page sharing the service.
+      if (!mounted || session != _session) return;
       setState(() {
         _starting = false;
         _listening = true;
@@ -65,6 +74,20 @@ class _PushToTalkButtonState extends State<_PushToTalkButton> {
       _finishWithError(session, error.message);
     } catch (_) {
       _finishWithError(session, 'Speech input is unavailable on this device.');
+    } finally {
+      // Keep a cancelled start occupied until its pending work has finished so
+      // its cleanup cannot cancel a newer press on this button.
+      if (mounted && session != _session) {
+        setState(() => _starting = false);
+      }
+    }
+  }
+
+  Future<void> _cancelListening() async {
+    try {
+      await widget.speechInputService.cancelListening();
+    } catch (error) {
+      debugPrint('Speech input cancellation failed: $error');
     }
   }
 
@@ -119,15 +142,14 @@ class _PushToTalkButtonState extends State<_PushToTalkButton> {
   void didUpdateWidget(covariant _PushToTalkButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled && !widget.enabled && (_starting || _listening)) {
-      _pressed = false;
-      unawaited(_stopListening());
+      _release();
     }
   }
 
   @override
   void dispose() {
     _session++;
-    unawaited(widget.speechInputService.cancelListening());
+    unawaited(_cancelListening());
     super.dispose();
   }
 

@@ -127,7 +127,7 @@ class _AnimatedButtonFeedbackState extends State<_AnimatedButtonFeedback>
   }
 
   void _setPressed(bool pressed) {
-    if (!widget.enabled || _pressed == pressed) return;
+    if (!mounted || !widget.enabled || _pressed == pressed) return;
     setState(() => _pressed = pressed);
   }
 
