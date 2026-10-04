@@ -295,6 +295,168 @@ void main() {
   );
 
   test(
+    'example corrections preserve card IDs, history, sessions and custom copies',
+    () async {
+      final db = await LocalDatabase.ensureInitialized();
+      final targets = await db.query(
+        'cards',
+        where: 'chinese IN (?, ?)',
+        whereArgs: ['最', '一会儿'],
+        orderBy: 'id',
+      );
+      expect(targets, hasLength(2));
+      for (final card in targets) {
+        await db.update(
+          'cards',
+          {
+            'example_sentence_chinese': 'Old example',
+            'example_sentence_pinyin': 'Old pinyin',
+            'example_sentence_english': 'Old translation',
+            'example_source_id': '1',
+            'example_translation_id': '2',
+          },
+          where: 'id = ?',
+          whereArgs: [card['id']],
+        );
+      }
+      final member = (await db.query(
+        'lesson_cards',
+        where: 'card_id = ?',
+        whereArgs: [targets.first['id']],
+      )).first;
+      final topic = (await lessons.findById(member['lesson_id'] as int))!;
+      await lessons.saveGenerated(topic);
+      final session = await progress.startSession(topic.summary.id);
+      final now = DateTime.utc(2026, 10, 4);
+      await progress.recordReview(
+        review: ReviewRecord(
+          id: 0,
+          cardId: targets.first['id'] as int,
+          sessionId: session.id,
+          reviewedAt: now,
+          rating: ReviewRating.good,
+          wasCorrect: true,
+        ),
+        progress: scheduleCardReview(
+          cardId: targets.first['id'] as int,
+          rating: ReviewRating.good,
+          reviewedAt: now,
+        ),
+      );
+      await progress.updateSession(
+        LessonSession(
+          id: session.id,
+          lessonId: topic.summary.id,
+          startedAt: session.startedAt,
+          currentCardIndex: 1,
+          cardsReviewed: 1,
+          correctAnswers: 1,
+        ),
+      );
+      final correctedCards = {for (final card in targets) card['id']: card};
+      final expectedCards = [
+        for (final card in await db.query('cards', orderBy: 'id'))
+          correctedCards[card['id']] ?? card,
+      ];
+      final preserved = {
+        for (final table in [
+          'lessons',
+          'lesson_cards',
+          'card_progress',
+          'review_history',
+          'lesson_sessions',
+        ])
+          table: await db.query(table, orderBy: 'rowid'),
+      };
+      await db.delete(
+        'content_migrations',
+        where: 'key = ?',
+        whereArgs: [vocabularyExampleCorrectionsMarker],
+      );
+      // Keep the original curriculum marker: an installed app must receive
+      // corrections without reinstalling the curriculum.
+      for (var reopen = 0; reopen < 2; reopen++) {
+        await LocalDatabase.close();
+        final upgraded = await LocalDatabase.ensureInitialized();
+        expect(await upgraded.query('cards', orderBy: 'id'), expectedCards);
+        for (final entry in preserved.entries) {
+          expect(
+            await upgraded.query(entry.key, orderBy: 'rowid'),
+            entry.value,
+            reason: '${entry.key} must survive the content update',
+          );
+        }
+        expect(
+          await upgraded.query(
+            'content_migrations',
+            where: 'key = ?',
+            whereArgs: [vocabularyExampleCorrectionsMarker],
+          ),
+          hasLength(1),
+        );
+        expect(await upgraded.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+      }
+    },
+  );
+
+  test('example corrections roll back and can be retried', () async {
+    final db = await LocalDatabase.ensureInitialized();
+    final currentCards = await db.query('cards', orderBy: 'id');
+    await db.update(
+      'cards',
+      {'example_sentence_chinese': 'Old example'},
+      where: 'chinese IN (?, ?)',
+      whereArgs: ['最', '一会儿'],
+    );
+    await db.delete(
+      'content_migrations',
+      where: 'key = ?',
+      whereArgs: [vocabularyExampleCorrectionsMarker],
+    );
+    final oldCards = await db.query('cards', orderBy: 'id');
+    await db.execute(
+      "CREATE TRIGGER fail_example_marker BEFORE INSERT ON content_migrations "
+      "WHEN NEW.key = '$vocabularyExampleCorrectionsMarker' "
+      "BEGIN SELECT RAISE(ABORT, 'Simulated failure'); END",
+    );
+    await expectLater(
+      db.transaction(installVocabularyCurriculum),
+      throwsA(isA<DatabaseException>()),
+    );
+    expect(await db.query('cards', orderBy: 'id'), oldCards);
+    expect(
+      await db.query(
+        'content_migrations',
+        where: 'key = ?',
+        whereArgs: [vocabularyExampleCorrectionsMarker],
+      ),
+      isEmpty,
+    );
+    await db.execute('DROP TRIGGER fail_example_marker');
+    await db.transaction(installVocabularyCurriculum);
+    expect(await db.query('cards', orderBy: 'id'), currentCards);
+  });
+
+  test(
+    'restoring old examples corrects them even after the update was applied',
+    () async {
+      const backups = SqliteBackupRepository();
+      final db = await LocalDatabase.ensureInitialized();
+      final currentCards = await db.query('cards', orderBy: 'id');
+      await db.update(
+        'cards',
+        {'example_sentence_chinese': 'Old example'},
+        where: 'chinese IN (?, ?)',
+        whereArgs: ['最', '一会儿'],
+      );
+      final oldBackup = await backups.exportBackup();
+      await backups.restoreBackup(oldBackup);
+      expect(await db.query('cards', orderBy: 'id'), currentCards);
+      expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+    },
+  );
+
+  test(
     'curriculum refresh is repeatable and rolls back failed membership writes',
     () async {
       final db = await LocalDatabase.ensureInitialized();

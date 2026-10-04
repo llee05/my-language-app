@@ -8,6 +8,7 @@ import 'flashcard_seed.dart';
 import 'vocabulary_content.dart';
 
 const vocabularyCurriculumMarker = 'bundled_hsk_curriculum_v1';
+const vocabularyExampleCorrectionsMarker = 'bundled_hsk_examples_v2';
 const vocabularyLessonSize = 20;
 
 /// Classify only the first exact bundled deck in backups lacking provenance.
@@ -88,6 +89,7 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
     where: 'key = ?',
     whereArgs: [vocabularyCurriculumMarker],
   )).isNotEmpty) {
+    await _correctVocabularyExamples(db);
     return;
   }
   final document =
@@ -277,4 +279,71 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
     'applied_at': DateTime.now().toUtc().toIso8601String(),
   });
   await batch.commit(noResult: true);
+  await _correctVocabularyExamples(db);
+}
+
+/// Update examples in place, without rebuilding memberships or choosing new
+/// shared cards based on the learner's current progress. The caller owns the
+/// transaction, including the completion marker.
+Future<void> _correctVocabularyExamples(DatabaseExecutor db) async {
+  if ((await db.query(
+    'content_migrations',
+    where: 'key = ?',
+    whereArgs: [vocabularyExampleCorrectionsMarker],
+  )).isNotEmpty) {
+    return;
+  }
+  const correctedIds = {'hsk-old-2-最', 'hsk-old-3-一会儿'};
+  final document =
+      jsonDecode(
+            await rootBundle.loadString('assets/data/vocabulary_lessons.json'),
+          )
+          as Map<String, dynamic>;
+  final vocabulary = await const BundledVocabularyRepository().load();
+  final byId = {for (final word in vocabulary) word['id']: word};
+  for (final definition
+      in (document['lessons'] as List).cast<Map<String, dynamic>>()) {
+    for (final entry
+        in (definition['entries'] as List).cast<Map<String, dynamic>>()) {
+      if (!correctedIds.contains(entry['vocabularyId'])) continue;
+      final word = byId[entry['vocabularyId']]!;
+      final example = entry['example'] as Map<String, dynamic>;
+      final cards = await db.rawQuery(
+        '''
+        SELECT DISTINCT cards.id, cards.chinese, cards.pinyin
+        FROM cards
+        INNER JOIN lessons owner ON owner.id = cards.lesson_id
+        INNER JOIN lesson_cards ON lesson_cards.card_id = cards.id
+        INNER JOIN lessons deck ON deck.id = lesson_cards.lesson_id
+        WHERE owner.is_user_generated = 0 AND owner.is_sentence_practice = 0
+          AND deck.is_user_generated = 0 AND deck.is_sentence_practice = 0
+          AND deck.lesson_title = ? AND cards.chinese = ?
+        ''',
+        [definition['title'], word['simplified']],
+      );
+      for (final card in cards) {
+        if (_wordKey(card['chinese'] as String, card['pinyin'] as String) !=
+            _wordKey(word['simplified'] as String, word['pinyin'] as String)) {
+          continue;
+        }
+        await db.update(
+          'cards',
+          {
+            'example_sentence_chinese': example['chinese'],
+            'example_sentence_pinyin': example['pinyin'],
+            'example_sentence_english': example['english'],
+            'example_source': example['source'],
+            'example_source_id': example['chineseId'],
+            'example_translation_id': example['englishId'],
+          },
+          where: 'id = ?',
+          whereArgs: [card['id']],
+        );
+      }
+    }
+  }
+  await db.insert('content_migrations', {
+    'key': vocabularyExampleCorrectionsMarker,
+    'applied_at': DateTime.now().toUtc().toIso8601String(),
+  });
 }

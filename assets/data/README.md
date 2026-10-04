@@ -86,6 +86,11 @@ Historical default decks are archived so their unfinished sessions and card orde
 remain available; learner-created lessons and the sentence decks are preserved.
 Backups include memberships and archive flags, and older backups acquire the
 curriculum during restore. Repeated startup does not reinstall content.
+`bundled_hsk_examples_v2` applies the reviewed 最 and 一会儿 example corrections
+once to installed curriculum cards. It changes only example text and attribution,
+preserving card IDs, memberships, learner history, sessions, and custom copies.
+The replacements are recorded in `lesson_example_overrides.json`; their source
+transcriptions remain in the bundled subset for offline regeneration.
 
 The historical flashcard seeds in `lib/database/flashcard_seed.dart` remain as
 migration definitions. They no longer seed the default vocabulary library.

@@ -2985,12 +2985,12 @@
         {
           "vocabularyId": "hsk-old-2-最",
           "example": {
-            "chinese": "得不到的东西就最想得到。",
-            "pinyin": "Débùdào de dōngxi jiù zuì xiǎng dédào.",
-            "english": "It is the things that we do not possess which seem to us most desirable.",
+            "chinese": "你最喜欢的饮料是什么？",
+            "pinyin": "Nǐ zuì xǐhuan de yǐnliào shì shénme?",
+            "english": "What's your favorite drink?",
             "source": "Tatoeba",
-            "chineseId": "332950",
-            "englishId": "237003",
+            "chineseId": "2186246",
+            "englishId": "906749",
             "pinyinContributor": "Yorwba"
           }
         },
@@ -3973,13 +3973,13 @@
         {
           "vocabularyId": "hsk-old-3-一会儿",
           "example": {
-            "chinese": "我休息了一会儿再要出去。",
-            "pinyin": "Wǒ xiūxi le yīhuìr zài yào chūqù.",
-            "english": "I'll go out after I've rested for a while.",
+            "chinese": "一会儿见！",
+            "pinyin": "Yīhuìr jiàn!",
+            "english": "See you soon!",
             "source": "Tatoeba",
-            "chineseId": "1305924",
-            "englishId": "1305925",
-            "pinyinContributor": "Yorwba"
+            "chineseId": "337874",
+            "englishId": "32672",
+            "pinyinContributor": ""
           }
         },
         {

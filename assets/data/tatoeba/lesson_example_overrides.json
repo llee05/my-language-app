@@ -74,5 +74,15 @@
     "chineseId": "332433",
     "englishId": "259388",
     "reason": "Uses the classifier for an object with a handle, matching the study meaning."
+  },
+  "hsk-old-3-一会儿": {
+    "chineseId": "337874",
+    "englishId": "32672",
+    "reason": "Natural short farewell using 一会儿; replaces awkward tense and word order."
+  },
+  "hsk-old-2-最": {
+    "chineseId": "2186246",
+    "englishId": "906749",
+    "reason": "Concrete beginner-friendly question about a favorite drink instead of an abstract statement about desire."
   }
 }
