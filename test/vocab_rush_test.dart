@@ -29,6 +29,166 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
   });
 
+  testWidgets('survival has no deadline and stopping has an accurate summary', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var now = DateTime(2026, 10, 4, 12);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: const _RushSettingsRepository(),
+            initialVocabulary: _smallVocabulary,
+            clock: () => now,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Survival'));
+    await startGame(tester);
+    now = now.add(const Duration(days: 1));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('∞'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Game ended. You scored 0 words.'), findsOneWidget);
+    expect(find.textContaining('Time!'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Vocab Rush respects the hidden pinyin preference', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            settingsRepository: _RushSettingsRepository(showPinyin: false),
+            initialVocabulary: _smallVocabulary,
+          ),
+        ),
+      ),
+    );
+    await startGame(tester);
+    for (final entry in _smallVocabulary) {
+      expect(find.text(entry['pinyin']! as String), findsNothing);
+      expect(find.text(entry['studyMeaning']! as String), findsOneWidget);
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  for (final elapsed in [
+    const Duration(seconds: 37),
+    const Duration(minutes: 4),
+  ]) {
+    testWidgets('timed rush accounts for $elapsed in the background', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      var now = DateTime(2026, 10, 4, 12);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: VocabRushPage(
+              settingsRepository: const _RushSettingsRepository(),
+              initialVocabulary: _smallVocabulary,
+              clock: () => now,
+            ),
+          ),
+        ),
+      );
+      await startGame(tester);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      now = now.add(elapsed);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      if (elapsed < const Duration(minutes: 3)) {
+        expect(find.text('143s'), findsOneWidget);
+      } else {
+        expect(find.text('PICK THE CORRECT MEANING'), findsNothing);
+        expect(find.textContaining('Time!'), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  testWidgets('an expired game rejects answers before the next timer tick', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final progress = _RushProgressRepository();
+    var now = DateTime(2026, 10, 4, 12);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VocabRushPage(
+            lessonRepository: _RushLessonRepository(),
+            progressRepository: progress,
+            settingsRepository: const _RushSettingsRepository(),
+            initialVocabulary: _smallVocabulary,
+            clock: () => now,
+          ),
+        ),
+      ),
+    );
+    await startGame(tester);
+    now = now.add(const Duration(minutes: 3));
+    await tester.tap(find.byType(OutlinedButton).first);
+    await tester.pumpAndSettle();
+    expect(progress.reviewAttempts, isEmpty);
+    expect(find.textContaining('You scored 0 words.'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'an earlier game cannot advance a new game during answer feedback',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: VocabRushPage(
+              lessonRepository: _RushLessonRepository(),
+              progressRepository: _RushProgressRepository(),
+              settingsRepository: const _RushSettingsRepository(),
+              initialVocabulary: _smallVocabulary,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Survival'));
+      await startGame(tester);
+      await tester.tap(find.byType(OutlinedButton).first);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, '再玩一次 — Play Again'),
+          )
+          .onPressed!();
+      await tester.pump();
+      final currentWord = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((text) => text.data)
+          .firstWhere((text) => text == '你' || text == '书')!;
+      await tester.tap(find.byType(OutlinedButton).first);
+      await tester.pump(const Duration(milliseconds: 410));
+      expect(find.text(currentWord), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 500));
+    },
+  );
+
   testWidgets('Android Back ends Vocab Rush and cancels its timer', (
     tester,
   ) async {
@@ -625,13 +785,17 @@ class _RushVocabularyBundle extends CachingAssetBundle {
 }
 
 class _RushSettingsRepository implements SettingsRepository {
-  const _RushSettingsRepository({this.soundEnabled = true});
+  const _RushSettingsRepository({
+    this.soundEnabled = true,
+    this.showPinyin = true,
+  });
 
   final bool soundEnabled;
+  final bool showPinyin;
 
   @override
   Future<LearnerSettings> load() async =>
-      LearnerSettings(soundEnabled: soundEnabled);
+      LearnerSettings(soundEnabled: soundEnabled, showPinyin: showPinyin);
 
   @override
   Future<void> save(LearnerSettings settings) async {}

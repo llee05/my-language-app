@@ -664,6 +664,7 @@ class _DashboardBody extends StatelessWidget {
         dailyReviewSessionRepository: dailyReviewSessionRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
+        clock: clock,
       );
     }
     if (selectedNav == 5) {

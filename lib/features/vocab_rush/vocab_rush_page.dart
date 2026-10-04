@@ -36,10 +36,12 @@ class VocabRushPage extends StatefulWidget {
     this.vocabularyRepository = const BundledVocabularyRepository(),
     this.studyService,
     this.onProgressChanged,
+    this.clock,
   });
 
   final VocabularyStudyService? studyService;
   final VoidCallback? onProgressChanged;
+  final DateTime Function()? clock;
 
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
@@ -53,13 +55,17 @@ class VocabRushPage extends StatefulWidget {
   State<VocabRushPage> createState() => _VocabRushPageState();
 }
 
-class _VocabRushPageState extends State<VocabRushPage> {
+class _VocabRushPageState extends State<VocabRushPage>
+    with WidgetsBindingObserver {
   final _random = Random();
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   _RushDifficulty _difficulty = _RushDifficulty.beginner;
   _RushDuration _duration = _RushDuration.threeMinutes;
   Timer? _timer;
+  DateTime? _deadline;
+  String _finishReason = 'Game ended.';
+  int _gameGeneration = 0;
   List<Map<String, dynamic>> _cards = const [];
   Map<String, dynamic>? _card;
   List<String> _answers = const [];
@@ -78,9 +84,12 @@ class _VocabRushPageState extends State<VocabRushPage> {
   bool _soundEnabled = true;
   LearnerSettings _learnerSettings = const LearnerSettings();
 
+  DateTime _now() => widget.clock?.call() ?? DateTime.now();
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -89,6 +98,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     if (_ownsPronunciationService) {
       unawaited(_pronunciationService.dispose());
@@ -96,6 +106,24 @@ class _VocabRushPageState extends State<VocabRushPage> {
       unawaited(_stopPronunciation());
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _tick();
+    if (state == AppLifecycleState.paused) unawaited(_stopPronunciation());
+  }
+
+  void _tick() {
+    final deadline = _deadline;
+    if (!mounted || !_playing || deadline == null) return;
+    final remaining = deadline.difference(_now()).inMilliseconds;
+    if (remaining <= 0) {
+      _finish(reason: 'Time!');
+    } else {
+      final seconds = (remaining / Duration.millisecondsPerSecond).ceil();
+      if (seconds != _secondsLeft) setState(() => _secondsLeft = seconds);
+    }
   }
 
   Future<void> _loadSoundPreference() async {
@@ -178,9 +206,13 @@ class _VocabRushPageState extends State<VocabRushPage> {
           .toString();
 
       setState(() {
+        _gameGeneration++;
         _playing = true;
         _finished = false;
         _secondsLeft = _duration.seconds ?? 0;
+        _deadline = _duration.seconds == null
+            ? null
+            : _now().add(Duration(seconds: _duration.seconds!));
         _score = 0;
         _streak = 0;
         _bestStreak = 0;
@@ -192,14 +224,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
       });
 
       if (_duration.seconds != null) {
-        _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-          if (!mounted) return;
-          if (_secondsLeft <= 1) {
-            _finish();
-          } else {
-            setState(() => _secondsLeft--);
-          }
-        });
+        _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
       }
     } catch (error) {
       debugPrint('Vocab Rush vocabulary load failed: $error');
@@ -229,7 +254,9 @@ class _VocabRushPageState extends State<VocabRushPage> {
   }
 
   void _answer(String answer) {
+    _tick();
     if (_selectedAnswer != null || !_playing) return;
+    final generation = _gameGeneration;
     unawaited(_stopPronunciation());
     final source = Map<String, dynamic>.of(_card!);
     final correct = answer == source['english_meaning'];
@@ -250,9 +277,11 @@ class _VocabRushPageState extends State<VocabRushPage> {
     unawaited(_savePractice(source, submissionKey, correct));
 
     Future<void>.delayed(const Duration(milliseconds: 450), () {
-      if (!mounted || !_playing) return;
+      if (!mounted || !_playing || generation != _gameGeneration) return;
+      _tick();
+      if (!_playing) return;
       if (_mistakes >= 3) {
-        _finish();
+        _finish(reason: 'Three strikes!');
       } else {
         setState(_nextCard);
       }
@@ -309,13 +338,14 @@ class _VocabRushPageState extends State<VocabRushPage> {
     }
   }
 
-  void _finish() {
+  void _finish({String reason = 'Game ended.'}) {
     _timer?.cancel();
     unawaited(_stopPronunciation());
     setState(() {
       _secondsLeft = 0;
       _playing = false;
       _finished = true;
+      _finishReason = reason;
     });
   }
 
@@ -403,6 +433,12 @@ class _VocabRushPageState extends State<VocabRushPage> {
               ),
           ],
         ),
+        const SizedBox(height: 12),
+        Text(
+          'Three mistakes end the game. The clock continues while the app is in the background.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, height: 1.6, color: AppColors.muted),
+        ),
         if (_startError != null) ...[
           const SizedBox(height: 16),
           _AppInlineError(message: _startError!),
@@ -426,7 +462,8 @@ class _VocabRushPageState extends State<VocabRushPage> {
         if (_finished) ...[
           const SizedBox(height: 30),
           Text(
-            '${_mistakes >= 3 ? 'Three strikes!' : 'Time!'} You scored $_score ${_score == 1 ? 'word' : 'words'}.',
+            '$_finishReason You scored $_score ${_score == 1 ? 'word' : 'words'}.',
+            textAlign: TextAlign.center,
             style: TextStyle(fontSize: 20, color: AppColors.text),
           ),
           const SizedBox(height: 12),
@@ -490,10 +527,11 @@ class _VocabRushPageState extends State<VocabRushPage> {
             color: AppColors.text,
           ),
         ),
-        Text(
-          _card!['pinyin'] as String,
-          style: TextStyle(fontSize: 16, color: AppColors.gold),
-        ),
+        if (_learnerSettings.showPinyin)
+          Text(
+            _card!['pinyin'] as String,
+            style: TextStyle(fontSize: 16, color: AppColors.gold),
+          ),
         PronunciationButton(
           requestKey: _attempts,
           key: const Key('vocab-rush-pronunciation'),
@@ -537,7 +575,7 @@ class _VocabRushPageState extends State<VocabRushPage> {
       background = AppColors.red.withValues(alpha: .12);
     }
     return OutlinedButton(
-      onPressed: () => _answer(answer),
+      onPressed: _selectedAnswer == null ? () => _answer(answer) : null,
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(0, 48),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
