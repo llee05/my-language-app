@@ -225,8 +225,10 @@ locally and restored on the next launch.
 
 ### Pronunciation audio
 
-The speaker button on lesson cards does not require an AI provider. Sound can be
-enabled or disabled under **Settings → Sound**.
+Use **Listen to example** on the back of a lesson card, or the speaker beside an
+example in Dictionary details, Doom Scrolling, or a saved lesson guide, to hear
+the full Mandarin sentence. Playback does not require an AI provider or award
+mastery. Sound can be enabled or disabled under **Settings → Sound**.
 
 On **Android**, pronunciation uses the device's Simplified Chinese (`zh-CN`)
 speech engine. Open **Settings → Mandarin voice → Install Mandarin voice**,

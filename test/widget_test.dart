@@ -2438,11 +2438,14 @@ void main() {
         await tester.binding.setSurfaceSize(Size(width, 900));
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final repository = _GuidedLessonRepository();
+        final voice = _FakePronunciationService();
+        addTearDown(voice.dispose);
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: LessonsPage(
                 repository: repository,
+                pronunciationService: voice,
                 initialLessonId: 7,
                 progressRepository: _MemoryProgressRepository(
                   hasActiveSession: false,
@@ -2459,6 +2462,9 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text(savedLessonGuide.objective), findsOneWidget);
+        await tester.tap(find.byTooltip('Hear example sentence').first);
+        await tester.pumpAndSettle();
+        expect(voice.spoken, [savedLessonGuide.dialogue.first.chinese]);
         final exercise = find.byKey(const ValueKey('lesson-exercise-0'));
         await tester.ensureVisible(exercise);
         await tester.tap(exercise);
@@ -2472,6 +2478,18 @@ void main() {
           ),
           findsOneWidget,
         );
+        final answerAudio = find.descendant(
+          of: exercise,
+          matching: find.byTooltip('Hear example sentence'),
+        );
+        await tester.ensureVisible(answerAudio);
+        await tester.tap(answerAudio);
+        await tester.pumpAndSettle();
+        expect(
+          voice.spoken.last,
+          savedLessonGuide.exercises.first.answer.chinese,
+        );
+        expect(voice.spoken, hasLength(2));
         await tester.tap(find.byKey(const Key('lesson-cards-tab')));
         await tester.pumpAndSettle();
         await tester.tap(find.widgetWithText(FilledButton, 'Next'));
@@ -2616,6 +2634,67 @@ void main() {
     expect(pronunciation.stopCalls, 1);
     expect(pronunciation.disposeCalls, 0);
   });
+
+  for (final size in [const Size(390, 844), const Size(1000, 1100)]) {
+    for (final soundEnabled in [true, false]) {
+      testWidgets('lesson example audio at $size with sound $soundEnabled', (
+        tester,
+      ) async {
+        await tester.binding.setSurfaceSize(size);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final voice = _FailOncePronunciationService();
+        addTearDown(voice.dispose);
+        final progress = _MemoryProgressRepository();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LessonsPage(
+                repository: _ExampleLessonRepository(),
+                progressRepository: progress,
+                settingsRepository: _MemorySettingsRepository(
+                  LearnerSettings(soundEnabled: soundEnabled),
+                ),
+                pronunciationService: voice,
+                initialLessonId: 7,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('学').hitTestable());
+        await tester.pumpAndSettle();
+        final button = find.byKey(const Key('lesson-example-pronunciation'));
+        await tester.ensureVisible(button);
+        expect(
+          tester.widget<PronunciationButton>(button).onPressed,
+          soundEnabled ? isNotNull : isNull,
+        );
+        if (soundEnabled) {
+          await tester.tap(button);
+          await tester.pumpAndSettle();
+          expect(
+            find.textContaining('Mandarin audio is unavailable.'),
+            findsOneWidget,
+          );
+          expect(voice.spoken, isEmpty);
+          await tester.tap(button);
+          await tester.pumpAndSettle();
+        }
+        expect(voice.spoken, soundEnabled ? ['我学中文。'] : isEmpty);
+        expect(find.text('我学中文。'), findsOneWidget);
+        expect(progress.recordReviewCalls, 0);
+        // Let the audio-error snackbar expire before using the bottom nav.
+        await tester.pump(const Duration(seconds: 4));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(OutlinedButton, 'Previous'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('你').hitTestable());
+        await tester.pumpAndSettle();
+        expect(button.hitTestable(), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 
   testWidgets('lesson answer is submitted only once while saving', (
     tester,
@@ -4404,6 +4483,19 @@ class _FakePronunciationService
   }
 }
 
+class _FailOncePronunciationService extends _FakePronunciationService {
+  bool _failNext = true;
+
+  @override
+  Future<void> speakMandarin(String text) async {
+    if (_failNext) {
+      _failNext = false;
+      throw StateError('Audio temporarily unavailable');
+    }
+    await super.speakMandarin(text);
+  }
+}
+
 class _ManagedFakePronunciationService extends _FakePronunciationService
     implements OfflinePronunciationManager {
   _ManagedFakePronunciationService({
@@ -4662,6 +4754,31 @@ class _MemoryLessonRepository implements LessonRepository {
 
   @override
   Future<List<LessonSummary>> topics() async => [lesson.summary];
+}
+
+class _ExampleLessonRepository extends _MemoryLessonRepository {
+  @override
+  Future<Lesson?> findById(int id) async => Lesson(
+    summary: lesson.summary,
+    cards: const [
+      Flashcard(
+        id: 11,
+        chinese: '你',
+        pinyin: 'nǐ',
+        englishMeaning: 'you',
+        exampleChinese: '  ',
+      ),
+      Flashcard(
+        id: 12,
+        chinese: '学',
+        pinyin: 'xué',
+        englishMeaning: 'study',
+        exampleChinese: '我学中文。',
+        examplePinyin: 'Wǒ xué Zhōngwén.',
+        exampleEnglish: 'I study Chinese.',
+      ),
+    ],
+  );
 }
 
 class _ArchivedLessonRepository extends _MemoryLessonRepository {

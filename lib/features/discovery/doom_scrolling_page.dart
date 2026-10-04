@@ -144,8 +144,10 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
   }
 
   Future<void> _speak(Map<String, dynamic> word) async {
+    if (!_settings.soundEnabled) return;
     try {
       await applyPronunciationSettings(widget.pronunciationService, _settings);
+      if (!mounted || !_settings.soundEnabled) return;
       await widget.pronunciationService.speakMandarin(
         word['simplified'] as String,
       );
@@ -373,15 +375,36 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                             ),
                             if (!compact && entry.hasExample) ...[
                               const SizedBox(height: 24),
-                              Text(
-                                entry.exampleChinese,
-                                textAlign: TextAlign.center,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: AppColors.text,
-                                  fontSize: 22,
-                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      entry.exampleChinese,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: AppColors.text,
+                                        fontSize: 22,
+                                      ),
+                                    ),
+                                  ),
+                                  PronunciationButton(
+                                    key: Key(
+                                      'discovery-example-pronunciation-$index',
+                                    ),
+                                    requestKey: entry.exampleChinese,
+                                    tooltip: _settings.soundEnabled
+                                        ? 'Hear example sentence'
+                                        : 'Pronunciation audio is disabled in Settings',
+                                    onPressed: _settings.soundEnabled
+                                        ? () => _speak({
+                                            'simplified': entry.exampleChinese,
+                                          })
+                                        : null,
+                                  ),
+                                ],
                               ),
                               if (_settings.showPinyin &&
                                   entry.examplePinyin.isNotEmpty)

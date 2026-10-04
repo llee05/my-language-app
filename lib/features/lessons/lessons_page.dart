@@ -117,11 +117,14 @@ class _LessonsPageState extends State<LessonsPage> {
     }
   }
 
-  Future<void> _speak(Flashcard card) async {
-    if (!_soundEnabled) return;
+  Future<void> _speak(Flashcard card) => _speakText(card.chinese);
+
+  Future<void> _speakText(String text) async {
+    if (!_soundEnabled || text.trim().isEmpty) return;
     try {
       await applyPronunciationSettings(_pronunciationService, _learnerSettings);
-      await _pronunciationService.speakMandarin(card.chinese);
+      if (!mounted || !_soundEnabled) return;
+      await _pronunciationService.speakMandarin(text);
     } catch (error) {
       if (!mounted) return;
       _showPronunciationError(context, _pronunciationService, error);
@@ -982,6 +985,9 @@ class _LessonsPageState extends State<LessonsPage> {
                       _reviewCardIds.contains(_cards[index].id),
                   onRated: (rating) => _recordAnswer(_cards[index], rating),
                   onSpeak: _soundEnabled ? () => _speak(_cards[index]) : null,
+                  onSpeakExample: _soundEnabled
+                      ? () => _speakText(_cards[index].exampleChinese)
+                      : null,
                 ),
               ),
       ),
@@ -1029,9 +1035,26 @@ class _LessonsPageState extends State<LessonsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            line.chinese,
-            style: TextStyle(fontSize: 20, color: AppColors.text),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  line.chinese,
+                  style: TextStyle(fontSize: 20, color: AppColors.text),
+                ),
+              ),
+              if (line.chinese.trim().isNotEmpty)
+                PronunciationButton(
+                  requestKey: line.chinese,
+                  tooltip: _soundEnabled
+                      ? 'Hear example sentence'
+                      : 'Pronunciation audio is disabled in Settings',
+                  onPressed: _soundEnabled
+                      ? () => _speakText(line.chinese)
+                      : null,
+                ),
+            ],
           ),
           Text(line.pinyin, style: TextStyle(color: AppColors.gold)),
           Text(line.english, style: TextStyle(color: AppColors.muted)),
@@ -1379,6 +1402,7 @@ class _LessonFlashcard extends StatefulWidget {
     required this.alreadyRated,
     required this.onRated,
     required this.onSpeak,
+    required this.onSpeakExample,
     this.isSentence = false,
   });
   final bool isSentence;
@@ -1388,6 +1412,7 @@ class _LessonFlashcard extends StatefulWidget {
   final bool alreadyRated;
   final Future<void> Function(ReviewRating rating) onRated;
   final Future<void> Function()? onSpeak;
+  final Future<void> Function()? onSpeakExample;
 
   @override
   State<_LessonFlashcard> createState() => _LessonFlashcardState();
@@ -1533,9 +1558,18 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 26, color: AppColors.text),
       ),
-      if (widget.card.exampleChinese.isNotEmpty) ...[
+      if (widget.card.exampleChinese.trim().isNotEmpty) ...[
         const SizedBox(height: 28),
         Text(widget.card.exampleChinese, textAlign: TextAlign.center),
+        PronunciationButton(
+          key: const Key('lesson-example-pronunciation'),
+          requestKey: widget.card.id,
+          label: 'Listen to example',
+          tooltip: widget.onSpeakExample == null
+              ? 'Pronunciation audio is disabled in Settings'
+              : 'Hear example sentence',
+          onPressed: widget.onSpeakExample,
+        ),
         if (widget.card.examplePinyin.isNotEmpty)
           Text(
             widget.card.examplePinyin,

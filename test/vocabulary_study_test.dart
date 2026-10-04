@@ -26,6 +26,7 @@ import 'tutor_personality_test_support.dart';
 const _words = [
   {
     'simplified': '茶',
+    'exampleChinese': '我喝茶。',
     'traditional': '茶',
     'pinyin': 'chá',
     'studyMeaning': 'tea',
@@ -34,6 +35,7 @@ const _words = [
   },
   {
     'simplified': '书',
+    'exampleChinese': '我看书。',
     'traditional': '書',
     'pinyin': 'shū',
     'studyMeaning': 'book',
@@ -42,6 +44,7 @@ const _words = [
   },
   {
     'simplified': '学习',
+    'exampleChinese': '我喜欢学习。',
     'traditional': '學習',
     'pinyin': 'xuéxí',
     'studyMeaning': 'to study',
@@ -58,17 +61,19 @@ class _Vocabulary extends BundledVocabularyRepository {
 }
 
 class _Settings implements SettingsRepository {
-  const _Settings();
+  const _Settings({this.soundEnabled = false});
+  final bool soundEnabled;
   @override
   Future<LearnerSettings> load() async =>
-      const LearnerSettings(soundEnabled: false);
+      LearnerSettings(soundEnabled: soundEnabled);
   @override
   Future<void> save(LearnerSettings settings) async {}
 }
 
 class _SilentVoice implements PronunciationService {
+  final spoken = <String>[];
   @override
-  Future<void> speakMandarin(String text) async {}
+  Future<void> speakMandarin(String text) async => spoken.add(text);
   @override
   Future<void> stop() async {}
 
@@ -464,6 +469,55 @@ void main() {
       expect(find.text('0 practised · 1 unlearned words'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+  }
+
+  for (final soundEnabled in [true, false]) {
+    testWidgets(
+      'feed example audio respects sound $soundEnabled without rating',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(390, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final voice = _SilentVoice();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DoomScrollingPage(
+                studyService: widgetStudy(),
+                settingsRepository: _Settings(soundEnabled: soundEnabled),
+                pronunciationService: voice,
+                random: Random(7),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final word = tester
+            .widget<Text>(find.byKey(const Key('discovery-word-0')))
+            .data;
+        final example = _words.firstWhere(
+          (entry) => entry['simplified'] == word,
+        )['exampleChinese'];
+        final button = find.byKey(
+          const Key('discovery-example-pronunciation-0'),
+        );
+        expect(
+          tester.widget<PronunciationButton>(button).onPressed,
+          soundEnabled ? isNotNull : isNull,
+        );
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(voice.spoken, soundEnabled ? [example] : isEmpty);
+        expect(await memory.reviewHistory(), isEmpty);
+        expect(
+          tester
+              .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+              .controller!
+              .page,
+          0,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
   testWidgets('keyboard skips do not award vocabulary mastery', (tester) async {
