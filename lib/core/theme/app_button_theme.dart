@@ -24,13 +24,14 @@ abstract final class AppButtonTheme {
         : NoSplash.splashFactory;
     final overlayColor = WidgetStateProperty.resolveWith<Color?>((states) {
       if (states.contains(WidgetState.disabled)) return Colors.transparent;
+      if (states.contains(WidgetState.focused)) {
+        return AppColors.red.withValues(alpha: .20);
+      }
+      if (states.contains(WidgetState.hovered)) {
+        return AppColors.red.withValues(alpha: .08);
+      }
       if (usesFill && states.contains(WidgetState.pressed)) {
         return AppColors.red.withValues(alpha: .14);
-      }
-      if (usesFill &&
-          (states.contains(WidgetState.hovered) ||
-              states.contains(WidgetState.focused))) {
-        return AppColors.red.withValues(alpha: .07);
       }
       return Colors.transparent;
     });
@@ -58,17 +59,17 @@ abstract final class AppButtonTheme {
             states.contains(WidgetState.pressed)) {
           return BorderSide(color: AppColors.red.withValues(alpha: .85));
         }
-        return BorderSide(color: AppColors.border.withValues(alpha: .75));
+        return BorderSide(color: AppColors.outline);
       }),
     );
     final textButton = flatButton.copyWith(
-      minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
+      minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
       padding: const WidgetStatePropertyAll(
         EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       ),
     );
     final iconButton = flatButton.copyWith(
-      minimumSize: const WidgetStatePropertyAll(Size.square(42)),
+      minimumSize: const WidgetStatePropertyAll(Size.square(44)),
       padding: const WidgetStatePropertyAll(EdgeInsets.all(9)),
       shape: const WidgetStatePropertyAll(CircleBorder()),
       foregroundColor: WidgetStateProperty.resolveWith((states) {
@@ -105,7 +106,16 @@ abstract final class AppButtonTheme {
         disabledColor: AppColors.surfaceLight.withValues(alpha: .45),
         labelStyle: _textStyle.copyWith(color: AppColors.text),
         secondaryLabelStyle: _textStyle.copyWith(color: AppColors.text),
-        side: BorderSide(color: AppColors.border.withValues(alpha: .7)),
+        side: WidgetStateBorderSide.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return BorderSide(color: AppColors.divider);
+          }
+          if (states.contains(WidgetState.selected) ||
+              states.contains(WidgetState.focused)) {
+            return BorderSide(color: AppColors.red.withValues(alpha: .65));
+          }
+          return BorderSide(color: AppColors.outline);
+        }),
         shape: buttonShape,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         elevation: 0,
@@ -132,9 +142,7 @@ abstract final class AppButtonTheme {
                 ? AppColors.red.withValues(alpha: .14)
                 : Colors.transparent,
           ),
-          side: WidgetStatePropertyAll(
-            BorderSide(color: AppColors.border.withValues(alpha: .7)),
-          ),
+          side: WidgetStatePropertyAll(BorderSide(color: AppColors.outline)),
           elevation: const WidgetStatePropertyAll(0),
           shadowColor: const WidgetStatePropertyAll(Colors.transparent),
           surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),

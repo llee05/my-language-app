@@ -169,6 +169,10 @@ abstract final class AppColors {
   static Color muted = AppThemes.classic.muted;
   static Color faint = AppThemes.classic.faint;
 
+  /// Quiet separators and card outlines leave emphasis to selected controls.
+  static Color get divider => border.withValues(alpha: .20);
+  static Color get outline => border.withValues(alpha: .38);
+
   static void apply(AppColorPalette palette) {
     background = palette.background;
     sidebar = palette.sidebar;

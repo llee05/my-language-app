@@ -33,6 +33,8 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const _AppPageHeader(title: 'Your progress', hanzi: '学习记录'),
+                const SizedBox(height: 24),
                 _ProfileHero(profile: profile, onEditProfile: onEditProfile),
                 if (loading) ...[
                   const SizedBox(height: 18),
@@ -82,7 +84,8 @@ class ProfilePage extends StatelessWidget {
                           valueKey: const Key('profile-streak-days'),
                           icon: Icons.local_fire_department_rounded,
                           label: 'Current streak',
-                          value: '${stats.streakDays} days',
+                          value:
+                              '${stats.streakDays} ${stats.streakDays == 1 ? 'day' : 'days'}',
                           color: AppColors.red,
                         ),
                         _AnalyticsMetric(
@@ -196,7 +199,7 @@ class _HskProgressAnalytics extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16),
       ),
       child: LayoutBuilder(
@@ -332,7 +335,7 @@ class _ProfileHero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(18),
       ),
       child: LayoutBuilder(
@@ -430,7 +433,7 @@ class _AnalyticsMetric extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -486,7 +489,7 @@ class _ProfilePanel extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -540,7 +543,7 @@ class _WeeklyProgressReportPanel extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

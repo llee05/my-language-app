@@ -139,7 +139,7 @@ class _AiTutorModeSelector extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 10),
       decoration: BoxDecoration(
         color: AppColors.sidebar,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        border: Border(bottom: BorderSide(color: AppColors.outline)),
       ),
       child: Align(
         alignment: Alignment.centerLeft,
@@ -501,7 +501,7 @@ useful:
           constraints: const BoxConstraints(minHeight: 68),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.border)),
+            border: Border(bottom: BorderSide(color: AppColors.outline)),
           ),
           child: Row(
             children: [
@@ -699,8 +699,8 @@ class _TutorMessage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(15, 13, 15, 12),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                border: Border.all(color: const Color(0xFF74372F)),
-                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.divider),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,8 +714,8 @@ class _TutorMessage extends StatelessWidget {
                             chinese,
                             style: TextStyle(
                               color: AppColors.text,
-                              fontSize: 13,
-                              height: 1.35,
+                              fontSize: 20,
+                              height: 1.5,
                             ),
                           ),
                         ),
@@ -734,8 +734,8 @@ class _TutorMessage extends StatelessWidget {
                     Text(
                       pinyin,
                       style: TextStyle(
-                        color: AppColors.red,
-                        fontSize: 11,
+                        color: AppColors.gold,
+                        fontSize: 13,
                         letterSpacing: .3,
                       ),
                     ),
@@ -745,7 +745,11 @@ class _TutorMessage extends StatelessWidget {
                       const SizedBox(height: 4),
                     Text(
                       english,
-                      style: TextStyle(fontSize: 11, color: AppColors.muted),
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ],
@@ -773,12 +777,15 @@ class _UserMessage extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 420),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.darkRed,
+            color: Color.alphaBlend(
+              AppColors.red.withValues(alpha: .18),
+              AppColors.surface,
+            ),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: Colors.white),
+            style: TextStyle(fontSize: 15, height: 1.5, color: AppColors.text),
           ),
         ),
       ),
@@ -800,13 +807,13 @@ class _TipBubble extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 520),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFF4A3825),
-            border: Border.all(color: const Color(0xFF8B671C)),
+            color: AppColors.gold.withValues(alpha: .08),
+            border: Border.all(color: AppColors.gold.withValues(alpha: .24)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             'Tip: $text',
-            style: TextStyle(fontSize: 11, color: AppColors.gold),
+            style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.gold),
           ),
         ),
       ),
@@ -850,7 +857,7 @@ class _TutorComposer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border)),
+        border: Border(top: BorderSide(color: AppColors.outline)),
       ),
       child: Column(
         children: [
@@ -1068,9 +1075,9 @@ class _TutorAvatar extends StatelessWidget {
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Color(0xFF4A1511),
+        color: AppColors.red.withValues(alpha: .12),
       ),
       child: Text(
         '龙',

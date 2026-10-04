@@ -542,18 +542,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              '听力练习',
-              style: TextStyle(
-                fontFamily: 'serif',
-                fontSize: 34,
-                color: AppColors.text,
-              ),
-            ),
-            Text(
-              'Listening practice',
-              style: TextStyle(fontSize: 16, color: AppColors.muted),
-            ),
+            const _AppPageHeader(title: 'Listening practice', hanzi: '听力练习'),
             const SizedBox(height: 24),
             Card(
               child: Padding(

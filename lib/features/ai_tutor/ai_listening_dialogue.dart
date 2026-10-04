@@ -367,7 +367,7 @@ Return only compact JSON with this exact shape:
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -580,7 +580,7 @@ Return only compact JSON with this exact shape:
       child: Material(
         color: AppColors.surface,
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: AppColors.border),
+          side: BorderSide(color: AppColors.outline),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
@@ -647,7 +647,7 @@ Return only compact JSON with this exact shape:
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(

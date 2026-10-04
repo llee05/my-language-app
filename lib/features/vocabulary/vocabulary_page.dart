@@ -234,20 +234,11 @@ class _VocabularyPageState extends State<VocabularyPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          '词汇',
-                          style: TextStyle(
-                            fontFamily: 'serif',
-                            fontSize: 36,
-                            color: AppColors.text,
-                          ),
-                        ),
-                        Text(
-                          'Dictionary',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.muted,
-                          ),
+                        const _AppPageHeader(
+                          title: 'Dictionary',
+                          hanzi: '词汇',
+                          description:
+                              'Find a word, explore its meaning, and practise it.',
                         ),
                         const SizedBox(height: 22),
                         TextField(
@@ -272,7 +263,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                             fillColor: AppColors.surface,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: AppColors.border),
+                              borderSide: BorderSide(color: AppColors.outline),
                             ),
                           ),
                         ),
@@ -529,7 +520,7 @@ class _VocabularyListItem extends StatelessWidget {
     return Material(
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColors.border.withValues(alpha: .65)),
+        side: BorderSide(color: AppColors.divider),
         borderRadius: BorderRadius.circular(14),
       ),
       clipBehavior: Clip.antiAlias,
@@ -569,7 +560,7 @@ class _VocabularyListItem extends StatelessWidget {
                   ],
                   const SizedBox(height: 6),
                   Text(
-                    entry.meanings.join(' · '),
+                    vocabularyStudyMeaning(entry.source),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: AppColors.text, height: 1.4),
@@ -580,7 +571,12 @@ class _VocabularyListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (compact)
-                    Expanded(child: hanzi)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [hanzi, const SizedBox(height: 8), details],
+                      ),
+                    )
                   else
                     SizedBox(width: 92, child: hanzi),
                   if (!compact) ...[
@@ -621,11 +617,7 @@ class _VocabularyListItem extends StatelessWidget {
                   ),
                 ],
               );
-              if (!compact) return heading;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [heading, const SizedBox(height: 12), details],
-              );
+              return heading;
             },
           ),
         ),
@@ -918,7 +910,7 @@ class _DetailHeader extends StatelessWidget {
                   Chip(
                     visualDensity: VisualDensity.compact,
                     label: Text(label),
-                    side: BorderSide(color: AppColors.border),
+                    side: BorderSide(color: AppColors.outline),
                     backgroundColor: AppColors.surfaceLight,
                   ),
               ],
@@ -993,7 +985,7 @@ class _LevelChip extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onSelected(),
       selectedColor: AppColors.red.withValues(alpha: .2),
-      side: BorderSide(color: selected ? AppColors.red : AppColors.border),
+      side: BorderSide(color: selected ? AppColors.red : AppColors.outline),
       labelStyle: TextStyle(color: selected ? AppColors.text : AppColors.muted),
     );
   }

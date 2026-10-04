@@ -251,8 +251,15 @@ class _HanziPathAppState extends State<HanziPathApp> {
         ).copyWith(
           primary: AppColors.red,
           onPrimary: AppColors.background,
-          outline: AppColors.border,
-          outlineVariant: AppColors.border.withValues(alpha: .65),
+          onSurface: AppColors.text,
+          onSurfaceVariant: AppColors.muted,
+          surfaceContainerLowest: AppColors.background,
+          surfaceContainerLow: AppColors.sidebar,
+          surfaceContainer: AppColors.surface,
+          surfaceContainerHigh: AppColors.surface,
+          surfaceContainerHighest: AppColors.surfaceLight,
+          outline: AppColors.outline,
+          outlineVariant: AppColors.divider,
         );
     final appTheme = AppButtonTheme.apply(
       ThemeData(
@@ -262,7 +269,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
         fontFamily: 'sans-serif',
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surface,
+          fillColor: AppColors.background.withValues(alpha: .45),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
@@ -272,23 +279,30 @@ class _HanziPathAppState extends State<HanziPathApp> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: AppColors.border.withValues(alpha: .6),
-            ),
+            borderSide: BorderSide(color: AppColors.outline),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: AppColors.red, width: 2),
           ),
         ),
-        dividerColor: AppColors.border,
+        cardTheme: CardThemeData(
+          color: AppColors.surface,
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: AppColors.divider),
+          ),
+        ),
+        dividerColor: AppColors.divider,
         splashColor: seed.withValues(alpha: .12),
         textTheme: TextTheme(
           headlineMedium: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w600,
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
             color: AppColors.text,
-            height: 1.15,
+            height: 1.25,
           ),
           titleLarge: TextStyle(
             fontSize: 18,
@@ -296,11 +310,25 @@ class _HanziPathAppState extends State<HanziPathApp> {
             color: AppColors.text,
           ),
           titleMedium: TextStyle(
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.text,
           ),
-          bodyMedium: TextStyle(fontSize: 13, color: AppColors.muted),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            color: AppColors.text,
+            height: 1.5,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 14,
+            color: AppColors.muted,
+            height: 1.5,
+          ),
+          bodySmall: TextStyle(
+            fontSize: 12,
+            color: AppColors.muted,
+            height: 1.4,
+          ),
         ),
       ),
       animationStyle: _buttonAnimationStyle,

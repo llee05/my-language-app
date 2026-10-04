@@ -75,7 +75,7 @@ class _LearnerSetupPageState extends State<LearnerSetupPage> {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.divider),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: const [
                       BoxShadow(

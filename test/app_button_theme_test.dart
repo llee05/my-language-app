@@ -38,11 +38,11 @@ void main() {
 
       expect(
         theme.textButtonTheme.style?.minimumSize?.resolve({}),
-        const Size(40, 40),
+        const Size(44, 44),
       );
       expect(
         theme.iconButtonTheme.style?.minimumSize?.resolve({}),
-        const Size.square(42),
+        const Size.square(44),
       );
       expect(
         theme.iconButtonTheme.style?.shape?.resolve({}),

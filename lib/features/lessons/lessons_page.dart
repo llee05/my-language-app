@@ -649,18 +649,7 @@ class _LessonsPageState extends State<LessonsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              '课程',
-              style: TextStyle(
-                fontFamily: 'serif',
-                fontSize: 36,
-                color: AppColors.text,
-              ),
-            ),
-            Text(
-              'Lesson Library',
-              style: TextStyle(fontSize: 16, color: AppColors.muted),
-            ),
+            const _AppPageHeader(title: 'Lesson Library', hanzi: '课程'),
             const SizedBox(height: 20),
             Wrap(
               spacing: 8,
@@ -815,7 +804,7 @@ class _LessonsPageState extends State<LessonsPage> {
             fillColor: AppColors.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: AppColors.outline),
             ),
           ),
         ),
@@ -1207,7 +1196,7 @@ class _SummaryStat extends StatelessWidget {
     child: DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.background,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
@@ -1331,10 +1320,10 @@ class _LessonLibraryCard extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: AppColors.darkRed,
+                color: AppColors.red.withValues(alpha: .12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.menu_book_outlined),
+              child: Icon(Icons.menu_book_outlined, color: AppColors.red),
             );
             final details = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1366,7 +1355,7 @@ class _LessonLibraryCard extends StatelessWidget {
                     value: progress.fraction,
                     semanticsLabel: 'Learned progress for ${summary.title}',
                     color: AppColors.teal,
-                    backgroundColor: AppColors.border,
+                    backgroundColor: AppColors.surfaceLight,
                   ),
                 ],
               ],

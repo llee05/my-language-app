@@ -430,7 +430,7 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.divider),
                 ),
                 child: Column(
                   mainAxisSize: scrollContent

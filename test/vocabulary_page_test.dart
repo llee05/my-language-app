@@ -260,6 +260,21 @@ void main() {
     expect(find.text('学习'), findsNothing);
   });
 
+  testWidgets('shows a concise meaning while searching every definition', (
+    tester,
+  ) async {
+    await pumpPage(tester);
+    await tester.enterText(find.byKey(const Key('vocabulary-search')), 'hi');
+    await tester.pump();
+    expect(find.text('1 word'), findsOneWidget);
+    expect(find.text('hello'), findsOneWidget);
+    expect(find.text('hello · hi'), findsNothing);
+    await tester.tap(find.text('你好'));
+    await tester.pumpAndSettle();
+    expect(find.text('hello'), findsOneWidget);
+    expect(find.text('hi'), findsOneWidget);
+  });
+
   testWidgets('filters vocabulary by HSK level', (tester) async {
     await pumpPage(tester);
 

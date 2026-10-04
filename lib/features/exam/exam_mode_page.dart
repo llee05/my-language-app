@@ -116,13 +116,11 @@ class _ExamModePageState extends State<ExamModePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'HSK Exam Mode',
-                style: TextStyle(fontSize: 30, color: AppColors.text),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Test your reading, pinyin, written recall, and listening with fresh questions from the bundled HSK vocabulary.',
+              const _AppPageHeader(
+                title: 'HSK Exam Mode',
+                hanzi: '考试',
+                description:
+                    'Test your reading, pinyin, written recall, and listening with fresh questions from the bundled HSK vocabulary.',
               ),
               const SizedBox(height: 12),
               Text(

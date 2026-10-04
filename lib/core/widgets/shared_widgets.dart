@@ -274,6 +274,67 @@ class _AppInlineError extends StatelessWidget {
   );
 }
 
+class _AppPageHeader extends StatelessWidget {
+  const _AppPageHeader({
+    required this.title,
+    this.hanzi,
+    this.description,
+    this.centered = false,
+  });
+
+  final String title;
+  final String? hanzi;
+  final String? description;
+  final bool centered;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: centered
+        ? CrossAxisAlignment.center
+        : CrossAxisAlignment.start,
+    children: [
+      Wrap(
+        spacing: 14,
+        runSpacing: 6,
+        alignment: centered ? WrapAlignment.center : WrapAlignment.start,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              title,
+              textAlign: centered ? TextAlign.center : TextAlign.start,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                height: 1.25,
+                color: AppColors.text,
+              ),
+            ),
+          ),
+          if (hanzi != null)
+            Text(
+              hanzi!,
+              style: TextStyle(
+                fontFamily: 'serif',
+                fontSize: 22,
+                color: AppColors.red,
+              ),
+            ),
+        ],
+      ),
+      if (description != null) ...[
+        const SizedBox(height: 10),
+        Text(
+          description!,
+          textAlign: centered ? TextAlign.center : TextAlign.start,
+          style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
+        ),
+      ],
+    ],
+  );
+}
+
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.label, {super.key});
   final String label;
@@ -282,9 +343,9 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: TextStyle(
-        fontSize: 11,
-        letterSpacing: 1.2,
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        fontSize: 12,
+        letterSpacing: .9,
         fontWeight: FontWeight.w600,
         color: AppColors.muted,
       ),
@@ -304,7 +365,12 @@ class _Pill extends StatelessWidget {
         color: AppColors.red.withValues(alpha: .12),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(label, style: TextStyle(fontSize: 9, color: AppColors.red)),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(fontSize: 9, color: AppColors.red),
+      ),
     );
   }
 }

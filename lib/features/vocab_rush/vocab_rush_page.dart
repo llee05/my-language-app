@@ -377,26 +377,15 @@ class _VocabRushPageState extends State<VocabRushPage>
   Widget _buildLobby() {
     return Column(
       children: [
-        const SizedBox(height: 36),
+        const SizedBox(height: 12),
         _modeBadge(),
         const SizedBox(height: 20),
-        Text(
-          '词汇冲刺',
-          style: TextStyle(
-            fontFamily: 'serif',
-            fontSize: 46,
-            color: AppColors.text,
-          ),
-        ),
-        Text(
-          'Vocab Rush',
-          style: TextStyle(fontSize: 17, color: AppColors.muted),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'Race the clock. Pick the correct English meaning and score as many words as you can.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, height: 1.6, color: AppColors.muted),
+        const _AppPageHeader(
+          title: 'Vocab Rush',
+          hanzi: '词汇冲刺',
+          centered: true,
+          description:
+              'Pick the correct English meaning and see how many words you know.',
         ),
         const SizedBox(height: 32),
         Wrap(
@@ -590,41 +579,57 @@ class _VocabRushPageState extends State<VocabRushPage>
 
   Widget _difficultyCard(_RushDifficulty difficulty) {
     final selected = difficulty == _difficulty;
-    return InkWell(
-      onTap: _starting ? null : () => setState(() => _difficulty = difficulty),
-      borderRadius: BorderRadius.circular(14),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        width: 150,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF211A0C) : AppColors.surface,
-          border: Border.all(
-            color: selected ? AppColors.gold : AppColors.border,
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: !_starting,
+      child: InkWell(
+        onTap: _starting
+            ? null
+            : () => setState(() => _difficulty = difficulty),
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          width: 150,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+          decoration: BoxDecoration(
+            color: selected
+                ? Color.alphaBlend(
+                    AppColors.gold.withValues(alpha: .12),
+                    AppColors.surface,
+                  )
+                : AppColors.surface,
+            border: Border.all(
+              color: selected ? AppColors.gold : AppColors.divider,
+            ),
+            borderRadius: BorderRadius.circular(14),
           ),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Text(
-              difficulty.chinese,
-              style: TextStyle(
-                fontFamily: 'serif',
-                fontSize: 20,
-                color: AppColors.text,
+          child: Column(
+            children: [
+              Text(
+                difficulty.chinese,
+                style: TextStyle(
+                  fontFamily: 'serif',
+                  fontSize: 20,
+                  color: AppColors.text,
+                ),
               ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              difficulty.english,
-              style: TextStyle(fontSize: 10, color: AppColors.muted),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'HSK ${difficulty.minHsk}–${difficulty.maxHsk}',
-              style: TextStyle(fontSize: 9, color: AppColors.muted),
-            ),
-          ],
+              const SizedBox(height: 5),
+              Text(
+                difficulty.english,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'HSK ${difficulty.minHsk}–${difficulty.maxHsk}',
+                style: TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
+            ],
+          ),
         ),
       ),
     );

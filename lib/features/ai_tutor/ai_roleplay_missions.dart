@@ -508,14 +508,11 @@ Return only compact JSON with this exact shape:
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'AI roleplay missions',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Complete a practical goal in a short conversation. Long Laoshi keeps each mission mostly within the vocabulary you have studied.',
-                style: TextStyle(color: AppColors.muted),
+              const _AppPageHeader(
+                title: 'AI roleplay missions',
+                hanzi: '对话任务',
+                description:
+                    'Complete a practical goal in a short conversation. Long Laoshi keeps each mission mostly within the vocabulary you have studied.',
               ),
               const SizedBox(height: 10),
               Text(
@@ -562,7 +559,7 @@ Return only compact JSON with this exact shape:
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.border)),
+            border: Border(bottom: BorderSide(color: AppColors.outline)),
           ),
           child: Row(
             children: [
@@ -651,7 +648,7 @@ Return only compact JSON with this exact shape:
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border)),
+        border: Border(top: BorderSide(color: AppColors.outline)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -757,7 +754,7 @@ class _RoleplayMissionCard extends StatelessWidget {
     return Material(
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColors.border),
+        side: BorderSide(color: AppColors.outline),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Padding(
@@ -874,7 +871,7 @@ class _RoleplayNpcTurn extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.divider),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
