@@ -67,6 +67,31 @@ void main() {
     expect(savedProfile?.dailyWordTarget, 20);
   });
 
+  testWidgets(
+    'first-run setup remains usable on a small screen with doubled text',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      LearnerProfile? saved;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LearnerSetupPage(
+            onComplete: (profile) async => saved = profile,
+          ),
+        ),
+      );
+      await tester.enterText(find.byType(TextFormField), 'Mei');
+      await tester.ensureVisible(find.text('Start learning'));
+      await tester.tap(find.text('Start learning'));
+      await tester.pump();
+      expect(saved?.name, 'Mei');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('learner setup recovers when saving fails', (tester) async {
     await tester.binding.setSurfaceSize(const Size(800, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

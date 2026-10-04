@@ -1325,9 +1325,9 @@ class _LessonLibraryCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final icon = Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
@@ -1335,58 +1335,77 @@ class _LessonLibraryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.menu_book_outlined),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            );
+            final details = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  summary.isSentencePractice ? summary.theme : summary.title,
+                  style: TextStyle(
+                    color: AppColors.text,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  summary.isSentencePractice
+                      ? '10 sentences · Everyday Mandarin'
+                      : '${summary.theme} · HSK ${summary.hskLevel}',
+                  style: TextStyle(fontSize: 12, color: AppColors.muted),
+                ),
+                if (learningProgress case final progress?) ...[
+                  const SizedBox(height: 8),
                   Text(
-                    summary.isSentencePractice ? summary.theme : summary.title,
-                    style: TextStyle(
-                      color: AppColors.text,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    '${progress.learnedCards} of ${progress.totalCards} '
+                    '${summary.isSentencePractice ? 'sentences' : 'words'} learned',
+                    key: Key('lesson-learned-count-${summary.id}'),
+                    style: TextStyle(fontSize: 12, color: AppColors.teal),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    summary.isSentencePractice
-                        ? '10 sentences · Everyday Mandarin'
-                        : '${summary.theme} · HSK ${summary.hskLevel}',
-                    style: TextStyle(fontSize: 12, color: AppColors.muted),
+                  LinearProgressIndicator(
+                    value: progress.fraction,
+                    semanticsLabel: 'Learned progress for ${summary.title}',
+                    color: AppColors.teal,
+                    backgroundColor: AppColors.border,
                   ),
-                  if (learningProgress case final progress?) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      '${progress.learnedCards} of ${progress.totalCards} '
-                      '${summary.isSentencePractice ? 'sentences' : 'words'} learned',
-                      key: Key('lesson-learned-count-${summary.id}'),
-                      style: TextStyle(fontSize: 12, color: AppColors.teal),
-                    ),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: progress.fraction,
-                      semanticsLabel: 'Learned progress for ${summary.title}',
-                      color: AppColors.teal,
-                      backgroundColor: AppColors.border,
-                    ),
-                  ],
                 ],
-              ),
-            ),
-            if (summary.isUserGenerated)
-              IconButton(
-                key: Key('delete-lesson-${summary.id}'),
-                tooltip: 'Delete lesson',
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
-              ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: onPressed,
-              child: Text(isActive ? 'Resume' : 'Start'),
-            ),
-          ],
+              ],
+            );
+            final actions = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (summary.isUserGenerated)
+                  IconButton(
+                    key: Key('delete-lesson-${summary.id}'),
+                    tooltip: 'Delete lesson',
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                FilledButton(
+                  onPressed: onPressed,
+                  child: Text(isActive ? 'Resume' : 'Start'),
+                ),
+              ],
+            );
+            final compact = constraints.maxWidth < 380;
+            final heading = Row(
+              children: [
+                icon,
+                const SizedBox(width: 14),
+                Expanded(child: details),
+                if (!compact) ...[const SizedBox(width: 8), actions],
+              ],
+            );
+            if (!compact) return heading;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                heading,
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerRight, child: actions),
+              ],
+            );
+          },
         ),
       ),
     ),

@@ -235,32 +235,34 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
   );
 
   Widget _buildEnd() => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.auto_awesome, color: AppColors.gold, size: 56),
-          const SizedBox(height: 20),
-          Text(
-            _words.isEmpty
-                ? 'You’ve learned every bundled word!'
-                : 'You’ve reached the end of this mix.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.text, fontSize: 24),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Words you’ve mastered stay out of your feed.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: _load,
-            icon: const Icon(Icons.shuffle),
-            label: const Text('Refresh word feed'),
-          ),
-        ],
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.gold, size: 56),
+            const SizedBox(height: 20),
+            Text(
+              _words.isEmpty
+                  ? 'You’ve learned every bundled word!'
+                  : 'You’ve reached the end of this mix.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.text, fontSize: 24),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Words you’ve mastered stay out of your feed.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: _load,
+              icon: const Icon(Icons.shuffle),
+              label: const Text('Refresh word feed'),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -294,184 +296,204 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final compact = constraints.maxHeight < 420;
-                      return SingleChildScrollView(
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.all(compact ? 12 : 24),
-                        child: Column(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final scrollContent =
+                  constraints.maxHeight < 320 ||
+                  MediaQuery.textScalerOf(context).scale(16) > 24;
+              final content = LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxHeight < 420;
+                  return SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(compact ? 12 : 24),
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                if (_settings.soundEnabled)
-                                  PronunciationButton(
-                                    requestKey: index,
-                                    onPressed: () => _speak(word),
-                                  ),
-                                Expanded(
-                                  child: Text(
-                                    'HSK ${entry.hskLevel} · ${index + 1} / ${_words.length}',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(color: AppColors.muted),
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Word details',
-                                  onPressed: _saving
-                                      ? null
-                                      : () => _showDetails(entry),
-                                  icon: const Icon(Icons.menu_book_outlined),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: compact ? 4 : 24),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  entry.simplified,
-                                  key: Key('discovery-word-$index'),
-                                  style: TextStyle(
-                                    fontSize: compact ? 48 : 64,
-                                    fontFamily: 'serif',
-                                    color: AppColors.text,
-                                  ),
-                                ),
+                            if (_settings.soundEnabled)
+                              PronunciationButton(
+                                requestKey: index,
+                                onPressed: () => _speak(word),
                               ),
-                            ),
-                            if (_settings.showPinyin)
-                              Text(
-                                entry.pinyin,
+                            Expanded(
+                              child: Text(
+                                'HSK ${entry.hskLevel} · ${index + 1} / ${_words.length}',
                                 textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: compact ? 18 : 24,
-                                  color: AppColors.gold,
-                                ),
+                                style: TextStyle(color: AppColors.muted),
                               ),
-                            SizedBox(height: compact ? 8 : 20),
-                            Text(
-                              vocabularyStudyMeaning(word),
-                              textAlign: TextAlign.center,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
+                            ),
+                            IconButton(
+                              tooltip: 'Word details',
+                              onPressed: _saving
+                                  ? null
+                                  : () => _showDetails(entry),
+                              icon: const Icon(Icons.menu_book_outlined),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: compact ? 4 : 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              entry.simplified,
+                              key: Key('discovery-word-$index'),
                               style: TextStyle(
-                                fontSize: compact ? 18 : 22,
+                                fontSize: compact ? 48 : 64,
+                                fontFamily: 'serif',
                                 color: AppColors.text,
                               ),
                             ),
-                            if (!compact && entry.hasExample) ...[
-                              const SizedBox(height: 24),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      entry.exampleChinese,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: AppColors.text,
-                                        fontSize: 22,
-                                      ),
-                                    ),
-                                  ),
-                                  PronunciationButton(
-                                    key: Key(
-                                      'discovery-example-pronunciation-$index',
-                                    ),
-                                    requestKey: entry.exampleChinese,
-                                    tooltip: _settings.soundEnabled
-                                        ? 'Hear example sentence'
-                                        : 'Pronunciation audio is disabled in Settings',
-                                    onPressed: _settings.soundEnabled
-                                        ? () => _speak({
-                                            'simplified': entry.exampleChinese,
-                                          })
-                                        : null,
-                                  ),
-                                ],
-                              ),
-                              if (_settings.showPinyin &&
-                                  entry.examplePinyin.isNotEmpty)
-                                Text(
-                                  entry.examplePinyin,
+                          ),
+                        ),
+                        if (_settings.showPinyin)
+                          Text(
+                            entry.pinyin,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: compact ? 18 : 24,
+                              color: AppColors.gold,
+                            ),
+                          ),
+                        SizedBox(height: compact ? 8 : 20),
+                        Text(
+                          vocabularyStudyMeaning(word),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: compact ? 18 : 22,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        if (!compact && entry.hasExample) ...[
+                          const SizedBox(height: 24),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  entry.exampleChinese,
                                   textAlign: TextAlign.center,
-                                  maxLines: 2,
+                                  maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: AppColors.gold),
+                                  style: TextStyle(
+                                    color: AppColors.text,
+                                    fontSize: 22,
+                                  ),
                                 ),
-                              Text(
-                                entry.exampleEnglish,
-                                textAlign: TextAlign.center,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: AppColors.muted),
+                              ),
+                              PronunciationButton(
+                                key: Key(
+                                  'discovery-example-pronunciation-$index',
+                                ),
+                                requestKey: entry.exampleChinese,
+                                tooltip: _settings.soundEnabled
+                                    ? 'Hear example sentence'
+                                    : 'Pronunciation audio is disabled in Settings',
+                                onPressed: _settings.soundEnabled
+                                    ? () => _speak({
+                                        'simplified': entry.exampleChinese,
+                                      })
+                                    : null,
                               ),
                             ],
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                          ),
+                          if (_settings.showPinyin &&
+                              entry.examplePinyin.isNotEmpty)
+                            Text(
+                              entry.examplePinyin,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: AppColors.gold),
+                            ),
+                          Text(
+                            entry.exampleEnglish,
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: AppColors.muted),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              );
+              final card = Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppColors.border),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  child: Column(
-                    children: [
-                      if (_saveError != null && index == _position)
-                        _AppInlineError(
-                          message: _saveError!,
-                          onRetry: () => _rate(_ratings[index]!),
-                          retryKey: const Key('discovery-save-retry'),
-                        )
-                      else if (_saved.contains(index))
-                        const Text('Progress saved')
-                      else
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: [
-                            OutlinedButton(
-                              onPressed: _saving
-                                  ? null
-                                  : () => _rate(ReviewRating.again),
-                              child: const Text('Still learning'),
+                child: Column(
+                  mainAxisSize: scrollContent
+                      ? MainAxisSize.min
+                      : MainAxisSize.max,
+                  children: [
+                    if (scrollContent) content else Expanded(child: content),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                      child: Column(
+                        children: [
+                          if (_saveError != null && index == _position)
+                            _AppInlineError(
+                              message: _saveError!,
+                              onRetry: () => _rate(_ratings[index]!),
+                              retryKey: const Key('discovery-save-retry'),
+                            )
+                          else if (_saved.contains(index))
+                            const Text('Progress saved')
+                          else
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: _saving
+                                      ? null
+                                      : () => _rate(ReviewRating.again),
+                                  child: const Text('Still learning'),
+                                ),
+                                FilledButton(
+                                  onPressed: _saving
+                                      ? null
+                                      : () => _rate(ReviewRating.good),
+                                  child: Text(_saving ? 'Saving…' : 'Got it'),
+                                ),
+                              ],
                             ),
-                            FilledButton(
-                              onPressed: _saving
-                                  ? null
-                                  : () => _rate(ReviewRating.good),
-                              child: Text(_saving ? 'Saving…' : 'Got it'),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: _saving || _saveError != null
+                                ? null
+                                : _next,
+                            icon: const Icon(Icons.keyboard_arrow_down),
+                            label: Text(
+                              scrollContent
+                                  ? 'Next word'
+                                  : 'Swipe up for another word',
                             ),
-                          ],
-                        ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: _saving || _saveError != null ? null : _next,
-                        icon: const Icon(Icons.keyboard_arrow_down),
-                        label: const Text('Swipe up for another word'),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+              if (!scrollContent) return card;
+              return SingleChildScrollView(
+                key: Key('discovery-word-scroll-$index'),
+                child: card,
+              );
+            },
           ),
         ),
       ),

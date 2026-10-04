@@ -367,6 +367,7 @@ void main() {
   for (final (size, textScale) in [
     (const Size(320, 640), 1.0),
     (const Size(320, 640), 1.5),
+    (const Size(320, 640), 2.0),
     (const Size(1280, 900), 1.0),
     (const Size(640, 360), 1.0),
   ]) {
@@ -619,56 +620,65 @@ void main() {
     );
   });
 
-  testWidgets('new learner dashboard offers a useful first step', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1280, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  for (final (size, scale) in [
+    (const Size(1280, 900), 1.0),
+    (const Size(320, 640), 2.0),
+  ]) {
+    testWidgets(
+      'new learner dashboard offers a useful first step at $size with $scale text',
+      (tester) async {
+        await tester.binding.setSurfaceSize(size);
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: DashboardPage(
-          vocabularyRepository: const _TestVocabulary(),
-          appThemeId: AppThemeId.classic,
-          onThemeChanged: (_) {},
-          profile: testProfile,
-          onProfileChanged: (_) async {},
-          onResetOnboarding: () async {},
-          onResetAllData: () async {},
-          lessonRepository: _MemoryLessonRepository(),
-          progressRepository: _MemoryProgressRepository(
-            hasActiveSession: false,
-            queue: const [
-              DailyQueueCard(
-                card: Flashcard(
-                  id: 21,
-                  chinese: '你好',
-                  pinyin: 'nǐ hǎo',
-                  englishMeaning: 'hello',
-                ),
-                reason: DailyQueueReason.newWord,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: DashboardPage(
+              vocabularyRepository: const _TestVocabulary(),
+              appThemeId: AppThemeId.classic,
+              onThemeChanged: (_) {},
+              profile: testProfile,
+              onProfileChanged: (_) async {},
+              onResetOnboarding: () async {},
+              onResetAllData: () async {},
+              lessonRepository: _MemoryLessonRepository(),
+              progressRepository: _MemoryProgressRepository(
+                hasActiveSession: false,
+                queue: const [
+                  DailyQueueCard(
+                    card: Flashcard(
+                      id: 21,
+                      chinese: '你好',
+                      pinyin: 'nǐ hǎo',
+                      englishMeaning: 'hello',
+                    ),
+                    reason: DailyQueueReason.newWord,
+                  ),
+                ],
               ),
-            ],
+              settingsRepository: _MemorySettingsRepository(),
+              developmentRepository: _MemoryDevelopmentRepository(),
+            ),
           ),
-          settingsRepository: _MemorySettingsRepository(),
-          developmentRepository: _MemoryDevelopmentRepository(),
-        ),
-      ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Start your first lesson'), findsOneWidget);
+        expect(find.text('Browse lessons'), findsOneWidget);
+        expect(find.text('Start scrolling'), findsOneWidget);
+        expect(find.text('4991 unlearned words to discover'), findsOneWidget);
+        expect(find.text('Resume'), findsNothing);
+
+        await tester.ensureVisible(find.text('Browse lessons'));
+        await tester.tap(find.text('Browse lessons'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Lesson Library'), findsOneWidget);
+        expect(find.text('Saved lesson'), findsOneWidget);
+      },
     );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Start your first lesson'), findsOneWidget);
-    expect(find.text('Browse lessons'), findsOneWidget);
-    expect(find.text('Start scrolling'), findsOneWidget);
-    expect(find.text('4991 unlearned words to discover'), findsOneWidget);
-    expect(find.text('Resume'), findsNothing);
-
-    await tester.tap(find.text('Browse lessons'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Lesson Library'), findsOneWidget);
-    expect(find.text('Saved lesson'), findsOneWidget);
-  });
+  }
 
   testWidgets('continue card invokes resume when tapped', (tester) async {
     var resumed = false;

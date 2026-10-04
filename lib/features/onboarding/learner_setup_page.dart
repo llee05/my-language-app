@@ -224,26 +224,28 @@ class _SetupBrand extends StatelessWidget {
           ),
         ),
         SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '听说 TingShuo',
-              style: TextStyle(
-                fontFamily: 'serif',
-                fontSize: 20,
-                color: AppColors.text,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '听说 TingShuo',
+                style: TextStyle(
+                  fontFamily: 'serif',
+                  fontSize: 20,
+                  color: AppColors.text,
+                ),
               ),
-            ),
-            Text(
-              'HANZIPATH',
-              style: TextStyle(
-                fontSize: 9,
-                letterSpacing: 2,
-                color: AppColors.muted,
+              Text(
+                'MANDARIN PRACTICE',
+                style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: 2,
+                  color: AppColors.muted,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -270,12 +272,14 @@ class _SetupLabel extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppColors.text,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: AppColors.text,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

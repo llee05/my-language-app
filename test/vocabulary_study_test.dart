@@ -471,6 +471,63 @@ void main() {
     });
   }
 
+  for (final (size, scale) in [
+    (const Size(320, 640), 2.0),
+    (const Size(640, 360), 1.0),
+  ]) {
+    testWidgets(
+      'feed words, ratings and the end screen remain reachable at $size with $scale text',
+      (tester) async {
+        await tester.binding.setSurfaceSize(size);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DoomScrollingPage(
+                studyService: widgetStudy(),
+                settingsRepository: const _Settings(),
+                pronunciationService: _SilentVoice(),
+                random: Random(7),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byKey(const Key('discovery-word-0')));
+        expect(
+          find.byKey(const Key('discovery-word-0')).hitTestable(),
+          findsOneWidget,
+        );
+        final rate = find.descendant(
+          of: find.byKey(const Key('discovery-word-scroll-0')),
+          matching: find.text('Got it'),
+        );
+        await tester.ensureVisible(rate);
+        await tester.tap(rate);
+        await tester.pumpAndSettle();
+        expect(await memory.reviewHistory(), hasLength(1));
+        for (var index = 1; index < 3; index++) {
+          final next = find.descendant(
+            of: find.byKey(Key('discovery-word-scroll-$index')),
+            matching: find.text('Next word'),
+          );
+          await tester.ensureVisible(next);
+          await tester.tap(next);
+          await tester.pumpAndSettle();
+        }
+        final refresh = find.text('Refresh word feed');
+        await tester.ensureVisible(refresh);
+        await tester.tap(refresh);
+        await tester.pumpAndSettle();
+        expect(find.text('0 practised · 2 unlearned words'), findsOneWidget);
+        expect(await memory.reviewHistory(), hasLength(1));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final soundEnabled in [true, false]) {
     testWidgets(
       'feed example audio respects sound $soundEnabled without rating',

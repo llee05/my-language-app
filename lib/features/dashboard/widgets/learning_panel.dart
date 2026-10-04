@@ -143,33 +143,52 @@ class _NewLearnerPrompt extends StatelessWidget {
       border: Border.all(color: const Color(0xFF5D4514)),
       borderRadius: BorderRadius.circular(14),
     ),
-    child: Row(
-      children: [
-        Icon(Icons.waving_hand_rounded, color: AppColors.gold, size: 34),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Start your first lesson',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final details = Row(
+          children: [
+            Icon(Icons.waving_hand_rounded, color: AppColors.gold, size: 34),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Start your first lesson',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'Learn a few words to begin building your streak, XP, and vocabulary mastery.',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  ),
+                ],
               ),
-              SizedBox(height: 5),
-              Text(
-                'Learn a few words to begin building your streak, XP, and vocabulary mastery.',
-                style: TextStyle(fontSize: 11, color: AppColors.muted),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        FilledButton(onPressed: onPressed, child: const Text('Browse lessons')),
-      ],
+            ),
+          ],
+        );
+        final action = FilledButton(
+          onPressed: onPressed,
+          child: const Text('Browse lessons'),
+        );
+        if (constraints.maxWidth < 440) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [details, const SizedBox(height: 16), action],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: details),
+            const SizedBox(width: 12),
+            action,
+          ],
+        );
+      },
     ),
   );
 }
@@ -630,54 +649,63 @@ class LessonTile extends StatelessWidget {
             onTap: state == LessonState.locked ? null : onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(
-                    done
-                        ? Icons.check_circle_outline_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    size: 18,
-                    color: done
-                        ? AppColors.teal
-                        : (active ? AppColors.red : AppColors.faint),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: contentColor,
-                              ),
-                            ),
-                            if (active) const _Pill(label: 'In progress'),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$chinese · $unit · $duration',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 380;
+                  final xpLabel = Text(
                     xp,
                     style: TextStyle(fontSize: 10, color: AppColors.muted),
-                  ),
-                ],
+                  );
+                  return Row(
+                    children: [
+                      Icon(
+                        done
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        size: 18,
+                        color: done
+                            ? AppColors.teal
+                            : (active ? AppColors.red : AppColors.faint),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  title,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: contentColor,
+                                  ),
+                                ),
+                                if (active) const _Pill(label: 'In progress'),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$chinese · $unit · $duration',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                            if (compact) ...[
+                              const SizedBox(height: 6),
+                              xpLabel,
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (!compact) ...[const SizedBox(width: 10), xpLabel],
+                    ],
+                  );
+                },
               ),
             ),
           ),
