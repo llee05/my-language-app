@@ -230,7 +230,8 @@ experimental **Press feedback** selector includes a preview button; select
 
 Use **Save settings** after editing your name, HSK level, daily word target,
 Show pinyin, Sound, or Kokoro voice selection. These preferences are stored
-locally and restored on the next launch.
+locally and restored on the next launch. The save action stays visible at the
+bottom while you scroll through Settings.
 
 ### Pronunciation audio
 
@@ -521,6 +522,8 @@ The [October 4 stability report](docs/stability-check-2026-10-04.md) records the
 automated checks, fixes, and remaining device checks for the next beta.
 The [app runthrough](docs/app-runthrough.md) records the subsequent Linux
 screen review, usability improvements, and full validation pass.
+The [interface review](docs/ui-runthrough.md) records the visual refinements,
+desktop and narrow-layout checks, and persistent Settings save action.
 
 ### Technical snapshot
 
