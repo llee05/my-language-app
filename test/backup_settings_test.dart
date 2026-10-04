@@ -115,6 +115,96 @@ void main() {
     expect(find.text('Backup exported.'), findsOneWidget);
   });
 
+  testWidgets('invalid backups never reach confirmation or restore', (
+    tester,
+  ) async {
+    final backups = _MemoryBackupRepository()
+      ..previewError = const BackupFormatException('Invalid backup file.');
+    await pumpSettings(
+      tester,
+      backups: backups,
+      files: _MemoryBackupFileService(),
+    );
+    await reveal(tester, const Key('settings-import-backup'));
+    await tester.tap(find.byKey(const Key('settings-import-backup')));
+    await tester.pumpAndSettle();
+    expect(find.text('Invalid backup file.'), findsOneWidget);
+    expect(find.byKey(const Key('backup-preview-dialog')), findsNothing);
+    expect(backups.restoreCalls, 0);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const Key('settings-import-backup')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('failed restore stays retryable and does not report success', (
+    tester,
+  ) async {
+    final backups = _MemoryBackupRepository()
+      ..restoreError = StateError('write failed');
+    var reloads = 0;
+    await pumpSettings(
+      tester,
+      backups: backups,
+      files: _MemoryBackupFileService(),
+      onBackupRestored: () async => reloads++,
+    );
+    await reveal(tester, const Key('settings-import-backup'));
+    for (final fails in [true, false]) {
+      await tester.tap(find.byKey(const Key('settings-import-backup')));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.byKey(const Key('backup-restore-confirm')));
+      await tester.pumpAndSettle();
+      if (fails) {
+        expect(
+          find.text(
+            'We couldn’t restore this backup. Your data was not changed.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Backup restored.'), findsNothing);
+        expect(reloads, 0);
+        backups.restoreError = null;
+      } else {
+        expect(find.text('Backup restored.'), findsOneWidget);
+        expect(reloads, 1);
+      }
+    }
+    expect(backups.restoreCalls, 2);
+  });
+
+  for (final fails in [false, true]) {
+    testWidgets(
+      'export ${fails ? 'failure' : 'cancellation'} never reports success and allows retry',
+      (tester) async {
+        final files = _MemoryBackupFileService()
+          ..saveResult = false
+          ..saveError = fails ? StateError('file unavailable') : null;
+        await pumpSettings(
+          tester,
+          backups: _MemoryBackupRepository(),
+          files: files,
+        );
+        await reveal(tester, const Key('settings-export-backup'));
+        await tester.tap(find.byKey(const Key('settings-export-backup')));
+        await tester.pumpAndSettle();
+        expect(find.text('Backup exported.'), findsNothing);
+        if (fails) {
+          expect(find.text('We couldn’t export your backup.'), findsOneWidget);
+        }
+        files.saveResult = true;
+        files.saveError = null;
+        await tester.tap(find.byKey(const Key('settings-export-backup')));
+        await tester.pumpAndSettle();
+        expect(find.text('Backup exported.'), findsOneWidget);
+      },
+    );
+  }
+
   for (final action in ['export', 'import']) {
     testWidgets('account reset waits for a pending backup $action', (
       tester,
@@ -161,6 +251,8 @@ class _MemoryBackupRepository implements BackupRepository {
   final bytes = Uint8List.fromList([1, 2, 3]);
   int exportCalls = 0;
   int restoreCalls = 0;
+  Object? previewError;
+  Object? restoreError;
 
   @override
   Future<Uint8List> exportBackup() async {
@@ -169,24 +261,32 @@ class _MemoryBackupRepository implements BackupRepository {
   }
 
   @override
-  BackupPreview previewBackup(Uint8List bytes) => BackupPreview(
-    exportedAt: DateTime.utc(2026, 9, 13),
-    learnerName: 'Backup learner',
-    hskLevel: 4,
-    lessonCount: 12,
-    cardCount: 240,
-    reviewCount: 83,
-    sessionCount: 7,
-  );
+  BackupPreview previewBackup(Uint8List bytes) {
+    if (previewError != null) throw previewError!;
+    return BackupPreview(
+      exportedAt: DateTime.utc(2026, 9, 13),
+      learnerName: 'Backup learner',
+      hskLevel: 4,
+      lessonCount: 12,
+      cardCount: 240,
+      reviewCount: 83,
+      sessionCount: 7,
+    );
+  }
 
   @override
-  Future<void> restoreBackup(Uint8List bytes) async => restoreCalls++;
+  Future<void> restoreBackup(Uint8List bytes) async {
+    restoreCalls++;
+    if (restoreError != null) throw restoreError!;
+  }
 }
 
 class _MemoryBackupFileService implements BackupFileService {
   Completer<void>? fileOperationGate;
   Uint8List? savedBytes;
   String? savedName;
+  bool saveResult = true;
+  Object? saveError;
 
   @override
   Future<Uint8List?> chooseBackup() async {
@@ -202,7 +302,8 @@ class _MemoryBackupFileService implements BackupFileService {
     await fileOperationGate?.future;
     savedName = fileName;
     savedBytes = bytes;
-    return true;
+    if (saveError != null) throw saveError!;
+    return saveResult;
   }
 }
 
