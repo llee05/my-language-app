@@ -70,34 +70,41 @@ class _ThemeHarnessState extends State<_ThemeHarness> {
   @override
   Widget build(BuildContext context) {
     AppColors.apply(AppThemes.paletteOf(_themeId));
-    return Scaffold(
-      body: Column(
-        children: [
-          ColoredBox(
-            key: const Key('theme-probe'),
-            color: AppColors.background,
-            child: const SizedBox(height: 1, width: 1),
-          ),
-          Text(
-            _buttonAnimationStyle.name,
-            key: const Key('button-animation-probe'),
-          ),
-          Expanded(
-            child: SettingsPage(
-              profile: _profile,
-              onProfileChanged: (_) async => await widget.profileSaveGate,
-              onResetOnboarding: () async {},
-              onResetAllData: () async {},
-              appThemeId: _themeId,
-              onThemeChanged: (themeId) => setState(() => _themeId = themeId),
-              buttonAnimationStyle: _buttonAnimationStyle,
-              onButtonAnimationStyleChanged: (style) =>
-                  setState(() => _buttonAnimationStyle = style),
-              developmentRepository: _FakeDevelopmentRepository(),
-              settingsRepository: widget.settingsRepository,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(
+          context,
+        ).colorScheme.copyWith(primary: AppColors.red),
+      ),
+      child: Scaffold(
+        body: Column(
+          children: [
+            ColoredBox(
+              key: const Key('theme-probe'),
+              color: AppColors.background,
+              child: const SizedBox(height: 1, width: 1),
             ),
-          ),
-        ],
+            Text(
+              _buttonAnimationStyle.name,
+              key: const Key('button-animation-probe'),
+            ),
+            Expanded(
+              child: SettingsPage(
+                profile: _profile,
+                onProfileChanged: (_) async => await widget.profileSaveGate,
+                onResetOnboarding: () async {},
+                onResetAllData: () async {},
+                appThemeId: _themeId,
+                onThemeChanged: (themeId) => setState(() => _themeId = themeId),
+                buttonAnimationStyle: _buttonAnimationStyle,
+                onButtonAnimationStyleChanged: (style) =>
+                    setState(() => _buttonAnimationStyle = style),
+                developmentRepository: _FakeDevelopmentRepository(),
+                settingsRepository: widget.settingsRepository,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -123,6 +130,45 @@ Future<void> _pumpHarness(
 }
 
 void main() {
+  for (final (size, scale) in [
+    (const Size(1000, 900), 1.0),
+    (const Size(320, 640), 2.0),
+  ]) {
+    testWidgets('settings save stays reachable while scrolling at $size', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final repository = _MemorySettingsRepository();
+      await _pumpHarness(tester, repository);
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpAndSettle();
+      final save = find.byKey(const Key('settings-save'));
+      expect(save.hitTestable(), findsOneWidget);
+      final pinyin = find.widgetWithText(SwitchListTile, 'Show pinyin');
+      await tester.scrollUntilVisible(
+        pinyin,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(pinyin);
+      await tester.pumpAndSettle();
+      final appearance = find.byKey(const Key('theme-choice-ocean'));
+      await tester.scrollUntilVisible(
+        appearance,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(save.hitTestable(), findsOneWidget);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(repository.savedSettings.showPinyin, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'an older failed theme choice cannot override a later successful choice',
     (tester) async {
@@ -163,9 +209,10 @@ void main() {
     final ocean = find.byKey(const Key('theme-choice-ocean'));
     await tester.scrollUntilVisible(
       ocean,
-      -400,
+      400,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.pump();
     await tester.tap(ocean);
     await tester.pump();
     expect(
@@ -214,6 +261,12 @@ void main() {
   ) async {
     final settingsRepository = _MemorySettingsRepository();
     await _pumpHarness(tester, settingsRepository);
+    await tester.binding.setSurfaceSize(const Size(1000, 1800));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Text>(find.text('设置')).style?.color,
+      AppThemes.classic.red,
+    );
 
     expect(
       tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
@@ -221,8 +274,7 @@ void main() {
     );
 
     final oceanChip = find.byKey(const Key('theme-choice-ocean'));
-    await tester.ensureVisible(oceanChip);
-    await tester.pumpAndSettle();
+    expect(oceanChip.hitTestable(), findsOneWidget);
     await tester.tap(oceanChip);
     await tester.pumpAndSettle();
 
@@ -230,6 +282,10 @@ void main() {
     expect(
       tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
       AppThemes.ocean.background,
+    );
+    expect(
+      tester.widget<Text>(find.text('设置')).style?.color,
+      AppThemes.ocean.red,
     );
     // …and the choice was persisted without touching other preferences.
     expect(settingsRepository.saveCalls, 1);

@@ -538,15 +538,68 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 880),
+      child: Column(
+        children: [
+          Expanded(child: _buildSettingsList(context)),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              border: Border(top: BorderSide(color: AppColors.divider)),
+            ),
+            child: _buildSaveAction(),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildSaveAction() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (_saveFailed)
+        _AppInlineError(
+          key: const Key('settings-save-error'),
+          message: _AppErrorCopy.saveChanges,
+          onRetry: _save,
+          retryKey: const Key('settings-save-retry'),
+        )
+      else
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            key: const Key('settings-save'),
+            onPressed:
+                _dataOperationInProgress ||
+                    _loadingPreferences ||
+                    _preferencesLoadFailed
+                ? null
+                : _save,
+            icon: _saving
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(_saving ? 'Saving…' : 'Save settings'),
+          ),
+        ),
+    ],
+  );
+
+  Widget _buildSettingsList(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(28),
       children: [
-        Text('Settings', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 6),
-        Text(
-          'Manage your learning preferences and local data.',
-          style: TextStyle(color: AppColors.muted),
+        const _AppPageHeader(
+          title: 'Settings',
+          hanzi: '设置',
+          description: 'Manage your learning preferences and local data.',
         ),
         const SizedBox(height: 24),
         _SettingsCard(
@@ -866,33 +919,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
         const SizedBox(height: 24),
-        if (_saveFailed)
-          _AppInlineError(
-            key: const Key('settings-save-error'),
-            message: _AppErrorCopy.saveChanges,
-            onRetry: _save,
-            retryKey: const Key('settings-save-retry'),
-          )
-        else
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton.icon(
-              key: const Key('settings-save'),
-              onPressed:
-                  _dataOperationInProgress ||
-                      _loadingPreferences ||
-                      _preferencesLoadFailed
-                  ? null
-                  : _save,
-              icon: _saving
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined),
-              label: Text(_saving ? 'Saving…' : 'Save settings'),
-            ),
-          ),
       ],
     );
   }
@@ -1504,7 +1530,7 @@ class _SettingsCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
