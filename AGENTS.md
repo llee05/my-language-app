@@ -18,7 +18,7 @@ required by this document or supplied alongside it.
 
 TingShuo is a local-first Mandarin learning app built with Flutter and Dart.
 The Dart package is `mylanguageapp`; the root widget retains the historical name
-`HanziPathApp`. Core lessons, dictionary, word discovery, and ratings must remain
+`HanziPathApp`. Core flashcards, dictionary, word discovery, and ratings must remain
 usable without an account, network access, or an AI provider.
 
 The package version is `1.0.0-beta.6+6` in `pubspec.yaml`. The current app includes
@@ -152,7 +152,10 @@ persisted. Built-in and custom tutor personalities are managed through
 `app_data`, survive onboarding reset, and are excluded from study backups.
 AI profile generation is optional; manual profile creation works without AI.
 
-Vocabulary lessons use the bundled curriculum; lesson creation has been removed.
+Flashcards and Listening Practice share one searchable deck browser and the same
+vocabulary, sentence-practice, and saved custom deck pool across HSK 1–6.
+Listening starts directly from a deck; random modes follow the visible filters.
+Vocabulary decks use the bundled curriculum; deck creation has been removed.
 Preserve previously saved custom lessons, lesson guides, and learning history.
 
 Startup never contacts an AI service. When no personal configuration is saved,

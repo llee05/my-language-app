@@ -1,7 +1,7 @@
 # 听说 TingShuo
 
 **TingShuo v1.0.0 Beta 6** is a local-first Flutter app for building a
-consistent Mandarin study habit. It combines HSK-aligned flashcard lessons,
+consistent Mandarin study habit. It combines HSK-aligned flashcard decks,
 sentence and listening practice, a swipe-based word feed, a searchable
 dictionary, Vocab Rush, offline vocabulary exams, and saved progress analytics.
 An optional AI tutor offers chat, listening dialogues, roleplay missions, and
@@ -16,14 +16,14 @@ custom teaching personalities using your own provider and API key.
 
 - First-run setup for the learner's name, HSK level, and daily word target.
 - All 4,991 bundled HSK 2.0 vocabulary entries across levels 1–6, arranged in
-  251 twenty-word lessons, plus previously saved custom decks.
+  251 twenty-word decks, plus previously saved custom decks.
 - Ten offline sentence-practice decks with 100 everyday expressions.
 - Hanzi, pinyin, English meanings, example sentences, and on-device Mandarin
   pronunciation.
 - Listening practice with hidden Hanzi and pinyin, meaning choices, answer
   reveal, replay, and slower playback.
-- Immediate card ratings, persisted lesson position, completion summaries, and
-  the ability to resume an unfinished lesson after restarting the app.
+- Immediate card ratings, persisted deck position, completion summaries, and
+  the ability to resume an unfinished deck after restarting the app.
 - Doom Scrolling: a vertical, random feed of vocabulary below 80% mastery,
   with pronunciation, examples, and explicit word ratings.
 - Spaced-review scheduling and saved progress shared across study modes.
@@ -87,36 +87,36 @@ settings and subsequent learning history are saved in a local SQLite database.
 
 ## Using the Beta
 
-### Lessons
+### Flashcards
 
-Open **Lessons** to start a bundled lesson or revisit a previously saved custom deck.
-The default vocabulary library contains 251 lessons covering all 4,991 bundled
-HSK 1–6 entries. Each lesson contains 20 distinct words from one HSK level;
-the final lesson in each level repeats a few words to keep its size at 20.
+Open **Flashcards** to start a bundled deck or revisit a previously saved custom deck.
+The default vocabulary library contains 251 decks covering all 4,991 bundled
+HSK 1–6 entries. Each deck contains 20 distinct words from one HSK level;
+the final deck in each level repeats a few words to keep its size at 20.
 Examples use attributed Tatoeba Mandarin–English pairs with source pinyin,
 and original study sentences fill gaps. Everything is bundled for offline use.
 
 Reveal each answer and rate the word; TingShuo saves every rating immediately
-and schedules the card's next review. Completing a lesson shows a short
+and schedules the card's next review. Completing a deck shows a short
 celebration, the XP earned from saved ratings, accuracy, and new/revisited word
 counts. Expand the recap to revisit cards rated Again or Hard, or start the next
-lesson at the same HSK level. Sentence practice offers the next sentence deck.
-An unfinished lesson can be resumed from the dashboard or Lessons page.
+deck at the same HSK level. Sentence practice offers the next sentence deck.
+An unfinished deck can be resumed from the dashboard or Flashcards page.
 The library opens at **All levels** and shows
-the total number of lessons. Filtering by HSK 6 shows 125 of the 251 vocabulary
-lessons; **Show all lessons** clears the level filter and search. Custom lesson
+the total number of decks. Filtering by HSK 6 shows 125 of the 251 vocabulary
+decks; **Show all decks** clears the level filter and search. Custom deck
 creation has been removed; previously saved decks and their progress remain available.
 
-Previously saved lessons with a **Lesson guide** still show their objective,
+Previously saved decks with a **Study guide** still show their objective,
 grammar explanation, dialogue, and practice questions. Guides remain available
-with the lesson and are included in exported backups.
+with the deck and are included in exported backups.
 
 Upgrading replaces the old default library while retaining saved reviews,
-schedules, custom lessons, and unfinished sessions. Historical lessons remain
+schedules, custom decks, and unfinished sessions. Historical decks remain
 available when resuming a session. Shared cards keep the same progress across
 the new decks.
 
-Open **Lessons → Sentence practice** for ten themed decks of ten everyday
+Open **Flashcards → Sentence practice** for ten themed decks of ten everyday
 sentences and short expressions. Each includes Hanzi, sentence pinyin, English,
 and pronunciation. These original study sentences follow the same rating and
 review flow as vocabulary cards; they are an everyday-language selection rather
@@ -126,8 +126,8 @@ for dataset sources, attribution, and regeneration instructions.
 ### Home and Profile
 
 **Home** shows the unlearned-word discovery prompt, the latest unfinished
-lesson, weekly XP, and vocabulary statistics. **Available HSK lessons** samples
-up to six lessons across HSK levels; use **Refresh lessons** for another selection.
+deck, weekly XP, and vocabulary statistics. **Available HSK flashcards** samples
+up to six decks across HSK levels; use **Refresh decks** for another selection.
 
 Open **Profile** through the user icon in the dashboard header to see total XP,
 current streak, answer accuracy, review counts, active study days, and vocabulary
@@ -141,7 +141,7 @@ lower levels are complete. This progress is separate from the HSK level you
 choose in learner settings and is not an official proficiency score. Analytics
 refresh after saved reviews, at local midnight, and when the app resumes.
 
-Lessons, Dictionary, Doom Scrolling, Listening Practice, Vocab Rush, and Exam
+Flashcards, Dictionary, Doom Scrolling, Listening Practice, Vocab Rush, and Exam
 Mode share the same saved word progress. Sentence recaps, AI chat, generated
 dialogues, and roleplay turns offer **Practise these words** controls for locally
 matched bundled vocabulary. Only explicit ratings and assessed answers update
@@ -172,20 +172,22 @@ filter remain available.
 
 ### Listening practice
 
-Open **Listening Practice** to practise words from saved lessons at or below
-your current HSK level, or select **All levels** to access all 251 default decks.
-Each default lesson is selectable individually and includes all 20 words in a
-listening session. Choose **Random mix** for a shuffled session spanning the
-selected HSK range, or **Random topic** to practise one randomly selected lesson.
-Lesson library cards and listening choices show how many words are learned,
-using saved progress with at least 80% mastery. Each prompt plays before its Hanzi
-and pinyin are shown. Choose the English meaning or reveal the answer, and use
-**Replay** or **Slower** whenever you need to hear it again.
+Open **Listening Practice** to use the same vocabulary, sentence-practice,
+and previously saved custom decks as **Flashcards**. The library opens at
+**All levels**; search decks, Hanzi, pinyin, or English, or use HSK chips to
+filter vocabulary. Select **Listen** on a deck to start directly, with all 20
+words in each default vocabulary deck and all ten prompts in each sentence deck.
+**Random deck** chooses one of the visible decks; **Random mix** shuffles cards
+from the visible decks. Both follow the current mode, level filter, and search.
+Deck cards show learned counts using saved progress with at least 80% mastery.
+Each prompt plays before its Hanzi and pinyin are shown. Choose the English
+meaning or reveal the answer, and use **Replay** or **Slower** to hear it again.
 
 Listening scores last for the current session only. Choosing a meaning saves
-a correct or incorrect vocabulary rating; revealing an answer without choosing
-a meaning saves an incorrect rating. These responses update vocabulary mastery,
-XP, streaks, and review schedules.
+a correct or incorrect card rating; revealing an answer saves an incorrect
+rating. Vocabulary responses update mastery, XP, streaks, and review schedules.
+Sentence-card responses retain their own review history and XP and do not count
+as HSK vocabulary mastery.
 
 ### Exam Mode
 
@@ -235,8 +237,8 @@ bottom while you scroll through Settings.
 
 ### Pronunciation audio
 
-Use **Listen to example** on the back of a lesson card, or the speaker beside an
-example in Dictionary details, Doom Scrolling, or a saved lesson guide, to hear
+Use **Listen to example** on the back of a deck card, or the speaker beside an
+example in Dictionary details, Doom Scrolling, or a saved deck guide, to hear
 the full Mandarin sentence. Playback does not require an AI provider or award
 mastery. Sound can be enabled or disabled under **Settings → Sound**.
 
@@ -312,7 +314,7 @@ Open **Settings → AI provider** to configure AI without rebuilding the app:
 with **Save without testing** (local storage only) and **Test connection**
 (a request without saving). Custom providers need both an endpoint and model ID.
 **Skip — continue without AI** dismisses setup and discards the unsaved key;
-lessons and review remain available. You can reopen setup from Settings.
+decks and review remain available. You can reopen setup from Settings.
 
 The setup pages are [Google AI Studio](https://aistudio.google.com/apikey),
 [OpenAI API keys](https://platform.openai.com/api-keys), and
@@ -323,9 +325,9 @@ access applies to selected models and has usage limits. Claude defaults to
 
 When you send a tutor message, the request also includes a bounded snapshot of
 your locally saved HSK level, studied vocabulary, weak and due words, recent
-mistakes, and recent lesson sessions so the tutor can personalize practice. The
+mistakes, and recent deck sessions so the tutor can personalize practice. The
 snapshot excludes your name and is limited to 80 studied words, 8 targeted
-words per category, and 5 lesson sessions. If the snapshot cannot be read,
+words per category, and 5 deck sessions. If the snapshot cannot be read,
 tutor chat continues without personalization.
 
 Choose **Listening dialogue** inside AI Tutor to generate a short conversation
@@ -377,10 +379,10 @@ instead of saving a key in ordinary preferences.
 Your key and tutor conversation history go directly to the selected provider
 when you use AI. Your provider's usage limits, charges, and data policies apply.
 Only enter a custom endpoint you trust. Chat history stays in memory until reset
-or navigation; bundled vocabulary lessons are available offline.
+or navigation; bundled vocabulary decks are available offline.
 
 No AI service is contacted during startup. Without a configured key, the tutor
-directs you to Settings. Lessons and review work offline.
+directs you to Settings. Flashcards and review work offline.
 
 #### Developer Gemini fallback
 
@@ -414,13 +416,13 @@ contain no shared AI key; users can add their own through Settings.
 ### Backup, restore, and reset
 
 Open **Settings → Backup and restore → Export backup** to save a JSON snapshot
-of your learner profile, learning and appearance settings, lessons and guides,
-cards, deck memberships, review history, mastery/schedules, and resumable lesson
+of your learner profile, learning and appearance settings, decks and guides,
+cards, deck memberships, review history, mastery/schedules, and resumable deck
 and daily-review sessions. Keep a copy outside the app's data directory before
 upgrading, moving to another device, or resetting.
 
 Select **Restore backup** to choose a file and review its learner name, HSK
-level, export date, and lesson/card/review/session counts. Confirming replaces
+level, export date, and deck/card/review/session counts. Confirming replaces
 the local study data and settings with the snapshot. Restore validates linked
 records and applies the replacement in one database transaction, so an invalid
 backup leaves existing study data intact. Older backups receive the current
@@ -435,9 +437,9 @@ to each installation.
 To start over, open **Settings → Reset account**. Read the deletion warning,
 select **Continue**, then type `RESET` and select **Reset account permanently**.
 You can cancel either confirmation without changing your data. Reset removes
-the local learner profile, study progress, review history, custom lessons and
+the local learner profile, study progress, review history, custom decks and
 tutors, settings, and saved AI configuration, including API keys, then returns
-to learner setup with the default appearance. Bundled lessons are recreated;
+to learner setup with the default appearance. Bundled decks are recreated;
 downloaded voices remain available. Deleted study data can only be recovered
 from a previously exported backup, which does not restore keys or tutor profiles.
 
@@ -553,7 +555,7 @@ Android and the three desktop platforms. There is no web runner.
 ### In-memory caching
 
 Bundled vocabulary is parsed once per asset bundle and shared as immutable data
-by Lessons, Dictionary, Doom Scrolling, Vocab Rush, and Exam Mode. The database
+by Flashcards, Dictionary, Doom Scrolling, Vocab Rush, and Exam Mode. The database
 retains up to 32 recent lesson reads (including the library summary) and one daily statistics
 result. Lesson sessions are loaded in one bulk query and remain fresh on each load.
 Statistics refresh after saved reviews, at local midnight, and when the app
@@ -594,13 +596,15 @@ Current version: **1.0.0-beta.6+6**
 
 Beta 6
 
+- Renamed Lessons to Flashcards and gave Listening Practice the same deck library,
+  with direct deck selection, search, and HSK filters in place of dropdowns.
 - Replaced AI lesson creation with 251 bundled twenty-word vocabulary decks
   covering all 4,991 HSK 1–6 entries, available offline.
 - Added attributed Tatoeba examples and original study sentences, and refreshed
   sentence-practice content.
 - Preserved saved custom decks, review history, and unfinished sessions during
   the curriculum upgrade; shared words retain their progress across decks.
-- Added learned-word counts to lessons and expanded listening practice to use
+- Added learned-word counts to decks and expanded listening practice to use
   the new curriculum decks.
 - Improved Android back navigation across study screens.
 - Added coordinated Linux x64, universal macOS, Windows x64, and signed Android
