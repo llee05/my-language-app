@@ -46,10 +46,10 @@ void main() {
       await _waitFor(tester, find.text('你好，Offline Mei'));
 
       for (final page in {
-        'Lessons': 'lesson-library-content',
+        'Flashcards': 'lesson-library-content',
         'Dictionary': 'vocabulary-result-count',
         'Doom Scrolling': 'doom-scrolling-feed',
-        'Listening Practice': 'listening-start-practice',
+        'Listening Practice': 'listening-library-content',
         'Exam Mode': 'exam-start',
       }.entries) {
         final navigation = find.descendant(

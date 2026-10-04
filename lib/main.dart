@@ -57,6 +57,7 @@ part 'core/widgets/push_to_talk_button.dart';
 part 'core/widgets/pronunciation_button.dart';
 part 'core/widgets/vocabulary_practice_panel.dart';
 part 'core/widgets/shared_widgets.dart';
+part 'core/widgets/flashcard_library.dart';
 part 'core/widgets/system_voice_setup.dart';
 part 'features/ai_tutor/ai_tutor_page.dart';
 part 'features/ai_tutor/tutor_personality_picker.dart';

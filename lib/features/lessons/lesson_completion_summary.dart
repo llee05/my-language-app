@@ -154,7 +154,7 @@ class _LessonCompletionSummary extends StatelessWidget {
                         header: true,
                         liveRegion: true,
                         child: Text(
-                          'Lesson complete!',
+                          'Deck complete!',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 28,
@@ -201,7 +201,7 @@ class _LessonCompletionSummary extends StatelessWidget {
                 Text(
                   cardsToRevisit.isEmpty
                       ? 'A strong finish. Keep coming back to make it stick.'
-                      : 'You finished the whole lesson. A little more practice '
+                      : 'You finished the whole deck. A little more practice '
                             'will help the tricky $noun stick.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppColors.text, height: 1.5),
@@ -369,7 +369,7 @@ class _LessonCompletionSummary extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.arrow_forward_rounded),
-          label: Text(openingNextLesson ? 'Opening lesson…' : 'Next lesson'),
+          label: Text(openingNextLesson ? 'Opening deck…' : 'Next deck'),
         ),
       if (nextLessonTitle != null)
         OutlinedButton.icon(

@@ -49,7 +49,7 @@ class GeminiService {
     if (_apiKey.isEmpty) {
       throw const GeminiConfigurationException(
         'Gemini is not configured for this build. '
-        'Lessons and review are still available offline.',
+        'Flashcards and review are still available offline.',
       );
     }
     if (!RegExp(r'^gemini-[a-zA-Z0-9._-]+$').hasMatch(_model)) {

@@ -79,7 +79,7 @@ void main() {
 
     expect(find.byKey(const Key('backup-preview-dialog')), findsOneWidget);
     expect(find.text('Backup learner · HSK 4'), findsOneWidget);
-    expect(find.text('12 lessons · 240 cards'), findsOneWidget);
+    expect(find.text('12 decks · 240 cards'), findsOneWidget);
     expect(find.text('83 reviews · 7 sessions'), findsOneWidget);
     expect(backups.restoreCalls, 0);
 

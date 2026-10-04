@@ -5,7 +5,6 @@ class ListeningPracticePage extends StatefulWidget {
     super.key,
     required this.lessonRepository,
     required this.settingsRepository,
-    required this.maxHskLevel,
     this.pronunciationService,
     this.progressRepository,
     this.sessionSize = 20,
@@ -19,7 +18,6 @@ class ListeningPracticePage extends StatefulWidget {
 
   final LessonRepository lessonRepository;
   final SettingsRepository settingsRepository;
-  final int maxHskLevel;
   final PronunciationService? pronunciationService;
   final ProgressRepository? progressRepository;
   final int sessionSize;
@@ -31,18 +29,22 @@ class ListeningPracticePage extends StatefulWidget {
 
 class _ListeningPracticePageState extends State<ListeningPracticePage> {
   static const _slowPlaybackRate = .75;
-  static const _randomTopicKey = '__random_topic__';
-  static const _randomTopicLabel = 'Random topic';
-  static const _randomMixKey = '__random_mix__';
   static const _randomMixLabel = 'Random mix';
 
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
   final _topicSearchController = TextEditingController();
   LearnerSettings _learnerSettings = const LearnerSettings();
-  List<_ListeningTopic> _topics = const [];
+  List<LessonSummary> _topics = const [];
+  Map<int, List<Flashcard>> _cardsByLesson = const {};
+  Map<Flashcard, int> _cardHskLevels = const {};
+  bool _sentenceMode = false;
+  int? _libraryHskFilter;
+  List<LessonSummary> _lastDecks = const [];
+  bool _lastRandomMix = false;
+  bool _lastRandomDeck = false;
+  String? _startError;
   Map<int, LessonLearningProgress> _lessonLearningProgress = const {};
-  int _maxHskLevel = 6;
   List<Flashcard> _answerPool = const [];
   List<Flashcard> _cards = const [];
   bool _loading = true;
@@ -59,7 +61,6 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   String? _saveError;
   String? _pendingMeaning;
   String _practiceRunId = '';
-  String? _selectedTopicKey;
   String? _activeTopicLabel;
   int _audioRequestId = 0;
   late final Random _random;
@@ -70,7 +71,6 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   void initState() {
     super.initState();
     _random = widget.random ?? Random();
-    _maxHskLevel = widget.maxHskLevel.clamp(1, 6);
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -106,66 +106,41 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       }
 
       final summaries = await widget.lessonRepository.topics();
-      final eligible = summaries.where(
-        (summary) =>
-            !summary.isSentencePractice && summary.hskLevel <= _maxHskLevel,
-      );
       final lessons = await Future.wait(
-        eligible.map((summary) => widget.lessonRepository.findById(summary.id)),
+        summaries.map(
+          (summary) => widget.lessonRepository.findById(summary.id),
+        ),
       );
       final learningProgress = await widget.progressRepository
           ?.learningProgressForLessons(
             widget.lessonRepository,
-            eligible.map((summary) => summary.id),
+            summaries.map((summary) => summary.id),
           );
-      final allCards = <String, Flashcard>{};
-      final topicLabels = <String, String>{};
-      final lessonIds = <String, int>{};
-      final cardsByTopic = <String, Map<String, Flashcard>>{};
+      final cardsByLesson = <int, List<Flashcard>>{};
+      final cardHskLevels = <Flashcard, int>{};
       for (final lesson in lessons.whereType<Lesson>()) {
-        final topicLabel = lesson.summary.title.trim();
-        if (topicLabel.isEmpty) continue;
-        final topicKey = 'lesson:${lesson.summary.id}';
-        final isRandomMix =
-            lesson.summary.theme.trim().toLowerCase() ==
-            _randomMixLabel.toLowerCase();
-        final topicCards = isRandomMix
-            ? null
-            : cardsByTopic.putIfAbsent(topicKey, () => {});
-        if (!isRandomMix) {
-          topicLabels.putIfAbsent(topicKey, () => topicLabel);
-          lessonIds[topicKey] = lesson.summary.id;
-        }
-        for (final card in lesson.cards) {
-          if (card.chinese.trim().isEmpty ||
-              card.englishMeaning.trim().isEmpty) {
-            continue;
-          }
-          final identity =
-              '${card.chinese}\u0000${card.pinyin}\u0000'
-              '${card.englishMeaning.toLowerCase()}';
-          allCards.putIfAbsent(identity, () => card);
-          topicCards?.putIfAbsent(identity, () => card);
+        final cards = lesson.cards
+            .where(
+              (card) =>
+                  card.chinese.trim().isNotEmpty &&
+                  card.englishMeaning.trim().isNotEmpty,
+            )
+            .toList(growable: false);
+        cardsByLesson[lesson.summary.id] = cards;
+        for (final card in cards) {
+          cardHskLevels[card] = lesson.summary.hskLevel;
         }
       }
-      final topics = [
-        for (final entry in cardsByTopic.entries)
-          if (entry.value.isNotEmpty)
-            _ListeningTopic(
-              key: entry.key,
-              lessonId: lessonIds[entry.key]!,
-              label: topicLabels[entry.key]!,
-              cards: entry.value.values.toList(growable: false),
-            ),
-      ];
 
       if (!mounted) return;
       setState(() {
         _learnerSettings = settings;
-        _topics = topics;
+        _topics = summaries;
+        _cardsByLesson = cardsByLesson;
+        _cardHskLevels = cardHskLevels;
+        _startError = null;
         _lessonLearningProgress = learningProgress ?? const {};
-        _answerPool = allCards.values.toList(growable: false);
-        _selectedTopicKey = topics.isEmpty ? _randomMixKey : topics.first.key;
+        _answerPool = const [];
         _activeTopicLabel = null;
         _cards = const [];
         _sessionStarted = false;
@@ -178,6 +153,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       if (!mounted) return;
       setState(() {
         _topics = const [];
+        _cardsByLesson = const {};
+        _cardHskLevels = const {};
         _answerPool = const [];
         _cards = const [];
         _sessionStarted = false;
@@ -198,122 +175,81 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     _audioError = null;
   }
 
-  String get _selectedTopicLabel {
-    if (_selectedTopicKey == _randomTopicKey) {
-      return _activeTopicLabel ?? _randomTopicLabel;
-    }
-    if (_selectedTopicKey == _randomMixKey) return _randomMixLabel;
-    for (final topic in _topics) {
-      if (topic.key == _selectedTopicKey) return topic.label;
-    }
-    return 'Listening practice';
-  }
+  List<LessonSummary> get _visibleDecks => _filterFlashcardDecks(
+    _topics,
+    sentenceMode: _sentenceMode,
+    hskFilter: _libraryHskFilter,
+    query: _topicSearchController.text,
+    cardsByLesson: _cardsByLesson,
+  );
 
-  String get _topicSearchQuery =>
-      _topicSearchController.text.trim().toLowerCase();
-
-  List<_ListeningTopic> get _visibleTopics {
-    final query = _topicSearchQuery;
-    if (query.isEmpty) return _topics;
-    final normalizedQuery = _normalizePinyin(query);
-    final compactQuery = normalizedQuery.replaceAll(' ', '');
-    return _topics
-        .where((topic) {
-          if (topic.label.toLowerCase().contains(query)) return true;
-          return topic.cards.any((card) {
-            final normalizedPinyin = _normalizePinyin(card.pinyin);
-            return card.chinese.toLowerCase().contains(query) ||
-                (normalizedQuery.isNotEmpty &&
-                    (normalizedPinyin.contains(normalizedQuery) ||
-                        normalizedPinyin
-                            .replaceAll(' ', '')
-                            .contains(compactQuery))) ||
-                card.englishMeaning.toLowerCase().contains(query);
-          });
-        })
-        .toList(growable: false);
-  }
-
-  bool get _showRandomTopic =>
-      _topics.isNotEmpty &&
-      (_topicSearchQuery.isEmpty ||
-          _randomTopicLabel.toLowerCase().contains(_topicSearchQuery));
-
-  LessonLearningProgress? get _selectedLearningProgress {
-    for (final topic in _topics) {
-      if (topic.key == _selectedTopicKey) {
-        return _lessonLearningProgress[topic.lessonId];
+  List<Flashcard> _uniqueCards(Iterable<LessonSummary> decks) {
+    final cards = <String, Flashcard>{};
+    for (final deck in decks) {
+      for (final card in _cardsByLesson[deck.id] ?? const <Flashcard>[]) {
+        final identity =
+            '${card.chinese}\u0000${card.pinyin}\u0000'
+            '${card.englishMeaning.toLowerCase()}';
+        cards.putIfAbsent(identity, () => card);
       }
     }
-    return null;
+    return cards.values.toList(growable: false);
   }
 
-  bool get _showRandomMix =>
-      _topicSearchQuery.isEmpty ||
-      _randomMixLabel.toLowerCase().contains(_topicSearchQuery);
-
-  void _updateTopicSearch(String _) {
-    setState(() {
-      final visibleTopics = _visibleTopics;
-      final selectedIsVisible =
-          (_selectedTopicKey == _randomTopicKey && _showRandomTopic) ||
-          (_selectedTopicKey == _randomMixKey && _showRandomMix) ||
-          visibleTopics.any((topic) => topic.key == _selectedTopicKey);
-      if (!selectedIsVisible) {
-        _selectedTopicKey = _showRandomTopic
-            ? _randomTopicKey
-            : _showRandomMix
-            ? _randomMixKey
-            : visibleTopics.isEmpty
-            ? null
-            : visibleTopics.first.key;
-      }
-    });
-  }
-
-  void _clearTopicSearch() {
-    _topicSearchController.clear();
-    _updateTopicSearch('');
-  }
-
-  Future<void> _startPractice() async {
-    final selectedTopicKey = _selectedTopicKey;
-    if (_transitioning || selectedTopicKey == null || _answerPool.isEmpty) {
-      return;
-    }
+  Future<void> _startPractice(
+    List<LessonSummary> decks, {
+    bool randomMix = false,
+    bool randomDeck = false,
+  }) async {
+    if (_transitioning || decks.isEmpty) return;
     _audioRequestId++;
     setState(() {
       _transitioning = true;
       _playing = false;
+      _startError = null;
     });
     try {
       await _pronunciationService.stop();
     } catch (error) {
       debugPrint('Listening practice pronunciation stop failed: $error');
     }
-    if (!mounted || selectedTopicKey != _selectedTopicKey) return;
+    if (!mounted) return;
 
-    late final List<Flashcard> source;
-    String? activeTopicLabel;
-    if (selectedTopicKey == _randomMixKey) {
-      source = List<Flashcard>.of(_answerPool)..shuffle(_random);
-    } else if (selectedTopicKey == _randomTopicKey) {
-      if (_topics.isEmpty) return;
-      final topic = _topics[_random.nextInt(_topics.length)];
-      source = List<Flashcard>.of(topic.cards);
-      activeTopicLabel = topic.label;
-    } else {
-      final topic = _topics.firstWhere(
-        (topic) => topic.key == selectedTopicKey,
-      );
-      source = List<Flashcard>.of(topic.cards);
-      activeTopicLabel = topic.label;
+    final available = decks
+        .where((deck) => (_cardsByLesson[deck.id] ?? const []).isNotEmpty)
+        .toList(growable: false);
+    if (available.isEmpty) {
+      setState(() {
+        _transitioning = false;
+        _startError = 'This deck has no listening cards. Choose another deck.';
+      });
+      return;
     }
+    final deck = randomDeck
+        ? available[_random.nextInt(available.length)]
+        : available.first;
+    final source = randomMix
+        ? (_uniqueCards(available)..shuffle(_random))
+        : List<Flashcard>.of(_cardsByLesson[deck.id]!);
+    final answerPool = randomMix
+        ? source
+        : _uniqueCards(
+            _topics.where(
+              (topic) =>
+                  topic.isSentencePractice == deck.isSentencePractice &&
+                  topic.hskLevel <= deck.hskLevel,
+            ),
+          );
     final sessionSize = widget.sessionSize.clamp(1, source.length);
-    final cards = source.take(sessionSize).toList(growable: false);
     setState(() {
-      _cards = cards;
-      _activeTopicLabel = activeTopicLabel;
+      _lastDecks = decks;
+      _lastRandomMix = randomMix;
+      _lastRandomDeck = randomDeck;
+      _cards = source.take(sessionSize).toList(growable: false);
+      _answerPool = answerPool;
+      _activeTopicLabel = randomMix
+          ? _randomMixLabel
+          : _flashcardDeckTitle(deck);
       _sessionStarted = true;
       _resetSessionState();
       _transitioning = false;
@@ -337,8 +273,19 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     } catch (error) {
       debugPrint('Listening practice pronunciation stop failed: $error');
     }
+    Map<int, LessonLearningProgress>? learningProgress;
+    try {
+      learningProgress = await widget.progressRepository
+          ?.learningProgressForLessons(
+            widget.lessonRepository,
+            _topics.map((topic) => topic.id),
+          );
+    } catch (error) {
+      debugPrint('Listening deck progress refresh failed: $error');
+    }
     if (!mounted) return;
     setState(() {
+      if (learningProgress != null) _lessonLearningProgress = learningProgress;
       _cards = const [];
       _activeTopicLabel = null;
       _sessionStarted = false;
@@ -443,7 +390,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     try {
       await widget.studyService?.recordCard(
         _card,
-        hskLevel: _maxHskLevel,
+        hskLevel: _cardHskLevels[_card]!,
         rating: correct ? ReviewRating.good : ReviewRating.again,
         submissionKey: 'listening:$_practiceRunId:$_position',
       );
@@ -497,23 +444,21 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     });
   }
 
-  Future<void> _practiceAgain() => _startPractice();
+  Future<void> _practiceAgain() => _startPractice(
+    _lastDecks,
+    randomMix: _lastRandomMix,
+    randomDeck: _lastRandomDeck,
+  );
 
   @override
   Widget build(BuildContext context) => _BackNavigationScope(
     active: _sessionStarted,
     blocked: _transitioning,
     onBack: () => unawaited(_chooseAnotherTopic()),
-    child: ColoredBox(
+    child: Material(
       key: const Key('listening-practice-page'),
       color: AppColors.background,
-      child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _loadFailed
-          ? _buildLoadError()
-          : _answerPool.isEmpty
-          ? _buildEmptyState()
-          : !_sessionStarted
+      child: !_sessionStarted
           ? _buildSetup()
           : _complete
           ? _buildSummary()
@@ -521,272 +466,65 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
     ),
   );
 
-  Widget _buildLoadError() => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: _AppErrorState(
-        key: const Key('listening-load-error'),
-        title: 'Listening practice could not be loaded',
-        message: 'Your saved lessons are still safe. Please try again.',
-        onRetry: _loadPractice,
-        retryKey: const Key('listening-load-retry'),
-      ),
-    ),
-  );
-
-  Widget _buildSetup() => SingleChildScrollView(
-    padding: const EdgeInsets.all(24),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildSetup() => _FlashcardLibrary(
+    listening: true,
+    enabled: !_transitioning,
+    topics: _topics,
+    sentenceMode: _sentenceMode,
+    searchController: _topicSearchController,
+    hskFilter: _libraryHskFilter,
+    cardsByLesson: _cardsByLesson,
+    onModeChanged: (value) => setState(() {
+      _sentenceMode = value;
+      _topicSearchController.clear();
+      _startError = null;
+    }),
+    onLevelChanged: (value) => setState(() => _libraryHskFilter = value),
+    onSearchChanged: () => setState(() {}),
+    onClearSearch: () => setState(() => _topicSearchController.clear()),
+    onShowAll: () => setState(() {
+      _libraryHskFilter = null;
+      _topicSearchController.clear();
+    }),
+    loading: _loading,
+    loadFailed: _loadFailed,
+    learningProgress: _lessonLearningProgress,
+    onOpen: (deck) => unawaited(_startPractice([deck])),
+    onRetry: () => unawaited(_loadPractice()),
+    actions: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: [
-            const _AppPageHeader(title: 'Listening practice', hanzi: '听力练习'),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Icon(
-                      Icons.headphones_rounded,
-                      size: 48,
-                      color: AppColors.gold,
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Choose what to listen for',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.text,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Pick a lesson for a 20-word listening session, let '
-                      'Random topic choose a lesson, or use Random mix to '
-                      'combine lessons.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.muted, height: 1.4),
-                    ),
-                    const SizedBox(height: 24),
-                    DropdownButtonFormField<int>(
-                      key: const Key('listening-hsk-range'),
-                      initialValue: _maxHskLevel,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'HSK range',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: [
-                        for (var level = 1; level <= 6; level++)
-                          DropdownMenuItem(
-                            value: level,
-                            child: Text(
-                              level == 6 ? 'All levels' : 'Up to HSK $level',
-                            ),
-                          ),
-                      ],
-                      onChanged: _transitioning
-                          ? null
-                          : (value) {
-                              if (value == null || value == _maxHskLevel) {
-                                return;
-                              }
-                              _maxHskLevel = value;
-                              unawaited(_loadPractice());
-                            },
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      '${_topics.length} lessons available',
-                      key: const Key('listening-lesson-count'),
-                      style: TextStyle(color: AppColors.muted),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      key: const Key('listening-topic-search'),
-                      enabled: !_transitioning,
-                      controller: _topicSearchController,
-                      onChanged: _updateTopicSearch,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: 'Search lessons, Hanzi, pinyin, or English',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _topicSearchController.text.isEmpty
-                            ? null
-                            : IconButton(
-                                key: const Key('listening-topic-search-clear'),
-                                tooltip: 'Clear search',
-                                onPressed: _transitioning
-                                    ? null
-                                    : _clearTopicSearch,
-                                icon: const Icon(Icons.close),
-                              ),
-                        filled: true,
-                        fillColor: AppColors.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: AppColors.border),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    DropdownButtonFormField<String>(
-                      key: const Key('listening-topic-picker'),
-                      initialValue: _selectedTopicKey,
-                      isExpanded: true,
-                      hint: Text(
-                        _topicSearchQuery.isEmpty
-                            ? 'Choose a topic'
-                            : 'No matching topics',
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: 'Lesson or topic',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: [
-                        if (_showRandomTopic)
-                          const DropdownMenuItem(
-                            value: _randomTopicKey,
-                            child: Row(
-                              children: [
-                                Icon(Icons.casino_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text(_randomTopicLabel),
-                              ],
-                            ),
-                          ),
-                        if (_showRandomMix)
-                          const DropdownMenuItem(
-                            value: _randomMixKey,
-                            child: Row(
-                              children: [
-                                Icon(Icons.shuffle_rounded, size: 18),
-                                SizedBox(width: 8),
-                                Text(_randomMixLabel),
-                              ],
-                            ),
-                          ),
-                        for (final topic in _visibleTopics)
-                          DropdownMenuItem(
-                            value: topic.key,
-                            child: _buildTopicChoice(topic),
-                          ),
-                      ],
-                      onChanged:
-                          _transitioning ||
-                              (!_showRandomTopic &&
-                                  !_showRandomMix &&
-                                  _visibleTopics.isEmpty)
-                          ? null
-                          : (value) =>
-                                setState(() => _selectedTopicKey = value),
-                    ),
-                    if (_selectedLearningProgress case final progress?) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        '${progress.learnedCards} of ${progress.totalCards} words learned',
-                        key: const Key('listening-learned-count'),
-                        style: TextStyle(color: AppColors.teal),
-                      ),
-                    ],
-                    if (!_showRandomTopic &&
-                        !_showRandomMix &&
-                        _visibleTopics.isEmpty) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        'No listening topics match your search.',
-                        key: const Key('listening-topic-search-empty'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.muted),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    FilledButton.icon(
-                      key: const Key('listening-start-practice'),
-                      onPressed: _transitioning || _selectedTopicKey == null
-                          ? null
-                          : _startPractice,
-                      icon: _transitioning
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.play_arrow_rounded),
-                      label: const Text('Start listening'),
-                    ),
-                  ],
-                ),
-              ),
+            OutlinedButton.icon(
+              key: const Key('listening-random-deck'),
+              onPressed: _transitioning || _visibleDecks.isEmpty
+                  ? null
+                  : () => _startPractice(_visibleDecks, randomDeck: true),
+              icon: const Icon(Icons.casino_outlined),
+              label: const Text('Random deck'),
+            ),
+            OutlinedButton.icon(
+              key: const Key('listening-random-mix'),
+              onPressed: _transitioning || _visibleDecks.isEmpty
+                  ? null
+                  : () => _startPractice(_visibleDecks, randomMix: true),
+              icon: const Icon(Icons.shuffle_rounded),
+              label: const Text(_randomMixLabel),
             ),
           ],
         ),
-      ),
-    ),
-  );
-
-  Widget _buildTopicChoice(_ListeningTopic topic) {
-    final progress = _lessonLearningProgress[topic.lessonId];
-    if (progress == null) {
-      return Text(topic.label, overflow: TextOverflow.ellipsis);
-    }
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(topic.label, overflow: TextOverflow.ellipsis),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            '${progress.learnedCards}/${progress.totalCards}',
-            overflow: TextOverflow.ellipsis,
-            semanticsLabel:
-                '${progress.learnedCards} of ${progress.totalCards} words learned',
-            style: TextStyle(fontSize: 12, color: AppColors.teal),
+        if (_startError != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            _startError!,
+            key: const Key('listening-start-error'),
+            style: TextStyle(color: AppColors.red),
           ),
-        ),
+        ],
       ],
-    );
-  }
-
-  Widget _buildEmptyState() => SingleChildScrollView(
-    padding: const EdgeInsets.all(24),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              children: [
-                Icon(Icons.hearing_rounded, size: 52, color: AppColors.gold),
-                const SizedBox(height: 16),
-                Text(
-                  'No listening words yet',
-                  style: TextStyle(
-                    color: AppColors.text,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'No vocabulary lessons are available in this HSK range. '
-                  'Reload Listening Practice to try again.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.muted),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     ),
   );
 
@@ -807,7 +545,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
               ),
             ),
             Text(
-              '$_selectedTopicLabel · ${_position + 1} of ${_cards.length}',
+              '$_activeTopicLabel · ${_position + 1} of ${_cards.length}',
               key: const Key('listening-position'),
               style: TextStyle(color: AppColors.muted),
             ),
@@ -951,6 +689,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       ],
       if (_saveError != null)
         _AppInlineError(
+          key: const Key('listening-save-error'),
           message: _saveError!,
           onRetry: () => _saveAnswer(_pendingMeaning),
           retryKey: const Key('listening-save-retry'),
@@ -1087,8 +826,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
                     OutlinedButton.icon(
                       key: const Key('listening-choose-topic'),
                       onPressed: _transitioning ? null : _chooseAnotherTopic,
-                      icon: const Icon(Icons.tune_rounded),
-                      label: const Text('Choose topic'),
+                      icon: const Icon(Icons.style_outlined),
+                      label: const Text('Choose deck'),
                     ),
                   ],
                 ),
@@ -1099,18 +838,4 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       ),
     ),
   );
-}
-
-class _ListeningTopic {
-  const _ListeningTopic({
-    required this.key,
-    required this.label,
-    required this.lessonId,
-    required this.cards,
-  });
-
-  final String key;
-  final String label;
-  final int lessonId;
-  final List<Flashcard> cards;
 }

@@ -149,7 +149,7 @@ class _LessonsPageState extends State<LessonsPage> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Delete lesson?'),
+          title: const Text('Delete deck?'),
           content: Text(
             'Delete “${lesson.title}” and its cards, saved progress, and review history? '
             'Its cards will also be removed from daily review. This cannot be undone.',
@@ -162,7 +162,7 @@ class _LessonsPageState extends State<LessonsPage> {
             FilledButton(
               key: const Key('confirm-delete-lesson'),
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Delete lesson'),
+              child: const Text('Delete deck'),
             ),
           ],
         ),
@@ -180,12 +180,12 @@ class _LessonsPageState extends State<LessonsPage> {
       widget.onProgressChanged?.call();
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Lesson deleted.')));
+      ).showSnackBar(const SnackBar(content: Text('Deck deleted.')));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not delete the lesson. Please try again.'),
+          content: Text('Could not delete the deck. Please try again.'),
         ),
       );
     } finally {
@@ -351,9 +351,7 @@ class _LessonsPageState extends State<LessonsPage> {
       _activeSessions = sessions;
       _lessonIsSentence = lesson.summary.isSentencePractice;
       _sentenceMode = lesson.summary.isSentencePractice;
-      _lessonTitle = _lessonIsSentence
-          ? lesson.summary.theme
-          : lesson.summary.title;
+      _lessonTitle = _flashcardDeckTitle(lesson.summary);
       _cards = lesson.cards;
       _lessonGuide = lesson.guide;
       _showLessonGuide = lesson.guide != null && !resumed && index == 0;
@@ -428,32 +426,8 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-  List<LessonSummary> get _modeTopics {
-    final topics = _topics
-        .where((topic) => topic.isSentencePractice == _sentenceMode)
-        .toList(growable: false);
-    if (_sentenceMode) topics.sort((a, b) => a.id.compareTo(b.id));
-    return topics;
-  }
-
-  List<LessonSummary> get _visibleTopics {
-    final query = _lessonSearchController.text.trim().toLowerCase();
-    return _modeTopics
-        .where((topic) {
-          if (!_sentenceMode &&
-              _libraryHskFilter != null &&
-              topic.hskLevel != _libraryHskFilter) {
-            return false;
-          }
-          if (query.isEmpty) return true;
-          return topic.title.toLowerCase().contains(query) ||
-              topic.theme.toLowerCase().contains(query) ||
-              (!_sentenceMode &&
-                  ('hsk ${topic.hskLevel}'.contains(query) ||
-                      topic.hskLevel.toString() == query));
-        })
-        .toList(growable: false);
-  }
+  List<LessonSummary> get _modeTopics =>
+      _flashcardDecksForMode(_topics, _sentenceMode);
 
   Future<void> _savePosition(int index) async {
     final session = _session;
@@ -640,243 +614,31 @@ class _LessonsPageState extends State<LessonsPage> {
     ),
   );
 
-  Widget _buildSetup() => SingleChildScrollView(
-    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-    padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 20 : 32),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const _AppPageHeader(title: 'Lesson Library', hanzi: '课程'),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final sentenceMode in [false, true])
-                  ChoiceChip(
-                    key: Key(
-                      sentenceMode
-                          ? 'sentence-practice-mode'
-                          : 'vocabulary-lesson-mode',
-                    ),
-                    label: Text(
-                      sentenceMode ? 'Sentence practice' : 'Vocabulary lessons',
-                    ),
-                    selected: _sentenceMode == sentenceMode,
-                    onSelected: (_) => setState(() {
-                      _sentenceMode = sentenceMode;
-                      _lessonSearchController.clear();
-                    }),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _sentenceMode
-                  ? '100 everyday Mandarin sentences · 10 short decks'
-                  : 'HSK 1–6 · 20 words per bundled lesson',
-              style: TextStyle(
-                color: AppColors.text,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _sentenceMode
-                  ? 'Practice common conversations offline. Tap a card for pinyin '
-                        'and English, then rate how well you remember it.'
-                  : 'Lessons are numbered within each HSK level. Study offline with Tatoeba '
-                        'examples and original sentences where needed.',
-              style: TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 24),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              child: _buildLessonLibrary(),
-            ),
-          ],
-        ),
-      ),
-    ),
+  Widget _buildSetup() => _FlashcardLibrary(
+    topics: _topics,
+    sentenceMode: _sentenceMode,
+    searchController: _lessonSearchController,
+    hskFilter: _libraryHskFilter,
+    onModeChanged: (value) => setState(() {
+      _sentenceMode = value;
+      _lessonSearchController.clear();
+    }),
+    onLevelChanged: (value) => setState(() => _libraryHskFilter = value),
+    onSearchChanged: () => setState(() {}),
+    onClearSearch: () => setState(() => _lessonSearchController.clear()),
+    onShowAll: () => setState(() {
+      _libraryHskFilter = null;
+      _lessonSearchController.clear();
+    }),
+    loading: _loadingTopics,
+    loadFailed: _libraryLoadFailed,
+    learningProgress: _lessonLearningProgress,
+    activeLessonIds: _activeSessions.keys.toSet(),
+    busyLessonIds: _deletingLessonIds,
+    onOpen: (topic) => unawaited(_startLesson(topic)),
+    onDelete: (topic) => unawaited(_deleteLesson(topic)),
+    onRetry: _beginTopicsLoad,
   );
-
-  Widget _buildLessonLibrary() {
-    if (_loadingTopics) {
-      return _LessonLibraryStateCard(
-        key: Key('lesson-library-loading-state'),
-        accent: AppColors.red,
-        icon: SizedBox.square(
-          dimension: 25,
-          child: CircularProgressIndicator(
-            color: AppColors.red,
-            strokeWidth: 2.5,
-            semanticsLabel: 'Loading saved lessons',
-          ),
-        ),
-        title: 'Loading your lesson library',
-        message: 'Finding your saved lessons and current progress.',
-      );
-    }
-    if (_libraryLoadFailed) {
-      return _AppErrorState(
-        key: const Key('lesson-library-error-state'),
-        title: _AppErrorCopy.lessonsTitle,
-        message: _AppErrorCopy.lessonsMessage,
-        onRetry: _beginTopicsLoad,
-        retryKey: const Key('lesson-library-retry'),
-      );
-    }
-    if (_modeTopics.isEmpty) {
-      return _LessonLibraryStateCard(
-        key: Key('lesson-library-empty-state'),
-        accent: AppColors.teal,
-        icon: Icon(Icons.menu_book_outlined, size: 30, color: AppColors.teal),
-        title: _sentenceMode
-            ? 'No sentence decks available'
-            : 'No saved lessons yet',
-        message: _sentenceMode
-            ? 'Reopen Lessons after restoring your bundled content.'
-            : 'Reopen Lessons to load the bundled vocabulary library.',
-      );
-    }
-
-    final visibleTopics = _visibleTopics;
-    final modeTopics = _modeTopics;
-    final noun = _sentenceMode ? 'sentence deck' : 'vocabulary lesson';
-    final count = visibleTopics.length == modeTopics.length
-        ? '${modeTopics.length}'
-        : '${visibleTopics.length} of ${modeTopics.length}';
-    return Column(
-      key: const Key('lesson-library-content'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 12,
-          children: [
-            Text(
-              '$count $noun${modeTopics.length == 1 ? '' : 's'}',
-              key: const Key('lesson-library-count'),
-              style: TextStyle(
-                color: AppColors.text,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if ((!_sentenceMode && _libraryHskFilter != null) ||
-                _lessonSearchController.text.trim().isNotEmpty)
-              TextButton(
-                key: const Key('lesson-library-show-all'),
-                onPressed: () => setState(() {
-                  _libraryHskFilter = null;
-                  _lessonSearchController.clear();
-                }),
-                child: const Text('Show all lessons'),
-              ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          key: const Key('lesson-library-search'),
-          controller: _lessonSearchController,
-          onChanged: (_) => setState(() {}),
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: _sentenceMode
-                ? 'Search sentence topics'
-                : 'Search lesson titles, topics, or HSK levels',
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: _lessonSearchController.text.isEmpty
-                ? null
-                : IconButton(
-                    key: const Key('lesson-library-search-clear'),
-                    tooltip: 'Clear search',
-                    onPressed: () {
-                      _lessonSearchController.clear();
-                      setState(() {});
-                    },
-                    icon: const Icon(Icons.close),
-                  ),
-            filled: true,
-            fillColor: AppColors.surface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppColors.outline),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (!_sentenceMode)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            key: const Key('lesson-library-level-filter'),
-            child: Row(
-              children: [
-                _LevelChip(
-                  label: 'All levels',
-                  selected: _libraryHskFilter == null,
-                  onSelected: () => setState(() => _libraryHskFilter = null),
-                ),
-                for (var level = 1; level <= 6; level++) ...[
-                  const SizedBox(width: 8),
-                  _LevelChip(
-                    label: 'HSK $level',
-                    selected: _libraryHskFilter == level,
-                    onSelected: () => setState(() => _libraryHskFilter = level),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        const SizedBox(height: 14),
-        if (visibleTopics.isEmpty &&
-            _lessonSearchController.text.trim().isNotEmpty)
-          _LessonLibraryStateCard(
-            key: const Key('lesson-library-search-empty-state'),
-            accent: AppColors.teal,
-            icon: Icon(Icons.search_off, size: 30, color: AppColors.teal),
-            title: 'No lessons found',
-            message:
-                'Try another lesson title, topic, or HSK level, or clear the '
-                'current level filter.',
-          )
-        else if (visibleTopics.isEmpty)
-          _LessonLibraryStateCard(
-            key: const Key('lesson-library-filtered-empty-state'),
-            accent: AppColors.teal,
-            icon: Icon(
-              Icons.filter_alt_outlined,
-              size: 30,
-              color: AppColors.teal,
-            ),
-            title: 'No HSK $_libraryHskFilter lessons yet',
-            message:
-                'No saved lessons match this level. Select All levels to '
-                'return to the full library.',
-          )
-        else
-          for (final (index, topic) in visibleTopics.indexed) ...[
-            _LessonLibraryCard(
-              summary: topic,
-              learningProgress: _lessonLearningProgress[topic.id],
-              isActive: _activeSessions.containsKey(topic.id),
-              onPressed: _deletingLessonIds.contains(topic.id)
-                  ? null
-                  : () => _startLesson(topic),
-              onDelete:
-                  topic.isUserGenerated &&
-                      !_deletingLessonIds.contains(topic.id)
-                  ? () => _deleteLesson(topic)
-                  : null,
-            ),
-            if (index != visibleTopics.length - 1) const SizedBox(height: 10),
-          ],
-      ],
-    );
-  }
 
   Widget _buildFlashcards() => Column(
     children: [
@@ -885,7 +647,7 @@ class _LessonsPageState extends State<LessonsPage> {
         child: Row(
           children: [
             IconButton(
-              tooltip: 'Back to lessons',
+              tooltip: 'Back to flashcards',
               onPressed: _savingAnswer || _startingNextLesson
                   ? null
                   : _backToLessons,
@@ -934,7 +696,7 @@ class _LessonsPageState extends State<LessonsPage> {
             children: [
               ChoiceChip(
                 key: const Key('lesson-guide-tab'),
-                label: const Text('Lesson guide'),
+                label: const Text('Study guide'),
                 selected: _showLessonGuide,
                 onSelected: (_) => setState(() => _showLessonGuide = true),
               ),
@@ -1164,11 +926,7 @@ class _LessonsPageState extends State<LessonsPage> {
             card,
       ],
       ratings: _sessionRatings,
-      nextLessonTitle: next == null
-          ? null
-          : next.isSentencePractice
-          ? next.theme
-          : next.title,
+      nextLessonTitle: next == null ? null : _flashcardDeckTitle(next),
       openingNextLesson: _startingNextLesson,
       onNextLesson: next == null || _savingAnswer || _startingNextLesson
           ? null
@@ -1220,181 +978,6 @@ class _SummaryStat extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: AppColors.muted),
             ),
           ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _LessonLibraryStateCard extends StatelessWidget {
-  const _LessonLibraryStateCard({
-    super.key,
-    required this.accent,
-    required this.icon,
-    required this.title,
-    required this.message,
-  });
-
-  final Color accent;
-  final Widget icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    container: true,
-    liveRegion: true,
-    child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: accent.withValues(alpha: .55)),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: .12),
-              shape: BoxShape.circle,
-            ),
-            child: icon,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.text,
-              fontSize: 19,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.muted,
-              fontSize: 13,
-              height: 1.45,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _LessonLibraryCard extends StatelessWidget {
-  const _LessonLibraryCard({
-    required this.summary,
-    required this.isActive,
-    required this.onPressed,
-    this.learningProgress,
-    this.onDelete,
-  });
-
-  final LessonSummary summary;
-  final LessonLearningProgress? learningProgress;
-  final bool isActive;
-  final VoidCallback? onPressed;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    child: InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final icon = Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: AppColors.red.withValues(alpha: .12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.menu_book_outlined, color: AppColors.red),
-            );
-            final details = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  summary.isSentencePractice ? summary.theme : summary.title,
-                  style: TextStyle(
-                    color: AppColors.text,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  summary.isSentencePractice
-                      ? '10 sentences · Everyday Mandarin'
-                      : '${summary.theme} · HSK ${summary.hskLevel}',
-                  style: TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-                if (learningProgress case final progress?) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '${progress.learnedCards} of ${progress.totalCards} '
-                    '${summary.isSentencePractice ? 'sentences' : 'words'} learned',
-                    key: Key('lesson-learned-count-${summary.id}'),
-                    style: TextStyle(fontSize: 12, color: AppColors.teal),
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: progress.fraction,
-                    semanticsLabel: 'Learned progress for ${summary.title}',
-                    color: AppColors.teal,
-                    backgroundColor: AppColors.surfaceLight,
-                  ),
-                ],
-              ],
-            );
-            final actions = Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (summary.isUserGenerated)
-                  IconButton(
-                    key: Key('delete-lesson-${summary.id}'),
-                    tooltip: 'Delete lesson',
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-                FilledButton(
-                  onPressed: onPressed,
-                  child: Text(isActive ? 'Resume' : 'Start'),
-                ),
-              ],
-            );
-            final compact = constraints.maxWidth < 380;
-            final heading = Row(
-              children: [
-                icon,
-                const SizedBox(width: 14),
-                Expanded(child: details),
-                if (!compact) ...[const SizedBox(width: 8), actions],
-              ],
-            );
-            if (!compact) return heading;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                heading,
-                const SizedBox(height: 12),
-                Align(alignment: Alignment.centerRight, child: actions),
-              ],
-            );
-          },
         ),
       ),
     ),

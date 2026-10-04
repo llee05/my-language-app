@@ -346,7 +346,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirmed = await _confirm(
       title: 'Reset learner setup?',
       message:
-          'Your learner profile will be removed. Lessons and other local data will be kept.',
+          'Your learner profile will be removed. Flashcards and other local data will be kept.',
       action: 'Reset setup',
     );
     if (confirmed && mounted) await _performOnboardingReset();
@@ -373,7 +373,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirmed = await _confirm(
       title: 'Reset your account?',
       message:
-          'This permanently deletes your learner profile, study progress, review history, custom lessons, settings, and saved AI configuration (including API keys) from this device. '
+          'This permanently deletes your learner profile, study progress, review history, custom decks, settings, and saved AI configuration (including API keys) from this device. '
           'Export a backup first if you want to restore your learning data later. API keys are not included in backups. '
           'This cannot be undone without a backup.',
       action: 'Continue',
@@ -489,14 +489,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 12),
                 Text('Exported $date'),
                 Text(
-                  '${preview.lessonCount} lessons · ${preview.cardCount} cards',
+                  '${preview.lessonCount} decks · ${preview.cardCount} cards',
                 ),
                 Text(
                   '${preview.reviewCount} reviews · ${preview.sessionCount} sessions',
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Restoring replaces the profile, lessons, review history, progress, and learning settings on this installation. API keys are not changed.',
+                  'Restoring replaces the profile, decks, review history, progress, and learning settings on this installation. API keys are not changed.',
                 ),
               ],
             ),
@@ -812,7 +812,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _SettingsCard(
             title: 'Offline Mandarin voices',
             subtitle:
-                'Download the local Kokoro engine. Lessons use the system Mandarin voice whenever the pack is unavailable.',
+                'Download the local Kokoro engine. Flashcards use the system Mandarin voice whenever the pack is unavailable.',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1192,7 +1192,7 @@ class _AccountResetConfirmationDialogState
         children: [
           const Text(
             'Type RESET to permanently delete your local account data. '
-            'You will return to learner setup. Bundled lessons and downloaded voices will still be available.',
+            'You will return to learner setup. Bundled decks and downloaded voices will still be available.',
           ),
           const SizedBox(height: 20),
           TextField(

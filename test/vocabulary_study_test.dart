@@ -768,7 +768,6 @@ void main() {
             progressRepository: memory,
             studyService: widgetStudy(),
             settingsRepository: const _Settings(),
-            maxHskLevel: 1,
             pronunciationService: _SilentVoice(),
             sessionSize: 1,
             random: Random(2),
@@ -777,10 +776,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const Key('listening-start-practice')),
-    );
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.ensureVisible(find.byKey(const Key('listening-start-1')));
+    await tester.tap(find.byKey(const Key('listening-start-1')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(
       find.byKey(const Key('listening-reveal-answer')),

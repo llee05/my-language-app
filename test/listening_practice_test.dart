@@ -11,6 +11,7 @@ import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
+import 'package:mylanguageapp/services/vocabulary_study_service.dart';
 
 void main() {
   for (final width in [390.0, 1000.0]) {
@@ -54,34 +55,62 @@ void main() {
             ],
           ),
       ];
+      final sentenceDecks = <Lesson>[
+        for (final (index, row)
+            in (jsonDecode(
+                      File(
+                        'assets/data/sentence_practice.json',
+                      ).readAsStringSync(),
+                    )
+                    as List)
+                .indexed)
+          Lesson(
+            summary: LessonSummary(
+              id: 252 + index,
+              title: 'Sentence practice: ${row['topic']}',
+              theme: row['topic'] as String,
+              hskLevel: 1,
+              isSentencePractice: true,
+            ),
+            cards: [
+              for (final sentence in row['sentences'] as List)
+                Flashcard(
+                  chinese: sentence['chinese'] as String,
+                  pinyin: sentence['pinyin'] as String,
+                  englishMeaning: sentence['english'] as String,
+                ),
+            ],
+          ),
+      ];
       final pronunciation = _ListeningPronunciationService();
       await tester.pumpWidget(
         MaterialApp(
           home: ListeningPracticePage(
-            lessonRepository: _ListeningLessonRepository(lessons: lessons),
+            lessonRepository: _ListeningLessonRepository(
+              lessons: [...lessons, ...sentenceDecks],
+            ),
             progressRepository: const _ListeningProgressRepository(),
             settingsRepository: const _ListeningSettingsRepository(),
-            maxHskLevel: 1,
             pronunciationService: pronunciation,
           ),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('8 lessons available'), findsOneWidget);
-      expect(find.text('HSK 1 · Lesson 001'), findsOneWidget);
-      expect(find.text('7/20'), findsOneWidget);
+      expect(find.text('251 vocabulary decks'), findsOneWidget);
+      expect(find.byType(DropdownButton<int>), findsNothing);
+      expect(find.byType(DropdownButton<String>), findsNothing);
+      expect(find.text('HSK 1 · Deck 001'), findsOneWidget);
       expect(find.text('7 of 20 words learned'), findsOneWidget);
-      final picker = tester.widget<DropdownButton<String>>(
-        find.byType(DropdownButton<String>),
-      );
-      expect(picker.items, hasLength(10));
-      expect(picker.items!.map((item) => item.value).toSet(), hasLength(10));
+      await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'HSK 1'));
+      await tester.tap(find.widgetWithText(ChoiceChip, 'HSK 1'));
+      await tester.pumpAndSettle();
+      expect(find.text('8 of 251 vocabulary decks'), findsOneWidget);
 
-      final start = find.byKey(const Key('listening-start-practice'));
+      final start = find.byKey(const Key('listening-start-1'));
       await tester.ensureVisible(start);
       await tester.tap(start);
       await tester.pumpAndSettle();
-      expect(find.text('HSK 1 · Lesson 001 · 1 of 20'), findsOneWidget);
+      expect(find.text('HSK 1 · Deck 001 · 1 of 20'), findsOneWidget);
       for (var index = 0; index < 20; index++) {
         expect(
           pronunciation.requests.last.$1,
@@ -99,28 +128,50 @@ void main() {
       expect(pronunciation.requests, hasLength(20));
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      final range = find.byKey(const Key('listening-hsk-range'));
-      await tester.ensureVisible(range);
-      await tester.tap(range);
+      await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'All levels'));
+      await tester.tap(find.widgetWithText(ChoiceChip, 'All levels'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('All levels').last);
-      await tester.pumpAndSettle();
-      expect(find.text('251 lessons available'), findsOneWidget);
+      expect(find.text('251 vocabulary decks'), findsOneWidget);
       await tester.enterText(
-        find.byKey(const Key('listening-topic-search')),
-        'HSK 6 · Lesson 125',
+        find.byKey(const Key('listening-library-search')),
+        'HSK 6 · Deck 125',
       );
       await tester.pumpAndSettle();
-      await tester.ensureVisible(start);
-      await tester.tap(start);
+      final lastDeck = find.byKey(const Key('listening-start-251'));
+      await tester.ensureVisible(lastDeck);
+      await tester.tap(lastDeck);
       await tester.pumpAndSettle();
-      expect(find.text('HSK 6 · Lesson 125 · 1 of 20'), findsOneWidget);
+      expect(find.text('HSK 6 · Deck 125 · 1 of 20'), findsOneWidget);
       expect(pronunciation.requests.last.$1, lessons.last.cards.first.chinese);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      final mode = find.byKey(const Key('sentence-practice-mode'));
+      await tester.ensureVisible(mode);
+      await tester.tap(mode);
+      await tester.pumpAndSettle();
+      expect(find.text('10 sentence decks'), findsOneWidget);
+      expect(
+        find.byKey(const Key('listening-library-level-filter')),
+        findsNothing,
+      );
+      final sentenceStart = find.byKey(const Key('listening-start-252'));
+      await tester.ensureVisible(sentenceStart);
+      await tester.tap(sentenceStart);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Greetings and introductions · 1 of 10'),
+        findsOneWidget,
+      );
+      expect(
+        pronunciation.requests.last.$1,
+        sentenceDecks.first.cards.first.chinese,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
       expect(tester.takeException(), isNull);
     });
   }
 
-  testWidgets('Android Back stops listening and returns to topic selection', (
+  testWidgets('Android Back stops listening and returns to the deck library', (
     tester,
   ) async {
     final pronunciation = _ListeningPronunciationService();
@@ -129,23 +180,22 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 1,
           pronunciationService: pronunciation,
         ),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-start-1')));
     await tester.pumpAndSettle();
     final stops = pronunciation.stopCalls;
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('Choose what to listen for'), findsOneWidget);
+    expect(find.text('Listening practice'), findsOneWidget);
     expect(pronunciation.stopCalls, greaterThan(stops));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('starting listening freezes topic search until audio stops', (
+  testWidgets('starting listening freezes deck controls until audio stops', (
     tester,
   ) async {
     final pronunciation = _ListeningPronunciationService();
@@ -154,24 +204,23 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 3,
           pronunciationService: pronunciation,
         ),
       ),
     );
     await tester.pumpAndSettle();
-    final search = find.byKey(const Key('listening-topic-search'));
+    final search = find.byKey(const Key('listening-library-search'));
     await tester.enterText(search, 'Basics');
     final stopGate = Completer<void>();
     pronunciation.stopGate = stopGate.future;
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-start-1')));
     await tester.pump();
 
     expect(tester.widget<TextField>(search).enabled, isFalse);
     expect(
       tester
           .widget<IconButton>(
-            find.byKey(const Key('listening-topic-search-clear')),
+            find.byKey(const Key('listening-library-search-clear')),
           )
           .onPressed,
       isNull,
@@ -196,16 +245,15 @@ void main() {
           home: ListeningPracticePage(
             lessonRepository: _ListeningLessonRepository(),
             settingsRepository: const _ListeningSettingsRepository(),
-            maxHskLevel: 1,
             pronunciationService: pronunciation,
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Choose what to listen for'), findsOneWidget);
+      expect(find.text('Listening practice'), findsOneWidget);
       expect(pronunciation.requests, isEmpty);
-      await tester.tap(find.byKey(const Key('listening-start-practice')));
+      await tester.tap(find.byKey(const Key('listening-start-1')));
       await tester.pumpAndSettle();
 
       expect(find.text('Listen and choose the meaning'), findsOneWidget);
@@ -260,7 +308,6 @@ void main() {
           settingsRepository: const _ListeningSettingsRepository(
             LearnerSettings(soundEnabled: false),
           ),
-          maxHskLevel: 1,
           pronunciationService: pronunciation,
           sessionSize: 1,
         ),
@@ -268,7 +315,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-start-1')));
     await tester.pumpAndSettle();
 
     expect(pronunciation.requests, isEmpty);
@@ -301,19 +348,15 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 3,
           pronunciationService: pronunciation,
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('listening-topic-picker')));
-    await tester.pumpAndSettle();
-    expect(find.text('Random mix'), findsOneWidget);
-    await tester.tap(find.text('Advanced').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    final start = find.byKey(const Key('listening-start-3'));
+    await tester.ensureVisible(start);
+    await tester.tap(start);
     await tester.pumpAndSettle();
 
     expect(find.text('Advanced · 1 of 1'), findsOneWidget);
@@ -331,7 +374,6 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 3,
           pronunciationService: pronunciation,
         ),
       ),
@@ -339,14 +381,14 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-      find.byKey(const Key('listening-topic-search')),
+      find.byKey(const Key('listening-library-search')),
       'gao ji',
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Advanced'), findsOneWidget);
     expect(find.text('Basics'), findsNothing);
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-start-3')));
     await tester.pumpAndSettle();
 
     expect(find.text('Advanced · 1 of 1'), findsOneWidget);
@@ -359,7 +401,6 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 3,
           pronunciationService: _ListeningPronunciationService(),
         ),
       ),
@@ -367,23 +408,22 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-      find.byKey(const Key('listening-topic-search')),
+      find.byKey(const Key('listening-library-search')),
       'not in any lesson',
     );
     await tester.pump();
 
     expect(
-      find.byKey(const Key('listening-topic-search-empty')),
+      find.byKey(const Key('listening-library-search-empty-state')),
       findsOneWidget,
     );
-    expect(
-      tester
-          .widget<FilledButton>(
-            find.byKey(const Key('listening-start-practice')),
-          )
-          .onPressed,
-      isNull,
-    );
+    expect(find.widgetWithText(FilledButton, 'Listen'), findsNothing);
+    for (final key in ['listening-random-deck', 'listening-random-mix']) {
+      expect(
+        tester.widget<OutlinedButton>(find.byKey(Key(key))).onPressed,
+        isNull,
+      );
+    }
   });
 
   testWidgets('random listening mode shuffles cards from every topic', (
@@ -397,7 +437,6 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 3,
           pronunciationService: pronunciation,
           sessionSize: 4,
           random: _ZeroRandom(),
@@ -406,11 +445,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('listening-topic-picker')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Random mix').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-random-mix')));
     await tester.pumpAndSettle();
 
     expect(find.text('Random mix · 1 of 4'), findsOneWidget);
@@ -433,7 +468,7 @@ void main() {
     });
   });
 
-  testWidgets('random topic mode chooses one focused listening topic', (
+  testWidgets('random deck mode chooses one focused listening deck', (
     tester,
   ) async {
     final pronunciation = _ListeningPronunciationService();
@@ -445,7 +480,6 @@ void main() {
         home: ListeningPracticePage(
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 3,
           pronunciationService: pronunciation,
           sessionSize: 4,
           random: random,
@@ -454,11 +488,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('listening-topic-picker')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Random topic').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-random-deck')));
     await tester.pumpAndSettle();
 
     expect(find.text('Basics · 1 of 3'), findsOneWidget);
@@ -480,56 +510,183 @@ void main() {
     });
   });
 
-  testWidgets('a saved random lesson uses the single random picker mode', (
+  testWidgets(
+    'saved custom decks remain individually available for listening',
+    (tester) async {
+      final pronunciation = _ListeningPronunciationService();
+      addTearDown(pronunciation.dispose);
+      final repository = _ListeningLessonRepository(
+        lessons: const [
+          Lesson(
+            summary: LessonSummary(
+              id: 5,
+              title: 'Random mix · HSK 1',
+              theme: 'Random mix',
+              hskLevel: 1,
+              isUserGenerated: true,
+            ),
+            cards: [
+              Flashcard(
+                id: 51,
+                chinese: '听',
+                pinyin: 'tīng',
+                englishMeaning: 'listen',
+              ),
+            ],
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListeningPracticePage(
+            lessonRepository: repository,
+            settingsRepository: const _ListeningSettingsRepository(),
+            pronunciationService: pronunciation,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Random mix · HSK 1'), findsNWidgets(2));
+      final start = find.byKey(const Key('listening-start-5'));
+      await tester.ensureVisible(start);
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Random mix · HSK 1 · 1 of 1'), findsOneWidget);
+      expect(pronunciation.requests, [const ('听', 1.0)]);
+    },
+  );
+
+  testWidgets('random modes follow the level filter and search', (
     tester,
   ) async {
     final pronunciation = _ListeningPronunciationService();
-    addTearDown(pronunciation.dispose);
-    final repository = _ListeningLessonRepository(
-      lessons: const [
-        Lesson(
-          summary: LessonSummary(
-            id: 5,
-            title: 'Random mix · HSK 1',
-            theme: 'Random mix',
-            hskLevel: 1,
-          ),
-          cards: [
-            Flashcard(
-              id: 51,
-              chinese: '听',
-              pinyin: 'tīng',
-              englishMeaning: 'listen',
-            ),
-          ],
-        ),
-      ],
-    );
-
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
-          lessonRepository: repository,
+          lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
-          maxHskLevel: 1,
           pronunciationService: pronunciation,
+          random: _ZeroRandom(),
         ),
       ),
     );
     await tester.pumpAndSettle();
-
-    final picker = tester.widget<DropdownButton<String>>(
-      find.byType(DropdownButton<String>),
-    );
-    expect(picker.items, hasLength(1));
-    expect(find.text('Random mix'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Random mix · 1 of 1'), findsOneWidget);
-    expect(pronunciation.requests, [const ('听', 1.0)]);
+    for (final randomKey in ['listening-random-deck', 'listening-random-mix']) {
+      final level = find.widgetWithText(ChoiceChip, 'HSK 3');
+      await tester.ensureVisible(level);
+      await tester.tap(level);
+      await tester.pumpAndSettle();
+      expect(find.text('1 of 2 vocabulary decks'), findsOneWidget);
+      expect(find.byKey(const Key('listening-start-1')), findsNothing);
+      await tester.enterText(
+        find.byKey(const Key('listening-library-search')),
+        'gao ji',
+      );
+      final random = find.byKey(Key(randomKey));
+      await tester.ensureVisible(random);
+      await tester.tap(random);
+      await tester.pumpAndSettle();
+      expect(pronunciation.requests.last.$1, '高级');
+      expect(find.textContaining('1 of 1'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const Key('listening-library-search')),
+            )
+            .controller!
+            .text,
+        'gao ji',
+      );
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets(
+    'higher-level listening answers retry with the same submission key',
+    (tester) async {
+      final study = _RecordingListeningStudy()..failNextSave = true;
+      var changed = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListeningPracticePage(
+            lessonRepository: _ListeningLessonRepository(),
+            settingsRepository: const _ListeningSettingsRepository(),
+            pronunciationService: _ListeningPronunciationService(),
+            studyService: study,
+            onProgressChanged: () => changed++,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final start = find.byKey(const Key('listening-start-3'));
+      await tester.ensureVisible(start);
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+      final answer = find.widgetWithText(OutlinedButton, 'advanced');
+      await tester.ensureVisible(answer);
+      await tester.tap(answer);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('listening-save-error')), findsOneWidget);
+      expect(find.byKey(const Key('listening-answer-hanzi')), findsNothing);
+      expect(changed, 0);
+      final retry = find.byKey(const Key('listening-save-retry'));
+      await tester.ensureVisible(retry);
+      await tester.tap(retry);
+      await tester.pumpAndSettle();
+      expect(study.saves, hasLength(2));
+      expect(study.saves.first, study.saves.last);
+      expect(study.saves.last.$1, 31);
+      expect(study.saves.last.$2, 3);
+      expect(study.saves.last.$3, ReviewRating.good);
+      expect(changed, 1);
+      expect(find.text('Correct'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'listening load failures retry and empty decks remain recoverable',
+    (tester) async {
+      final repository = _FailOnceListeningLessons();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListeningPracticePage(
+            lessonRepository: repository,
+            settingsRepository: const _ListeningSettingsRepository(),
+            pronunciationService: _ListeningPronunciationService(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('listening-library-error-state')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('listening-library-retry')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('listening-library-content')),
+        findsOneWidget,
+      );
+      final start = find.byKey(const Key('listening-start-9'));
+      await tester.ensureVisible(start);
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('listening-start-error')), findsOneWidget);
+      expect(tester.widget<FilledButton>(start).onPressed, isNotNull);
+      final basics = find.byKey(const Key('listening-start-1'));
+      await tester.ensureVisible(basics);
+      await tester.tap(basics);
+      await tester.pumpAndSettle();
+      expect(find.text('Basics · 1 of 3'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets('listening is available from the app sidebar', (tester) async {
     var selected = -1;
@@ -686,4 +843,55 @@ class _ZeroRandom implements Random {
 
   @override
   int nextInt(int max) => 0;
+}
+
+class _RecordingListeningStudy extends VocabularyStudyService {
+  _RecordingListeningStudy()
+    : super(
+        lessons: _ListeningLessonRepository(),
+        progress: const _ListeningProgressRepository(),
+      );
+  bool failNextSave = false;
+  final saves = <(int, int, ReviewRating, String)>[];
+  @override
+  Future<Flashcard> recordCard(
+    Flashcard word, {
+    required int hskLevel,
+    required ReviewRating rating,
+    required String submissionKey,
+  }) async {
+    saves.add((word.id, hskLevel, rating, submissionKey));
+    if (failNextSave) {
+      failNextSave = false;
+      throw StateError('Temporary save failure');
+    }
+    return word;
+  }
+}
+
+class _FailOnceListeningLessons extends _ListeningLessonRepository {
+  _FailOnceListeningLessons()
+    : super(
+        lessons: [
+          ..._ListeningLessonRepository.defaultLessons,
+          const Lesson(
+            summary: LessonSummary(
+              id: 9,
+              title: 'Empty deck',
+              theme: 'Empty',
+              hskLevel: 1,
+            ),
+            cards: [],
+          ),
+        ],
+      );
+  bool fail = true;
+  @override
+  Future<List<LessonSummary>> topics() async {
+    if (fail) {
+      fail = false;
+      throw StateError('Temporary load failure');
+    }
+    return super.topics();
+  }
 }

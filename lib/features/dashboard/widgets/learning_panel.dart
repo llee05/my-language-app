@@ -76,7 +76,7 @@ class MainDashboard extends StatelessWidget {
             const SectionLabel('CONTINUE LEARNING'),
             const SizedBox(height: 12),
             ContinueCard(
-              lessonTitle: lesson.summary.title,
+              lessonTitle: _flashcardDeckTitle(lesson.summary),
               theme: lesson.summary.theme,
               level: lesson.summary.hskLevel,
               duration: '${lesson.cards.length} cards',
@@ -99,10 +99,10 @@ class MainDashboard extends StatelessWidget {
           const SizedBox(height: 26),
           Row(
             children: [
-              const Expanded(child: SectionLabel('AVAILABLE HSK LESSONS')),
+              const Expanded(child: SectionLabel('AVAILABLE HSK FLASHCARDS')),
               IconButton(
                 key: const Key('available-lessons-refresh'),
-                tooltip: 'Refresh lessons',
+                tooltip: 'Refresh decks',
                 onPressed: loadingAvailableLessons ? null : onRetryLessons,
                 icon: const Icon(Icons.refresh_rounded),
               ),
@@ -118,7 +118,7 @@ class MainDashboard extends StatelessWidget {
           for (final availableLesson in availableLessons.take(6))
             LessonTile(
               key: ValueKey('available-lesson-${availableLesson.summary.id}'),
-              title: availableLesson.summary.title,
+              title: _flashcardDeckTitle(availableLesson.summary),
               chinese: availableLesson.summary.theme,
               unit: 'HSK ${availableLesson.summary.hskLevel}',
               duration:
@@ -161,7 +161,7 @@ class _NewLearnerPrompt extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Start your first lesson',
+                    'Start your first deck',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -184,7 +184,7 @@ class _NewLearnerPrompt extends StatelessWidget {
         );
         final action = FilledButton(
           onPressed: onPressed,
-          child: const Text('Browse lessons'),
+          child: const Text('Browse flashcards'),
         );
         if (constraints.maxWidth < 440) {
           return Column(
@@ -218,11 +218,11 @@ class _AvailableLessonsLoading extends StatelessWidget {
         child: CircularProgressIndicator(
           color: AppColors.red,
           strokeWidth: 2.5,
-          semanticsLabel: 'Loading available lessons',
+          semanticsLabel: 'Loading available decks',
         ),
       ),
-      title: 'Loading available lessons',
-      message: 'Loading a selection of lessons across HSK levels.',
+      title: 'Loading available decks',
+      message: 'Loading a selection of decks across HSK levels.',
     ),
   );
 }
@@ -255,12 +255,12 @@ class _AvailableLessonsEmpty extends StatelessWidget {
     liveRegion: true,
     child: _AvailableLessonsStateCard(
       icon: Icon(Icons.menu_book_outlined, color: AppColors.teal),
-      title: 'No saved lessons yet',
-      message: 'Open Lessons to load the bundled vocabulary library.',
+      title: 'No saved decks yet',
+      message: 'Open Flashcards to load the bundled vocabulary library.',
       action: OutlinedButton.icon(
         onPressed: onBrowse,
         icon: const Icon(Icons.arrow_forward_rounded, size: 17),
-        label: const Text('Browse lessons'),
+        label: const Text('Browse flashcards'),
       ),
     ),
   );

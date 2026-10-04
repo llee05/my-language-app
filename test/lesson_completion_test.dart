@@ -122,7 +122,7 @@ void main() {
       await _pumpLesson(tester, progress);
       await _markFamiliar(tester, _lesson.cards[2]);
 
-      expect(find.text('Lesson complete!'), findsOneWidget);
+      expect(find.text('Deck complete!'), findsOneWidget);
       expect(find.text('+25 XP'), findsOneWidget);
       expect(find.text('67%'), findsOneWidget);
       expect(find.text('New words'), findsOneWidget);
@@ -165,7 +165,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(progress.startedLessons, [7, 8]);
     expect(find.text('茶'), findsOneWidget);
-    expect(find.text('Lesson complete!'), findsNothing);
+    expect(find.text('Deck complete!'), findsNothing);
     await _markFamiliar(tester, _nextLesson.cards.single);
     expect(find.text('+10 XP'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
@@ -203,11 +203,11 @@ void main() {
       await tester.ensureVisible(next);
       await tester.tap(next);
       await tester.pumpAndSettle();
-      expect(find.text('Lesson complete!'), findsOneWidget);
+      expect(find.text('Deck complete!'), findsOneWidget);
       expect(find.text('+30 XP'), findsOneWidget);
       expect(find.text('3'), findsNWidgets(2));
       expect(find.text('0'), findsOneWidget);
-      expect(find.text('We couldn’t open this lesson.'), findsOneWidget);
+      expect(find.text('We couldn’t open this deck.'), findsOneWidget);
       expect(tester.widget<FilledButton>(next).onPressed, isNotNull);
       final retrySave = Completer<void>();
       progress.failSessionSaveForLesson = null;
@@ -250,11 +250,11 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(progress.recordCalls, 1);
-      expect(find.text('Lesson complete!'), findsNothing);
+      expect(find.text('Deck complete!'), findsNothing);
       save.completeError(StateError('save failed'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('lesson-answer-error')), findsOneWidget);
-      expect(find.text('Lesson complete!'), findsNothing);
+      expect(find.text('Deck complete!'), findsNothing);
       progress.sessionSaveGate = null;
       await tester.tap(find.byKey(const Key('lesson-answer-retry')));
       await tester.pumpAndSettle();
@@ -324,7 +324,7 @@ void main() {
           textScale: textScale,
           reduceMotion: true,
         );
-        expect(find.text('Lesson complete!'), findsOneWidget);
+        expect(find.text('Deck complete!'), findsOneWidget);
         expect(find.text('+10 XP'), findsOneWidget);
         expect(find.text('New sentences'), findsOneWidget);
         expect(find.text('Sentences revisited'), findsOneWidget);

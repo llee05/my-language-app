@@ -55,7 +55,7 @@ class AiService {
       } else {
         throw const AiConfigurationException(
           'Choose an AI provider and add your API key in Settings. '
-          'Lessons and review are still available offline.',
+          'Flashcards and review are still available offline.',
         );
       }
     }

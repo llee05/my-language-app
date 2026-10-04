@@ -976,14 +976,14 @@ class _LevelChip extends StatelessWidget {
 
   final String label;
   final bool selected;
-  final VoidCallback onSelected;
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context) {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      onSelected: (_) => onSelected(),
+      onSelected: onSelected == null ? null : (_) => onSelected!(),
       selectedColor: AppColors.red.withValues(alpha: .2),
       side: BorderSide(color: selected ? AppColors.red : AppColors.outline),
       labelStyle: TextStyle(color: selected ? AppColors.text : AppColors.muted),

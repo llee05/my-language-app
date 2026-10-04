@@ -15,6 +15,7 @@ import 'package:mylanguageapp/repositories/backup_repository.dart';
 import 'package:mylanguageapp/repositories/sqlite_repositories.dart';
 import 'package:mylanguageapp/services/pronunciation_service.dart';
 import 'package:mylanguageapp/services/review_scheduler.dart';
+import 'package:mylanguageapp/services/vocabulary_study_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 const _lessons = SqliteLessonRepository();
@@ -271,7 +272,7 @@ void main() {
         await tester.tap(find.text('Good').hitTestable());
         await _waitFor(tester, find.text('${i + 1} of 10 sentences completed'));
       }
-      expect(find.text('Lesson complete!'), findsOneWidget);
+      expect(find.text('Deck complete!'), findsOneWidget);
       expect(find.text('90%'), findsOneWidget);
       final history = await tester.runAsync(() => _progress.reviewHistory());
       expect(history, hasLength(10));
@@ -349,6 +350,78 @@ void main() {
     await _waitFor(tester, find.text('1 of 10 sentences completed'));
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  testWidgets(
+    'sentence listening saves sentence progress without HSK mastery',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final voice = _Voice();
+      final deck = await tester.runAsync(() async {
+        final summary = (await _lessons.topics()).firstWhere(
+          (deck) => deck.isSentencePractice,
+        );
+        return _lessons.findById(summary.id);
+      });
+      var changed = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ListeningPracticePage(
+              lessonRepository: _lessons,
+              progressRepository: _progress,
+              settingsRepository: _settings,
+              pronunciationService: voice,
+              studyService: VocabularyStudyService(
+                lessons: _lessons,
+                progress: _progress,
+              ),
+              onProgressChanged: () => changed++,
+            ),
+          ),
+        ),
+      );
+      await _waitFor(
+        tester,
+        find.byKey(const Key('listening-library-content')),
+      );
+      await tester.tap(find.byKey(const Key('sentence-practice-mode')));
+      await tester.pumpAndSettle();
+      final count = find.byKey(Key('lesson-learned-count-${deck!.summary.id}'));
+      expect(tester.widget<Text>(count).data, '0 of 10 sentences learned');
+      final start = find.byKey(Key('listening-start-${deck.summary.id}'));
+      await tester.ensureVisible(start);
+      await tester.tap(start);
+      await tester.pumpAndSettle();
+      expect(voice.spoken.last, deck.cards.first.chinese);
+      final answer = find.widgetWithText(
+        OutlinedButton,
+        deck.cards.first.englishMeaning,
+      );
+      await tester.ensureVisible(answer);
+      await tester.tap(answer);
+      await _waitFor(tester, find.byKey(const Key('listening-answer-hanzi')));
+      final saved = await tester.runAsync(
+        () async => (
+          await _progress.reviewHistory(),
+          await _progress.progressForCard(deck.cards.first.id),
+          await _progress.learningStats(DateTime.now()),
+        ),
+      );
+      expect(saved!.$1.single.cardId, deck.cards.first.id);
+      expect(saved.$1.single.wasCorrect, isTrue);
+      expect(saved.$2!.mastery, greaterThanOrEqualTo(.8));
+      expect(saved.$3.wordsLearned, 0);
+      expect(saved.$3.totalXp, greaterThan(0));
+      expect(changed, 1);
+      await tester.binding.handlePopRoute();
+      await _waitFor(
+        tester,
+        find.byKey(const Key('listening-library-content')),
+      );
+      expect(tester.widget<Text>(count).data, '1 of 10 sentences learned');
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
 
 Future<void> _pumpLessons(

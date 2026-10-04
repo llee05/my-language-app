@@ -198,7 +198,7 @@ void main() {
             await tester.tap(find.byIcon(Icons.menu_rounded));
             await tester.pumpAndSettle();
           }
-          await tester.tap(find.text('Lessons').first);
+          await tester.tap(find.text('Flashcards').first);
           await tester.pumpAndSettle();
         }
 
@@ -206,14 +206,14 @@ void main() {
         await tester.ensureVisible(find.text('Resume'));
         await tester.tap(find.text('Resume'));
         await tester.pumpAndSettle();
-        expect(find.byTooltip('Back to lessons'), findsOneWidget);
+        expect(find.byTooltip('Back to flashcards'), findsOneWidget);
         if (width < 760) {
           await tester.tap(find.byIcon(Icons.menu_rounded));
           await tester.pumpAndSettle();
           await tester.binding.handlePopRoute();
           await tester.pumpAndSettle();
           expect(find.byType(Drawer), findsNothing);
-          expect(find.byTooltip('Back to lessons'), findsOneWidget);
+          expect(find.byTooltip('Back to flashcards'), findsOneWidget);
         }
         unawaited(
           showDialog<void>(
@@ -225,11 +225,11 @@ void main() {
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(find.text('Test dialog'), findsNothing);
-        expect(find.byTooltip('Back to lessons'), findsOneWidget);
+        expect(find.byTooltip('Back to flashcards'), findsOneWidget);
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(find.byType(LessonsPage), findsOneWidget);
-        expect(find.byTooltip('Back to lessons'), findsNothing);
+        expect(find.byTooltip('Back to flashcards'), findsNothing);
         expect(pronunciation.stopCalls, greaterThan(0));
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -240,7 +240,7 @@ void main() {
         await tester.ensureVisible(find.text('Resume'));
         await tester.tap(find.text('Resume'));
         await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip('Back to lessons'));
+        await tester.tap(find.byTooltip('Back to flashcards'));
         await tester.pumpAndSettle();
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -277,7 +277,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('1 vocabulary lesson'), findsOneWidget);
+    expect(find.text('1 vocabulary deck'), findsOneWidget);
     expect(find.text('Create a lesson'), findsNothing);
     expect(find.text('Create lesson'), findsNothing);
     expect(find.text('New lesson'), findsNothing);
@@ -437,7 +437,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: label);
           final pageType = switch (label) {
-            'Lessons' => LessonsPage,
+            'Flashcards' => LessonsPage,
             'Roleplay Missions' => AiRoleplayMissionsPage,
             'Listening Practice' => ListeningPracticePage,
             'Vocab Rush' => VocabRushPage,
@@ -479,7 +479,7 @@ void main() {
 
     expect(find.text('你好，Mei'), findsOneWidget);
     expect(find.text('WEEKLY XP'), findsOneWidget);
-    expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
+    expect(find.text('AVAILABLE HSK FLASHCARDS'), findsOneWidget);
   });
 
   testWidgets('dashboard user icon opens progress analytics', (tester) async {
@@ -664,17 +664,23 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Start your first lesson'), findsOneWidget);
-        expect(find.text('Browse lessons'), findsOneWidget);
+        expect(find.text('Start your first deck'), findsOneWidget);
+        expect(find.text('Browse flashcards'), findsOneWidget);
         expect(find.text('Start scrolling'), findsOneWidget);
         expect(find.text('4991 unlearned words to discover'), findsOneWidget);
         expect(find.text('Resume'), findsNothing);
 
-        await tester.ensureVisible(find.text('Browse lessons'));
-        await tester.tap(find.text('Browse lessons'));
+        await tester.ensureVisible(find.text('Browse flashcards'));
+        await tester.tap(find.text('Browse flashcards'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Lesson Library'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(LessonsPage),
+            matching: find.text('Flashcards'),
+          ),
+          findsOneWidget,
+        );
         expect(find.text('Saved lesson'), findsOneWidget);
       },
     );
@@ -759,7 +765,7 @@ void main() {
     expect(find.text('50% complete'), findsOneWidget);
     expect(find.text('Lesson 1'), findsNothing);
     expect(find.text('50%'), findsOneWidget);
-    expect(find.text('AVAILABLE HSK LESSONS'), findsOneWidget);
+    expect(find.text('AVAILABLE HSK FLASHCARDS'), findsOneWidget);
     expect(find.text('Saved · HSK 1 · 2 cards'), findsOneWidget);
     expect(find.text('Up to 20 XP'), findsOneWidget);
 
@@ -936,10 +942,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ListeningPracticePage), findsOneWidget);
-    expect(find.text('Choose what to listen for'), findsOneWidget);
+    expect(find.text('Listening practice'), findsOneWidget);
     expect(pronunciation.spoken, isEmpty);
 
-    await tester.tap(find.byKey(const Key('listening-start-practice')));
+    await tester.tap(find.byKey(const Key('listening-start-7')));
     await tester.pumpAndSettle();
 
     expect(find.text('Listen and choose the meaning'), findsOneWidget);
@@ -1887,9 +1893,15 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Lessons'));
+    await tester.tap(find.text('Flashcards'));
     await tester.pumpAndSettle();
-    expect(find.text('Lesson Library'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(LessonsPage),
+        matching: find.text('Flashcards'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Saved lesson'), findsOneWidget);
     expect(find.text('Create a lesson'), findsNothing);
     expect(find.text('Custom lesson topic'), findsNothing);
@@ -1933,30 +1945,33 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('251 vocabulary lessons'), findsOneWidget);
+      expect(find.text('251 vocabulary decks'), findsOneWidget);
       for (final topic in topics) {
-        expect(find.text(topic.title), findsOneWidget);
+        expect(
+          find.text(topic.title.replaceAll('Lesson', 'Deck')),
+          findsOneWidget,
+        );
       }
       await tester.ensureVisible(find.text('HSK 6'));
       await tester.tap(find.text('HSK 6'));
       await tester.pumpAndSettle();
-      expect(find.text('125 of 251 vocabulary lessons'), findsOneWidget);
-      expect(find.text('HSK 1 · Lesson 001'), findsNothing);
-      expect(find.text('HSK 6 · Lesson 125'), findsOneWidget);
+      expect(find.text('125 of 251 vocabulary decks'), findsOneWidget);
+      expect(find.text('HSK 1 · Deck 001'), findsNothing);
+      expect(find.text('HSK 6 · Deck 125'), findsOneWidget);
       await tester.enterText(
         find.byKey(const Key('lesson-library-search')),
         '125',
       );
       await tester.pumpAndSettle();
-      expect(find.text('1 of 251 vocabulary lessons'), findsOneWidget);
+      expect(find.text('1 of 251 vocabulary decks'), findsOneWidget);
       await tester.ensureVisible(
         find.byKey(const Key('lesson-library-show-all')),
       );
       await tester.tap(find.byKey(const Key('lesson-library-show-all')));
       await tester.pumpAndSettle();
-      expect(find.text('251 vocabulary lessons'), findsOneWidget);
-      expect(find.text('HSK 1 · Lesson 001'), findsOneWidget);
-      expect(find.text('HSK 6 · Lesson 125'), findsOneWidget);
+      expect(find.text('251 vocabulary decks'), findsOneWidget);
+      expect(find.text('HSK 1 · Deck 001'), findsOneWidget);
+      expect(find.text('HSK 6 · Deck 125'), findsOneWidget);
       expect(
         tester
             .widget<TextField>(find.byKey(const Key('lesson-library-search')))
@@ -1964,9 +1979,9 @@ void main() {
             .text,
         isEmpty,
       );
-      await tester.ensureVisible(find.text('HSK 6 · Lesson 125'));
+      await tester.ensureVisible(find.text('HSK 6 · Deck 125'));
       await tester.pumpAndSettle();
-      expect(find.text('HSK 6 · Lesson 125').hitTestable(), findsOneWidget);
+      expect(find.text('HSK 6 · Deck 125').hitTestable(), findsOneWidget);
       expect(find.text('Create a lesson'), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -2001,7 +2016,7 @@ void main() {
         await tester.ensureVisible(delete);
         await tester.tap(delete);
         await tester.pumpAndSettle();
-        expect(find.text('Delete lesson?'), findsOneWidget);
+        expect(find.text('Delete deck?'), findsOneWidget);
         expect(find.textContaining('This cannot be undone.'), findsOneWidget);
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
@@ -2014,13 +2029,13 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         expect(repository.deleteCalls, 1);
         expect(find.text('My generated lesson'), findsOneWidget);
-        expect(find.text('Lesson deleted.'), findsNothing);
+        expect(find.text('Deck deleted.'), findsNothing);
         expect(tester.widget<IconButton>(delete).onPressed, isNull);
         repository.deletion.complete();
         await tester.pumpAndSettle();
         expect(find.text('My generated lesson'), findsNothing);
         expect(find.text('Saved lesson'), findsOneWidget);
-        expect(find.text('Lesson deleted.'), findsOneWidget);
+        expect(find.text('Deck deleted.'), findsOneWidget);
         expect(changed, 1);
         expect(tester.takeException(), isNull);
       },
@@ -2058,7 +2073,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('My generated lesson'), findsOneWidget);
     expect(
-      find.text('Could not delete the lesson. Please try again.'),
+      find.text('Could not delete the deck. Please try again.'),
       findsOneWidget,
     );
     expect(tester.widget<IconButton>(delete).onPressed, isNotNull);
@@ -2116,7 +2131,7 @@ void main() {
       find.byKey(const Key('lesson-library-filtered-empty-state')),
       findsOneWidget,
     );
-    expect(find.textContaining('No HSK 2 lessons yet'), findsOneWidget);
+    expect(find.textContaining('No HSK 2 decks yet'), findsOneWidget);
     expect(find.text('Morning Greetings'), findsNothing);
 
     await tester.tap(find.text('All levels'));
@@ -2207,17 +2222,17 @@ void main() {
       find.byKey(const Key('lesson-library-loading-state')),
       findsOneWidget,
     );
-    expect(find.text('Loading your lesson library'), findsOneWidget);
-    expect(find.textContaining('Finding your saved lessons'), findsOneWidget);
+    expect(find.text('Loading your flashcard library'), findsOneWidget);
+    expect(find.textContaining('Finding your saved decks'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     topics.complete(const []);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('lesson-library-empty-state')), findsOneWidget);
-    expect(find.text('No saved lessons yet'), findsOneWidget);
+    expect(find.text('No saved decks yet'), findsOneWidget);
     expect(
-      find.text('Reopen Lessons to load the bundled vocabulary library.'),
+      find.text('Reopen Flashcards to load the bundled vocabulary library.'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
@@ -2244,7 +2259,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('lesson-library-error-state')), findsOneWidget);
-    expect(find.text('We couldn’t load your lessons'), findsOneWidget);
+    expect(find.text('We couldn’t load your flashcards'), findsOneWidget);
     expect(find.textContaining('sensitive database path'), findsNothing);
 
     await tester.tap(find.byKey(const Key('lesson-library-retry')));
@@ -2287,7 +2302,7 @@ void main() {
       find.byKey(const Key('available-lessons-loading-state')),
       findsOneWidget,
     );
-    expect(find.text('Loading available lessons'), findsOneWidget);
+    expect(find.text('Loading available decks'), findsOneWidget);
 
     topics.complete(const []);
     await tester.pumpAndSettle();
@@ -2296,9 +2311,9 @@ void main() {
       find.byKey(const Key('available-lessons-empty-state')),
       findsOneWidget,
     );
-    expect(find.text('No saved lessons yet'), findsOneWidget);
+    expect(find.text('No saved decks yet'), findsOneWidget);
     expect(
-      find.text('Open Lessons to load the bundled vocabulary library.'),
+      find.text('Open Flashcards to load the bundled vocabulary library.'),
       findsOneWidget,
     );
   });
@@ -2599,7 +2614,7 @@ void main() {
     expect(progress.savedSession?.currentCardIndex, 2);
     expect(progress.savedSession?.isComplete, isTrue);
     expect(lessonProgressChanges, 1);
-    expect(find.text('Lesson complete!'), findsOneWidget);
+    expect(find.text('Deck complete!'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
     expect(find.text('New words'), findsOneWidget);
     expect(find.text('Words revisited'), findsOneWidget);
@@ -2760,14 +2775,14 @@ void main() {
 
     await tester.binding.handlePopRoute();
     await tester.pump();
-    expect(find.byTooltip('Back to lessons'), findsOneWidget);
+    expect(find.byTooltip('Back to flashcards'), findsOneWidget);
     save.complete();
     await tester.pumpAndSettle();
     expect(progress.recordReviewCalls, 1);
-    expect(find.text('Lesson complete!'), findsOneWidget);
+    expect(find.text('Deck complete!'), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Back to lessons'), findsNothing);
+    expect(find.byTooltip('Back to flashcards'), findsNothing);
   });
 
   testWidgets('lesson retries the exact failed answer', (tester) async {
@@ -2809,7 +2824,7 @@ void main() {
 
     expect(progress.recordReviewAttempts, 2);
     expect(find.byKey(const Key('lesson-answer-error')), findsNothing);
-    expect(find.text('Lesson complete!'), findsOneWidget);
+    expect(find.text('Deck complete!'), findsOneWidget);
   });
 
   testWidgets('lesson resume repairs an answer saved before session progress', (
@@ -2929,7 +2944,7 @@ void main() {
       await tester.tap(find.text('Start'));
       await tester.pumpAndSettle();
       vocabulary.clear();
-      await tester.tap(find.byTooltip('Back to lessons'));
+      await tester.tap(find.byTooltip('Back to flashcards'));
       await tester.pumpAndSettle();
       expect(tester.widget<Text>(count).data, '0 of 2 words learned');
       expect(tester.takeException(), isNull);

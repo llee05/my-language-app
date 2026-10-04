@@ -4,9 +4,9 @@ abstract final class _AppErrorCopy {
   static const dailyReviewTitle = 'We couldn’t load today’s review';
   static const dailyReviewMessage =
       'Something went wrong while preparing today’s review cards.';
-  static const lessonsTitle = 'We couldn’t load your lessons';
+  static const lessonsTitle = 'We couldn’t load your flashcards';
   static const lessonsMessage =
-      'Something went wrong while opening your saved lessons.';
+      'Something went wrong while opening your saved decks.';
   static const vocabularyTitle = 'We couldn’t load vocabulary';
   static const vocabularyMessage =
       'Something went wrong while opening your vocabulary library.';
@@ -20,7 +20,7 @@ abstract final class _AppErrorCopy {
   static const saveProfile = 'We couldn’t save your profile.';
   static const saveChanges = 'We couldn’t save your changes.';
   static const saveAnswer = 'We couldn’t save your answer.';
-  static const openLesson = 'We couldn’t open this lesson.';
+  static const openLesson = 'We couldn’t open this deck.';
   static const tutor = 'We couldn’t reach Long Laoshi right now.';
   static const addToReview = 'We couldn’t add this word to your review queue.';
   static const resetSetup = 'We couldn’t reset learner setup.';

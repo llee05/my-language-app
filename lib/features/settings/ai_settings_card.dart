@@ -312,7 +312,7 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'AI setup skipped. Lessons and review still work without AI.',
+                'AI setup skipped. Flashcards and review still work without AI.',
               ),
               TextButton(
                 key: const Key('ai-setup-resume'),
@@ -327,9 +327,9 @@ class _AiSettingsCardState extends State<AiSettingsCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Your API key, messages, and lesson prompts go directly to the selected provider. '
+                'Your API key, messages, and practice prompts go directly to the selected provider. '
                 'Your key’s usage limits and any API charges apply. '
-                'Lessons and review still work without AI.',
+                'Flashcards and review still work without AI.',
               ),
               const SizedBox(height: 16),
               _stepTitle('1. Choose a provider'),

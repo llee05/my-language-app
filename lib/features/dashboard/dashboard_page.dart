@@ -651,7 +651,6 @@ class _DashboardBody extends StatelessWidget {
         progressRepository: progressRepository,
         settingsRepository: settingsRepository,
         pronunciationService: pronunciationService,
-        maxHskLevel: profile.hskLevel,
       );
     }
     if (selectedNav == 4) {
