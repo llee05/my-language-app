@@ -52,6 +52,8 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _deletingAccount = false;
   bool _transferringBackup = false;
   int _pendingThemeSaves = 0;
+  Future<void> _themeSaveQueue = Future.value();
+  int _themeSaveRequest = 0;
   bool _showPinyin = true;
   bool _soundEnabled = true;
   bool _reminderEnabled = false;
@@ -261,7 +263,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _selectTheme(AppThemeId themeId) {
-    if (_resetting || _transferringBackup || themeId == _selectedThemeId) {
+    if (_saving ||
+        _resetting ||
+        _transferringBackup ||
+        _loadingPreferences ||
+        _preferencesLoadFailed ||
+        themeId == _selectedThemeId) {
       return;
     }
     setState(() {
@@ -275,22 +282,30 @@ class _SettingsPageState extends State<SettingsPage> {
   /// Themes apply immediately; persistence merges into the currently saved
   /// settings so unrelated preference values are not overwritten.
   Future<void> _persistTheme(AppThemeId themeId) async {
-    if (!mounted || _resetting || _transferringBackup) return;
+    if (!mounted || _saving || _resetting || _transferringBackup) return;
+    final request = ++_themeSaveRequest;
     setState(() => _pendingThemeSaves++);
-    try {
-      final settings = await widget.settingsRepository.load();
-      await widget.settingsRepository.save(
-        settings.copyWith(appThemeId: themeId.name),
-      );
-      if (!mounted) return;
-      setState(() => _themeSaveFailed = false);
-    } catch (error) {
-      debugPrint('Colour theme could not be saved: $error');
-      if (!mounted) return;
-      setState(() => _themeSaveFailed = true);
-    } finally {
-      if (mounted) setState(() => _pendingThemeSaves--);
-    }
+    // Keep choices ordered even if a previous write is slow or the user leaves.
+    // Each operation catches its own failure so later choices can still save.
+    _themeSaveQueue = _themeSaveQueue.then((_) async {
+      try {
+        final settings = await widget.settingsRepository.load();
+        await widget.settingsRepository.save(
+          settings.copyWith(appThemeId: themeId.name),
+        );
+        if (mounted && request == _themeSaveRequest) {
+          setState(() => _themeSaveFailed = false);
+        }
+      } catch (error) {
+        debugPrint('Colour theme could not be saved: $error');
+        if (mounted && request == _themeSaveRequest) {
+          setState(() => _themeSaveFailed = true);
+        }
+      } finally {
+        if (mounted) setState(() => _pendingThemeSaves--);
+      }
+    });
+    await _themeSaveQueue;
   }
 
   void _showSaveSuccess() {
@@ -648,7 +663,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       key: Key('theme-choice-${palette.id.name}'),
                       palette: palette,
                       selected: _selectedThemeId == palette.id,
-                      onTap: () => _selectTheme(palette.id),
+                      onTap:
+                          _saving ||
+                              _resetting ||
+                              _transferringBackup ||
+                              _loadingPreferences ||
+                              _preferencesLoadFailed
+                          ? null
+                          : () => _selectTheme(palette.id),
                     ),
                 ],
               ),
@@ -656,7 +678,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const Divider(),
               const SizedBox(height: 18),
               Text(
-                "Button animation (ignore this it doesn't really work)",
+                'Button animation (experimental)',
                 style: TextStyle(
                   color: AppColors.text,
                   fontWeight: FontWeight.w600,
@@ -1387,63 +1409,68 @@ class _ThemeSwatch extends StatelessWidget {
 
   final AppColorPalette palette;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final borderColor = selected
         ? AppColors.red.withValues(alpha: .9)
         : AppColors.border.withValues(alpha: .45);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: 132,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: palette.background,
-          border: Border.all(color: borderColor, width: selected ? 2 : 1),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                _swatchDot(palette.red),
-                const SizedBox(width: 5),
-                _swatchDot(palette.gold),
-                const SizedBox(width: 5),
-                _swatchDot(palette.teal),
-                const SizedBox(width: 5),
-                _swatchDot(palette.surfaceLight),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    palette.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: palette.text,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: onTap != null,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 132,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: palette.background,
+            border: Border.all(color: borderColor, width: selected ? 2 : 1),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  _swatchDot(palette.red),
+                  const SizedBox(width: 5),
+                  _swatchDot(palette.gold),
+                  const SizedBox(width: 5),
+                  _swatchDot(palette.teal),
+                  const SizedBox(width: 5),
+                  _swatchDot(palette.surfaceLight),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      palette.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: palette.text,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-                if (selected)
-                  Icon(
-                    Icons.check_circle_rounded,
-                    size: 16,
-                    color: palette.red,
-                  ),
-              ],
-            ),
-          ],
+                  if (selected)
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 16,
+                      color: palette.red,
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

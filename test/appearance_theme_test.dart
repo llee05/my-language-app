@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
@@ -14,7 +16,10 @@ class _MemorySettingsRepository implements SettingsRepository {
 
   LearnerSettings _settings;
   bool failSaves = false;
+  final failedThemes = <String>{};
   int saveCalls = 0;
+  Future<void>? saveGate;
+  final attemptedThemes = <String>[];
 
   LearnerSettings get savedSettings => _settings;
 
@@ -23,7 +28,9 @@ class _MemorySettingsRepository implements SettingsRepository {
 
   @override
   Future<void> save(LearnerSettings settings) async {
-    if (failSaves) {
+    attemptedThemes.add(settings.appThemeId);
+    if (settings.appThemeId == 'ocean') await saveGate;
+    if (failSaves || failedThemes.contains(settings.appThemeId)) {
       throw Exception('simulated settings save failure');
     }
     saveCalls++;
@@ -45,10 +52,12 @@ class _ThemeHarness extends StatefulWidget {
   const _ThemeHarness({
     required this.settingsRepository,
     required this.initialTheme,
+    this.profileSaveGate,
   });
 
   final SettingsRepository settingsRepository;
   final AppThemeId initialTheme;
+  final Future<void>? profileSaveGate;
 
   @override
   State<_ThemeHarness> createState() => _ThemeHarnessState();
@@ -76,7 +85,7 @@ class _ThemeHarnessState extends State<_ThemeHarness> {
           Expanded(
             child: SettingsPage(
               profile: _profile,
-              onProfileChanged: (_) async {},
+              onProfileChanged: (_) async => await widget.profileSaveGate,
               onResetOnboarding: () async {},
               onResetAllData: () async {},
               appThemeId: _themeId,
@@ -96,8 +105,9 @@ class _ThemeHarnessState extends State<_ThemeHarness> {
 
 Future<void> _pumpHarness(
   WidgetTester tester,
-  _MemorySettingsRepository settingsRepository,
-) async {
+  _MemorySettingsRepository settingsRepository, {
+  Future<void>? profileSaveGate,
+}) async {
   await tester.binding.setSurfaceSize(const Size(1000, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
@@ -105,6 +115,7 @@ Future<void> _pumpHarness(
       home: _ThemeHarness(
         settingsRepository: settingsRepository,
         initialTheme: AppThemeId.classic,
+        profileSaveGate: profileSaveGate,
       ),
     ),
   );
@@ -112,6 +123,92 @@ Future<void> _pumpHarness(
 }
 
 void main() {
+  testWidgets(
+    'an older failed theme choice cannot override a later successful choice',
+    (tester) async {
+      final repository = _MemorySettingsRepository()..failedThemes.add('ocean');
+      final gate = Completer<void>();
+      repository.saveGate = gate.future;
+      await _pumpHarness(tester, repository);
+      final ocean = find.byKey(const Key('theme-choice-ocean'));
+      await tester.ensureVisible(ocean);
+      await tester.pumpAndSettle();
+      await tester.tap(ocean);
+      await tester.pump();
+      final forest = find.byKey(const Key('theme-choice-forest'));
+      await tester.ensureVisible(forest);
+      await tester.tap(forest);
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(repository.attemptedThemes, ['ocean', 'forest']);
+      expect(repository.savedSettings.appThemeId, 'forest');
+      expect(find.byKey(const Key('theme-save-error')), findsNothing);
+    },
+  );
+
+  testWidgets('theme selection waits until a full settings save has finished', (
+    tester,
+  ) async {
+    final repository = _MemorySettingsRepository();
+    final gate = Completer<void>();
+    await _pumpHarness(tester, repository, profileSaveGate: gate.future);
+    final save = find.byKey(const Key('settings-save'));
+    await tester.scrollUntilVisible(
+      save,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(save);
+    await tester.pump();
+    final ocean = find.byKey(const Key('theme-choice-ocean'));
+    await tester.scrollUntilVisible(
+      ocean,
+      -400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(ocean);
+    await tester.pump();
+    expect(
+      tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
+      AppThemes.classic.background,
+    );
+    gate.complete();
+    await tester.pumpAndSettle();
+    await tester.tap(ocean);
+    await tester.pumpAndSettle();
+    expect(repository.savedSettings.appThemeId, 'ocean');
+    expect(repository.savedSettings.showPinyin, isFalse);
+  });
+
+  testWidgets(
+    'rapid theme choices persist in selection order even after leaving',
+    (tester) async {
+      final repository = _MemorySettingsRepository();
+      final gate = Completer<void>();
+      repository.saveGate = gate.future;
+      await _pumpHarness(tester, repository);
+      final ocean = find.byKey(const Key('theme-choice-ocean'));
+      final forest = find.byKey(const Key('theme-choice-forest'));
+      await tester.ensureVisible(ocean);
+      await tester.pumpAndSettle();
+      await tester.tap(ocean);
+      await tester.pump();
+      await tester.ensureVisible(forest);
+      await tester.tap(forest);
+      await tester.pump();
+      expect(
+        tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
+        AppThemes.forest.background,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(repository.savedSettings.appThemeId, 'forest');
+      expect(repository.savedSettings.showPinyin, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('selecting a theme applies it and persists the choice', (
     tester,
   ) async {
