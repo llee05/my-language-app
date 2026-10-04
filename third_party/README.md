@@ -24,14 +24,29 @@ plugin loader still finds a well-formed module for the `sherpa_onnx` plugin
 graph while nothing native is packaged into the APK. iOS, Linux, macOS, and
 Windows keep the real `sherpa_onnx` packages unchanged.
 
-`flutter_soloud` (also unused on Android, because only Kokoro playback used
-it) is excluded from the Android APK through a Gradle exclusion in
+`flutter_soloud` (unused on Android, where speech comes from the system engine)
+is excluded from the Android APK through a Gradle exclusion in
 `android/app/build.gradle.kts` instead; it cannot be stubbed this way
 because the same package provides its desktop native libraries.
 
 If the app ever wants Kokoro back on Android, remove the
 `dependency_overrides` section for these packages and the
 `configurations.all` exclusion from `android/app/build.gradle.kts`.
+
+# Linux pronunciation playback
+
+Linux and Windows now use the human recordings documented in
+`assets/audio/mandarin/README.md`; their CMake files install the pack beside the
+executable without adding it to Flutter's shared assets. Apple platforms retain
+Kokoro, and Android's system voice and packaging remain unchanged.
+
+Linux disables SoLoud's optional Xiph codecs with `NO_XIPH_LIBS` to avoid
+bundled codec libraries that require newer glibc. MP3 and PCM WAV decoding are
+still available. The current plugin enables its ALSA backend without linking
+`libasound` in this configuration, leaving unresolved `snd_pcm_*` symbols.
+`linux/CMakeLists.txt` explicitly links `flutter_soloud_plugin` against
+`PkgConfig::ALSA` so it can be loaded. Keep ALSA development headers installed
+for builds and verify native library loading after plugin upgrades.
 
 # Vendored flutter_secure_storage_linux
 

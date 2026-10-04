@@ -59,6 +59,7 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 # System-level dependencies.
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
+pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
@@ -79,6 +80,10 @@ set_target_properties(${BINARY_NAME}
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+
+# flutter_soloud enables ALSA but omits its link when optional Xiph codecs
+# are disabled. Resolve those symbols explicitly so the plugin can load.
+target_link_libraries(flutter_soloud_plugin PRIVATE PkgConfig::ALSA)
 
 
 # === Installation ===
