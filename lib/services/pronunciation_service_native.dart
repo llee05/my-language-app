@@ -10,18 +10,47 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import '../models/learning_progress.dart';
 import 'fallback_pronunciation_service.dart';
 import 'kokoro_voice_pack.dart';
+import 'linux_system_pronunciation_service.dart';
 import 'pronunciation_service.dart';
 import 'pronunciation_audio_cache.dart';
 import 'pronunciation_service_system.dart';
+import 'recorded_audio_player_native.dart';
+import 'recorded_pronunciation_service.dart';
 import 'sherpa_voice_config.dart';
 
 PronunciationService createPlatformPronunciationService() =>
-    createAndroidAwarePronunciationService(isAndroid: Platform.isAndroid);
+    createDesktopAwarePronunciationService(
+      isAndroid: Platform.isAndroid,
+      isLinux: Platform.isLinux,
+      isWindows: Platform.isWindows,
+    );
 
 PronunciationService createPlatformSystemPronunciationService() =>
     Platform.isAndroid
     ? AndroidSystemPronunciationService()
+    : Platform.isLinux
+    ? LinuxSystemPronunciationService()
     : SystemPronunciationService();
+
+PronunciationService createDesktopAwarePronunciationService({
+  required bool isAndroid,
+  required bool isLinux,
+  required bool isWindows,
+}) {
+  if (!isAndroid && (isLinux || isWindows)) {
+    return RecordedPronunciationService(
+      BundledRecordedAudioLibrary(),
+      SoLoudRecordedAudioPlayer(),
+      isLinux
+          ? LinuxSystemPronunciationService()
+          : SystemPronunciationService(),
+      systemSpeechDescription: isLinux
+          ? 'Missing words and full sentences use eSpeak NG (or eSpeak). Install eSpeak NG through your package manager to enable Mandarin speech.'
+          : 'Missing words and full sentences use your Windows Mandarin voice. Add Chinese (Simplified) speech in Windows language settings if needed.',
+    );
+  }
+  return createAndroidAwarePronunciationService(isAndroid: isAndroid);
+}
 
 /// Android builds do not ship the Kokoro voice engine or its onnxruntime
 /// native libraries, so voice lines always use the system Mandarin voice.

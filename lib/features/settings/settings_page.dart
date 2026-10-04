@@ -807,6 +807,35 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ],
+        if (_pronunciationService is RecordedAudioPronunciation) ...[
+          const SizedBox(height: 20),
+          _SettingsCard(
+            key: const Key('recorded-mandarin-settings'),
+            title: 'Recorded Mandarin audio',
+            subtitle:
+                'Human recordings are included with this desktop app. No voice download is needed.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _checkingKokoroVoice
+                      ? 'Checking bundled recordings…'
+                      : _kokoroVoiceStatus?.message ??
+                            'Bundled word recordings are available offline.',
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  (_pronunciationService as RecordedAudioPronunciation)
+                      .systemSpeechDescription,
+                ),
+                const SizedBox(height: 10),
+                const SelectableText(
+                  'Recordings © 2009 Yue Tan (Shtooka / University of Caen). MP3 conversion: Hugo Lopez, audio-cmn. CC BY-SA 3.0 US: https://creativecommons.org/licenses/by-sa/3.0/us/',
+                ),
+              ],
+            ),
+          ),
+        ],
         if (_shouldShowOfflineVoiceCard) ...[
           const SizedBox(height: 20),
           _SettingsCard(
@@ -924,6 +953,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   bool get _shouldShowOfflineVoiceCard {
+    if (_pronunciationService is RecordedAudioPronunciation) return false;
     final status = _kokoroVoiceStatus;
     return status != null && status.state != OfflineVoiceState.unavailable;
   }

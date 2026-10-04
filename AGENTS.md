@@ -85,8 +85,12 @@ Check implementation and tests before describing an existing feature as planned.
   choices apply immediately and persist automatically; button-animation choices
   require Save settings and remain experimental. Preserve appearance restoration,
   backup support, and the default appearance after full reset.
-- Pronunciation uses a platform-selecting factory: native Kokoro synthesis through
-  `sherpa_onnx`, playback through `flutter_soloud`, and `flutter_tts` system fallback.
+- Pronunciation uses a platform-selecting factory. Linux and Windows play bundled
+  human word recordings through `flutter_soloud`, with eSpeak NG / legacy eSpeak
+  on Linux and `flutter_tts` on Windows for missing words and sentences.
+  The 4,379 MP3s in `assets/audio/mandarin/` are installed only by desktop CMake
+  into `data/mandarin_audio`; keep them out of pubspec assets and Android builds.
+  iOS/macOS retain Kokoro through `sherpa_onnx` with system speech fallback.
   Android always uses the system `zh-CN` voice instead: its APK ships no Kokoro,
   onnxruntime, or soloud native libraries (see `third_party/README.md`).
   Android's voice installer opens the speech engine's installer/settings and
@@ -199,6 +203,7 @@ flutter test test/hsk_exam_test.dart test/exam_mode_test.dart test/profile_progr
 flutter test test/tutor_context_repository_test.dart test/tutor_personality_test.dart test/listening_dialogue_test.dart test/roleplay_mission_test.dart
 flutter test test/backup_repository_test.dart test/backup_settings_test.dart test/appearance_theme_test.dart test/app_button_theme_test.dart
 flutter test test/android_pronunciation_test.dart test/system_pronunciation_service_test.dart test/pronunciation_button_test.dart
+flutter test test/recorded_pronunciation_service_test.dart test/linux_system_pronunciation_service_test.dart
 flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
 ```
 
@@ -313,6 +318,15 @@ pending-work sharing, retry after failures, and playback of uncached oversized
 clips. Caches supplement persistence rather than replacing it.
 
 ### Voice packs and native platforms
+
+Linux/Windows recordings are pinned, checksum-verified, and credited under
+CC BY-SA 3.0 US. Use `tool/import_mandarin_audio.py --verify` for offline asset
+validation; regenerate with the importer rather than editing the catalog.
+It matches whole Hanzi words and excludes ambiguous single characters; catalog
+pinyin is curriculum metadata, not a source-verified transcript. Never splice
+word clips to approximate whole sentences. Failed or missing recordings fall
+back to system speech, and Linux needs a locally installed eSpeak engine for
+that fallback. Playback must cancel superseded requests and release sources.
 
 Kokoro downloads are large and stored in the app's private support directory,
 not bundled into the repository. Preserve HTTP Range resume behavior, archive

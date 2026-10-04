@@ -101,6 +101,12 @@ class _FakeDialoguePronunciationService extends _FakePronunciationService
       dialogues.add(List.unmodifiable(utterances));
 }
 
+class _RecordedPronunciation extends _FakePronunciationService
+    implements RecordedAudioPronunciation {
+  @override
+  String get systemSpeechDescription => 'Install a system Mandarin voice.';
+}
+
 class _FakeSpeechInputService implements SpeechInputService {
   String transcript = '';
   String? preferredLocaleId;
@@ -1060,6 +1066,49 @@ void main() {
       },
     );
   }
+
+  testWidgets('desktop generated dialogue uses system speech without Kokoro', (
+    tester,
+  ) async {
+    final pronunciation = _RecordedPronunciation();
+    await _pumpTutor(
+      tester,
+      pronunciationService: pronunciation,
+      tutorContextRepository: _MemoryTutorContextRepository(
+        snapshot: TutorLearnerSnapshot(
+          asOf: DateTime.utc(2026, 9, 14),
+          knownWords: [
+            for (final word in ['你', '好', '我', '要', '谢谢'])
+              TutorWordSnapshot(
+                chinese: word,
+                pinyin: 'test',
+                englishMeaning: 'test',
+                mastery: .8,
+                incorrectAnswers: 0,
+              ),
+          ],
+        ),
+      ),
+      request: (_) async => _dialogueResponse(),
+    );
+    await tester.tap(find.text('Listening dialogue'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Generated dialogues use one system Mandarin voice'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Install the Kokoro'), findsNothing);
+    await tester.tap(find.byKey(const Key('generate-dialogue')));
+    await tester.pumpAndSettle();
+    expect(pronunciation.spokenTexts, hasLength(1));
+    expect(pronunciation.spokenTexts.single, contains('你好！\n'));
+    expect(pronunciation.spokenTexts.single, contains('咖啡'));
+    await tester.ensureVisible(find.byKey(const Key('play-dialogue')));
+    await tester.tap(find.byKey(const Key('play-dialogue')));
+    await tester.pumpAndSettle();
+    expect(pronunciation.spokenTexts, hasLength(2));
+    expect(find.byKey(const Key('dialogue-audio-error')), findsNothing);
+  });
 
   testWidgets(
     'generates a validated two-voice dialogue with tappable new words and questions',

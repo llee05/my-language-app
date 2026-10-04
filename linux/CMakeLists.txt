@@ -16,7 +16,7 @@ cmake_policy(SET CMP0063 NEW)
 # Load bundled libraries from the lib/ directory relative to the binary.
 set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
 
-# TingShuo feeds generated PCM WAV data to SoLoud and does not need its
+# TingShuo plays MP3 recordings and PCM WAV data through SoLoud and does not need its
 # optional Xiph codecs. The plugin's bundled codec binaries target a newer
 # glibc than some supported Linux systems, which prevents the SoLoud plugin
 # from loading at runtime even though the app builds successfully.
@@ -95,6 +95,9 @@ install(CODE "
   " COMPONENT Runtime)
 
 set(INSTALL_BUNDLE_DATA_DIR "${CMAKE_INSTALL_PREFIX}/data")
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../assets/audio/mandarin/"
+  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}/mandarin_audio"
+  COMPONENT Runtime)
 set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"

@@ -231,7 +231,7 @@ experimental **Press feedback** selector includes a preview button; select
 **Save settings** to keep that choice.
 
 Use **Save settings** after editing your name, HSK level, daily word target,
-Show pinyin, Sound, or Kokoro voice selection. These preferences are stored
+Show pinyin, Sound, or Kokoro voice selection on iOS/macOS. These preferences are stored
 locally and restored on the next launch. The save action stays visible at the
 bottom while you scroll through Settings.
 
@@ -250,7 +250,25 @@ you return; use **Check again** if the download finishes later. Voice downloads
 are managed by the device's speech engine and may require internet access.
 Android does not offer Kokoro and ships without its native libraries.
 
-On **iOS and desktop**, open **Settings → Offline Mandarin voices**. TingShuo
+On **Linux and Windows**, 4,379 human-recorded vocabulary words are included
+with the app (87.7% of the vocabulary, about 47 MB). Matching words play offline
+immediately, including in Flashcards and Listening Practice. **Settings →
+Recorded Mandarin audio** shows the pack status and credits. No Kokoro download
+is needed. The recordings are by Yue Tan (Shtooka / University of Caen),
+converted to MP3 by [audio-cmn](https://github.com/hugolpz/audio-cmn), under
+[CC BY-SA 3.0 US](https://creativecommons.org/licenses/by-sa/3.0/us/).
+
+Missing words and full sentences, including examples and AI dialogue, use
+system speech. Windows needs a Chinese (Simplified) speech voice installed in
+its language settings. Linux uses **eSpeak NG**, with legacy eSpeak as a
+fallback; install `espeak-ng` through your distribution's package manager
+(for example, `sudo apt install espeak-ng` on Debian/Ubuntu or
+`sudo pacman -S espeak-ng` on Arch). The recordings work without that engine;
+sentence audio needs it. Generated desktop dialogue uses one system voice.
+Potentially ambiguous single-character recordings are excluded pending reading
+review. See [recording provenance and regeneration](assets/audio/mandarin/README.md).
+
+On **iOS and macOS**, open **Settings → Offline Mandarin voices**. TingShuo
 downloads and verifies this pack into the app's private support directory;
 no manual model-file setup is needed:
 
@@ -268,7 +286,7 @@ voice pool includes all 100 voices and chooses one randomly for each phrase
 without immediately repeating a voice. The searchable voice picker can limit
 that pool to any subset; selecting one voice keeps pronunciation consistent.
 Save settings to keep the voice pool for future launches. Synthesis runs
-locally through sherpa-onnx, including on Linux. Until the pack is ready, the
+locally through sherpa-onnx. Until the pack is ready, the
 app falls back to a compatible Simplified Chinese (`zh-CN`) system voice where
 one is available. Kokoro uses the Apache-2.0-licensed
 [Kokoro int8 multilingual v1.1 model](https://huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1).
@@ -335,7 +353,8 @@ from up to 80 recently studied words. The response is locally checked so every
 spoken token comes from that list apart from one or two highlighted new words.
 Listen without the transcript, answer the comprehension questions, then reveal
 the pinyin and translation. New words are tappable for their reading, meaning,
-and pronunciation. When the Kokoro pack is installed, the two speakers use two
+and pronunciation. Linux/Windows play generated dialogues through one system
+Mandarin voice. On iOS/macOS, when the Kokoro pack is installed, the two speakers use two
 different voices from the learner's selected voice pool where possible.
 
 Choose **Roleplay Missions** from the sidebar for a short goal-driven exchange
@@ -535,8 +554,10 @@ desktop and narrow-layout checks, and persistent Settings save action.
 - **Schema:** version 17, with ordered migrations and separate bundled-content
   updates that preserve learner history
 - **AI:** Gemini, Anthropic, and OpenAI-compatible REST APIs through an HTTP client
-- **Audio:** offline Kokoro via `sherpa_onnx` and `flutter_soloud`, with a
-  `flutter_tts` system-voice fallback. Android uses the system `zh-CN` voice
+- **Audio:** Linux/Windows use bundled human MP3 recordings via `flutter_soloud`,
+  with Linux eSpeak and Windows system speech for missing clips and sentences.
+  iOS/macOS use Kokoro via `sherpa_onnx` with `flutter_tts` fallback.
+  Android uses the system `zh-CN` voice
   only and ships without Kokoro, onnxruntime, and soloud native libraries.
 - **Speech input:** platform recognition via `speech_to_text`
 - **Backups:** validated local JSON snapshots through `file_picker`
@@ -561,7 +582,8 @@ result. Lesson sessions are loaded in one bulk query and remain fresh on each lo
 Statistics refresh after saved reviews, at local midnight, and when the app
 resumes. Kokoro retains up to 64 synthesized clips within a 16 MiB sample-data
 budget, keyed by text, speaker, model directory, and model archive version.
-Oversized clips can play without being retained in that cache.
+Oversized clips can play without being retained in that cache. Desktop word
+recordings retain up to 64 compressed clips within a separate 4 MiB budget.
 
 Database cache hits still participate in close/reset coordination. Content
 writes and backup restores invalidate both database caches; saved reviews only

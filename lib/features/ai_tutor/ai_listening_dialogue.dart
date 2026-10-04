@@ -63,9 +63,10 @@ Return only compact JSON with this exact shape:
 
   bool get _hasDialogueAudio =>
       _settings.soundEnabled &&
-      _voiceStatus.state == OfflineVoiceState.ready &&
-      _voices.length == 2 &&
-      widget.pronunciationService is DialoguePronunciationService;
+      (widget.pronunciationService is RecordedAudioPronunciation ||
+          (_voiceStatus.state == OfflineVoiceState.ready &&
+              _voices.length == 2 &&
+              widget.pronunciationService is DialoguePronunciationService));
 
   @override
   void initState() {
@@ -241,19 +242,26 @@ Return only compact JSON with this exact shape:
       _audioError = null;
     });
     try {
-      await (service as DialoguePronunciationService).speakDialogue([
-        for (final line in dialogue.lines)
-          PronunciationUtterance(
-            text: line.chinese,
-            voice: line.speaker == 'A' ? _voices.first : _voices.last,
-          ),
-      ]);
+      if (service is RecordedAudioPronunciation) {
+        await service.speakMandarin(
+          dialogue.lines.map((line) => line.chinese).join('\n'),
+        );
+      } else {
+        await (service as DialoguePronunciationService).speakDialogue([
+          for (final line in dialogue.lines)
+            PronunciationUtterance(
+              text: line.chinese,
+              voice: line.speaker == 'A' ? _voices.first : _voices.last,
+            ),
+        ]);
+      }
     } catch (error) {
       debugPrint('Listening dialogue playback failed: $error');
       if (!mounted) return;
       setState(() {
-        _audioError =
-            'Two-speaker audio is unavailable. Check the Kokoro voice pack in Settings.';
+        _audioError = service is RecordedAudioPronunciation
+            ? (service as RecordedAudioPronunciation).systemSpeechDescription
+            : 'Two-speaker audio is unavailable. Check the Kokoro voice pack in Settings.';
       });
     } finally {
       if (mounted) setState(() => _playing = false);
@@ -400,7 +408,8 @@ Return only compact JSON with this exact shape:
                 : '${_knownWords.length} studied words available to the dialogue.',
             style: TextStyle(fontSize: 11, color: AppColors.muted),
           ),
-          if (!_hasDialogueAudio) ...[
+          if (!_hasDialogueAudio ||
+              widget.pronunciationService is RecordedAudioPronunciation) ...[
             const SizedBox(height: 10),
             Text(
               _dialogueAudioMessage(),
@@ -442,6 +451,9 @@ Return only compact JSON with this exact shape:
   String _dialogueAudioMessage() {
     if (!_settings.soundEnabled) {
       return 'Pronunciation audio is disabled in Settings.';
+    }
+    if (widget.pronunciationService is RecordedAudioPronunciation) {
+      return 'Generated dialogues use one system Mandarin voice. Bundled vocabulary uses human recordings.';
     }
     return switch (_voiceStatus.state) {
       OfflineVoiceState.notInstalled =>

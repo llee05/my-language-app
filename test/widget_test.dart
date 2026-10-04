@@ -4157,6 +4157,48 @@ void main() {
     expect(ready, findsOneWidget);
   });
 
+  for (final size in [const Size(400, 800), const Size(1000, 1000)]) {
+    testWidgets('desktop settings shows recorded audio at $size', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final pronunciation = _RecordedFakePronunciationService();
+      addTearDown(pronunciation.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SettingsPage(
+              appThemeId: AppThemeId.classic,
+              onThemeChanged: (_) {},
+              profile: testProfile,
+              onProfileChanged: (_) async {},
+              onResetOnboarding: () async {},
+              onResetAllData: () async {},
+              developmentRepository: _MemoryDevelopmentRepository(),
+              settingsRepository: _MemorySettingsRepository(),
+              pronunciationService: pronunciation,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('recorded-mandarin-settings')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Recorded Mandarin audio'), findsOneWidget);
+      expect(find.textContaining('4379 human-recorded words'), findsOneWidget);
+      expect(find.text('Offline Mandarin voices'), findsNothing);
+      expect(find.byKey(const Key('kokoro-voice-download')), findsNothing);
+      expect(find.byKey(const Key('kokoro-voice-picker')), findsNothing);
+      expect(find.byKey(const Key('system-voice-install')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('settings downloads Kokoro and saves a random voice pool', (
     tester,
   ) async {
@@ -4571,6 +4613,20 @@ class _FailOncePronunciationService extends _FakePronunciationService {
     }
     await super.speakMandarin(text);
   }
+}
+
+class _RecordedFakePronunciationService extends _FakePronunciationService
+    implements RecordedAudioPronunciation {
+  @override
+  String get systemSpeechDescription =>
+      'Missing words use system Mandarin speech.';
+
+  @override
+  Future<OfflineVoiceStatus> checkOfflineVoice() async =>
+      const OfflineVoiceStatus(
+        state: OfflineVoiceState.ready,
+        message: '4379 human-recorded words are bundled and ready offline.',
+      );
 }
 
 class _ManagedFakePronunciationService extends _FakePronunciationService

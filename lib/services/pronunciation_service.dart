@@ -317,6 +317,12 @@ abstract interface class PreparedPronunciationService {
   Future<void> prepareMandarin(String text);
 }
 
+/// Desktop pronunciation backed by bundled human recordings, with system
+/// speech for text that has no matching clip.
+abstract interface class RecordedAudioPronunciation {
+  String get systemSpeechDescription;
+}
+
 /// Optional capability for practice modes that need speech at a relative
 /// speed. A rate of 1 uses the service's normal Mandarin speaking speed.
 abstract interface class PlaybackRatePronunciationService {
