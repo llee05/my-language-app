@@ -194,6 +194,62 @@ void main() {
     expect(find.text('你好'), findsNothing);
   });
 
+  for (final query in ['ni3 hao3', 'ni3hao3', 'NI3 HAO3', 'nǐ hǎo']) {
+    testWidgets('searches pinyin entered as $query', (tester) async {
+      await pumpPage(tester);
+      await tester.enterText(find.byKey(const Key('vocabulary-search')), query);
+      await tester.pump();
+      expect(find.text('你好'), findsOneWidget);
+      expect(find.text('1 word'), findsOneWidget);
+    });
+  }
+
+  for (final query in ['lü4', 'lv4', 'lu:4', 'LU:4', 'lu\u03084']) {
+    testWidgets('searches umlaut pinyin entered as $query', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: VocabularyPage(
+              initialEntries: const [
+                {
+                  'simplified': '绿',
+                  'traditional': '綠',
+                  'pinyin': 'lǜ',
+                  'meanings': ['green'],
+                  'hskLevel': 2,
+                },
+                {
+                  'simplified': '路',
+                  'traditional': '路',
+                  'pinyin': 'lù',
+                  'meanings': ['road'],
+                  'hskLevel': 2,
+                },
+              ],
+              settingsRepository: _MemorySettingsRepository(
+                const LearnerSettings(),
+              ),
+              pronunciationService: _FakePronunciationService(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('vocabulary-search')), query);
+      await tester.pump();
+      expect(find.text('绿'), findsOneWidget);
+      expect(find.text('路'), findsNothing);
+      expect(find.text('1 word'), findsOneWidget);
+    });
+  }
+
+  testWidgets('a tone number alone does not match every word', (tester) async {
+    await pumpPage(tester);
+    await tester.enterText(find.byKey(const Key('vocabulary-search')), '3');
+    await tester.pump();
+    expect(find.text('0 words'), findsOneWidget);
+  });
+
   testWidgets('searches vocabulary by English meaning', (tester) async {
     await pumpPage(tester);
 

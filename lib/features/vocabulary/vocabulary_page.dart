@@ -1028,12 +1028,17 @@ String _normalizePinyin(String value) {
     'ü': 'v',
   };
   final buffer = StringBuffer();
-  for (final rune in value.toLowerCase().runes) {
+  final input = value
+      .toLowerCase()
+      .replaceAll('u:', 'ü')
+      .replaceAll('u\u0308', 'ü');
+  for (final rune in input.runes) {
     final character = String.fromCharCode(rune);
     buffer.write(replacements[character] ?? character);
   }
   return buffer
       .toString()
+      .replaceAll(RegExp(r'[1-5]'), '')
       .replaceAll(RegExp(r"[^a-z0-9\s']"), '')
       .replaceAll(RegExp(r"[\s']+"), ' ')
       .trim();
