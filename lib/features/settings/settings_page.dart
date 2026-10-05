@@ -813,7 +813,7 @@ class _SettingsPageState extends State<SettingsPage> {
             key: const Key('recorded-mandarin-settings'),
             title: 'Recorded Mandarin audio',
             subtitle:
-                'Human recordings are included with this desktop app. No voice download is needed.',
+                'Human word recordings are included with this desktop app and work offline.',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -828,6 +828,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   (_pronunciationService as RecordedAudioPronunciation)
                       .systemSpeechDescription,
                 ),
+                if (_pronunciationService is DesktopVoiceInstaller) ...[
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  _DesktopVoiceSetup(
+                    installer: _pronunciationService as DesktopVoiceInstaller,
+                  ),
+                ],
                 const SizedBox(height: 10),
                 const SelectableText(
                   'Recordings © 2009 Yue Tan (Shtooka / University of Caen). MP3 conversion: Hugo Lopez, audio-cmn. CC BY-SA 3.0 US: https://creativecommons.org/licenses/by-sa/3.0/us/',

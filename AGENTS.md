@@ -88,6 +88,11 @@ Check implementation and tests before describing an existing feature as planned.
 - Pronunciation uses a platform-selecting factory. Linux and Windows play bundled
   human word recordings through `flutter_soloud`, with eSpeak NG / legacy eSpeak
   on Linux and `flutter_tts` on Windows for missing words and sentences.
+  Settings checks fallback availability and installs missing system speech on
+  an explicit button action: Linux uses PolicyKit and the package manager;
+  Windows installs Simplified Chinese Basic and TextToSpeech capabilities
+  through Windows Update with UAC. Recheck the playback engine after installation
+  and on resume; installer completion alone is not proof of a usable voice.
   The 4,379 MP3s in `assets/audio/mandarin/` are installed only by desktop CMake
   into `data/mandarin_audio`; keep them out of pubspec assets and Android builds.
   iOS/macOS retain Kokoro through `sherpa_onnx` with system speech fallback.
@@ -203,7 +208,7 @@ flutter test test/hsk_exam_test.dart test/exam_mode_test.dart test/profile_progr
 flutter test test/tutor_context_repository_test.dart test/tutor_personality_test.dart test/listening_dialogue_test.dart test/roleplay_mission_test.dart
 flutter test test/backup_repository_test.dart test/backup_settings_test.dart test/appearance_theme_test.dart test/app_button_theme_test.dart
 flutter test test/android_pronunciation_test.dart test/system_pronunciation_service_test.dart test/pronunciation_button_test.dart
-flutter test test/recorded_pronunciation_service_test.dart test/linux_system_pronunciation_service_test.dart
+flutter test test/recorded_pronunciation_service_test.dart test/linux_system_pronunciation_service_test.dart test/desktop_voice_installation_test.dart
 flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
 ```
 

@@ -22,15 +22,18 @@ void main() {
       );
       if (platform == 'linux' || platform == 'windows') {
         expect(service, isA<RecordedAudioPronunciation>());
+        expect(service, isA<DesktopVoiceInstaller>());
         expect(service, isNot(isA<OfflinePronunciationManager>()));
         await service.dispose();
       } else if (platform == 'android') {
         expect(service, isA<AndroidSystemPronunciationService>());
         expect(service, isNot(isA<RecordedAudioPronunciation>()));
+        expect(service, isNot(isA<DesktopVoiceInstaller>()));
         await service.dispose();
       } else {
         expect(service, isA<OfflinePronunciationManager>());
         expect(service, isNot(isA<RecordedAudioPronunciation>()));
+        expect(service, isNot(isA<DesktopVoiceInstaller>()));
         await service.dispose();
       }
     });
@@ -53,6 +56,15 @@ void main() {
       );
     });
     tearDown(() => service.dispose());
+
+    test('checks and installs fallback speech without playing audio', () async {
+      expect(await service.isMandarinVoiceInstalled(), isFalse);
+      await service.installMandarinVoice();
+      expect(await service.isMandarinVoiceInstalled(), isTrue);
+      expect(speech.voiceInstallCalls, 1);
+      expect(speech.spoken, isEmpty);
+      expect(player.played, isEmpty);
+    });
 
     test('uses the recording and requested listening speed', () async {
       library.bytes = Uint8List.fromList([1, 2, 3]);
@@ -263,7 +275,22 @@ class _Player implements RecordedAudioPlayer {
 }
 
 class _Speech
-    implements PronunciationService, PlaybackRatePronunciationService {
+    implements
+        PronunciationService,
+        PlaybackRatePronunciationService,
+        DesktopVoiceInstaller {
+  bool voiceInstalled = false;
+  int voiceInstallCalls = 0;
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() async => voiceInstalled;
+
+  @override
+  Future<void> installMandarinVoice() async {
+    voiceInstallCalls++;
+    voiceInstalled = true;
+  }
+
   final spoken = <String>[];
   final rates = <double>[];
   bool disposed = false;

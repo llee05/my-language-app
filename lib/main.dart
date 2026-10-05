@@ -59,6 +59,7 @@ part 'core/widgets/vocabulary_practice_panel.dart';
 part 'core/widgets/shared_widgets.dart';
 part 'core/widgets/flashcard_library.dart';
 part 'core/widgets/system_voice_setup.dart';
+part 'core/widgets/desktop_voice_setup.dart';
 part 'features/ai_tutor/ai_tutor_page.dart';
 part 'features/ai_tutor/tutor_personality_picker.dart';
 part 'features/ai_tutor/ai_listening_dialogue.dart';

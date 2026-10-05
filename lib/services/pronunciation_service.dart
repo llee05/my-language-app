@@ -12,6 +12,20 @@ abstract interface class SystemVoiceInstaller {
   Future<void> openMandarinVoiceInstaller();
 }
 
+/// Installs desktop system speech after an explicit learner action. Readiness
+/// must be checked separately; an installer exit is not proof of a usable voice.
+abstract interface class DesktopVoiceInstaller {
+  Future<bool> isMandarinVoiceInstalled();
+  Future<void> installMandarinVoice();
+}
+
+class DesktopVoiceInstallationException implements Exception {
+  const DesktopVoiceInstallationException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
 const kokoroOfflineVoiceDownloadBytes = 147031220;
 
 class OfflineVoiceStatus {

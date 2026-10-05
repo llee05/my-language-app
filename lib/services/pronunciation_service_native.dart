@@ -17,6 +17,7 @@ import 'pronunciation_service_system.dart';
 import 'recorded_audio_player_native.dart';
 import 'recorded_pronunciation_service.dart';
 import 'sherpa_voice_config.dart';
+import 'windows_system_pronunciation_service.dart';
 
 PronunciationService createPlatformPronunciationService() =>
     createDesktopAwarePronunciationService(
@@ -30,6 +31,8 @@ PronunciationService createPlatformSystemPronunciationService() =>
     ? AndroidSystemPronunciationService()
     : Platform.isLinux
     ? LinuxSystemPronunciationService()
+    : Platform.isWindows
+    ? WindowsSystemPronunciationService()
     : SystemPronunciationService();
 
 PronunciationService createDesktopAwarePronunciationService({
@@ -43,10 +46,10 @@ PronunciationService createDesktopAwarePronunciationService({
       SoLoudRecordedAudioPlayer(),
       isLinux
           ? LinuxSystemPronunciationService()
-          : SystemPronunciationService(),
+          : WindowsSystemPronunciationService(),
       systemSpeechDescription: isLinux
-          ? 'Missing words and full sentences use eSpeak NG (or eSpeak). Install eSpeak NG through your package manager to enable Mandarin speech.'
-          : 'Missing words and full sentences use your Windows Mandarin voice. Add Chinese (Simplified) speech in Windows language settings if needed.',
+          ? 'Missing words and full sentences use eSpeak NG (or eSpeak). Install it below through your Linux package manager.'
+          : 'Missing words and full sentences use your Windows Mandarin voice. Install Chinese (Simplified) speech below through Windows Update.',
     );
   }
   return createAndroidAwarePronunciationService(isAndroid: isAndroid);

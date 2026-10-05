@@ -102,6 +102,35 @@ Future<void> _openSettingsResetDialog(
   await tester.pumpAndSettle();
 }
 
+Future<void> _pumpRecordedVoiceSettings(
+  WidgetTester tester,
+  _RecordedFakePronunciationService pronunciation, {
+  Size surfaceSize = const Size(1000, 1000),
+}) async {
+  await tester.binding.setSurfaceSize(surfaceSize);
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  addTearDown(pronunciation.dispose);
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: SettingsPage(
+          appThemeId: AppThemeId.classic,
+          onThemeChanged: (_) {},
+          profile: testProfile,
+          onProfileChanged: (_) async {},
+          onResetOnboarding: () async {},
+          onResetAllData: () async {},
+          developmentRepository: _MemoryDevelopmentRepository(),
+          settingsRepository: _MemorySettingsRepository(),
+          pronunciationService: pronunciation,
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await _revealSettingsControl(tester, const Key('desktop-voice-check'));
+}
+
 Future<void> _confirmAccountReset(WidgetTester tester) async {
   await tester.tap(find.text('Continue'));
   await tester.pumpAndSettle();
@@ -4158,46 +4187,140 @@ void main() {
   });
 
   for (final size in [const Size(400, 800), const Size(1000, 1000)]) {
-    testWidgets('desktop settings shows recorded audio at $size', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(size);
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      final pronunciation = _RecordedFakePronunciationService();
-      addTearDown(pronunciation.dispose);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SettingsPage(
-              appThemeId: AppThemeId.classic,
-              onThemeChanged: (_) {},
-              profile: testProfile,
-              onProfileChanged: (_) async {},
-              onResetOnboarding: () async {},
-              onResetAllData: () async {},
-              developmentRepository: _MemoryDevelopmentRepository(),
-              settingsRepository: _MemorySettingsRepository(),
-              pronunciationService: pronunciation,
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.byKey(const Key('recorded-mandarin-settings')),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Recorded Mandarin audio'), findsOneWidget);
-      expect(find.textContaining('4379 human-recorded words'), findsOneWidget);
-      expect(find.text('Offline Mandarin voices'), findsNothing);
-      expect(find.byKey(const Key('kokoro-voice-download')), findsNothing);
-      expect(find.byKey(const Key('kokoro-voice-picker')), findsNothing);
-      expect(find.byKey(const Key('system-voice-install')), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
+    testWidgets(
+      'desktop settings checks and installs fallback speech at $size',
+      (tester) async {
+        final pronunciation = _RecordedFakePronunciationService();
+        await _pumpRecordedVoiceSettings(
+          tester,
+          pronunciation,
+          surfaceSize: size,
+        );
+        expect(find.text('Recorded Mandarin audio'), findsOneWidget);
+        expect(
+          find.textContaining('4379 human-recorded words'),
+          findsOneWidget,
+        );
+        expect(find.text('Offline Mandarin voices'), findsNothing);
+        expect(find.byKey(const Key('kokoro-voice-download')), findsNothing);
+        expect(find.byKey(const Key('kokoro-voice-picker')), findsNothing);
+        expect(find.byKey(const Key('system-voice-install')), findsNothing);
+        expect(pronunciation.voiceCheckCalls, 1);
+        expect(pronunciation.voiceInstallCalls, 0);
+        expect(find.textContaining('has not been confirmed'), findsOneWidget);
+
+        await _revealSettingsControl(
+          tester,
+          const Key('desktop-voice-install'),
+        );
+        await tester.tap(find.byKey(const Key('desktop-voice-install')));
+        await tester.pumpAndSettle();
+        expect(pronunciation.voiceInstallCalls, 1);
+        expect(pronunciation.voiceCheckCalls, 2);
+        expect(
+          find.textContaining('installed and ready offline'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('desktop-voice-install')), findsNothing);
+        expect(pronunciation.spoken, isEmpty);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
+
+  testWidgets('desktop voice setup reports failures and rechecks on resume', (
+    tester,
+  ) async {
+    final pronunciation = _RecordedFakePronunciationService()..failCheck = true;
+    await _pumpRecordedVoiceSettings(tester, pronunciation);
+    expect(find.textContaining('Could not check the fallback'), findsOneWidget);
+    expect(find.textContaining('installed and ready offline'), findsNothing);
+    pronunciation.failCheck = false;
+    pronunciation.failInstall = true;
+    await tester.tap(find.byKey(const Key('desktop-voice-install')));
+    await tester.pumpAndSettle();
+    expect(find.text('Administrator approval was cancelled.'), findsOneWidget);
+    expect(find.byKey(const Key('desktop-voice-install')), findsOneWidget);
+    pronunciation.installed = true;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('installed and ready offline'), findsOneWidget);
+    expect(find.byKey(const Key('desktop-voice-error')), findsNothing);
+    expect(find.byKey(const Key('desktop-voice-install')), findsNothing);
+    expect(pronunciation.voiceInstallCalls, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('desktop setup confirms availability after installation', (
+    tester,
+  ) async {
+    final pronunciation = _RecordedFakePronunciationService()
+      ..readyAfterInstall = false;
+    await _pumpRecordedVoiceSettings(tester, pronunciation);
+    await tester.tap(find.byKey(const Key('desktop-voice-install')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('installed and ready offline'), findsNothing);
+    expect(find.textContaining('installer finished, but'), findsOneWidget);
+    expect(find.byKey(const Key('desktop-voice-install')), findsOneWidget);
+    pronunciation.installed = true;
+    await _revealSettingsControl(tester, const Key('desktop-voice-check'));
+    await tester.tap(find.byKey(const Key('desktop-voice-check')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('installed and ready offline'), findsOneWidget);
+    expect(find.byKey(const Key('desktop-voice-error')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'desktop setup waits for installation and handles leaving settings',
+    (tester) async {
+      final completion = Completer<void>();
+      final pronunciation = _RecordedFakePronunciationService()
+        ..installationGate = completion.future;
+      await _pumpRecordedVoiceSettings(tester, pronunciation);
+      await tester.tap(find.byKey(const Key('desktop-voice-install')));
+      await tester.pump();
+      final scrollable = tester.state<ScrollableState>(
+        find
+            .descendant(
+              of: find.byType(SettingsPage),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      final offset = scrollable.position.pixels;
+      scrollable.position.jumpTo(0);
+      await tester.pump();
+      scrollable.position.jumpTo(offset);
+      await tester.pump();
+      expect(find.text('Installing Mandarin voice…'), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const Key('desktop-voice-install')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<TextButton>(find.byKey(const Key('desktop-voice-check')))
+            .onPressed,
+        isNull,
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(pronunciation.voiceCheckCalls, 1);
+      await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+      completion.complete();
+      await tester.pumpAndSettle();
+      expect(pronunciation.voiceCheckCalls, 1);
+      expect(pronunciation.voiceInstallCalls, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('settings downloads Kokoro and saves a random voice pool', (
     tester,
@@ -4616,7 +4739,34 @@ class _FailOncePronunciationService extends _FakePronunciationService {
 }
 
 class _RecordedFakePronunciationService extends _FakePronunciationService
-    implements RecordedAudioPronunciation {
+    implements RecordedAudioPronunciation, DesktopVoiceInstaller {
+  bool installed = false;
+  bool failCheck = false;
+  bool failInstall = false;
+  bool readyAfterInstall = true;
+  int voiceCheckCalls = 0;
+  int voiceInstallCalls = 0;
+  Future<void>? installationGate;
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() async {
+    voiceCheckCalls++;
+    if (failCheck) throw StateError('Voice enumeration failed');
+    return installed;
+  }
+
+  @override
+  Future<void> installMandarinVoice() async {
+    voiceInstallCalls++;
+    if (failInstall) {
+      throw const DesktopVoiceInstallationException(
+        'Administrator approval was cancelled.',
+      );
+    }
+    await installationGate;
+    installed = readyAfterInstall;
+  }
+
   @override
   String get systemSpeechDescription =>
       'Missing words use system Mandarin speech.';

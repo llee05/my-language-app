@@ -1,18 +1,33 @@
 import 'dart:io';
 
+import 'desktop_voice_installation.dart';
 import 'pronunciation_service.dart';
 
 /// flutter_tts has no Linux implementation. Use the locally installed speech
 /// engine directly, passing text through stdin without a shell.
 class LinuxSystemPronunciationService
-    implements PronunciationService, PlaybackRatePronunciationService {
-  LinuxSystemPronunciationService({LinuxSpeechLauncher? launch})
-    : _launch = launch ?? _launchSpeech;
+    implements
+        PronunciationService,
+        PlaybackRatePronunciationService,
+        DesktopVoiceInstaller {
+  LinuxSystemPronunciationService({
+    LinuxSpeechLauncher? launch,
+    DesktopVoiceInstaller? voiceInstaller,
+  }) : _launch = launch ?? _launchSpeech,
+       _voiceInstaller = voiceInstaller ?? LinuxMandarinVoiceInstaller();
 
   final LinuxSpeechLauncher _launch;
+  final DesktopVoiceInstaller _voiceInstaller;
   LinuxSpeechProcess? _process;
   int _requestId = 0;
   bool _disposed = false;
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() =>
+      _voiceInstaller.isMandarinVoiceInstalled();
+
+  @override
+  Future<void> installMandarinVoice() => _voiceInstaller.installMandarinVoice();
 
   @override
   Stream<OfflineVoiceStatus> get offlineVoiceUpdates => const Stream.empty();

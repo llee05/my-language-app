@@ -259,12 +259,21 @@ converted to MP3 by [audio-cmn](https://github.com/hugolpz/audio-cmn), under
 [CC BY-SA 3.0 US](https://creativecommons.org/licenses/by-sa/3.0/us/).
 
 Missing words and full sentences, including examples and AI dialogue, use
-system speech. Windows needs a Chinese (Simplified) speech voice installed in
-its language settings. Linux uses **eSpeak NG**, with legacy eSpeak as a
-fallback; install `espeak-ng` through your distribution's package manager
+system speech. Open **Settings → Recorded Mandarin audio → System Mandarin
+fallback** to check availability. **Install Mandarin voice** installs **eSpeak
+NG** on Linux through the system package manager, or Chinese (Simplified)
+text-to-speech on Windows through Windows Update. Installation needs internet
+access and system administrator approval. The app verifies availability after
+installation and when it resumes; **Check again** refreshes the status manually.
+If Windows requests a restart, restart and check again before using sentence
+audio. Installing speech does not change your display language.
+
+Linux automatic installation supports apt, dnf, pacman, zypper, and apk and
+requires PolicyKit (`pkexec`). For other setups, install `espeak-ng` manually
 (for example, `sudo apt install espeak-ng` on Debian/Ubuntu or
-`sudo pacman -S espeak-ng` on Arch). The recordings work without that engine;
-sentence audio needs it. Generated desktop dialogue uses one system voice.
+`sudo pacman -S espeak-ng` on Arch), then select **Check again**. Legacy eSpeak
+is also supported. The recordings work without a fallback engine; sentence
+audio needs it. Generated desktop dialogue uses one system voice.
 Potentially ambiguous single-character recordings are excluded pending reading
 review. See [recording provenance and regeneration](assets/audio/mandarin/README.md).
 

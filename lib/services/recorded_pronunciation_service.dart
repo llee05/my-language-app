@@ -117,6 +117,7 @@ class RecordedPronunciationService
     implements
         PronunciationService,
         RecordedAudioPronunciation,
+        DesktopVoiceInstaller,
         PreparedPronunciationService,
         PlaybackRatePronunciationService {
   RecordedPronunciationService(
@@ -134,6 +135,21 @@ class RecordedPronunciationService
   int _requestId = 0;
   bool _disposed = false;
   Future<void> _stopQueue = Future.value();
+
+  DesktopVoiceInstaller get _voiceInstaller {
+    final service = _fallback;
+    if (service is DesktopVoiceInstaller) {
+      return service as DesktopVoiceInstaller;
+    }
+    throw UnsupportedError('System speech setup is unavailable here.');
+  }
+
+  @override
+  Future<bool> isMandarinVoiceInstalled() =>
+      _voiceInstaller.isMandarinVoiceInstalled();
+
+  @override
+  Future<void> installMandarinVoice() => _voiceInstaller.installMandarinVoice();
 
   @override
   Stream<OfflineVoiceStatus> get offlineVoiceUpdates => const Stream.empty();
