@@ -21,7 +21,7 @@ The Dart package is `mylanguageapp`; the root widget retains the historical name
 `HanziPathApp`. Core flashcards, dictionary, word discovery, and ratings must remain
 usable without an account, network access, or an AI provider.
 
-The package version is `1.0.0-beta.6+6` in `pubspec.yaml`. The current app includes
+The package version is `1.0.0-beta.7+7` in `pubspec.yaml`. The current app includes
 251 twenty-word vocabulary decks covering 4,991 HSK 2.0 entries across levels
 1–6, ten sentence-practice decks, Dictionary, Doom Scrolling, Listening Practice,
 Vocab Rush, offline Exam Mode, Profile analytics, appearance settings, manual

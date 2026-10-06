@@ -1,6 +1,6 @@
 # 听说 TingShuo
 
-**TingShuo v1.0.0 Beta 6** is a local-first Flutter app for building a
+**TingShuo v1.0.0 Beta 7** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard decks,
 sentence and listening practice, a swipe-based word feed, a searchable
 dictionary, Vocab Rush, offline vocabulary exams, and saved progress analytics.
@@ -623,9 +623,29 @@ release tools live in `tool/`; automated coverage lives in `test/`.
 
 ## Release
 
-Current version: **1.0.0-beta.6+6**
+Current version: **1.0.0-beta.7+7**
 
-Beta 6
+### Beta 7
+
+- Added Dictionary, Doom Scrolling, and vocabulary progress shared across study
+  modes, with saved XP, streaks, HSK mastery, and weekly analytics.
+- Gave Flashcards and Listening Practice one searchable deck library with HSK
+  filters and direct deck selection.
+- Added example-sentence playback, numbered-pinyin dictionary searches, and
+  improved lesson completion summaries.
+- Refreshed navigation and study layouts, kept Settings save controls visible,
+  and improved controls for enlarged text.
+- Fixed Vocab Rush timing and answer feedback, rapid appearance selections,
+  stale dictation callbacks, and reviewed curriculum examples.
+- Added a two-step account reset confirmation and expanded offline persistence
+  and backup failure-recovery coverage.
+- Bundled 4,379 human Mandarin word recordings for Linux and Windows, with
+  system speech fallback and explicit fallback-voice installation in Settings.
+  Android continues to use its system Mandarin voice.
+- Updated Android to version code **7** and documented the Google Play internal
+  testing upload process.
+
+### Beta 6
 
 - Renamed Lessons to Flashcards and gave Listening Practice the same deck library,
   with direct deck selection, search, and HSK filters in place of dropdowns.
@@ -673,6 +693,11 @@ flutter build appbundle --release
 
 The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
+
+For Google Play, follow [Google Play internal testing](docs/google-play-internal-testing.md).
+Beta 7 uses package ID `io.github.llee05.tingshuo`, version name
+`1.0.0-beta.7`, and version code `7`. Reuse the existing upload key and check
+that Play Console has not already used version code `7` before uploading.
 
 Version tags matching `v*` use the same signing configuration in GitHub
 Actions. Release artifacts contain no shared AI key; users configure their own
