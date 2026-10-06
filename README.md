@@ -153,9 +153,10 @@ Whole sentence cards earn study XP but are excluded from HSK word totals.
 Open **Doom Scrolling** or select **Start scrolling** on Home for a vertical feed
 of random HSK 1–6 words you have not learned yet. Words at 80% mastery or above
 are excluded, including learned words whose spaced review is due. Each card
-shows Hanzi, optional pinyin, a study meaning, pronunciation, and an example
-where one is available. On smaller screens, **Word details** shows the full
-readings, meanings, and examples.
+shows Hanzi, optional pinyin, a study meaning, and an example where one is
+available. Each word plays automatically when its card appears, if Sound is
+enabled in Settings. **Word details** shows the full readings, meanings, and
+examples, with controls to replay the word or hear its example sentence.
 
 Swipe up, scroll with the mouse wheel, use the arrow keys, or select **Swipe up
 for another word**. Browsing and skipping do not change progress. **Got it**
@@ -238,9 +239,9 @@ bottom while you scroll through Settings.
 ### Pronunciation audio
 
 Use **Listen to example** on the back of a deck card, or the speaker beside an
-example in Dictionary details, Doom Scrolling, or a saved deck guide, to hear
-the full Mandarin sentence. Playback does not require an AI provider or award
-mastery. Sound can be enabled or disabled under **Settings → Sound**.
+example in Dictionary or Doom Scrolling word details, or a saved deck guide, to
+hear the full Mandarin sentence. Playback does not require an AI provider or
+award mastery. Sound can be enabled or disabled under **Settings → Sound**.
 
 On **Android**, pronunciation uses the device's Simplified Chinese (`zh-CN`)
 speech engine. Open **Settings → Mandarin voice → Install Mandarin voice**,

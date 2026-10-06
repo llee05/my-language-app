@@ -33,6 +33,8 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
   bool _failed = false;
   bool _saving = false;
   String? _saveError;
+  int _audioRequestId = 0;
+  Future<void> _audioStopQueue = Future<void>.value();
 
   @override
   void initState() {
@@ -47,15 +49,20 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
     super.dispose();
   }
 
-  Future<void> _stopAudio() async {
-    try {
-      await widget.pronunciationService.stop();
-    } catch (error) {
-      debugPrint('Discovery audio stop failed: $error');
-    }
+  Future<void> _stopAudio() {
+    _audioRequestId++;
+    // Finish earlier stops before starting a new word's audio.
+    return _audioStopQueue = _audioStopQueue.then((_) async {
+      try {
+        await widget.pronunciationService.stop();
+      } catch (error) {
+        debugPrint('Discovery audio stop failed: $error');
+      }
+    });
   }
 
   Future<void> _load() async {
+    unawaited(_stopAudio());
     setState(() {
       _loading = true;
       _failed = false;
@@ -82,6 +89,7 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
         _saveError = null;
         _loading = false;
       });
+      _playCurrentWord();
     } catch (error) {
       debugPrint('Discovery vocabulary load failed: $error');
       if (mounted) {
@@ -143,16 +151,31 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
     );
   }
 
+  void _playCurrentWord() {
+    if (_loading || _position >= _words.length || !_settings.soundEnabled) {
+      unawaited(_stopAudio());
+      return;
+    }
+    unawaited(_speak(_words[_position]));
+  }
+
+  bool _isCurrentAudioRequest(int requestId) =>
+      mounted && requestId == _audioRequestId && _settings.soundEnabled;
+
   Future<void> _speak(Map<String, dynamic> word) async {
     if (!_settings.soundEnabled) return;
+    final stop = _stopAudio();
+    final requestId = _audioRequestId;
     try {
+      await stop;
+      if (!_isCurrentAudioRequest(requestId)) return;
       await applyPronunciationSettings(widget.pronunciationService, _settings);
-      if (!mounted || !_settings.soundEnabled) return;
+      if (!_isCurrentAudioRequest(requestId)) return;
       await widget.pronunciationService.speakMandarin(
         word['simplified'] as String,
       );
     } catch (error) {
-      if (mounted) {
+      if (mounted && _isCurrentAudioRequest(requestId)) {
         _showPronunciationError(context, widget.pronunciationService, error);
       }
     }
@@ -210,8 +233,8 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                     : const PageScrollPhysics(),
                 itemCount: _words.length + 1,
                 onPageChanged: (index) {
-                  unawaited(_stopAudio());
                   setState(() => _position = index);
+                  _playCurrentWord();
                 },
                 itemBuilder: (context, index) => _buildFeedItem(index),
               ),
@@ -311,11 +334,6 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                       children: [
                         Row(
                           children: [
-                            if (_settings.soundEnabled)
-                              PronunciationButton(
-                                requestKey: index,
-                                onPressed: () => _speak(word),
-                              ),
                             Expanded(
                               child: Text(
                                 'HSK ${entry.hskLevel} · ${index + 1} / ${_words.length}',
@@ -372,36 +390,15 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                         ),
                         if (!compact && entry.hasExample) ...[
                           const SizedBox(height: 24),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  entry.exampleChinese,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: AppColors.text,
-                                    fontSize: 22,
-                                  ),
-                                ),
-                              ),
-                              PronunciationButton(
-                                key: Key(
-                                  'discovery-example-pronunciation-$index',
-                                ),
-                                requestKey: entry.exampleChinese,
-                                tooltip: _settings.soundEnabled
-                                    ? 'Hear example sentence'
-                                    : 'Pronunciation audio is disabled in Settings',
-                                onPressed: _settings.soundEnabled
-                                    ? () => _speak({
-                                        'simplified': entry.exampleChinese,
-                                      })
-                                    : null,
-                              ),
-                            ],
+                          Text(
+                            entry.exampleChinese,
+                            textAlign: TextAlign.center,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.text,
+                              fontSize: 22,
+                            ),
                           ),
                           if (_settings.showPinyin &&
                               entry.examplePinyin.isNotEmpty)

@@ -72,13 +72,34 @@ class _Settings implements SettingsRepository {
 
 class _SilentVoice implements PronunciationService {
   final spoken = <String>[];
+  int stops = 0;
   @override
   Future<void> speakMandarin(String text) async => spoken.add(text);
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async => stops++;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _GatedVoice extends _SilentVoice implements OfflinePronunciationManager {
+  final configurations = <Completer<void>>[];
+  @override
+  Future<void> configurePronunciation({
+    required PronunciationEngine engine,
+    List<String> voiceIds = const [],
+  }) {
+    final gate = Completer<void>();
+    configurations.add(gate);
+    return gate.future;
+  }
+}
+
+class _FailingVoice extends _SilentVoice {
+  @override
+  Future<void> speakMandarin(String text) async {
+    throw StateError('audio unavailable');
+  }
 }
 
 class _SilentSpeech implements SpeechInputService {
@@ -528,54 +549,203 @@ void main() {
     );
   }
 
-  for (final soundEnabled in [true, false]) {
-    testWidgets(
-      'feed example audio respects sound $soundEnabled without rating',
-      (tester) async {
-        await tester.binding.setSurfaceSize(const Size(390, 900));
-        addTearDown(() => tester.binding.setSurfaceSize(null));
-        final voice = _SilentVoice();
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: DoomScrollingPage(
-                studyService: widgetStudy(),
-                settingsRepository: _Settings(soundEnabled: soundEnabled),
-                pronunciationService: voice,
-                random: Random(7),
-              ),
+  for (final (soundEnabled, size) in [
+    (true, const Size(320, 640)),
+    (true, const Size(1000, 900)),
+    (false, const Size(320, 640)),
+    (false, const Size(1000, 900)),
+  ]) {
+    testWidgets('feed autoplays each card with sound $soundEnabled at $size', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final voice = _SilentVoice();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DoomScrollingPage(
+              studyService: widgetStudy(),
+              settingsRepository: _Settings(soundEnabled: soundEnabled),
+              pronunciationService: voice,
+              random: Random(7),
             ),
           ),
-        );
-        await tester.pumpAndSettle();
-        final word = tester
-            .widget<Text>(find.byKey(const Key('discovery-word-0')))
-            .data;
-        final example = _words.firstWhere(
-          (entry) => entry['simplified'] == word,
-        )['exampleChinese'];
-        final button = find.byKey(
-          const Key('discovery-example-pronunciation-0'),
-        );
-        expect(
-          tester.widget<PronunciationButton>(button).onPressed,
-          soundEnabled ? isNotNull : isNull,
-        );
-        await tester.tap(button);
-        await tester.pumpAndSettle();
-        expect(voice.spoken, soundEnabled ? [example] : isEmpty);
-        expect(await memory.reviewHistory(), isEmpty);
-        expect(
-          tester
-              .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
-              .controller!
-              .page,
-          0,
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
+        ),
+      );
+      await tester.pumpAndSettle();
+      String visibleWord(int index) =>
+          tester.widget<Text>(find.byKey(Key('discovery-word-$index'))).data!;
+      final first = visibleWord(0);
+      expect(voice.spoken, soundEnabled ? [first] : isEmpty);
+      expect(find.byType(PronunciationButton), findsNothing);
+      expect(await memory.reviewHistory(), isEmpty);
+
+      // Rebuilding a card does not repeat its pronunciation.
+      await tester.binding.setSurfaceSize(Size(size.width - 10, size.height));
+      await tester.pumpAndSettle();
+      expect(voice.spoken, soundEnabled ? [first] : isEmpty);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      final second = visibleWord(1);
+      expect(voice.spoken, soundEnabled ? [first, second] : isEmpty);
+      expect(await memory.reviewHistory(), isEmpty);
+
+      await tester.tap(find.text('Still learning').hitTestable().first);
+      await tester.pumpAndSettle();
+      final third = visibleWord(2);
+      expect(voice.spoken, soundEnabled ? [first, second, third] : isEmpty);
+      expect(await memory.reviewHistory(), hasLength(1));
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      expect(
+        voice.spoken,
+        soundEnabled ? [first, second, third, second] : isEmpty,
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      final stopsBeforeEnd = voice.stops;
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(find.text('You’ve reached the end of this mix.'), findsOneWidget);
+      expect(
+        voice.spoken,
+        soundEnabled ? [first, second, third, second, third] : isEmpty,
+      );
+      expect(voice.stops, greaterThan(stopsBeforeEnd));
+
+      await tester.tap(find.text('Refresh word feed'));
+      await tester.pumpAndSettle();
+      expect(
+        voice.spoken,
+        soundEnabled
+            ? [first, second, third, second, third, visibleWord(0)]
+            : isEmpty,
+      );
+      expect(await memory.reviewHistory(), hasLength(1));
+      expect(
+        tester
+            .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+            .controller!
+            .page,
+        0,
+      );
+      expect(tester.takeException(), isNull);
+    });
   }
+
+  testWidgets('feed cancels stale audio preparation and stops on exit', (
+    tester,
+  ) async {
+    final voice = _GatedVoice();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DoomScrollingPage(
+            studyService: widgetStudy(),
+            settingsRepository: const _Settings(soundEnabled: true),
+            pronunciationService: voice,
+            random: Random(7),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(voice.configurations, hasLength(1));
+    expect(voice.spoken, isEmpty);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pumpAndSettle();
+    expect(voice.configurations, hasLength(3));
+
+    // Even returning to the same word must not revive an older request.
+    voice.configurations[1].complete();
+    voice.configurations[0].complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, isEmpty);
+    voice.configurations[2].complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, [
+      tester.widget<Text>(find.byKey(const Key('discovery-word-0'))).data,
+    ]);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    expect(voice.configurations, hasLength(4));
+    final stopsBeforeExit = voice.stops;
+    await tester.pumpWidget(const SizedBox.shrink());
+    voice.configurations[3].complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, hasLength(1));
+    expect(voice.stops, greaterThan(stopsBeforeExit));
+    expect(await memory.reviewHistory(), isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('opening word details cancels pending feed audio', (
+    tester,
+  ) async {
+    final voice = _GatedVoice();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DoomScrollingPage(
+            studyService: widgetStudy(),
+            settingsRepository: const _Settings(soundEnabled: true),
+            pronunciationService: voice,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Word details').hitTestable().first);
+    await tester.pumpAndSettle();
+    voice.configurations.single.complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, isEmpty);
+    expect(find.text('Word details'), findsOneWidget);
+    expect(find.byType(PronunciationButton).hitTestable(), findsWidgets);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, isEmpty);
+    expect(await memory.reviewHistory(), isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unavailable autoplay audio does not prevent feed ratings', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DoomScrollingPage(
+            studyService: widgetStudy(),
+            settingsRepository: const _Settings(soundEnabled: true),
+            pronunciationService: _FailingVoice(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Mandarin audio is unavailable'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Got it').hitTestable().first);
+    await tester.pumpAndSettle();
+    expect(await memory.reviewHistory(), hasLength(1));
+    expect(
+      tester
+          .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+          .controller!
+          .page,
+      1,
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('keyboard skips do not award vocabulary mastery', (tester) async {
     await tester.pumpWidget(
@@ -606,27 +776,40 @@ void main() {
   testWidgets(
     'vertical swipes and the mouse wheel advance the feed without saving',
     (tester) async {
+      final voice = _SilentVoice();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: DoomScrollingPage(
               studyService: widgetStudy(),
-              settingsRepository: const _Settings(),
-              pronunciationService: _SilentVoice(),
+              settingsRepository: const _Settings(soundEnabled: true),
+              pronunciationService: voice,
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
       final feed = find.byKey(const Key('doom-scrolling-feed'));
+      final spoken = [
+        tester.widget<Text>(find.byKey(const Key('discovery-word-0'))).data,
+      ];
+      expect(voice.spoken, spoken);
       await tester.drag(feed, const Offset(0, -600));
       await tester.pumpAndSettle();
       expect(tester.widget<PageView>(feed).controller!.page, 1);
+      spoken.add(
+        tester.widget<Text>(find.byKey(const Key('discovery-word-1'))).data,
+      );
+      expect(voice.spoken, spoken);
       final mouse = TestPointer(1, PointerDeviceKind.mouse);
       await tester.sendEventToBinding(mouse.hover(tester.getCenter(feed)));
       await tester.sendEventToBinding(mouse.scroll(const Offset(0, 150)));
       await tester.pumpAndSettle();
       expect(tester.widget<PageView>(feed).controller!.page, 2);
+      spoken.add(
+        tester.widget<Text>(find.byKey(const Key('discovery-word-2'))).data,
+      );
+      expect(voice.spoken, spoken);
       expect(await memory.reviewHistory(), isEmpty);
     },
   );
