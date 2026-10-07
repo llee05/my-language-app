@@ -1060,43 +1060,58 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
   }
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: _showAnswer ? 'Flashcard answer' : 'Flashcard question',
-    hint: 'Tap to flip the card',
-    child: GestureDetector(
-      onTap: _flip,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-        clipBehavior: Clip.antiAlias,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          transitionBuilder: (child, animation) {
-            final rotation = Tween(begin: pi, end: 0.0).animate(animation);
-            return AnimatedBuilder(
-              animation: rotation,
-              child: child,
-              builder: (context, child) => Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.rotationY(rotation.value),
-                child: child,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final compact = constraints.maxWidth < 600;
+      return Semantics(
+        button: true,
+        label: _showAnswer ? 'Flashcard answer' : 'Flashcard question',
+        hint: 'Tap to flip the card',
+        child: GestureDetector(
+          onTap: _flip,
+          child: Card(
+            margin: EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: compact ? 12 : 24,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              transitionBuilder: (child, animation) {
+                final rotation = Tween(begin: pi, end: 0.0).animate(animation);
+                return AnimatedBuilder(
+                  animation: rotation,
+                  child: child,
+                  builder: (context, child) => Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.rotationY(rotation.value),
+                    child: child,
+                  ),
+                );
+              },
+              layoutBuilder: (currentChild, previousChildren) => Stack(
+                fit: StackFit.expand,
+                children: [...previousChildren, ?currentChild],
               ),
-            );
-          },
-          layoutBuilder: (currentChild, previousChildren) => Stack(
-            fit: StackFit.expand,
-            children: [...previousChildren, ?currentChild],
+              child: _showAnswer
+                  ? _buildAnswer(
+                      key: const ValueKey('answer'),
+                      compact: compact,
+                    )
+                  : _buildQuestion(
+                      key: const ValueKey('question'),
+                      compact: compact,
+                    ),
+            ),
           ),
-          child: _showAnswer
-              ? _buildAnswer(key: const ValueKey('answer'))
-              : _buildQuestion(key: const ValueKey('question')),
         ),
-      ),
-    ),
+      );
+    },
   );
 
-  Widget _buildQuestion({required Key key}) => _cardSide(
+  Widget _buildQuestion({required Key key, required bool compact}) => _cardSide(
     key: key,
+    compact: compact,
     children: [
       const Spacer(),
       Text(
@@ -1119,68 +1134,69 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     ],
   );
 
-  Widget _buildAnswer({required Key key}) => _cardSide(
+  Widget _buildAnswer({required Key key, required bool compact}) => _cardSide(
     key: key,
+    compact: compact,
     children: [
-      const Spacer(),
-      if (widget.isSentence) ...[
-        Text(
-          widget.card.chinese,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 24, color: AppColors.text),
-        ),
-        const SizedBox(height: 16),
-      ],
-      Text(
-        widget.card.pinyin,
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 22, color: AppColors.gold),
-      ),
-      PronunciationButton(
-        requestKey: widget.card.id,
-        tooltip: widget.onSpeak == null
-            ? 'Pronunciation audio is disabled in Settings'
-            : 'Hear Mandarin pronunciation',
-        onPressed: widget.onSpeak,
-      ),
-      const SizedBox(height: 18),
-      Text(
-        widget.card.englishMeaning,
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 26, color: AppColors.text),
-      ),
-      if (widget.card.exampleChinese.trim().isNotEmpty) ...[
-        const SizedBox(height: 28),
-        Text(widget.card.exampleChinese, textAlign: TextAlign.center),
-        PronunciationButton(
-          key: const Key('lesson-example-pronunciation'),
-          requestKey: widget.card.id,
-          label: 'Listen to example',
-          tooltip: widget.onSpeakExample == null
-              ? 'Pronunciation audio is disabled in Settings'
-              : 'Hear example sentence',
-          onPressed: widget.onSpeakExample,
-        ),
-        if (widget.card.examplePinyin.isNotEmpty)
-          Text(
-            widget.card.examplePinyin,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.muted),
+      if (compact) const SizedBox(height: 20) else const Spacer(),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.card.chinese,
+                      style: TextStyle(
+                        fontFamily: 'serif',
+                        fontSize: widget.isSentence ? 24 : (compact ? 32 : 36),
+                        height: 1.3,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.card.pinyin,
+                      style: TextStyle(
+                        fontSize: compact ? 18 : 20,
+                        height: 1.4,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              PronunciationButton(
+                requestKey: widget.card.id,
+                tooltip: widget.onSpeak == null
+                    ? 'Pronunciation audio is disabled in Settings'
+                    : 'Hear Mandarin pronunciation',
+                onPressed: widget.onSpeak,
+              ),
+            ],
           ),
-        Text(
-          widget.card.exampleEnglish,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.muted),
-        ),
-        if (widget.card.exampleSource.isNotEmpty)
+          const SizedBox(height: 16),
           Text(
-            widget.card.exampleSource == 'Original'
-                ? 'Original study example'
-                : '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 10, color: AppColors.faint),
+            widget.card.englishMeaning,
+            style: TextStyle(
+              fontSize: compact ? 22 : 26,
+              height: 1.35,
+              fontWeight: FontWeight.w500,
+              color: AppColors.text,
+            ),
           ),
-      ],
+          if (widget.card.exampleChinese.trim().isNotEmpty) ...[
+            const SizedBox(height: 24),
+            _buildExample(),
+          ],
+        ],
+      ),
+      const SizedBox(height: 24),
       const Spacer(),
       if (widget.isSentence)
         Wrap(
@@ -1202,11 +1218,20 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
           ],
         )
       else
-        OutlinedButton(
-          onPressed: _submitting || _rated || _ratingError != null
-              ? null
-              : () => _rate(ReviewRating.easy),
-          child: const Text('Click if you are already familiar with this word'),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            key: const Key('lesson-familiar'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            onPressed: _submitting || _rated || _ratingError != null
+                ? null
+                : () => _rate(ReviewRating.easy),
+            icon: const Icon(Icons.check_circle_outline, size: 20),
+            label: const Text('I know this word', textAlign: TextAlign.center),
+          ),
         ),
       if (_ratingError != null) ...[
         const SizedBox(height: 8),
@@ -1217,13 +1242,80 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
           retryKey: const Key('lesson-answer-retry'),
         ),
       ],
-      const SizedBox(height: 12),
+      const SizedBox(height: 16),
     ],
   );
 
-  Widget _cardSide({required Key key, required List<Widget> children}) {
+  Widget _buildExample() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+    decoration: BoxDecoration(
+      color: AppColors.surfaceLight.withValues(alpha: .45),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.border.withValues(alpha: .18)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Example sentence',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.muted,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            PronunciationButton(
+              key: const Key('lesson-example-pronunciation'),
+              requestKey: widget.card.id,
+              tooltip: widget.onSpeakExample == null
+                  ? 'Pronunciation audio is disabled in Settings'
+                  : 'Hear example sentence',
+              onPressed: widget.onSpeakExample,
+            ),
+          ],
+        ),
+        Text(
+          widget.card.exampleChinese,
+          style: TextStyle(fontSize: 18, height: 1.45, color: AppColors.text),
+        ),
+        if (widget.card.examplePinyin.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            widget.card.examplePinyin,
+            style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.gold),
+          ),
+        ],
+        const SizedBox(height: 8),
+        Text(
+          widget.card.exampleEnglish,
+          style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
+        ),
+        if (widget.card.exampleSource.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(
+            widget.card.exampleSource == 'Original'
+                ? 'Original study example'
+                : '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
+            style: TextStyle(fontSize: 10, height: 1.4, color: AppColors.faint),
+          ),
+        ],
+      ],
+    ),
+  );
+
+  Widget _cardSide({
+    required Key key,
+    required bool compact,
+    required List<Widget> children,
+  }) {
     final side = Padding(
-      padding: EdgeInsets.all(widget.isSentence ? 20 : 32),
+      padding: EdgeInsets.all(compact || widget.isSentence ? 20 : 32),
       child: Column(
         children: [
           Align(
@@ -1247,7 +1339,7 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
                             ? 'Tap for sentence'
                             : 'Tap for word')
                       : 'Tap for answer',
-                  style: TextStyle(color: AppColors.muted),
+                  style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
               ),
             ],

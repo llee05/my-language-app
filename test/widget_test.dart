@@ -339,10 +339,7 @@ void main() {
       await tester.tap(find.text('学'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final rating = find.widgetWithText(
-        OutlinedButton,
-        'Click if you are already familiar with this word',
-      );
+      final rating = find.widgetWithText(OutlinedButton, 'I know this word');
       await tester.ensureVisible(rating);
       await tester.tap(rating);
       await tester.pumpAndSettle();
@@ -2629,12 +2626,7 @@ void main() {
 
     await tester.tap(find.text('学'));
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(
-      find.widgetWithText(
-        OutlinedButton,
-        'Click if you are already familiar with this word',
-      ),
-    );
+    await tester.tap(find.widgetWithText(OutlinedButton, 'I know this word'));
     await tester.pumpAndSettle();
 
     expect(progress.recordedReview?.cardId, 12);
@@ -2783,7 +2775,7 @@ void main() {
 
     final answerButton = find.widgetWithText(
       OutlinedButton,
-      'Click if you are already familiar with this word',
+      'I know this word',
     );
     final submit = tester.widget<OutlinedButton>(answerButton).onPressed!;
     submit();
@@ -2835,12 +2827,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('学'));
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(
-      find.widgetWithText(
-        OutlinedButton,
-        'Click if you are already familiar with this word',
-      ),
-    );
+    await tester.tap(find.widgetWithText(OutlinedButton, 'I know this word'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('lesson-answer-error')), findsOneWidget);
@@ -2907,10 +2894,7 @@ void main() {
     await tester.tap(find.text('学'));
     await tester.pump(const Duration(milliseconds: 400));
     final recordedButton = tester.widget<OutlinedButton>(
-      find.widgetWithText(
-        OutlinedButton,
-        'Click if you are already familiar with this word',
-      ),
+      find.widgetWithText(OutlinedButton, 'I know this word'),
     );
     expect(recordedButton.onPressed, isNull);
     expect(progress.recordReviewCalls, 0);

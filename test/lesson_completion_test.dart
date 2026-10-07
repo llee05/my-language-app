@@ -82,9 +82,7 @@ Future<void> _pumpLesson(
 Future<void> _markFamiliar(WidgetTester tester, Flashcard card) async {
   await tester.tap(find.text(card.chinese).hitTestable());
   await tester.pumpAndSettle();
-  await tester.tap(
-    find.text('Click if you are already familiar with this word').hitTestable(),
-  );
+  await tester.tap(find.text('I know this word').hitTestable());
   await tester.pumpAndSettle();
 }
 
@@ -99,6 +97,114 @@ ReviewRecord _review(int cardId, int sessionId, ReviewRating rating) =>
     );
 
 void main() {
+  testWidgets('a mobile answer keeps the example and rating in view', (
+    tester,
+  ) async {
+    const card = Flashcard(
+      id: 51,
+      chinese: '一',
+      pinyin: 'yī',
+      englishMeaning: 'one',
+      exampleChinese: '一年有十二个月。',
+      examplePinyin: 'Yī nián yǒu shí èr gè yuè.',
+      exampleEnglish: 'One year has twelve months.',
+      exampleSource: 'Tatoeba',
+      exampleSourceId: '333474',
+    );
+    final progress = _CompletionProgress();
+    await _pumpLesson(
+      tester,
+      progress,
+      size: const Size(390, 844),
+      lessons: [
+        Lesson(summary: _lesson.summary, cards: const [card]),
+      ],
+    );
+    await tester.tap(find.text(card.chinese));
+    await tester.pumpAndSettle();
+
+    for (final text in [
+      card.chinese,
+      card.pinyin,
+      card.englishMeaning,
+      card.exampleChinese,
+      card.examplePinyin,
+      card.exampleEnglish,
+      'Tatoeba · sentence 333474',
+      'I know this word',
+      'Tap for word',
+    ]) {
+      expect(find.text(text).hitTestable(), findsOneWidget);
+    }
+    expect(progress.recordCalls, 0);
+    await tester.tap(find.text('Tap for word'));
+    await tester.pumpAndSettle();
+    expect(find.text(card.pinyin), findsNothing);
+    expect(find.text('Tap for answer').hitTestable(), findsOneWidget);
+    expect(progress.recordCalls, 0);
+    await _markFamiliar(tester, card);
+    expect(progress.recordCalls, 1);
+    expect(progress.reviews.single.rating, ReviewRating.easy);
+    expect(find.text('Deck complete!'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final (size, textScale) in [
+    (const Size(320, 568), 1.0),
+    (const Size(360, 640), 1.5),
+    (const Size(390, 844), 2.0),
+    (const Size(1000, 1100), 1.0),
+  ]) {
+    testWidgets('long vocabulary answers scroll at $size and scale $textScale', (
+      tester,
+    ) async {
+      const card = Flashcard(
+        id: 51,
+        chinese: '从而',
+        pinyin: 'cóng ér',
+        englishMeaning: 'thus; thereby',
+        exampleChinese: '他们创作出令人惊叹的艺术作品，从而让人们驻足欣赏宇宙之美。',
+        examplePinyin:
+            "Tāmen chuàngzuò chū lìngrén jīngtàn de yìshù zuòpǐn, cóng'ér ràng rénmen zhùzú xīnshǎng yǔzhòu zhī měi.",
+        exampleEnglish:
+            "They're creating stunning works of art to force people to stop and appreciate the beauty of the universe.",
+        exampleSource: 'Tatoeba',
+        exampleSourceId: '13753100',
+      );
+      final progress = _CompletionProgress();
+      await _pumpLesson(
+        tester,
+        progress,
+        lessons: [
+          Lesson(summary: _lesson.summary, cards: const [card]),
+        ],
+        size: size,
+        textScale: textScale,
+      );
+      await tester.tap(find.text(card.chinese).hitTestable());
+      await tester.pumpAndSettle();
+      expect(find.text(card.pinyin), findsOneWidget);
+      expect(find.text(card.exampleChinese), findsOneWidget);
+      expect(find.text(card.examplePinyin), findsOneWidget);
+      expect(find.text(card.exampleEnglish), findsOneWidget);
+      expect(find.text('Tatoeba · sentence 13753100'), findsOneWidget);
+      final rating = find.byKey(const Key('lesson-familiar'));
+      await tester.ensureVisible(rating);
+      await tester.pumpAndSettle();
+      expect(rating.hitTestable(), findsOneWidget);
+      expect(tester.getSize(rating).height, greaterThanOrEqualTo(48));
+      expect(progress.recordCalls, 0);
+      expect(tester.takeException(), isNull);
+      await tester.tap(rating);
+      await tester.pumpAndSettle();
+      expect(progress.recordCalls, 1);
+      expect(progress.reviews.single.cardId, card.id);
+      expect(progress.reviews.single.rating, ReviewRating.easy);
+      expect(find.text('Deck complete!'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'completion restores the full recap and awards XP from saved ratings',
     (tester) async {
@@ -242,11 +348,7 @@ void main() {
       progress.sessionSaveGate = save;
       await tester.tap(find.text('茶'));
       await tester.pumpAndSettle();
-      await tester.tap(
-        find
-            .text('Click if you are already familiar with this word')
-            .hitTestable(),
-      );
+      await tester.tap(find.text('I know this word').hitTestable());
       await tester.pump();
       await tester.pump();
       expect(progress.recordCalls, 1);
