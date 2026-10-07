@@ -85,12 +85,20 @@ void main() {
     WidgetTester tester, {
     LearnerSettings settings = const LearnerSettings(),
     PronunciationService? pronunciationService,
+    List<Map<String, dynamic>> entries = _entries,
+    double textScale = 1,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: Scaffold(
           body: VocabularyPage(
-            initialEntries: _entries,
+            initialEntries: entries,
             initialProgress: _progress,
             settingsRepository: _MemorySettingsRepository(settings),
             pronunciationService:
@@ -101,6 +109,61 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+  }
+
+  for (final (size, textScale) in [
+    (const Size(390, 844), 1.0),
+    (const Size(320, 568), 2.0),
+    (const Size(1100, 900), 1.0),
+  ]) {
+    testWidgets('search stays pinned at $size with text scale $textScale', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final entries = [
+        ..._entries,
+        for (var index = 0; index < 60; index++)
+          {
+            ..._entries[1],
+            'simplified': '学习$index',
+            'traditional': '學習$index',
+            'meanings': ['study word $index'],
+          },
+      ];
+      await pumpPage(tester, entries: entries, textScale: textScale);
+      // Large text can put the search below the initial viewport.
+      final search = find.byKey(
+        const Key('vocabulary-search'),
+        skipOffstage: false,
+      );
+      final scroll = find.byKey(const Key('vocabulary-scroll'));
+      final pinnedTop = tester.getTopLeft(scroll).dy + 8;
+      expect(tester.getTopLeft(search).dy, greaterThan(pinnedTop));
+
+      for (final offset in [-800.0, -700.0, 200.0]) {
+        await tester.drag(scroll, Offset(0, offset));
+        await tester.pumpAndSettle();
+        expect(search.hitTestable(), findsOneWidget);
+        expect(tester.getTopLeft(search).dy, closeTo(pinnedTop, .1));
+        expect(find.text('Dictionary').hitTestable(), findsNothing);
+      }
+
+      await tester.enterText(search, 'library');
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(search).controller!.text, 'library');
+      expect(search.hitTestable(), findsOneWidget);
+      expect(find.text('1 word', skipOffstage: false), findsOneWidget);
+      await tester.ensureVisible(find.text('图书馆', skipOffstage: false));
+      await tester.pumpAndSettle();
+      expect(find.text('图书馆').hitTestable(), findsOneWidget);
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+      expect(find.text('64 words', skipOffstage: false), findsOneWidget);
+      expect(search.hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   }
 
   testWidgets('clears search, level, and learning filters together', (
@@ -160,6 +223,10 @@ void main() {
       const Offset(0, -260),
     );
     await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('vocabulary-search')).hitTestable(),
+      findsOneWidget,
+    );
     expect(find.text('你好').hitTestable(), findsOneWidget);
     await tester.tap(find.text('你好'));
     await tester.pumpAndSettle();

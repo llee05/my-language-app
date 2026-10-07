@@ -229,45 +229,57 @@ class _VocabularyPageState extends State<VocabularyPage> {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 14),
+                  sliver: SliverToBoxAdapter(
+                    child: const _AppPageHeader(
+                      title: 'Dictionary',
+                      hanzi: '词汇',
+                      description:
+                          'Find a word, explore its meaning, and practise it.',
+                    ),
+                  ),
+                ),
+                PinnedHeaderSliver(
+                  key: const Key('vocabulary-search-header'),
+                  child: ColoredBox(
+                    color: AppColors.background,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 14),
+                      child: TextField(
+                        key: const Key('vocabulary-search'),
+                        controller: _searchController,
+                        onChanged: (_) => setState(() {}),
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: 'Search Hanzi, pinyin, or English',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchController.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: 'Clear search',
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {});
+                                  },
+                                  icon: const Icon(Icons.close),
+                                ),
+                          filled: true,
+                          fillColor: AppColors.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: AppColors.outline),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const _AppPageHeader(
-                          title: 'Dictionary',
-                          hanzi: '词汇',
-                          description:
-                              'Find a word, explore its meaning, and practise it.',
-                        ),
-                        const SizedBox(height: 22),
-                        TextField(
-                          key: const Key('vocabulary-search'),
-                          controller: _searchController,
-                          onChanged: (_) => setState(() {}),
-                          textInputAction: TextInputAction.search,
-                          decoration: InputDecoration(
-                            hintText: 'Search Hanzi, pinyin, or English',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchController.text.isEmpty
-                                ? null
-                                : IconButton(
-                                    tooltip: 'Clear search',
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {});
-                                    },
-                                    icon: const Icon(Icons.close),
-                                  ),
-                            filled: true,
-                            fillColor: AppColors.surface,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: AppColors.outline),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(

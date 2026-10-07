@@ -214,7 +214,8 @@ Failed progress saves can be retried without counting answers twice.
 The **Dictionary** page supports Hanzi, pinyin, and English search, HSK 1–6
 filters, and unseen, learning, learned, and due states. Pinyin search accepts
 tone marks, plain letters, or tone numbers such as `xue2xi2`; `ü`, `v`, and `u:`
-spellings are supported. Open word details and expand **Practise these words**
+spellings are supported. The search bar stays at the top while you scroll the
+word list. Open word details and expand **Practise these words**
 to save a **Got it** or **Still learning** rating.
 Looking up a word or playing its pronunciation does not award mastery.
 **Vocab Rush** provides timed and survival challenges; every answer contributes
