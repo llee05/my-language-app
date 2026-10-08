@@ -426,6 +426,7 @@ class _DashboardPageState extends State<DashboardPage>
                         ),
                         Expanded(
                           child: _DashboardBody(
+                            mobileLayout: !showSidebar,
                             vocabularyRepository: widget.vocabularyRepository,
                             studyService: _studyService,
                             selectedNav: selectedNav,
@@ -515,6 +516,7 @@ class _DashboardPageState extends State<DashboardPage>
 
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
+    required this.mobileLayout,
     required this.selectedNav,
     required this.resumeLatestLesson,
     this.initialLessonId,
@@ -565,6 +567,7 @@ class _DashboardBody extends StatelessWidget {
     this.backupRepository = const SqliteBackupRepository(),
     this.backupFileService = const FilePickerBackupFileService(),
   });
+  final bool mobileLayout;
   final VocabularyStudyService studyService;
   final int selectedNav;
   final bool resumeLatestLesson;
@@ -811,6 +814,7 @@ class _DashboardBody extends StatelessWidget {
                     ),
                     RightRail(
                       compact: true,
+                      mobileLayout: mobileLayout,
                       stats: learningStats,
                       onReviewAll: onOpenDiscovery,
                     ),

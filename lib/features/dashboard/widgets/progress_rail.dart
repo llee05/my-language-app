@@ -4,15 +4,20 @@ class RightRail extends StatelessWidget {
   const RightRail({
     super.key,
     this.compact = false,
+    this.mobileLayout = false,
     required this.stats,
     required this.onReviewAll,
   });
   final bool compact;
+  final bool mobileLayout;
   final DashboardLearningStats stats;
   final VoidCallback onReviewAll;
 
   @override
   Widget build(BuildContext context) {
+    final mobile = compact && mobileLayout;
+    final horizontalPadding = compact && !mobile ? 32.0 : 20.0;
+
     return Container(
       decoration: compact
           ? BoxDecoration(
@@ -22,12 +27,14 @@ class RightRail extends StatelessWidget {
               border: Border(left: BorderSide(color: AppColors.outline)),
             ),
       padding: EdgeInsets.fromLTRB(
-        compact ? 32 : 20,
+        horizontalPadding,
         28,
-        compact ? 32 : 20,
+        horizontalPadding,
         32,
       ),
-      child: compact
+      child: mobile
+          ? WeeklyXp(xpByDay: stats.weeklyXp)
+          : compact
           ? Wrap(
               spacing: 22,
               runSpacing: 24,

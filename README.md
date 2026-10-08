@@ -126,7 +126,8 @@ for dataset sources, attribution, and regeneration instructions.
 ### Home and Profile
 
 **Home** shows the unlearned-word discovery prompt, the latest unfinished
-deck, weekly XP, and vocabulary statistics. **Available HSK flashcards** samples
+deck, and weekly XP. Vocabulary statistics also appear on wider layouts; on
+mobile, open Profile for vocabulary mastery. **Available HSK flashcards** samples
 up to six decks across HSK levels; use **Refresh decks** for another selection.
 
 Open **Profile** through the user icon in the dashboard header to see total XP,

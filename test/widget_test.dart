@@ -394,6 +394,7 @@ void main() {
     (const Size(320, 640), 1.0),
     (const Size(320, 640), 1.5),
     (const Size(320, 640), 2.0),
+    (const Size(760, 900), 1.0),
     (const Size(1280, 900), 1.0),
     (const Size(640, 360), 1.0),
   ]) {
@@ -475,6 +476,19 @@ void main() {
             _ => MainDashboard,
           };
           expect(find.byType(pageType), findsOneWidget, reason: label);
+          if (label == 'Home') {
+            expect(find.byType(WeeklyXp), findsOneWidget);
+            expect(
+              find.byType(VocabularyPanel),
+              size.width < 760 ? findsNothing : findsOneWidget,
+            );
+            if (size.width < 760) {
+              expect(
+                tester.getSize(find.byType(WeeklyXp)).width,
+                size.width - 40,
+              );
+            }
+          }
           if (label == 'Exam Mode') {
             expect(find.byKey(const Key('exam-start')), findsOneWidget);
           }
