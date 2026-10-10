@@ -100,13 +100,13 @@ class DashboardLearningStats {
         .where((word) => word.progress.timesSeen > 0)
         .toList(growable: false);
     final wordsLearned = seenVocabulary
-        .where((word) => word.progress.mastery >= .8)
+        .where((word) => word.progress.isLearned)
         .length;
     final learnedWordsByLevel = [
       for (var level = 0; level < 6; level++) <String>{},
     ];
     for (final word in seenVocabulary) {
-      if (word.progress.mastery < .8) continue;
+      if (!word.progress.isLearned) continue;
       learnedWordsByLevel[word.hskLevel - 1].add(word.chinese);
     }
 

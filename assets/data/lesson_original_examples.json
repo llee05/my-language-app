@@ -1,4 +1,64 @@
 {
+  "hsk-old-1-下": {
+    "chinese": "请把书放在桌子下。",
+    "pinyin": "Qǐng bǎ shū fàng zài zhuō zi xià。",
+    "english": "Please put the book under the table.",
+    "source": "Original"
+  },
+  "hsk-old-1-块": {
+    "chinese": "这块蛋糕很好吃。",
+    "pinyin": "Zhè kuài dàn gāo hěn hǎo chī。",
+    "english": "This piece of cake is delicious.",
+    "source": "Original"
+  },
+  "hsk-old-1-字": {
+    "chinese": "这个字怎么写？",
+    "pinyin": "Zhè gè zì zěn me xiě？",
+    "english": "How do you write this character?",
+    "source": "Original"
+  },
+  "hsk-old-1-日": {
+    "chinese": "今天是十月一日。",
+    "pinyin": "Jīn tiān shì shí yuè yī rì。",
+    "english": "Today is the first of October.",
+    "source": "Original"
+  },
+  "hsk-old-2-外": {
+    "chinese": "他在门外等你。",
+    "pinyin": "Tā zài mén wài děng nǐ。",
+    "english": "He is waiting for you outside the door.",
+    "source": "Original"
+  },
+  "hsk-old-2-离": {
+    "chinese": "学校离我家很近。",
+    "pinyin": "Xué xiào lí wǒ jiā hěn jìn。",
+    "english": "The school is close to my home.",
+    "source": "Original"
+  },
+  "hsk-old-2-题": {
+    "chinese": "这道题很难。",
+    "pinyin": "Zhè dào tí hěn nán。",
+    "english": "This question is difficult.",
+    "source": "Original"
+  },
+  "hsk-old-3-包": {
+    "chinese": "这个包是我的。",
+    "pinyin": "Zhè gè bāo shì wǒ de。",
+    "english": "This bag is mine.",
+    "source": "Original"
+  },
+  "hsk-old-3-宾馆": {
+    "chinese": "这家宾馆很干净。",
+    "pinyin": "Zhè jiā bīn guǎn hěn gān jìng。",
+    "english": "This hotel is clean.",
+    "source": "Original"
+  },
+  "hsk-old-3-拿": {
+    "chinese": "请拿一本书给我。",
+    "pinyin": "Qǐng ná yī běn shū gěi wǒ。",
+    "english": "Please bring me a book.",
+    "source": "Original"
+  },
   "hsk-old-4-京剧": {
     "chinese": "她每周都练习京剧。",
     "pinyin": "Tā měi zhōu dōu liàn xí jīng jù。",
@@ -7,8 +67,20 @@
   },
   "hsk-old-4-俩": {
     "chinese": "我们俩是很好的朋友。",
-    "pinyin": "Wǒ men liǎng shì hěn hǎo de péng you。",
+    "pinyin": "Wǒ men liǎ shì hěn hǎo de péng you。",
     "english": "The two of us are good friends.",
+    "source": "Original"
+  },
+  "hsk-old-4-博士": {
+    "chinese": "她正在读博士。",
+    "pinyin": "Tā zhèng zài dú bó shì。",
+    "english": "She is studying for a doctorate.",
+    "source": "Original"
+  },
+  "hsk-old-4-台": {
+    "chinese": "我买了一台电脑。",
+    "pinyin": "Wǒ mǎi le yī tái diàn nǎo。",
+    "english": "I bought a computer.",
     "source": "Original"
   },
   "hsk-old-4-售货员": {
@@ -17,10 +89,22 @@
     "english": "This salesclerk is very experienced.",
     "source": "Original"
   },
+  "hsk-old-4-场": {
+    "chinese": "今天有一场比赛。",
+    "pinyin": "Jīn tiān yǒu yī chǎng bǐ sài。",
+    "english": "There is a match today.",
+    "source": "Original"
+  },
   "hsk-old-4-填空": {
     "chinese": "请根据课文内容填空。",
     "pinyin": "Qǐng gēn jù kè wén nèi róng tián kòng。",
     "english": "Please fill in the blanks using the lesson text.",
+    "source": "Original"
+  },
+  "hsk-old-4-干": {
+    "chinese": "这件事你干得很好。",
+    "pinyin": "Zhè jiàn shì nǐ gàn de hěn hǎo。",
+    "english": "You did this very well.",
     "source": "Original"
   },
   "hsk-old-4-打针": {
@@ -29,10 +113,28 @@
     "english": "The nurse is giving the patient an injection.",
     "source": "Original"
   },
+  "hsk-old-4-理发": {
+    "chinese": "我明天去理发。",
+    "pinyin": "Wǒ míng tiān qù lǐ fà。",
+    "english": "I am getting a haircut tomorrow.",
+    "source": "Original"
+  },
   "hsk-old-4-积累": {
     "chinese": "我们需要积累经验。",
     "pinyin": "Wǒ men xū yào jī lěi jīng yàn。",
     "english": "We need to accumulate experience.",
+    "source": "Original"
+  },
+  "hsk-old-4-篇": {
+    "chinese": "我读了三篇文章。",
+    "pinyin": "Wǒ dú le sān piān wén zhāng。",
+    "english": "I read three articles.",
+    "source": "Original"
+  },
+  "hsk-old-4-行": {
+    "chinese": "这样做行吗？",
+    "pinyin": "Zhè yàng zuò xíng ma？",
+    "english": "Is it okay to do it this way?",
     "source": "Original"
   },
   "hsk-old-4-长江": {
@@ -53,10 +155,22 @@
     "english": "He is sometimes careless.",
     "source": "Original"
   },
+  "hsk-old-5-丁": {
+    "chinese": "甲、乙、丙、丁是四个不同的小组。",
+    "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+    "english": "A, B, C, and D are four different groups.",
+    "source": "Original"
+  },
   "hsk-old-5-丙": {
-    "chinese": "甲、乙、丙是三个不同的小组。",
-    "pinyin": "Jiǎ、 yǐ、 bǐng shì sān gè bù tóng de xiǎo zǔ。",
-    "english": "A, B, and C are three different groups.",
+    "chinese": "甲、乙、丙、丁是四个不同的小组。",
+    "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+    "english": "A, B, C, and D are four different groups.",
+    "source": "Original"
+  },
+  "hsk-old-5-乙": {
+    "chinese": "甲、乙、丙、丁是四个不同的小组。",
+    "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+    "english": "A, B, C, and D are four different groups.",
     "source": "Original"
   },
   "hsk-old-5-体现": {
@@ -77,10 +191,28 @@
     "english": "He pushed the door open with all his strength.",
     "source": "Original"
   },
+  "hsk-old-5-册": {
+    "chinese": "我买了两册书。",
+    "pinyin": "Wǒ mǎi le liǎng cè shū。",
+    "english": "I bought two volumes.",
+    "source": "Original"
+  },
+  "hsk-old-5-则": {
+    "chinese": "报纸上有一则新闻。",
+    "pinyin": "Bào zhǐ shàng yǒu yī zé xīn wén。",
+    "english": "There is a news item in the newspaper.",
+    "source": "Original"
+  },
   "hsk-old-5-初级": {
     "chinese": "她正在参加初级汉语课程。",
     "pinyin": "Tā zhèng zài cān jiā chū jí Hàn yǔ kè chéng。",
     "english": "She is taking an elementary Chinese course.",
+    "source": "Original"
+  },
+  "hsk-old-5-匹": {
+    "chinese": "田里有一匹马。",
+    "pinyin": "Tián lǐ yǒu yī pǐ mǎ。",
+    "english": "There is a horse in the field.",
     "source": "Original"
   },
   "hsk-old-5-华裔": {
@@ -113,6 +245,12 @@
     "english": "He does not care whether his clothes are a famous brand.",
     "source": "Original"
   },
+  "hsk-old-5-哈": {
+    "chinese": "哈哈，这个笑话真有趣！",
+    "pinyin": "Hā hā， zhè gè xiào hua zhēn yǒu qù！",
+    "english": "Ha ha, this joke is really funny!",
+    "source": "Original"
+  },
   "hsk-old-5-唉": {
     "chinese": "唉，今天又错过了公共汽车。",
     "pinyin": "Ài， jīn tiān yòu cuò guo le gōng gòng qì chē。",
@@ -127,7 +265,7 @@
   },
   "hsk-old-5-嘱咐": {
     "chinese": "妈妈嘱咐我早点回家。",
-    "pinyin": "Mā ma zhǔ fù wǒ zǎo diǎn huí jiā。",
+    "pinyin": "Mā ma zhǔ fu wǒ zǎo diǎn huí jiā。",
     "english": "Mother told me to come home early.",
     "source": "Original"
   },
@@ -161,10 +299,34 @@
     "english": "Luckily, you reminded me.",
     "source": "Original"
   },
+  "hsk-old-5-应聘": {
+    "chinese": "她想应聘这份工作。",
+    "pinyin": "Tā xiǎng yìng pìn zhè fèn gōng zuò。",
+    "english": "She wants to apply for this job.",
+    "source": "Original"
+  },
+  "hsk-old-5-开放": {
+    "chinese": "这家博物馆周末开放。",
+    "pinyin": "Zhè jiā bó wù guǎn zhōu mò kāi fàng。",
+    "english": "This museum is open to the public on weekends.",
+    "source": "Original"
+  },
   "hsk-old-5-性质": {
     "chinese": "我们需要了解这种材料的性质。",
     "pinyin": "Wǒ men xū yào liǎo jiě zhè zhǒng cái liào de xìng zhì。",
     "english": "We need to understand the properties of this material.",
+    "source": "Original"
+  },
+  "hsk-old-5-恐怖": {
+    "chinese": "这部电影很恐怖。",
+    "pinyin": "Zhè bù diàn yǐng hěn kǒng bù。",
+    "english": "This movie is terrifying.",
+    "source": "Original"
+  },
+  "hsk-old-5-所": {
+    "chinese": "附近有一所学校。",
+    "pinyin": "Fù jìn yǒu yī suǒ xué xiào。",
+    "english": "There is a school nearby.",
     "source": "Original"
   },
   "hsk-old-5-振动": {
@@ -209,6 +371,18 @@
     "english": "I would like to try the tangerines here.",
     "source": "Original"
   },
+  "hsk-old-5-棒": {
+    "chinese": "你的想法真棒！",
+    "pinyin": "Nǐ de xiǎng fǎ zhēn bàng！",
+    "english": "Your idea is excellent!",
+    "source": "Original"
+  },
+  "hsk-old-5-橡皮": {
+    "chinese": "我用橡皮擦掉了这个字。",
+    "pinyin": "Wǒ yòng xiàng pí cā diào le zhè gè zì。",
+    "english": "I erased this character with an eraser.",
+    "source": "Original"
+  },
   "hsk-old-5-步骤": {
     "chinese": "请介绍一下这个步骤。",
     "pinyin": "Qǐng jiè shào yī xià zhè gè bù zhòu。",
@@ -233,6 +407,12 @@
     "english": "They are visiting this pond.",
     "source": "Original"
   },
+  "hsk-old-5-甲": {
+    "chinese": "甲、乙、丙、丁是四个不同的小组。",
+    "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+    "english": "A, B, C, and D are four different groups.",
+    "source": "Original"
+  },
   "hsk-old-5-登机牌": {
     "chinese": "请把登机牌放在桌上。",
     "pinyin": "Qǐng bǎ dēng jī pái fàng zài zhuō shàng。",
@@ -243,6 +423,12 @@
     "chinese": "请仔细阅读这份目录。",
     "pinyin": "Qǐng zǐ xì yuè dú zhè fèn mù lù。",
     "english": "Please read this catalog carefully.",
+    "source": "Original"
+  },
+  "hsk-old-5-系": {
+    "chinese": "她在中文系学习。",
+    "pinyin": "Tā zài zhōng wén xì xué xí。",
+    "english": "She studies in the Chinese language department.",
     "source": "Original"
   },
   "hsk-old-5-纪律": {
@@ -267,6 +453,18 @@
     "chinese": "我们需要缩小差距。",
     "pinyin": "Wǒ men xū yào suō xiǎo chā jù。",
     "english": "We need to narrow the gap.",
+    "source": "Original"
+  },
+  "hsk-old-5-聚会": {
+    "chinese": "周末我们有一个聚会。",
+    "pinyin": "Zhōu mò wǒ men yǒu yī gè jù huì。",
+    "english": "We have a get-together this weekend.",
+    "source": "Original"
+  },
+  "hsk-old-5-背": {
+    "chinese": "请背这首诗。",
+    "pinyin": "Qǐng bèi zhè shǒu shī。",
+    "english": "Please memorize this poem.",
     "source": "Original"
   },
   "hsk-old-5-自觉": {
@@ -297,6 +495,12 @@
     "chinese": "这个谜语很有趣，你能猜出来吗？",
     "pinyin": "Zhè gè mí yǔ hěn yǒu qù， nǐ néng cāi chū lái ma？",
     "english": "This riddle is interesting. Can you solve it?",
+    "source": "Original"
+  },
+  "hsk-old-5-象棋": {
+    "chinese": "爷爷教我下象棋。",
+    "pinyin": "Yé ye jiāo wǒ xià xiàng qí。",
+    "english": "Grandpa teaches me to play Chinese chess.",
     "source": "Original"
   },
   "hsk-old-5-转告": {
@@ -341,10 +545,22 @@
     "english": "We need to cooperate with the doctor’s examination.",
     "source": "Original"
   },
+  "hsk-old-5-闻": {
+    "chinese": "我闻到了花的香味。",
+    "pinyin": "Wǒ wén dào le huā de xiāng wèi。",
+    "english": "I smelled the fragrance of the flowers.",
+    "source": "Original"
+  },
   "hsk-old-5-鞭炮": {
     "chinese": "春节的时候，我们听到了鞭炮的声音。",
     "pinyin": "Chūn jié de shí hou， wǒ men tīng dào le biān pào de shēng yīn。",
     "english": "During the Spring Festival, we heard firecrackers.",
+    "source": "Original"
+  },
+  "hsk-old-5-项": {
+    "chinese": "这是一项重要的任务。",
+    "pinyin": "Zhè shì yī xiàng zhòng yào de rèn wu。",
+    "english": "This is an important task.",
     "source": "Original"
   },
   "hsk-old-6-一丝不苟": {
@@ -369,6 +585,12 @@
     "chinese": "他一度想放弃这个计划。",
     "pinyin": "Tā yī dù xiǎng fàng qì zhè gè jì huà。",
     "english": "For a while, he wanted to give up this plan.",
+    "source": "Original"
+  },
+  "hsk-old-6-一律": {
+    "chinese": "所有学生一律遵守规定。",
+    "pinyin": "Suǒ yǒu xué sheng yī lǜ zūn shǒu guī dìng。",
+    "english": "All students must follow the rules without exception.",
     "source": "Original"
   },
   "hsk-old-6-一贯": {
@@ -504,9 +726,9 @@
     "source": "Original"
   },
   "hsk-old-6-主流": {
-    "chinese": "这条河的主流流向南方。",
-    "pinyin": "Zhè tiáo hé de zhǔ liú liú xiàng nán fāng。",
-    "english": "The main stream of this river flows south.",
+    "chinese": "这种观点已经成为主流。",
+    "pinyin": "Zhè zhǒng guān diǎn yǐ jīng chéng wéi zhǔ liú。",
+    "english": "This view has already become mainstream.",
     "source": "Original"
   },
   "hsk-old-6-举世瞩目": {
@@ -1361,6 +1583,12 @@
     "english": "He was shivering from the cold.",
     "source": "Original"
   },
+  "hsk-old-6-哇": {
+    "chinese": "哇，这里真漂亮！",
+    "pinyin": "Wā， zhè lǐ zhēn piào liang！",
+    "english": "Wow, it is really beautiful here!",
+    "source": "Original"
+  },
   "hsk-old-6-唾沫": {
     "chinese": "讲话时不要把唾沫喷到别人身上。",
     "pinyin": "Jiǎng huà shí bù yào bǎ tuò mo pēn dào bié ren shēn shàng。",
@@ -1479,6 +1707,12 @@
     "chinese": "这家公司正在推动业务多元化。",
     "pinyin": "Zhè jiā gōng sī zhèng zài tuī dòng yè wù duō yuán huà。",
     "english": "This company is promoting diversification of its business.",
+    "source": "Original"
+  },
+  "hsk-old-6-大意": {
+    "chinese": "开车时不要大意。",
+    "pinyin": "Kāi chē shí bù yào dà yi。",
+    "english": "Do not be careless when driving.",
     "source": "Original"
   },
   "hsk-old-6-大肆": {
@@ -1883,6 +2117,12 @@
     "english": "This place enjoys exceptionally favorable natural conditions.",
     "source": "Original"
   },
+  "hsk-old-6-得罪": {
+    "chinese": "我不想得罪你。",
+    "pinyin": "Wǒ bù xiǎng dé zui nǐ。",
+    "english": "I do not want to offend you.",
+    "source": "Original"
+  },
   "hsk-old-6-徘徊": {
     "chinese": "他在门外徘徊了很久。",
     "pinyin": "Tā zài mén wài pái huái le hěn jiǔ。",
@@ -2067,6 +2307,12 @@
     "chinese": "他慌忙跑出了教室。",
     "pinyin": "Tā huāng máng pǎo chū le jiào shì。",
     "english": "He hurried out of the classroom.",
+    "source": "Original"
+  },
+  "hsk-old-6-慢性": {
+    "chinese": "这是一种慢性病。",
+    "pinyin": "Zhè shì yī zhǒng màn xìng bìng。",
+    "english": "This is a chronic illness.",
     "source": "Original"
   },
   "hsk-old-6-慰问": {
@@ -2831,6 +3077,18 @@
     "english": "Do not lose heart when facing difficulties.",
     "source": "Original"
   },
+  "hsk-old-6-泄露": {
+    "chinese": "不要泄露这个秘密。",
+    "pinyin": "Bù yào xiè lòu zhè gè mì mì。",
+    "english": "Do not reveal this secret.",
+    "source": "Original"
+  },
+  "hsk-old-6-法人": {
+    "chinese": "公司是独立的法人。",
+    "pinyin": "Gōng sī shì dú lì de fǎ rén。",
+    "english": "The company is an independent legal entity.",
+    "source": "Original"
+  },
   "hsk-old-6-泡沫": {
     "chinese": "洗衣服时，水里有很多泡沫。",
     "pinyin": "Xǐ yī fu shí， shuǐ lǐ yǒu hěn duō pào mò。",
@@ -2889,6 +3147,12 @@
     "chinese": "吃火锅时，我们涮了一些蔬菜。",
     "pinyin": "Chī huǒ guō shí， wǒ men shuàn le yī xiē shū cài。",
     "english": "We cooked some vegetables briefly in the hotpot.",
+    "source": "Original"
+  },
+  "hsk-old-6-淋": {
+    "chinese": "他被雨淋湿了。",
+    "pinyin": "Tā bèi yǔ lín shī le。",
+    "english": "He was soaked by the rain.",
     "source": "Original"
   },
   "hsk-old-6-深情厚谊": {
@@ -3065,6 +3329,12 @@
     "english": "This organization gradually fell apart.",
     "source": "Original"
   },
+  "hsk-old-6-生态": {
+    "chinese": "我们需要保护这里的生态环境。",
+    "pinyin": "Wǒ men xū yào bǎo hù zhè lǐ de shēng tài huán jìng。",
+    "english": "We need to protect the local ecological environment.",
+    "source": "Original"
+  },
   "hsk-old-6-生机": {
     "chinese": "春天来了，花园充满了生机。",
     "pinyin": "Chūn tiān lái le， huā yuán chōng mǎn le shēng jī。",
@@ -3231,6 +3501,12 @@
     "chinese": "能和家人一起生活是一种福气。",
     "pinyin": "Néng hé jiā rén yī qǐ shēng huó shì yī zhǒng fú qi。",
     "english": "It is a blessing to live with one’s family.",
+    "source": "Original"
+  },
+  "hsk-old-6-私自": {
+    "chinese": "不要私自打开这封信。",
+    "pinyin": "Bù yào sī zì dǎ kāi zhè fēng xìn。",
+    "english": "Do not open this letter without permission.",
     "source": "Original"
   },
   "hsk-old-6-秤": {
@@ -3629,6 +3905,12 @@
     "english": "This chairman of the board is very experienced.",
     "source": "Original"
   },
+  "hsk-old-6-蒙": {
+    "chinese": "我蒙上了眼睛。",
+    "pinyin": "Wǒ méng shàng le yǎn jing。",
+    "english": "I covered my eyes.",
+    "source": "Original"
+  },
   "hsk-old-6-蕴藏": {
     "chinese": "这片土地蕴藏着丰富的资源。",
     "pinyin": "Zhè piàn tǔ dì yùn cáng zhe fēng fù de zī yuán。",
@@ -3995,6 +4277,12 @@
     "english": "You cannot give in to a child over everything.",
     "source": "Original"
   },
+  "hsk-old-6-过渡": {
+    "chinese": "我们正从旧系统过渡到新系统。",
+    "pinyin": "Wǒ men zhèng cóng jiù xì tǒng guò dù dào xīn xì tǒng。",
+    "english": "We are transitioning from the old system to the new one.",
+    "source": "Original"
+  },
   "hsk-old-6-迈": {
     "chinese": "她勇敢地迈出了第一步。",
     "pinyin": "Tā yǒng gǎn de mài chū le dì yī bù。",
@@ -4259,6 +4547,12 @@
     "english": "You must not frame others for personal gain.",
     "source": "Original"
   },
+  "hsk-old-6-随手": {
+    "chinese": "请随手关门。",
+    "pinyin": "Qǐng suí shǒu guān mén。",
+    "english": "Please close the door as you leave.",
+    "source": "Original"
+  },
   "hsk-old-6-隐患": {
     "chinese": "检查发现了一处安全隐患。",
     "pinyin": "Jiǎn chá fā xiàn le yī chù ān quán yǐn huàn。",
@@ -4317,6 +4611,12 @@
     "chinese": "这个村子的面貌发生了很大变化。",
     "pinyin": "Zhè gè cūn zi de miàn mào fā shēng le hěn dà biàn huà。",
     "english": "The appearance of this village has changed a great deal.",
+    "source": "Original"
+  },
+  "hsk-old-6-须知": {
+    "chinese": "请先阅读游客须知。",
+    "pinyin": "Qǐng xiān yuè dú yóu kè xū zhī。",
+    "english": "Please read the visitor instructions first.",
     "source": "Original"
   },
   "hsk-old-6-颁布": {

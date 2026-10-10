@@ -648,6 +648,7 @@ class _DashboardBody extends StatelessWidget {
     }
     if (selectedNav == 3) {
       return ListeningPracticePage(
+        vocabularyRepository: vocabularyRepository,
         studyService: studyService,
         onProgressChanged: onLearningProgressChanged,
         lessonRepository: lessonRepository,

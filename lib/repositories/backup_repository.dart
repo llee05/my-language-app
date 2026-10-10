@@ -237,6 +237,14 @@ class SqliteBackupRepository implements BackupRepository {
         await txn.delete(
           'content_migrations',
           where: 'key = ?',
+          whereArgs: [vocabularyEditorialCorrectionsMarker],
+        );
+        // Correct legacy display readings before the installer chooses shared
+        // cards, so old backups retain their IDs and saved vocabulary progress.
+        await refreshVocabularyEditorialContent(txn);
+        await txn.delete(
+          'content_migrations',
+          where: 'key = ?',
           whereArgs: [vocabularyCurriculumMarker],
         );
         await installVocabularyCurriculum(txn);

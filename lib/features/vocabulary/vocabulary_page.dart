@@ -1,7 +1,5 @@
 part of '../../main.dart';
 
-enum VocabularyLearningState { unseen, learning, learned, due }
-
 class VocabularyPage extends StatefulWidget {
   const VocabularyPage({
     super.key,
@@ -505,13 +503,7 @@ class _VocabularyEntry {
   bool get hasExample => exampleChinese.isNotEmpty;
 
   VocabularyLearningState learningState(DateTime now) {
-    final value = progress;
-    if (value == null || value.timesSeen == 0) {
-      return VocabularyLearningState.unseen;
-    }
-    if (!value.nextReview.isAfter(now)) return VocabularyLearningState.due;
-    if (value.mastery >= .8) return VocabularyLearningState.learned;
-    return VocabularyLearningState.learning;
+    return progress?.learningStateAt(now) ?? VocabularyLearningState.unseen;
   }
 }
 
@@ -921,7 +913,7 @@ class _DetailHeader extends StatelessWidget {
                 for (final label in entry.partOfSpeech)
                   Chip(
                     visualDensity: VisualDensity.compact,
-                    label: Text(label),
+                    label: Text(vocabularyPartOfSpeechLabel(label)),
                     side: BorderSide(color: AppColors.outline),
                     backgroundColor: AppColors.surfaceLight,
                   ),

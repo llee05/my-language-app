@@ -6,6 +6,8 @@ import '../repositories/lesson_repository.dart';
 import '../repositories/progress_repository.dart';
 import 'review_scheduler.dart';
 
+export '../database/vocabulary_content.dart' show vocabularyWordKey;
+
 /// Saves practice from every study mode against the same vocabulary cards.
 class VocabularyStudyService {
   VocabularyStudyService({
@@ -116,17 +118,13 @@ class VocabularyStudyService {
   }
 }
 
-String vocabularyWordKey(String chinese, String pinyin) =>
-    '${chinese.trim()}\u0000${pinyin.toLowerCase().replaceAll(RegExp(r'\s+'), '')}';
-
 List<Map<String, dynamic>> unlearnedVocabulary(
   List<Map<String, dynamic>> words,
   List<VocabularyCardProgress> progress,
 ) {
   final learned = {
     for (final word in progress)
-      if (word.progress.timesSeen > 0 && word.progress.mastery >= .8)
-        vocabularyWordKey(word.chinese, word.pinyin),
+      if (word.progress.isLearned) vocabularyWordKey(word.chinese, word.pinyin),
   };
   return [
     for (final word in words)

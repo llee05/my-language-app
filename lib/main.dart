@@ -35,6 +35,7 @@ import 'repositories/sqlite_repositories.dart';
 import 'repositories/tutor_context_repository.dart';
 import 'services/review_scheduler.dart';
 import 'services/vocabulary_study_service.dart';
+import 'services/vocabulary_quiz_options.dart';
 import 'services/pronunciation_service_factory.dart';
 import 'services/speech_input_service_factory.dart';
 import 'services/backup_file_service.dart';
@@ -45,6 +46,7 @@ import 'repositories/bundled_vocabulary_repository.dart';
 export 'models/dashboard_learning_stats.dart';
 export 'models/learner_profile.dart';
 export 'models/lesson.dart';
+export 'models/learning_progress.dart' show VocabularyLearningState;
 export 'models/weekly_progress_report.dart';
 
 part 'core/theme/app_colors.dart';

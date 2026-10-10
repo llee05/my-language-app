@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../database/vocabulary_content.dart';
+import '../services/vocabulary_quiz_options.dart';
 
 enum ExamSection {
   reading('Reading'),
@@ -106,16 +107,15 @@ class HskExamGenerator {
               (entry['traditional'] as String?)?.trim() ?? hanzi.trim(),
           pinyin: pinyin.trim(),
           meaning: meaning,
-          meanings: Set.unmodifiable(
-            vocabularyDisplayMeanings(entry)
-                .expand((value) => value.toLowerCase().split(RegExp(r'[;,]')))
-                .map((value) => value.trim())
-                .where((value) => value.isNotEmpty),
-          ),
+          meanings: Set.unmodifiable(vocabularyDisplayMeanings(entry)),
         ),
       );
     }
     words.shuffle(_random);
+    final meanings = {
+      for (final word in words)
+        word.id: QuizMeaning(word.meaning, meanings: word.meanings),
+    };
     final sections = ExamSection.values.where(
       (section) => includeListening || section != ExamSection.listening,
     );
@@ -136,7 +136,7 @@ class HskExamGenerator {
           for (final other in candidates) {
             if (other.hanzi == word.hanzi ||
                 other.pinyin == word.pinyin ||
-                other.meanings.intersection(word.meanings).isNotEmpty) {
+                meanings[word.id]!.overlaps(meanings[other.id]!)) {
               continue;
             }
             final option = section == ExamSection.pinyin

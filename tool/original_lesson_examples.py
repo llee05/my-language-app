@@ -697,9 +697,65 @@ SPECIAL += """
 薄弱|词汇是他学习中的薄弱环节。|Vocabulary is the weak point in his studies.
 """
 
+# Reviewed sense-specific replacements; older corpus pairs can contain the
+# target only inside an unrelated word, a wrong reading, or a mistranslation.
+REVIEWED_EXAMPLES = {'下': ('请把书放在桌子下。', 'Please put the book under the table.'),
+ '块': ('这块蛋糕很好吃。', 'This piece of cake is delicious.'),
+ '日': ('今天是十月一日。', 'Today is the first of October.'),
+ '外': ('他在门外等你。', 'He is waiting for you outside the door.'),
+ '题': ('这道题很难。', 'This question is difficult.'),
+ '包': ('这个包是我的。', 'This bag is mine.'),
+ '宾馆': ('这家宾馆很干净。', 'This hotel is clean.'),
+ '拿': ('请拿一本书给我。', 'Please bring me a book.'),
+ '博士': ('她正在读博士。', 'She is studying for a doctorate.'),
+ '台': ('我买了一台电脑。', 'I bought a computer.'),
+ '场': ('今天有一场比赛。', 'There is a match today.'),
+ '理发': ('我明天去理发。', 'I am getting a haircut tomorrow.'),
+ '篇': ('我读了三篇文章。', 'I read three articles.'),
+ '行': ('这样做行吗？', 'Is it okay to do it this way?'),
+ '甲': ('甲、乙、丙、丁是四个不同的小组。', 'A, B, C, and D are four different groups.'),
+ '乙': ('甲、乙、丙、丁是四个不同的小组。', 'A, B, C, and D are four different groups.'),
+ '丙': ('甲、乙、丙、丁是四个不同的小组。', 'A, B, C, and D are four different groups.'),
+ '丁': ('甲、乙、丙、丁是四个不同的小组。', 'A, B, C, and D are four different groups.'),
+ '背': ('请背这首诗。', 'Please memorize this poem.'),
+ '哇': ('哇，这里真漂亮！', 'Wow, it is really beautiful here!'),
+ '大意': ('开车时不要大意。', 'Do not be careless when driving.'),
+ '淋': ('他被雨淋湿了。', 'He was soaked by the rain.'),
+ '蒙': ('我蒙上了眼睛。', 'I covered my eyes.'),
+ '干': ('这件事你干得很好。', 'You did this very well.'),
+ '生态': ('我们需要保护这里的生态环境。', 'We need to protect the local ecological environment.'),
+ '册': ('我买了两册书。', 'I bought two volumes.'),
+ '则': ('报纸上有一则新闻。', 'There is a news item in the newspaper.'),
+ '哈': ('哈哈，这个笑话真有趣！', 'Ha ha, this joke is really funny!'),
+ '应聘': ('她想应聘这份工作。', 'She wants to apply for this job.'),
+ '开放': ('这家博物馆周末开放。', 'This museum is open to the public on weekends.'),
+ '恐怖': ('这部电影很恐怖。', 'This movie is terrifying.'),
+ '所': ('附近有一所学校。', 'There is a school nearby.'),
+ '棒': ('你的想法真棒！', 'Your idea is excellent!'),
+ '系': ('她在中文系学习。', 'She studies in the Chinese language department.'),
+ '聚会': ('周末我们有一个聚会。', 'We have a get-together this weekend.'),
+ '象棋': ('爷爷教我下象棋。', 'Grandpa teaches me to play Chinese chess.'),
+ '闻': ('我闻到了花的香味。', 'I smelled the fragrance of the flowers.'),
+ '项': ('这是一项重要的任务。', 'This is an important task.'),
+ '一律': ('所有学生一律遵守规定。', 'All students must follow the rules without exception.'),
+ '得罪': ('我不想得罪你。', 'I do not want to offend you.'),
+ '慢性': ('这是一种慢性病。', 'This is a chronic illness.'),
+ '法人': ('公司是独立的法人。', 'The company is an independent legal entity.'),
+ '私自': ('不要私自打开这封信。', 'Do not open this letter without permission.'),
+ '须知': ('请先阅读游客须知。', 'Please read the visitor instructions first.'),
+ '随手': ('请随手关门。', 'Please close the door as you leave.'),
+ '过渡': ('我们正从旧系统过渡到新系统。', 'We are transitioning from the old system to the new one.'),
+ '匹': ('田里有一匹马。', 'There is a horse in the field.'),
+ '橡皮': ('我用橡皮擦掉了这个字。', 'I erased this character with an eraser.'),
+ '主流': ('这种观点已经成为主流。', 'This view has already become mainstream.'),
+ '泄露': ('不要泄露这个秘密。', 'Do not reveal this secret.'),
+ '俩': ('我们俩是很好的朋友。', 'The two of us are good friends.'),
+ '字': ('这个字怎么写？', 'How do you write this character?'),
+ '离': ('学校离我家很近。', 'The school is close to my home.')}
+
 # Explicit supporting readings override contextual particles and polyphonic words.
 SUPPORT = {
- '作家':'zuò jiā', '环保':'huán bǎo', '今年':'jīn nián',
+ '湿':'shī', '正':'zhèng', '中文':'zhōng wén', '淋湿':'lín shī', '香味':'xiāng wèi', '作家':'zuò jiā', '环保':'huán bǎo', '今年':'jīn nián',
  '关注':'guān zhù', '行业':'háng yè', '最新':'zuì xīn', '足':'zú',
  '突如其来':'tū rú qí lái', '分享':'fēn xiǎng', '花费':'huā fèi',
  '结尾':'jié wěi', '留下':'liú xià', '主人公':'zhǔ rén gōng',
@@ -754,6 +810,7 @@ def examples(vocabulary, missing_ids):
             continue
         word, chinese, english = row.split('|')
         assigned[word] = (chinese, english)
+    assigned.update(REVIEWED_EXAMPLES)
     # All original examples are explicit choices; regeneration reports uncovered
     # words so an editor can add a natural, sense-specific example.
     missing = [by_word_id for by_word_id in missing_ids

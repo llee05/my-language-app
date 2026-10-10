@@ -51,7 +51,7 @@ def blob_sha1(data):
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
-def verify():
+def verify(*, check_metadata=True):
     catalog = json.loads((OUTPUT / "catalog.json").read_text())
     assert catalog["version"] == 1 and catalog["revision"] == REVISION
     vocabulary = {
@@ -63,7 +63,9 @@ def verify():
         text = entry["text"]
         assert text not in seen and text in vocabulary and text not in AMBIGUOUS
         seen.add(text)
-        assert entry["pinyin"] == vocabulary[text]["pinyin"]
+        if check_metadata:
+            assert entry["pinyin"] == vocabulary[text]["pinyin"]
+            assert entry["hskLevel"] == vocabulary[text]["hskLevel"]
         assert entry["file"] == entry["sha256"] + ".mp3"
         data = (OUTPUT / "clips" / entry["file"]).read_bytes()
         assert len(data) == entry["bytes"] and sha256(data) == entry["sha256"]
@@ -76,9 +78,27 @@ def verify():
     print(f"Verified {len(seen)} recordings ({size:.1f} MB).")
 
 
+def refresh_metadata():
+    """Update curriculum labels only after verifying every existing audio blob."""
+    verify(check_metadata=False)
+    path = OUTPUT / "catalog.json"
+    catalog = json.loads(path.read_text())
+    words = {
+        word["simplified"]: word
+        for word in json.loads((ROOT / "assets/data/hsk_vocabulary.json").read_text())
+    }
+    for entry in catalog["clips"]:
+        word = words[entry["text"]]
+        entry.update(pinyin=word["pinyin"], hskLevel=word["hskLevel"])
+    path.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n")
+    verify()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true")
+    parser.add_argument("--refresh-metadata", action="store_true",
+                        help="Verify cached audio and update curriculum labels offline")
     parser.add_argument(
         "--tree", type=Path, help="Use a previously downloaded GitHub tree JSON"
     )
@@ -86,6 +106,9 @@ def main():
     args = parser.parse_args()
     if args.verify:
         verify()
+        return
+    if args.refresh_metadata:
+        refresh_metadata()
         return
     tree = json.loads(
         args.tree.read_text() if args.tree else fetch(

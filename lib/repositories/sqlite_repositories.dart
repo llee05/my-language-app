@@ -629,7 +629,7 @@ class SqliteProgressRepository
           )
           SELECT lessons.id, COUNT(members.card_id) AS total_cards,
             SUM(CASE WHEN card_progress.times_seen > 0
-              AND card_progress.mastery >= .8 THEN 1 ELSE 0 END) AS learned_cards
+              AND card_progress.mastery >= ? THEN 1 ELSE 0 END) AS learned_cards
           FROM lessons
           LEFT JOIN members ON members.lesson_id = lessons.id
           LEFT JOIN card_progress ON card_progress.card_id = members.card_id
@@ -637,7 +637,7 @@ class SqliteProgressRepository
           WHERE lessons.is_listed = ?
           GROUP BY lessons.id
         ''',
-          [1, 1],
+          [learnedAccuracyThreshold, 1, 1],
         );
         return Map.unmodifiable({
           for (final row in rows)

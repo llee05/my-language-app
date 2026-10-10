@@ -184,6 +184,7 @@ class _VocabRushPageState extends State<VocabRushPage>
               'chinese': card['simplified'],
               'pinyin': card['pinyin'],
               'english_meaning': vocabularyStudyMeaning(card),
+              'meanings': card['meanings'] ?? const <String>[],
               'hsk_level': card['hskLevel'],
               'part_of_speech':
                   (card['partOfSpeech'] as List<dynamic>? ?? const []).join(
@@ -241,15 +242,16 @@ class _VocabRushPageState extends State<VocabRushPage>
   void _nextCard() {
     if (_cards.isEmpty) return;
     _card = _cards[_attempts % _cards.length];
-    final correct = _card!['english_meaning'] as String;
-    final meanings =
-        _cards
-            .map((card) => card['english_meaning'] as String)
-            .where((meaning) => meaning != correct)
-            .toSet()
-            .toList()
-          ..shuffle(_random);
-    _answers = [correct, ...meanings.take(3)]..shuffle(_random);
+    final candidates = List<Map<String, dynamic>>.of(_cards)..shuffle(_random);
+    QuizMeaning meaningFor(Map<String, dynamic> card) => QuizMeaning(
+      card['english_meaning'] as String,
+      pinyin: card['pinyin'] as String,
+      meanings: (card['meanings'] as List).cast<String>(),
+    );
+    _answers = buildMeaningOptions(
+      answer: meaningFor(_card!),
+      candidates: candidates.map(meaningFor),
+    )..shuffle(_random);
     _selectedAnswer = null;
   }
 

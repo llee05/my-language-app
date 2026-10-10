@@ -7,6 +7,7 @@ class ListeningPracticePage extends StatefulWidget {
     required this.settingsRepository,
     this.pronunciationService,
     this.progressRepository,
+    this.vocabularyRepository = const BundledVocabularyRepository(),
     this.sessionSize = 20,
     this.random,
     this.studyService,
@@ -20,6 +21,7 @@ class ListeningPracticePage extends StatefulWidget {
   final SettingsRepository settingsRepository;
   final PronunciationService? pronunciationService;
   final ProgressRepository? progressRepository;
+  final BundledVocabularyRepository vocabularyRepository;
   final int sessionSize;
   final Random? random;
 
@@ -46,6 +48,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   String? _startError;
   Map<int, LessonLearningProgress> _lessonLearningProgress = const {};
   List<Flashcard> _answerPool = const [];
+  VocabularyQuizIndex _quizIndex = VocabularyQuizIndex(const []);
   List<Flashcard> _cards = const [];
   bool _loading = true;
   bool _loadFailed = false;
@@ -89,6 +92,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   }
 
   Future<void> _loadPractice() async {
+    final bundle = DefaultAssetBundle.of(context);
     if (mounted && !_loading) {
       setState(() {
         _loading = true;
@@ -106,6 +110,8 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
       }
 
       final summaries = await widget.lessonRepository.topics();
+      final vocabulary = await widget.vocabularyRepository.load(bundle: bundle);
+      final quizIndex = VocabularyQuizIndex(vocabulary);
       final lessons = await Future.wait(
         summaries.map(
           (summary) => widget.lessonRepository.findById(summary.id),
@@ -141,6 +147,7 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
         _startError = null;
         _lessonLearningProgress = learningProgress ?? const {};
         _answerPool = const [];
+        _quizIndex = quizIndex;
         _activeTopicLabel = null;
         _cards = const [];
         _sessionStarted = false;
@@ -344,28 +351,14 @@ class _ListeningPracticePageState extends State<ListeningPracticePage> {
   }
 
   List<String> get _meaningOptions {
-    final correct = _card.englishMeaning.trim();
-    final options = <String>[];
-    final seen = <String>{};
-
-    void add(String option) {
-      final trimmed = option.trim();
-      if (trimmed.isNotEmpty && seen.add(trimmed.toLowerCase())) {
-        options.add(trimmed);
-      }
-    }
-
-    add(correct);
-    for (final card in _answerPool) {
-      if (card != _card) add(card.englishMeaning);
-      if (options.length >= 4) break;
-    }
-    if (options.length < 4) {
-      for (final option in _card.quizOptions) {
-        add(option);
-        if (options.length >= 4) break;
-      }
-    }
+    final options = buildMeaningOptions(
+      answer: _quizIndex.forCard(_card),
+      candidates: [
+        for (final card in _answerPool)
+          if (card != _card) _quizIndex.forCard(card),
+        for (final option in _card.quizOptions) QuizMeaning(option),
+      ],
+    );
 
     final seed = _card.id == 0
         ? Object.hash(_card.chinese, _card.pinyin, _position)

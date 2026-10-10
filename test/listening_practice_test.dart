@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:mylanguageapp/repositories/bundled_vocabulary_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
@@ -14,6 +15,77 @@ import 'package:mylanguageapp/services/pronunciation_service.dart';
 import 'package:mylanguageapp/services/vocabulary_study_service.dart';
 
 void main() {
+  testWidgets('a valid alternate meaning cannot be marked wrong in listening', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final study = _RecordingListeningStudy();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
+          lessonRepository: _ListeningLessonRepository(
+            lessons: [
+              const Lesson(
+                summary: LessonSummary(
+                  id: 1,
+                  title: 'Meaning practice',
+                  theme: 'Meanings',
+                  hskLevel: 6,
+                ),
+                cards: [
+                  Flashcard(
+                    id: 101,
+                    chinese: '人工',
+                    pinyin: 'rén gōng',
+                    englishMeaning: 'man-made',
+                  ),
+                  Flashcard(
+                    id: 102,
+                    chinese: '人造',
+                    pinyin: 'rén zào',
+                    englishMeaning: 'artificial',
+                  ),
+                  Flashcard(
+                    id: 103,
+                    chinese: '书',
+                    pinyin: 'shū',
+                    englishMeaning: 'book',
+                  ),
+                  Flashcard(
+                    id: 104,
+                    chinese: '水',
+                    pinyin: 'shuǐ',
+                    englishMeaning: 'water',
+                  ),
+                  Flashcard(
+                    id: 105,
+                    chinese: '老师',
+                    pinyin: 'lǎo shī',
+                    englishMeaning: 'teacher',
+                  ),
+                ],
+              ),
+            ],
+          ),
+          settingsRepository: const _ListeningSettingsRepository(),
+          pronunciationService: _ListeningPronunciationService(),
+          studyService: study,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listening-start-1')));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(OutlinedButton, 'artificial'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'man-made'), findsOneWidget);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'man-made'));
+    await tester.pump();
+    expect(study.saves.single.$1, 101);
+    expect(study.saves.single.$3, ReviewRating.good);
+  });
+
   for (final width in [390.0, 1000.0]) {
     testWidgets('default listening decks stay separate at width $width', (
       tester,
@@ -86,6 +158,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ListeningPracticePage(
+            vocabularyRepository: const _ListeningVocabularyRepository(),
             lessonRepository: _ListeningLessonRepository(
               lessons: [...lessons, ...sentenceDecks],
             ),
@@ -178,6 +251,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -202,6 +276,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -243,6 +318,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ListeningPracticePage(
+            vocabularyRepository: const _ListeningVocabularyRepository(),
             lessonRepository: _ListeningLessonRepository(),
             settingsRepository: const _ListeningSettingsRepository(),
             pronunciationService: pronunciation,
@@ -304,6 +380,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(
             LearnerSettings(soundEnabled: false),
@@ -346,6 +423,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -372,6 +450,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -399,6 +478,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: _ListeningPronunciationService(),
@@ -435,6 +515,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -478,6 +559,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -540,6 +622,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ListeningPracticePage(
+            vocabularyRepository: const _ListeningVocabularyRepository(),
             lessonRepository: repository,
             settingsRepository: const _ListeningSettingsRepository(),
             pronunciationService: pronunciation,
@@ -566,6 +649,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: ListeningPracticePage(
+          vocabularyRepository: const _ListeningVocabularyRepository(),
           lessonRepository: _ListeningLessonRepository(),
           settingsRepository: const _ListeningSettingsRepository(),
           pronunciationService: pronunciation,
@@ -614,6 +698,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ListeningPracticePage(
+            vocabularyRepository: const _ListeningVocabularyRepository(),
             lessonRepository: _ListeningLessonRepository(),
             settingsRepository: const _ListeningSettingsRepository(),
             pronunciationService: _ListeningPronunciationService(),
@@ -656,6 +741,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ListeningPracticePage(
+            vocabularyRepository: const _ListeningVocabularyRepository(),
             lessonRepository: repository,
             settingsRepository: const _ListeningSettingsRepository(),
             pronunciationService: _ListeningPronunciationService(),
@@ -894,4 +980,16 @@ class _FailOnceListeningLessons extends _ListeningLessonRepository {
     }
     return super.topics();
   }
+}
+
+final _vocabularyEntries =
+    (jsonDecode(File('assets/data/hsk_vocabulary.json').readAsStringSync())
+            as List)
+        .cast<Map<String, dynamic>>();
+
+class _ListeningVocabularyRepository extends BundledVocabularyRepository {
+  const _ListeningVocabularyRepository();
+  @override
+  Future<List<Map<String, dynamic>>> load({AssetBundle? bundle}) async =>
+      _vocabularyEntries;
 }

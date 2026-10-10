@@ -83,7 +83,7 @@
     "simplified": "上午",
     "traditional": "上午",
     "pinyin": "shàng wǔ",
-    "studyMeaning": "late morning (before noon)",
+    "studyMeaning": "morning; before noon",
     "meanings": [
       "morning"
     ],
@@ -98,7 +98,7 @@
     "simplified": "下",
     "traditional": "下",
     "pinyin": "xià",
-    "studyMeaning": "fall",
+    "studyMeaning": "down; below; next",
     "meanings": [
       "down",
       "downwards",
@@ -157,7 +157,7 @@
     "simplified": "不",
     "traditional": "不",
     "pinyin": "bù",
-    "studyMeaning": "no",
+    "studyMeaning": "not; no",
     "meanings": [
       "no; not so",
       "(bound form) not; un-"
@@ -198,8 +198,7 @@
     ],
     "partOfSpeech": [
       "n",
-      "f",
-      "nr"
+      "f"
     ],
     "hskLevel": 1,
     "frequency": 226
@@ -310,7 +309,7 @@
     "simplified": "了",
     "traditional": "了",
     "pinyin": "le",
-    "studyMeaning": "indicates a completed or finished action",
+    "studyMeaning": "particle marking a completed action or a change of state",
     "meanings": [
       "(completed action marker)",
       "(modal particle indicating change of state, situation now)",
@@ -920,7 +919,7 @@
     "simplified": "呢",
     "traditional": "呢",
     "pinyin": "ne",
-    "studyMeaning": "indicates a question",
+    "studyMeaning": "question or topic particle; what about ...?",
     "meanings": [
       "particle indicating that a previously asked question is to be applied to the preceding word (\"What about ...?\", \"And ...?\")",
       "particle for inquiring about location (\"Where is ...?\")",
@@ -1126,7 +1125,7 @@
     "simplified": "块",
     "traditional": "塊",
     "pinyin": "kuài",
-    "studyMeaning": "lump",
+    "studyMeaning": "piece; yuan in everyday prices",
     "meanings": [
       "lump; chunk; piece",
       "classifier for pieces of cloth, cake, soap etc",
@@ -1315,7 +1314,7 @@
     "simplified": "字",
     "traditional": "字",
     "pinyin": "zì",
-    "studyMeaning": "letter",
+    "studyMeaning": "written character; letter",
     "meanings": [
       "letter",
       "symbol",
@@ -1382,7 +1381,7 @@
     "simplified": "家",
     "traditional": "家",
     "pinyin": "jiā",
-    "studyMeaning": "family",
+    "studyMeaning": "family; home",
     "meanings": [
       "home",
       "family",
@@ -1611,7 +1610,7 @@
     "simplified": "想",
     "traditional": "想",
     "pinyin": "xiǎng",
-    "studyMeaning": "think",
+    "studyMeaning": "to think; to want; to miss",
     "meanings": [
       "to think (about)",
       "to think of; to devise",
@@ -1678,7 +1677,7 @@
     "simplified": "日",
     "traditional": "日",
     "pinyin": "rì",
-    "studyMeaning": "sun",
+    "studyMeaning": "day; date; sun",
     "meanings": [
       "sun",
       "day",
@@ -1781,7 +1780,7 @@
     "simplified": "月",
     "traditional": "月",
     "pinyin": "yuè",
-    "studyMeaning": "moon",
+    "studyMeaning": "month; moon",
     "meanings": [
       "moon",
       "month",
@@ -1981,7 +1980,7 @@
     "simplified": "没",
     "traditional": "沒",
     "pinyin": "méi",
-    "studyMeaning": "(negative prefix for verbs) have not",
+    "studyMeaning": "not have; did not",
     "meanings": [
       "(negative prefix for verbs) have not; not"
     ],
@@ -2043,7 +2042,7 @@
     "simplified": "点",
     "traditional": "點",
     "pinyin": "diǎn",
-    "studyMeaning": "a dot",
+    "studyMeaning": "o'clock; point; a little",
     "meanings": [
       "point",
       "dot",
@@ -2078,7 +2077,7 @@
     "simplified": "热",
     "traditional": "熱",
     "pinyin": "rè",
-    "studyMeaning": "heat",
+    "studyMeaning": "hot; heat",
     "meanings": [
       "to warm up",
       "to heat up",
@@ -2429,7 +2428,7 @@
     "simplified": "认识",
     "traditional": "認識",
     "pinyin": "rèn shi",
-    "studyMeaning": "recognize",
+    "studyMeaning": "to know a person; to recognize",
     "meanings": [
       "to know",
       "to recognize",
@@ -2626,8 +2625,7 @@
       "unit of weight, one tenth of a tael 两"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 1,
     "frequency": 218
@@ -2723,8 +2721,7 @@
     ],
     "partOfSpeech": [
       "s",
-      "d",
-      "nr"
+      "d"
     ],
     "hskLevel": 2,
     "frequency": 172
@@ -3269,7 +3266,7 @@
     "simplified": "向",
     "traditional": "向",
     "pinyin": "xiàng",
-    "studyMeaning": "direction",
+    "studyMeaning": "toward; to",
     "meanings": [
       "towards",
       "to face",
@@ -3411,7 +3408,7 @@
     "simplified": "外",
     "traditional": "外",
     "pinyin": "wài",
-    "studyMeaning": "outer",
+    "studyMeaning": "outside; outer",
     "meanings": [
       "outside",
       "in addition",
@@ -3747,7 +3744,6 @@
     ],
     "partOfSpeech": [
       "q",
-      "nr",
       "v",
       "g"
     ],
@@ -4078,7 +4074,7 @@
     "simplified": "旅游",
     "traditional": "旅遊",
     "pinyin": "lǚ yóu",
-    "studyMeaning": "trip",
+    "studyMeaning": "to travel; tourism",
     "meanings": [
       "trip",
       "journey",
@@ -4294,7 +4290,7 @@
     "simplified": "比",
     "traditional": "比",
     "pinyin": "bǐ",
-    "studyMeaning": "compare",
+    "studyMeaning": "than; to compare",
     "meanings": [
       "to compare",
       "(followed by a noun and adjective) more {adj.} than {noun}",
@@ -4460,7 +4456,6 @@
     ],
     "partOfSpeech": [
       "a",
-      "nr",
       "d",
       "b",
       "v",
@@ -4529,7 +4524,7 @@
     "simplified": "着",
     "traditional": "著",
     "pinyin": "zhe",
-    "studyMeaning": "-ing (indicating action in progress)",
+    "studyMeaning": "particle marking a continuing action or state",
     "meanings": [
       "aspect particle indicating action in progress or ongoing state"
     ],
@@ -4584,7 +4579,7 @@
     "simplified": "离",
     "traditional": "離",
     "pinyin": "lí",
-    "studyMeaning": "leave",
+    "studyMeaning": "from; away from; to leave",
     "meanings": [
       "to leave",
       "to part from",
@@ -4863,7 +4858,7 @@
     "simplified": "让",
     "traditional": "讓",
     "pinyin": "ràng",
-    "studyMeaning": "ask",
+    "studyMeaning": "to let; to allow; to ask someone to",
     "meanings": [
       "to yield",
       "to permit",
@@ -5037,7 +5032,7 @@
     "simplified": "身体",
     "traditional": "身體",
     "pinyin": "shēn tǐ",
-    "studyMeaning": "health",
+    "studyMeaning": "body; health",
     "meanings": [
       "the body",
       "one's health",
@@ -5363,7 +5358,7 @@
     "simplified": "题",
     "traditional": "題",
     "pinyin": "tí",
-    "studyMeaning": "topic",
+    "studyMeaning": "question; problem; topic",
     "meanings": [
       "topic",
       "problem for discussion",
@@ -5928,7 +5923,7 @@
     "simplified": "位",
     "traditional": "位",
     "pinyin": "wèi",
-    "studyMeaning": "position",
+    "studyMeaning": "polite classifier for people; position",
     "meanings": [
       "position",
       "location",
@@ -6010,7 +6005,7 @@
     "simplified": "作用",
     "traditional": "作用",
     "pinyin": "zuò yòng",
-    "studyMeaning": "action",
+    "studyMeaning": "effect; function; role",
     "meanings": [
       "to act on",
       "to affect",
@@ -6036,7 +6031,7 @@
     "simplified": "使",
     "traditional": "使",
     "pinyin": "shǐ",
-    "studyMeaning": "to use",
+    "studyMeaning": "to make; to cause; to use",
     "meanings": [
       "to make",
       "to cause",
@@ -6084,7 +6079,7 @@
     "simplified": "借",
     "traditional": "借",
     "pinyin": "jiè",
-    "studyMeaning": "lend",
+    "studyMeaning": "to borrow; to lend",
     "meanings": [
       "to lend",
       "to borrow",
@@ -6190,8 +6185,7 @@
     ],
     "partOfSpeech": [
       "v",
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 3,
     "frequency": 1129
@@ -6581,7 +6575,7 @@
     "simplified": "包",
     "traditional": "包",
     "pinyin": "bāo",
-    "studyMeaning": "to cover",
+    "studyMeaning": "bag; package; to wrap",
     "meanings": [
       "to cover",
       "to wrap",
@@ -6729,7 +6723,7 @@
     "simplified": "双",
     "traditional": "雙",
     "pinyin": "shuāng",
-    "studyMeaning": "two",
+    "studyMeaning": "pair; classifier for paired things",
     "meanings": [
       "two",
       "double",
@@ -7145,7 +7139,7 @@
     "simplified": "复习",
     "traditional": "復習",
     "pinyin": "fù xí",
-    "studyMeaning": "revise",
+    "studyMeaning": "to review study material; to revise for an exam",
     "meanings": [
       "to review",
       "revision"
@@ -7168,8 +7162,7 @@
     ],
     "partOfSpeech": [
       "tg",
-      "g",
-      "nr"
+      "g"
     ],
     "hskLevel": 3,
     "frequency": 3828
@@ -7403,7 +7396,7 @@
     "simplified": "宾馆",
     "traditional": "賓館",
     "pinyin": "bīn guǎn",
-    "studyMeaning": "guesthouse",
+    "studyMeaning": "hotel; guesthouse",
     "meanings": [
       "guesthouse",
       "lodge",
@@ -7458,7 +7451,7 @@
     "simplified": "差",
     "traditional": "差",
     "pinyin": "chà",
-    "studyMeaning": "differ from",
+    "studyMeaning": "poor; not good; to differ",
     "meanings": [
       "different",
       "wrong; mistaken",
@@ -7479,7 +7472,7 @@
     "simplified": "带",
     "traditional": "帶",
     "pinyin": "dài",
-    "studyMeaning": "band",
+    "studyMeaning": "to bring; to take along; belt",
     "meanings": [
       "band",
       "belt",
@@ -7738,7 +7731,7 @@
     "simplified": "成绩",
     "traditional": "成績",
     "pinyin": "chéng jì",
-    "studyMeaning": "achievement",
+    "studyMeaning": "grades; results; achievement",
     "meanings": [
       "achievement",
       "performance records",
@@ -7772,7 +7765,7 @@
     "simplified": "才",
     "traditional": "才",
     "pinyin": "cái",
-    "studyMeaning": "ability",
+    "studyMeaning": "only; only then; just",
     "meanings": [
       "ability; talent",
       "sb of a certain type",
@@ -7832,7 +7825,7 @@
     "simplified": "把",
     "traditional": "把",
     "pinyin": "bǎ",
-    "studyMeaning": "classifier for things with handles",
+    "studyMeaning": "object-marking particle; classifier for handled objects",
     "meanings": [
       "to hold; to grasp",
       "to hold a baby in position to help it urinate or defecate",
@@ -7890,7 +7883,7 @@
     "simplified": "拿",
     "traditional": "拿",
     "pinyin": "ná",
-    "studyMeaning": "carry in your hand",
+    "studyMeaning": "to take; to hold",
     "meanings": [
       "to hold",
       "to seize",
@@ -8326,7 +8319,7 @@
     "simplified": "条",
     "traditional": "條",
     "pinyin": "tiáo",
-    "studyMeaning": "strip",
+    "studyMeaning": "classifier for long or narrow things; strip",
     "meanings": [
       "strip",
       "item",
@@ -8451,7 +8444,7 @@
     "simplified": "楼",
     "traditional": "樓",
     "pinyin": "lóu",
-    "studyMeaning": "story",
+    "studyMeaning": "building; floor; storey",
     "meanings": [
       "house with more than 1 story",
       "storied building",
@@ -8468,7 +8461,7 @@
     "simplified": "段",
     "traditional": "段",
     "pinyin": "duàn",
-    "studyMeaning": "paragraph",
+    "studyMeaning": "section; stretch; paragraph",
     "meanings": [
       "paragraph",
       "section",
@@ -8889,7 +8882,7 @@
     "simplified": "班",
     "traditional": "班",
     "pinyin": "bān",
-    "studyMeaning": "team",
+    "studyMeaning": "class; shift; team",
     "meanings": [
       "team; class; grade",
       "(military) squad",
@@ -8898,8 +8891,7 @@
     ],
     "partOfSpeech": [
       "n",
-      "q",
-      "nr"
+      "q"
     ],
     "hskLevel": 3,
     "frequency": 1238
@@ -8970,7 +8962,7 @@
     "simplified": "电子",
     "traditional": "電子",
     "pinyin": "diàn zǐ",
-    "studyMeaning": "electronic",
+    "studyMeaning": "electron; electronic",
     "meanings": [
       "electronic",
       "electron (particle physics)"
@@ -9209,15 +9201,14 @@
     "simplified": "祝",
     "traditional": "祝",
     "pinyin": "zhù",
-    "studyMeaning": "to pray for",
+    "studyMeaning": "to wish someone well",
     "meanings": [
       "to pray for",
       "to wish (sb bon voyage, happy birthday etc)",
       "person who invokes the spirits during sacrificial ceremonies"
     ],
     "partOfSpeech": [
-      "v",
-      "nr"
+      "v"
     ],
     "hskLevel": 3,
     "frequency": 1197
@@ -9367,7 +9358,7 @@
     "simplified": "米",
     "traditional": "米",
     "pinyin": "mǐ",
-    "studyMeaning": "rice",
+    "studyMeaning": "metre; uncooked rice",
     "meanings": [
       "rice",
       "meter (classifier)"
@@ -9892,7 +9883,7 @@
     "simplified": "行李箱",
     "traditional": "行李箱",
     "pinyin": "xíng li xiāng",
-    "studyMeaning": "trunk",
+    "studyMeaning": "suitcase",
     "meanings": [
       "suitcase",
       "baggage compartment",
@@ -10091,7 +10082,7 @@
     "simplified": "角",
     "traditional": "角",
     "pinyin": "jiǎo",
-    "studyMeaning": "horn",
+    "studyMeaning": "angle; corner; one tenth of a yuan; horn",
     "meanings": [
       "angle",
       "corner",
@@ -10308,7 +10299,7 @@
     "simplified": "还是",
     "traditional": "還是",
     "pinyin": "hái shi",
-    "studyMeaning": "or",
+    "studyMeaning": "or in a question; still",
     "meanings": [
       "still (as before)",
       "had better",
@@ -10633,7 +10624,7 @@
     "simplified": "饱",
     "traditional": "飽",
     "pinyin": "bǎo",
-    "studyMeaning": "eat until full",
+    "studyMeaning": "full after eating",
     "meanings": [
       "to eat till full",
       "satisfied"
@@ -10692,7 +10683,6 @@
     ],
     "partOfSpeech": [
       "n",
-      "nr",
       "b"
     ],
     "hskLevel": 3,
@@ -10765,7 +10755,6 @@
       "to fall through"
     ],
     "partOfSpeech": [
-      "nr",
       "a",
       "b"
     ],
@@ -10892,7 +10881,7 @@
     "simplified": "不过",
     "traditional": "不過",
     "pinyin": "bù guò",
-    "studyMeaning": "only",
+    "studyMeaning": "however; but; only",
     "meanings": [
       "only",
       "merely",
@@ -10933,7 +10922,7 @@
     "simplified": "专业",
     "traditional": "專業",
     "pinyin": "zhuān yè",
-    "studyMeaning": "profession",
+    "studyMeaning": "academic major; specialty; professional",
     "meanings": [
       "specialty",
       "specialized field",
@@ -11115,7 +11104,7 @@
     "simplified": "主意",
     "traditional": "主意",
     "pinyin": "zhǔ yi",
-    "studyMeaning": "plan",
+    "studyMeaning": "idea; suggestion",
     "meanings": [
       "plan",
       "idea",
@@ -11675,7 +11664,7 @@
     "simplified": "估计",
     "traditional": "估計",
     "pinyin": "gū jì",
-    "studyMeaning": "appraise",
+    "studyMeaning": "to estimate; to reckon",
     "meanings": [
       "to estimate",
       "to reckon",
@@ -11828,10 +11817,12 @@
     "id": "hsk-old-4-俩",
     "simplified": "俩",
     "traditional": "倆",
-    "pinyin": "liǎng",
-    "studyMeaning": "(colloquial) two (people)",
+    "pinyin": "liǎ",
+    "studyMeaning": "two; both",
     "meanings": [
-      "used in 伎俩"
+      "two (colloquial equivalent of 两个)",
+      "both",
+      "some"
     ],
     "partOfSpeech": [
       "m"
@@ -11844,7 +11835,7 @@
     "simplified": "修",
     "traditional": "修",
     "pinyin": "xiū",
-    "studyMeaning": "to decorate",
+    "studyMeaning": "to repair; to study a subject",
     "meanings": [
       "to decorate",
       "to embellish",
@@ -12128,7 +12119,7 @@
     "simplified": "兴奋",
     "traditional": "興奮",
     "pinyin": "xīng fèn",
-    "studyMeaning": "excitement； be excited",
+    "studyMeaning": "excited; excitement",
     "meanings": [
       "excited",
       "excitement",
@@ -12681,7 +12672,7 @@
     "simplified": "千万",
     "traditional": "千萬",
     "pinyin": "qiān wàn",
-    "studyMeaning": "ten million",
+    "studyMeaning": "ten million; by all means; be sure to",
     "meanings": [
       "ten million",
       "countless",
@@ -12700,7 +12691,7 @@
     "simplified": "博士",
     "traditional": "博士",
     "pinyin": "bó shì",
-    "studyMeaning": "doctor",
+    "studyMeaning": "doctorate; PhD holder",
     "meanings": [
       "doctor",
       "court academician (in feudal China)",
@@ -12789,7 +12780,7 @@
     "simplified": "厉害",
     "traditional": "厲害",
     "pinyin": "lì hai",
-    "studyMeaning": "terrible",
+    "studyMeaning": "formidable; impressive; severe",
     "meanings": [
       "(used to describe sb or sth that makes a very strong impression, whether favorable or unfavorable) terrible",
       "intense",
@@ -13237,7 +13228,7 @@
     "simplified": "台",
     "traditional": "臺",
     "pinyin": "tái",
-    "studyMeaning": "platform",
+    "studyMeaning": "classifier for machines; platform",
     "meanings": [
       "platform",
       "stage",
@@ -13267,8 +13258,7 @@
       "(slang) marijuana"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 4,
     "frequency": 10287
@@ -13775,7 +13765,7 @@
     "simplified": "场",
     "traditional": "場",
     "pinyin": "chǎng",
-    "studyMeaning": "courtyard",
+    "studyMeaning": "venue; classifier for events",
     "meanings": [
       "large place used for a specific purpose",
       "stage",
@@ -14157,8 +14147,7 @@
       "son's son"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 4,
     "frequency": 5639
@@ -14242,7 +14231,7 @@
     "simplified": "实在",
     "traditional": "實在",
     "pinyin": "shí zài",
-    "studyMeaning": "honest",
+    "studyMeaning": "really; indeed; honest",
     "meanings": [
       "really",
       "actually",
@@ -14287,7 +14276,7 @@
     "simplified": "害羞",
     "traditional": "害羞",
     "pinyin": "hài xiū",
-    "studyMeaning": "blush",
+    "studyMeaning": "shy; embarrassed",
     "meanings": [
       "shy",
       "embarrassed",
@@ -14694,7 +14683,6 @@
       "(Chinese chess) general (on the red side, equivalent to a king in Western chess)"
     ],
     "partOfSpeech": [
-      "nr",
       "g"
     ],
     "hskLevel": 4,
@@ -14722,7 +14710,7 @@
     "simplified": "干",
     "traditional": "幹",
     "pinyin": "gàn",
-    "studyMeaning": "to concern",
+    "studyMeaning": "to do; to work",
     "meanings": [
       "tree trunk",
       "main part of sth",
@@ -14767,7 +14755,7 @@
     "simplified": "干燥",
     "traditional": "乾燥",
     "pinyin": "gān zào",
-    "studyMeaning": "to dry (of paint, cement, etc.)",
+    "studyMeaning": "dry; dryness",
     "meanings": [
       "to dry (of weather, paint, cement etc)",
       "desiccation",
@@ -15050,7 +15038,7 @@
     "simplified": "当",
     "traditional": "當",
     "pinyin": "dāng",
-    "studyMeaning": "should",
+    "studyMeaning": "to serve as; when; at",
     "meanings": [
       "to be",
       "to act as",
@@ -15531,8 +15519,7 @@
       "to support"
     ],
     "partOfSpeech": [
-      "v",
-      "nr"
+      "v"
     ],
     "hskLevel": 4,
     "frequency": 1802
@@ -15917,7 +15904,7 @@
     "simplified": "指",
     "traditional": "指",
     "pinyin": "zhǐ",
-    "studyMeaning": "finger",
+    "studyMeaning": "to point at; to refer to; finger",
     "meanings": [
       "finger",
       "to point at or to",
@@ -15974,7 +15961,7 @@
     "simplified": "挺",
     "traditional": "挺",
     "pinyin": "tǐng",
-    "studyMeaning": "straighten up",
+    "studyMeaning": "quite; very; to straighten",
     "meanings": [
       "straight",
       "erect",
@@ -16258,7 +16245,7 @@
     "simplified": "收入",
     "traditional": "收入",
     "pinyin": "shōu rù",
-    "studyMeaning": "take in",
+    "studyMeaning": "income; revenue",
     "meanings": [
       "to take in",
       "income",
@@ -16640,7 +16627,7 @@
     "simplified": "无聊",
     "traditional": "無聊",
     "pinyin": "wú liáo",
-    "studyMeaning": "nonsense",
+    "studyMeaning": "bored; boring",
     "meanings": [
       "bored",
       "boring",
@@ -17241,7 +17228,7 @@
     "simplified": "民族",
     "traditional": "民族",
     "pinyin": "mín zú",
-    "studyMeaning": "nationality",
+    "studyMeaning": "ethnic group; nationality",
     "meanings": [
       "nationality; ethnic group"
     ],
@@ -17330,8 +17317,7 @@
       "water in which sth has been boiled"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 4,
     "frequency": 2237
@@ -17464,7 +17450,7 @@
     "simplified": "流行",
     "traditional": "流行",
     "pinyin": "liú xíng",
-    "studyMeaning": "spread",
+    "studyMeaning": "popular; fashionable; to circulate",
     "meanings": [
       "(of a contagious disease etc) to spread",
       "to propagate",
@@ -17911,7 +17897,7 @@
     "simplified": "理发",
     "traditional": "理髮",
     "pinyin": "lǐ fà",
-    "studyMeaning": "a barber, hairdressing",
+    "studyMeaning": "to get or give a haircut",
     "meanings": [
       "to get a haircut; to have one's hair done",
       "to cut (sb's) hair; to give (sb) a haircut"
@@ -18028,7 +18014,7 @@
     "simplified": "由",
     "traditional": "由",
     "pinyin": "yóu",
-    "studyMeaning": "follow",
+    "studyMeaning": "by; from; through",
     "meanings": [
       "to follow",
       "from",
@@ -18821,7 +18807,7 @@
     "simplified": "算",
     "traditional": "算",
     "pinyin": "suàn",
-    "studyMeaning": "to regard as",
+    "studyMeaning": "to calculate; to count as",
     "meanings": [
       "to regard as",
       "to figure",
@@ -18860,7 +18846,7 @@
     "simplified": "篇",
     "traditional": "篇",
     "pinyin": "piān",
-    "studyMeaning": "sheet",
+    "studyMeaning": "classifier for articles or written pieces",
     "meanings": [
       "sheet",
       "piece of writing",
@@ -19363,7 +19349,7 @@
     "simplified": "联系",
     "traditional": "聯繫",
     "pinyin": "lián xì",
-    "studyMeaning": "integrate",
+    "studyMeaning": "to contact; connection",
     "meanings": [
       "connection",
       "contact",
@@ -19562,7 +19548,7 @@
     "simplified": "节约",
     "traditional": "節約",
     "pinyin": "jié yuē",
-    "studyMeaning": "frugal",
+    "studyMeaning": "to save resources; economical",
     "meanings": [
       "to economize",
       "to conserve (resources)",
@@ -19669,7 +19655,7 @@
     "simplified": "行",
     "traditional": "行",
     "pinyin": "xíng",
-    "studyMeaning": "walk",
+    "studyMeaning": "okay; to work; to be acceptable; to travel",
     "meanings": [
       "to walk",
       "to go",
@@ -20470,7 +20456,7 @@
     "simplified": "输",
     "traditional": "輸",
     "pinyin": "shū",
-    "studyMeaning": "to transport",
+    "studyMeaning": "to lose; to transport",
     "meanings": [
       "to lose; to be beaten",
       "(bound form) to transport",
@@ -20636,7 +20622,7 @@
     "simplified": "适应",
     "traditional": "適應",
     "pinyin": "shì yìng",
-    "studyMeaning": "to suit",
+    "studyMeaning": "to adapt to",
     "meanings": [
       "to adapt",
       "to fit",
@@ -20742,7 +20728,7 @@
     "simplified": "遍",
     "traditional": "遍",
     "pinyin": "biàn",
-    "studyMeaning": "a time",
+    "studyMeaning": "classifier for a complete repetition",
     "meanings": [
       "everywhere",
       "all over",
@@ -21228,7 +21214,7 @@
     "simplified": "顿",
     "traditional": "頓",
     "pinyin": "dùn",
-    "studyMeaning": "pause",
+    "studyMeaning": "classifier for meals; pause",
     "meanings": [
       "to stop",
       "to pause",
@@ -21527,7 +21513,7 @@
     "simplified": "一旦",
     "traditional": "一旦",
     "pinyin": "yī dàn",
-    "studyMeaning": "in case (something happens)",
+    "studyMeaning": "once; as soon as a condition is met",
     "meanings": [
       "in case (sth happens)",
       "if",
@@ -21602,10 +21588,10 @@
     "simplified": "丁",
     "traditional": "丁",
     "pinyin": "dīng",
-    "studyMeaning": "male adult",
+    "studyMeaning": "fourth; label D; fourth Heavenly Stem",
     "meanings": [
       "male adult",
-      "the 4th of the 10 Heavenly Stems 干",
+      "the 4th of the 10 Heavenly Stems 天干",
       "fourth (used like \"4\" or \"D\")",
       "small cube of meat or vegetable",
       "(literary) to encounter",
@@ -21613,7 +21599,6 @@
       "(chemistry) butyl"
     ],
     "partOfSpeech": [
-      "nr",
       "o",
       "g",
       "Mg"
@@ -21966,9 +21951,9 @@
     "simplified": "丙",
     "traditional": "丙",
     "pinyin": "bǐng",
-    "studyMeaning": "bright",
+    "studyMeaning": "third; label C; third Heavenly Stem",
     "meanings": [
-      "third of the ten Heavenly Stems 干",
+      "third of the ten Heavenly Stems 十天干",
       "third in order",
       "letter \"C\" or Roman \"III\" in list \"A, B, C\", or \"I, II, III\" etc",
       "ancient Chinese compass point: 165°",
@@ -22396,12 +22381,12 @@
     "simplified": "乙",
     "traditional": "乙",
     "pinyin": "yǐ",
-    "studyMeaning": "two",
+    "studyMeaning": "second; label B; second Heavenly Stem",
     "meanings": [
-      "second of the ten Heavenly Stems 干",
+      "second of the ten Heavenly Stems 十天干",
       "second in order",
       "letter \"B\" or Roman \"II\" in list \"A, B, C\", or \"I, II, III\" etc",
-      "second party (in legal contract, usually 方, as opposed to 方)",
+      "second party (in legal contract, usually 乙方, as opposed to 甲方)",
       "ethyl",
       "bent",
       "winding",
@@ -22803,7 +22788,7 @@
     "simplified": "从事",
     "traditional": "從事",
     "pinyin": "cóng shì",
-    "studyMeaning": "go for",
+    "studyMeaning": "to engage in; to work in",
     "meanings": [
       "to go for",
       "to engage in",
@@ -23508,7 +23493,7 @@
     "simplified": "便",
     "traditional": "便",
     "pinyin": "biàn",
-    "studyMeaning": "plain",
+    "studyMeaning": "convenient; then",
     "meanings": [
       "plain",
       "informal",
@@ -24360,8 +24345,7 @@
       "internal medicine; general medicine"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 5,
     "frequency": 13792
@@ -24371,7 +24355,7 @@
     "simplified": "册",
     "traditional": "冊",
     "pinyin": "cè",
-    "studyMeaning": "book",
+    "studyMeaning": "volume; classifier for books",
     "meanings": [
       "book",
       "booklet",
@@ -24582,7 +24566,7 @@
     "simplified": "凭",
     "traditional": "憑",
     "pinyin": "píng",
-    "studyMeaning": "lean against",
+    "studyMeaning": "on the basis of; to rely on",
     "meanings": [
       "to lean against",
       "to rely on",
@@ -24781,7 +24765,7 @@
     "simplified": "则",
     "traditional": "則",
     "pinyin": "zé",
-    "studyMeaning": "standard",
+    "studyMeaning": "then; but; classifier for written items; rule",
     "meanings": [
       "(literary) (conjunction used to express contrast with a previous clause) but; then",
       "(bound form) standard; norm",
@@ -25101,7 +25085,7 @@
     "simplified": "功夫",
     "traditional": "功夫",
     "pinyin": "gōng fu",
-    "studyMeaning": "kung fu",
+    "studyMeaning": "skill; effort; kung fu",
     "meanings": [
       "skill",
       "art",
@@ -25337,7 +25321,7 @@
     "simplified": "匹",
     "traditional": "匹",
     "pinyin": "pǐ",
-    "studyMeaning": "ordinary person",
+    "studyMeaning": "classifier for horses; bolt of cloth",
     "meanings": [
       "classifier for horses, mules etc",
       "Taiwan pr. [pī]",
@@ -26791,13 +26775,13 @@
     "simplified": "哈",
     "traditional": "哈",
     "pinyin": "hā",
-    "studyMeaning": "exhale",
+    "studyMeaning": "ha; sound of laughter",
     "meanings": [
       "(interj.) ha!",
       "(onom. for laughter)",
       "(slang) to be infatuated with",
       "to adore",
-      "abbr. for 奇, husky (dog)"
+      "abbr. for 哈士奇, husky (dog)"
     ],
     "partOfSpeech": [
       "b",
@@ -26991,8 +26975,8 @@
     "id": "hsk-old-5-嘱咐",
     "simplified": "嘱咐",
     "traditional": "囑咐",
-    "pinyin": "zhǔ fù",
-    "studyMeaning": "enjoin",
+    "pinyin": "zhǔ fu",
+    "studyMeaning": "to tell",
     "meanings": [
       "to tell",
       "to exhort",
@@ -28592,7 +28576,7 @@
     "simplified": "实习",
     "traditional": "實習",
     "pinyin": "shí xí",
-    "studyMeaning": "to practice",
+    "studyMeaning": "internship; practical training",
     "meanings": [
       "to practice",
       "field work",
@@ -28769,7 +28753,7 @@
     "simplified": "宣传",
     "traditional": "宣傳",
     "pinyin": "xuān chuán",
-    "studyMeaning": "propaganda",
+    "studyMeaning": "publicity; to promote; propaganda",
     "meanings": [
       "to disseminate",
       "to give publicity to",
@@ -29141,7 +29125,7 @@
   {
     "id": "hsk-old-5-小伙子",
     "simplified": "小伙子",
-    "traditional": "小伙子",
+    "traditional": "小夥子",
     "pinyin": "xiǎo huǒ zi",
     "studyMeaning": "young man",
     "meanings": [
@@ -29326,7 +29310,7 @@
     "simplified": "届",
     "traditional": "屆",
     "pinyin": "jiè",
-    "studyMeaning": "arrive at",
+    "studyMeaning": "classifier for sessions, events or graduating classes",
     "meanings": [
       "to arrive at (place or time)",
       "period",
@@ -29567,8 +29551,7 @@
     "partOfSpeech": [
       "n",
       "g",
-      "b",
-      "nr"
+      "b"
     ],
     "hskLevel": 5,
     "frequency": 1694
@@ -29594,7 +29577,7 @@
     "simplified": "幅",
     "traditional": "幅",
     "pinyin": "fú",
-    "studyMeaning": "width of cloth",
+    "studyMeaning": "classifier for pictures or lengths of cloth",
     "meanings": [
       "width",
       "roll",
@@ -29988,7 +29971,7 @@
     "simplified": "应聘",
     "traditional": "應聘",
     "pinyin": "yìng pìn",
-    "studyMeaning": "accept a job offer",
+    "studyMeaning": "to apply for a job",
     "meanings": [
       "to accept a job offer",
       "to apply for an advertised position"
@@ -30182,7 +30165,7 @@
     "simplified": "开放",
     "traditional": "開放",
     "pinyin": "kāi fàng",
-    "studyMeaning": "(of flowers) to bloom",
+    "studyMeaning": "to open to the public; open-minded; to bloom",
     "meanings": [
       "to bloom",
       "to open",
@@ -30928,7 +30911,7 @@
     "simplified": "恐怖",
     "traditional": "恐怖",
     "pinyin": "kǒng bù",
-    "studyMeaning": "afraid",
+    "studyMeaning": "horror; terrifying",
     "meanings": [
       "terrible",
       "frightful",
@@ -31022,7 +31005,7 @@
     "simplified": "悠久",
     "traditional": "悠久",
     "pinyin": "yōu jiǔ",
-    "studyMeaning": "established",
+    "studyMeaning": "long-standing; having a long history",
     "meanings": [
       "long (tradition, history etc)"
     ],
@@ -31474,7 +31457,7 @@
     "simplified": "所",
     "traditional": "所",
     "pinyin": "suǒ",
-    "studyMeaning": "place",
+    "studyMeaning": "classifier for buildings or institutions; place",
     "meanings": [
       "actually",
       "place",
@@ -31674,7 +31657,7 @@
     "simplified": "打招呼",
     "traditional": "打招呼",
     "pinyin": "dǎ zhāo hu",
-    "studyMeaning": "notify",
+    "studyMeaning": "to greet; to say hello",
     "meanings": [
       "to greet sb by word or action",
       "to give prior notice"
@@ -33289,7 +33272,7 @@
     "simplified": "数码",
     "traditional": "數碼",
     "pinyin": "shù mǎ",
-    "studyMeaning": "numeral",
+    "studyMeaning": "digital; numerical code",
     "meanings": [
       "number",
       "numerals",
@@ -34511,7 +34494,7 @@
     "simplified": "根本",
     "traditional": "根本",
     "pinyin": "gēn běn",
-    "studyMeaning": "root",
+    "studyMeaning": "fundamental; at all, usually in a negative clause",
     "meanings": [
       "fundamental",
       "basic",
@@ -34625,7 +34608,7 @@
     "simplified": "棒",
     "traditional": "棒",
     "pinyin": "bàng",
-    "studyMeaning": "stick",
+    "studyMeaning": "excellent; stick",
     "meanings": [
       "stick",
       "club",
@@ -34748,7 +34731,7 @@
     "simplified": "橡皮",
     "traditional": "橡皮",
     "pinyin": "xiàng pí",
-    "studyMeaning": "rubber",
+    "studyMeaning": "eraser; rubber",
     "meanings": [
       "rubber",
       "an eraser"
@@ -34764,7 +34747,7 @@
     "simplified": "欠",
     "traditional": "欠",
     "pinyin": "qiàn",
-    "studyMeaning": "yawn",
+    "studyMeaning": "to owe; to lack; to yawn",
     "meanings": [
       "to owe",
       "to lack",
@@ -35039,7 +35022,6 @@
       "classifier for Chinese fractional monetary unit ( = 角 , = one-tenth of a yuan or 10 fen 分)"
     ],
     "partOfSpeech": [
-      "nr",
       "n",
       "q"
     ],
@@ -35168,7 +35150,7 @@
     "simplified": "沙滩",
     "traditional": "沙灘",
     "pinyin": "shā tān",
-    "studyMeaning": "sand bar",
+    "studyMeaning": "beach; sandy shore",
     "meanings": [
       "beach",
       "sandy shore"
@@ -35199,7 +35181,7 @@
     "simplified": "沟通",
     "traditional": "溝通",
     "pinyin": "gōu tōng",
-    "studyMeaning": "link",
+    "studyMeaning": "to communicate; to connect",
     "meanings": [
       "to join; to connect; to link up",
       "to communicate"
@@ -35974,7 +35956,7 @@
     "simplified": "烂",
     "traditional": "爛",
     "pinyin": "làn",
-    "studyMeaning": "overcooked",
+    "studyMeaning": "rotten; broken; overcooked",
     "meanings": [
       "soft; mushy",
       "well-cooked and soft",
@@ -36547,8 +36529,7 @@
       "son of a king"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 5,
     "frequency": 3631
@@ -36597,7 +36578,7 @@
     "simplified": "现象",
     "traditional": "現象",
     "pinyin": "xiàn xiàng",
-    "studyMeaning": "appearance",
+    "studyMeaning": "phenomenon",
     "meanings": [
       "phenomenon",
       "appearance"
@@ -36811,9 +36792,9 @@
     "simplified": "甲",
     "traditional": "甲",
     "pinyin": "jiǎ",
-    "studyMeaning": "one",
+    "studyMeaning": "first; label A; first Heavenly Stem",
     "meanings": [
-      "first of the ten Heavenly Stems 干",
+      "first of the ten Heavenly Stems 十天干",
       "(used for an unspecified person or thing)",
       "first (in a list, as a party to a contract etc)",
       "letter \"A\" or roman \"I\" in list \"A, B, C\", or \"I, II, III\" etc",
@@ -36822,7 +36803,7 @@
       "(of the fingers or toes) nail",
       "bladed leather or metal armor (old)",
       "ranking system used in the Imperial examinations (old)",
-      "civil administration unit in the baojia 甲 system (old)",
+      "civil administration unit in the baojia 保甲 system (old)",
       "ancient Chinese compass point: 75°"
     ],
     "partOfSpeech": [
@@ -36838,7 +36819,7 @@
     "simplified": "电台",
     "traditional": "電臺",
     "pinyin": "diàn tái",
-    "studyMeaning": "transceiver",
+    "studyMeaning": "radio station; transceiver",
     "meanings": [
       "transmitter-receiver",
       "broadcasting station",
@@ -38221,7 +38202,7 @@
     "meanings": [
       "cube (math.)",
       "abbr. for 立方体",
-      "abbr. for 米"
+      "abbr. for 立方米"
     ],
     "partOfSpeech": [
       "q"
@@ -38298,7 +38279,7 @@
     "simplified": "答应",
     "traditional": "答應",
     "pinyin": "dā ying",
-    "studyMeaning": "to respond",
+    "studyMeaning": "to agree; to promise; to answer",
     "meanings": [
       "to answer; to respond",
       "to answer positively; to agree; to accept; to promise"
@@ -38370,8 +38351,7 @@
       "drinking straw"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 5,
     "frequency": 13105
@@ -38509,7 +38489,7 @@
     "simplified": "系",
     "traditional": "系",
     "pinyin": "xì",
-    "studyMeaning": "be",
+    "studyMeaning": "department; system; relationship",
     "meanings": [
       "system",
       "department",
@@ -39110,7 +39090,7 @@
     "simplified": "罐头",
     "traditional": "罐頭",
     "pinyin": "guàn tou",
-    "studyMeaning": "tin",
+    "studyMeaning": "canned food; can",
     "meanings": [
       "tin",
       "can"
@@ -39317,7 +39297,7 @@
     "simplified": "聚会",
     "traditional": "聚會",
     "pinyin": "jù huì",
-    "studyMeaning": "hold a meeting",
+    "studyMeaning": "social gathering; get-together",
     "meanings": [
       "party",
       "gathering",
@@ -39443,7 +39423,7 @@
     "simplified": "背",
     "traditional": "背",
     "pinyin": "bèi",
-    "studyMeaning": "carry on one's back",
+    "studyMeaning": "back; to memorize",
     "meanings": [
       "the back of a body or object",
       "to turn one's back",
@@ -41381,7 +41361,7 @@
     "simplified": "象棋",
     "traditional": "象棋",
     "pinyin": "xiàng qí",
-    "studyMeaning": "chess",
+    "studyMeaning": "Chinese chess; xiangqi",
     "meanings": [
       "Chinese chess"
     ],
@@ -42941,8 +42921,7 @@
       "bell"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 5,
     "frequency": 1714
@@ -43171,7 +43150,7 @@
     "simplified": "闻",
     "traditional": "聞",
     "pinyin": "wén",
-    "studyMeaning": "hear",
+    "studyMeaning": "to smell; to hear",
     "meanings": [
       "to hear",
       "news",
@@ -43371,7 +43350,7 @@
     "simplified": "除非",
     "traditional": "除非",
     "pinyin": "chú fēi",
-    "studyMeaning": "only if",
+    "studyMeaning": "unless; only if",
     "meanings": [
       "only if (..., or otherwise, ...)",
       "only when",
@@ -43588,8 +43567,7 @@
       "(Tw) (coll.) to reveal plot details to (sb)"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 5,
     "frequency": 1494
@@ -43824,7 +43802,7 @@
     "simplified": "项",
     "traditional": "項",
     "pinyin": "xiàng",
-    "studyMeaning": "nape (of the neck)",
+    "studyMeaning": "item; classifier for items; nape",
     "meanings": [
       "back of neck",
       "item",
@@ -43970,7 +43948,7 @@
     "simplified": "频道",
     "traditional": "頻道",
     "pinyin": "pín dào",
-    "studyMeaning": "frequency",
+    "studyMeaning": "TV or radio channel",
     "meanings": [
       "frequency",
       "(television) channel"
@@ -44199,7 +44177,7 @@
     "studyMeaning": "high speed",
     "meanings": [
       "high speed",
-      "expressway (abbr. for 路)"
+      "expressway (abbr. for 高速公路)"
     ],
     "partOfSpeech": [
       "b",
@@ -44348,8 +44326,7 @@
       "imperial"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 5,
     "frequency": 1547
@@ -44359,7 +44336,7 @@
     "simplified": "一丝不苟",
     "traditional": "一絲不苟",
     "pinyin": "yī sī bù gǒu",
-    "studyMeaning": "(literally) not one thread loose",
+    "studyMeaning": "meticulous; scrupulous",
     "meanings": [
       "not one thread loose (idiom); strictly according to the rules",
       "meticulous",
@@ -44474,7 +44451,7 @@
     "simplified": "一律",
     "traditional": "一律",
     "pinyin": "yī lǜ",
-    "studyMeaning": "same",
+    "studyMeaning": "uniformly; without exception",
     "meanings": [
       "same",
       "uniformly",
@@ -44745,7 +44722,7 @@
     "simplified": "不屑一顾",
     "traditional": "不屑一顧",
     "pinyin": "bù xiè yī gù",
-    "studyMeaning": "not worth seeing",
+    "studyMeaning": "to dismiss as beneath one's notice",
     "meanings": [
       "to disdain as beneath contempt (idiom)"
     ],
@@ -45152,8 +45129,7 @@
     ],
     "partOfSpeech": [
       "g",
-      "q",
-      "nr"
+      "q"
     ],
     "hskLevel": 6,
     "frequency": 15283
@@ -45607,7 +45583,7 @@
     "simplified": "主流",
     "traditional": "主流",
     "pinyin": "zhǔ liú",
-    "studyMeaning": "main stream (of a river)",
+    "studyMeaning": "mainstream; main current",
     "meanings": [
       "main stream (of a river)",
       "fig. the essential point",
@@ -45710,7 +45686,7 @@
     "simplified": "举足轻重",
     "traditional": "舉足輕重",
     "pinyin": "jǔ zú qīng zhòng",
-    "studyMeaning": "a foot's move sways the balance",
+    "studyMeaning": "to have a decisive influence",
     "meanings": [
       "to play a critical role (idiom)",
       "influential"
@@ -45974,7 +45950,7 @@
     "simplified": "争气",
     "traditional": "爭氣",
     "pinyin": "zhēng qì",
-    "studyMeaning": "work hard for sth.",
+    "studyMeaning": "to make someone proud through one's efforts",
     "meanings": [
       "to work hard for sth",
       "to resolve on improvement",
@@ -46110,7 +46086,7 @@
   {
     "id": "hsk-old-6-事迹",
     "simplified": "事迹",
-    "traditional": "事跡",
+    "traditional": "事蹟",
     "pinyin": "shì jì",
     "studyMeaning": "achievement",
     "meanings": [
@@ -46752,7 +46728,7 @@
     "simplified": "以至",
     "traditional": "以至",
     "pinyin": "yǐ zhì",
-    "studyMeaning": "down to",
+    "studyMeaning": "to the extent that; even",
     "meanings": [
       "down to",
       "up to",
@@ -46871,7 +46847,7 @@
     "simplified": "任重道远",
     "traditional": "任重道遠",
     "pinyin": "rèn zhòng dào yuǎn",
-    "studyMeaning": "lit. a heavy load and a long road",
+    "studyMeaning": "to have a heavy responsibility and a long way to go",
     "meanings": [
       "a heavy load and a long road",
       "fig. to bear heavy responsibilities through a long struggle (cf Confucian Analects, 8.7)"
@@ -47771,7 +47747,7 @@
     "simplified": "保管",
     "traditional": "保管",
     "pinyin": "bǎo guǎn",
-    "studyMeaning": "assure",
+    "studyMeaning": "to keep safe; to take care of",
     "meanings": [
       "to hold in safekeeping",
       "to have in one's care",
@@ -48802,7 +48778,7 @@
     "simplified": "全力以赴",
     "traditional": "全力以赴",
     "pinyin": "quán lì yǐ fù",
-    "studyMeaning": "do at all costs",
+    "studyMeaning": "to devote all one's effort",
     "meanings": [
       "to do at all costs",
       "to make an all-out effort"
@@ -48863,7 +48839,7 @@
     "simplified": "公告",
     "traditional": "公告",
     "pinyin": "gōng gào",
-    "studyMeaning": "post",
+    "studyMeaning": "public announcement; to announce publicly",
     "meanings": [
       "post",
       "announcement"
@@ -48975,7 +48951,7 @@
     "simplified": "公认",
     "traditional": "公認",
     "pinyin": "gōng rèn",
-    "studyMeaning": "publicly know (to be)",
+    "studyMeaning": "widely recognized; generally accepted",
     "meanings": [
       "publicly known (to be)",
       "accepted (as)"
@@ -49340,7 +49316,7 @@
     "simplified": "农历",
     "traditional": "農曆",
     "pinyin": "nóng lì",
-    "studyMeaning": "agricultural calendar",
+    "studyMeaning": "traditional Chinese lunar calendar",
     "meanings": [
       "the traditional Chinese calendar",
       "the lunar calendar"
@@ -49604,7 +49580,7 @@
     "simplified": "凑合",
     "traditional": "湊合",
     "pinyin": "còu he",
-    "studyMeaning": "bring together",
+    "studyMeaning": "to make do; to get by",
     "meanings": [
       "to bring together",
       "to make do in a bad situation",
@@ -49909,7 +49885,7 @@
     "simplified": "分歧",
     "traditional": "分歧",
     "pinyin": "fēn qí",
-    "studyMeaning": "difference (of opinion/position）",
+    "studyMeaning": "difference of opinion; disagreement",
     "meanings": [
       "divergent",
       "difference (of opinion, position); disagreement",
@@ -52132,7 +52108,7 @@
     "simplified": "反动",
     "traditional": "反動",
     "pinyin": "fǎn dòng",
-    "studyMeaning": "reaction",
+    "studyMeaning": "reactionary; politically regressive",
     "meanings": [
       "reaction",
       "reactionary"
@@ -52403,7 +52379,7 @@
     "simplified": "发火",
     "traditional": "發火",
     "pinyin": "fā huǒ",
-    "studyMeaning": "to catch fire",
+    "studyMeaning": "to lose one's temper; to catch fire",
     "meanings": [
       "to catch fire",
       "to ignite",
@@ -52971,7 +52947,7 @@
   {
     "id": "hsk-old-6-合伙",
     "simplified": "合伙",
-    "traditional": "合伙",
+    "traditional": "合夥",
     "pinyin": "hé huǒ",
     "studyMeaning": "to make a partnership",
     "meanings": [
@@ -53346,8 +53322,8 @@
     "id": "hsk-old-6-吩咐",
     "simplified": "吩咐",
     "traditional": "吩咐",
-    "pinyin": "fēn fù",
-    "studyMeaning": "instruct",
+    "pinyin": "fēn fu",
+    "studyMeaning": "to tell",
     "meanings": [
       "to tell",
       "to instruct",
@@ -53697,8 +53673,7 @@
       "spin-offs"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 6,
     "frequency": 6380
@@ -54034,10 +54009,12 @@
     "id": "hsk-old-6-哇",
     "simplified": "哇",
     "traditional": "哇",
-    "pinyin": "wa",
+    "pinyin": "wā",
     "studyMeaning": "wow",
     "meanings": [
-      "replaces 啊 when following the vowel \"u\" or \"ao\""
+      "Wow!",
+      "sound of a child's crying",
+      "sound of vomiting"
     ],
     "partOfSpeech": [
       "y",
@@ -54085,7 +54062,7 @@
     "simplified": "哎哟",
     "traditional": "哎喲",
     "pinyin": "āi yō",
-    "studyMeaning": "hey",
+    "studyMeaning": "ouch; oh dear",
     "meanings": [
       "hey",
       "ow",
@@ -54730,7 +54707,7 @@
     "simplified": "固执",
     "traditional": "固執",
     "pinyin": "gù zhí",
-    "studyMeaning": "persistent",
+    "studyMeaning": "stubborn; obstinate",
     "meanings": [
       "obstinate",
       "stubborn",
@@ -55889,7 +55866,7 @@
     "id": "hsk-old-6-大不了",
     "simplified": "大不了",
     "traditional": "大不了",
-    "pinyin": "dà bù liǎo",
+    "pinyin": "dà bu liǎo",
     "studyMeaning": "at the worst",
     "meanings": [
       "at worst; if worst comes to worst",
@@ -55957,7 +55934,7 @@
     "simplified": "大意",
     "traditional": "大意",
     "pinyin": "dà yi",
-    "studyMeaning": "main idea",
+    "studyMeaning": "careless",
     "meanings": [
       "careless"
     ],
@@ -56063,8 +56040,7 @@
       "gifted"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 6,
     "frequency": 4429
@@ -56742,7 +56718,7 @@
       "suspicion",
       "resentment",
       "enmity",
-      "abbr. for 犯, criminal suspect"
+      "abbr. for 嫌犯, criminal suspect"
     ],
     "partOfSpeech": [
       "v",
@@ -56794,7 +56770,6 @@
     ],
     "partOfSpeech": [
       "n",
-      "nr",
       "q"
     ],
     "hskLevel": 6,
@@ -59010,7 +58985,7 @@
     "simplified": "常务",
     "traditional": "常務",
     "pinyin": "cháng wù",
-    "studyMeaning": "routine",
+    "studyMeaning": "executive; standing, for an organizational role",
     "meanings": [
       "routine",
       "everyday business",
@@ -59185,7 +59160,7 @@
     "simplified": "平原",
     "traditional": "平原",
     "pinyin": "píng yuán",
-    "studyMeaning": "field",
+    "studyMeaning": "plain; flat lowland",
     "meanings": [
       "field",
       "plain"
@@ -59532,7 +59507,7 @@
     "simplified": "庸俗",
     "traditional": "庸俗",
     "pinyin": "yōng sú",
-    "studyMeaning": "filthy",
+    "studyMeaning": "vulgar; commonplace",
     "meanings": [
       "vulgar",
       "tacky",
@@ -60373,13 +60348,13 @@
     "id": "hsk-old-6-得罪",
     "simplified": "得罪",
     "traditional": "得罪",
-    "pinyin": "dé zuì",
-    "studyMeaning": "offend",
+    "pinyin": "dé zui",
+    "studyMeaning": "to offend; to make a faux pas",
     "meanings": [
-      "to commit an offense",
-      "to violate the law",
-      "excuse me! (formal)",
-      "see also 罪"
+      "to offend sb",
+      "to make a faux pas",
+      "a faux pas",
+      "see also 得罪 (dé zuì)"
     ],
     "partOfSpeech": [
       "v"
@@ -60494,7 +60469,7 @@
     "simplified": "心态",
     "traditional": "心態",
     "pinyin": "xīn tài",
-    "studyMeaning": "pyschology",
+    "studyMeaning": "mindset; mental attitude",
     "meanings": [
       "attitude (of the heart)",
       "state of one's psyche",
@@ -60568,7 +60543,7 @@
     "simplified": "心血",
     "traditional": "心血",
     "pinyin": "xīn xuè",
-    "studyMeaning": "heart and blood",
+    "studyMeaning": "effort and dedication",
     "meanings": [
       "heart's blood",
       "expenditure (for some project)",
@@ -61881,7 +61856,7 @@
     "simplified": "慢性",
     "traditional": "慢性",
     "pinyin": "màn xìng",
-    "studyMeaning": "slow and patient",
+    "studyMeaning": "chronic; slow-acting",
     "meanings": [
       "slow and patient",
       "chronic (disease)",
@@ -61914,7 +61889,7 @@
     "simplified": "慷慨",
     "traditional": "慷慨",
     "pinyin": "kāng kǎi",
-    "studyMeaning": "vehement",
+    "studyMeaning": "generous; impassioned",
     "meanings": [
       "vehement; fervent",
       "generous; magnanimous"
@@ -63253,7 +63228,7 @@
     "simplified": "拄",
     "traditional": "拄",
     "pinyin": "zhǔ",
-    "studyMeaning": "post",
+    "studyMeaning": "to lean on a walking stick; to support oneself with",
     "meanings": [
       "to lean on",
       "to prop on"
@@ -63303,7 +63278,7 @@
     "simplified": "拔苗助长",
     "traditional": "拔苗助長",
     "pinyin": "bá miáo zhù zhǎng",
-    "studyMeaning": "(literally) help shoots grow by pulling them out",
+    "studyMeaning": "to spoil progress by trying to force it",
     "meanings": [
       "to spoil things through excessive enthusiasm (idiom)"
     ],
@@ -63356,7 +63331,7 @@
     "simplified": "拘留",
     "traditional": "拘留",
     "pinyin": "jū liú",
-    "studyMeaning": "detain (a prison)",
+    "studyMeaning": "to detain someone; detention",
     "meanings": [
       "to detain (a prisoner)",
       "to keep sb in custody"
@@ -63953,7 +63928,7 @@
     "simplified": "挨",
     "traditional": "挨",
     "pinyin": "ái",
-    "studyMeaning": "get close to",
+    "studyMeaning": "to suffer; to endure",
     "meanings": [
       "to suffer; to endure",
       "to pull through (hard times)",
@@ -65765,7 +65740,7 @@
     "simplified": "效益",
     "traditional": "效益",
     "pinyin": "xiào yì",
-    "studyMeaning": "benefit；results",
+    "studyMeaning": "benefit; effectiveness",
     "meanings": [
       "benefit",
       "effectiveness",
@@ -66042,7 +66017,7 @@
     "simplified": "敷衍",
     "traditional": "敷衍",
     "pinyin": "fū yǎn",
-    "studyMeaning": "to elaborate (on a theme)",
+    "studyMeaning": "to do perfunctorily; to fob someone off",
     "meanings": [
       "to elaborate (on a theme)",
       "to expound (the classics)",
@@ -66192,7 +66167,7 @@
     "simplified": "斩钉截铁",
     "traditional": "斬釘截鐵",
     "pinyin": "zhǎn dīng jié tiě",
-    "studyMeaning": "to chop the nail and slice the iron (idiom)",
+    "studyMeaning": "resolute; unequivocal",
     "meanings": [
       "lit. to chop the nail and slice the iron (idiom)",
       "fig. resolute and decisive; unhesitating; categorical"
@@ -66824,7 +66799,7 @@
     "simplified": "时差",
     "traditional": "時差",
     "pinyin": "shí chā",
-    "studyMeaning": "jetlag",
+    "studyMeaning": "time difference; jet lag",
     "meanings": [
       "time difference",
       "time lag",
@@ -67921,7 +67896,7 @@
     "simplified": "条理",
     "traditional": "條理",
     "pinyin": "tiáo lǐ",
-    "studyMeaning": "consecutive",
+    "studyMeaning": "logical order; organization",
     "meanings": [
       "arrangement",
       "order",
@@ -68272,7 +68247,7 @@
     "simplified": "栋",
     "traditional": "棟",
     "pinyin": "dòng",
-    "studyMeaning": "roof beam",
+    "studyMeaning": "classifier for buildings",
     "meanings": [
       "classifier for houses or buildings",
       "ridgepole (old)"
@@ -68321,7 +68296,7 @@
     "simplified": "株",
     "traditional": "株",
     "pinyin": "zhū",
-    "studyMeaning": "stem",
+    "studyMeaning": "classifier for plants; plant",
     "meanings": [
       "tree trunk",
       "stump (tree root)",
@@ -68863,7 +68838,7 @@
     "id": "hsk-old-6-欧洲",
     "simplified": "欧洲",
     "traditional": "歐洲",
-    "pinyin": "Oū zhōu",
+    "pinyin": "Ōu zhōu",
     "studyMeaning": "Europe",
     "meanings": [
       "Europe (abbr. for 欧罗巴洲)"
@@ -70053,7 +70028,7 @@
     "simplified": "沾光",
     "traditional": "沾光",
     "pinyin": "zhān guāng",
-    "studyMeaning": "bask in the light",
+    "studyMeaning": "to benefit through an association with someone",
     "meanings": [
       "to bask in the light",
       "fig. to benefit from association with sb or sth",
@@ -70105,11 +70080,11 @@
     "id": "hsk-old-6-泄露",
     "simplified": "泄露",
     "traditional": "泄露",
-    "pinyin": "xiè lù",
+    "pinyin": "xiè lòu",
     "studyMeaning": "leak (information)",
     "meanings": [
       "to leak (information); to divulge",
-      "also pr. [xiè lòu]"
+      "also pr. [xiè lù]"
     ],
     "partOfSpeech": [
       "v"
@@ -70126,7 +70101,7 @@
     "meanings": [
       "legal person",
       "corporation",
-      "see also 人"
+      "see also 自然人"
     ],
     "partOfSpeech": [
       "n"
@@ -70271,7 +70246,7 @@
     "pinyin": "tài dǒu",
     "studyMeaning": "leading scholar of his time",
     "meanings": [
-      "(abbr. for 斗) distinguished figure",
+      "(abbr. for 泰山北斗) distinguished figure",
       "doyen",
       "revered authority"
     ],
@@ -70770,7 +70745,7 @@
     "simplified": "淋",
     "traditional": "淋",
     "pinyin": "lín",
-    "studyMeaning": "to drain",
+    "studyMeaning": "to drench; to sprinkle",
     "meanings": [
       "to sprinkle",
       "to drip",
@@ -70829,7 +70804,7 @@
     "meanings": [
       "off season",
       "slow business season",
-      "see also 季"
+      "see also 旺季"
     ],
     "partOfSpeech": [
       "t",
@@ -71224,8 +71199,7 @@
       "moderate"
     ],
     "partOfSpeech": [
-      "a",
-      "nr"
+      "a"
     ],
     "hskLevel": 6,
     "frequency": 7438
@@ -71484,7 +71458,7 @@
     "simplified": "漂浮",
     "traditional": "漂浮",
     "pinyin": "piāo fú",
-    "studyMeaning": "superficial",
+    "studyMeaning": "to float; to drift",
     "meanings": [
       "to float",
       "to hover",
@@ -71714,7 +71688,7 @@
     "simplified": "澄清",
     "traditional": "澄清",
     "pinyin": "chéng qīng",
-    "studyMeaning": "(of liquid) settle",
+    "studyMeaning": "to clarify; clear",
     "meanings": [
       "clear (of liquid)",
       "limpid",
@@ -73085,7 +73059,7 @@
     "simplified": "生态",
     "traditional": "生態",
     "pinyin": "shēng tài",
-    "studyMeaning": "way of life",
+    "studyMeaning": "ecology; ecological conditions",
     "meanings": [
       "ecology"
     ],
@@ -73116,7 +73090,7 @@
     "simplified": "生机",
     "traditional": "生機",
     "pinyin": "shēng jī",
-    "studyMeaning": "reprieve from death",
+    "studyMeaning": "vitality; a chance of survival",
     "meanings": [
       "opportunity to live",
       "to reprieve from death",
@@ -73204,7 +73178,7 @@
   {
     "id": "hsk-old-6-生锈",
     "simplified": "生锈",
-    "traditional": "生銹",
+    "traditional": "生鏽",
     "pinyin": "shēng xiù",
     "studyMeaning": "to rust",
     "meanings": [
@@ -73616,7 +73590,7 @@
     "simplified": "疲惫",
     "traditional": "疲憊",
     "pinyin": "pí bèi",
-    "studyMeaning": "beaten",
+    "studyMeaning": "exhausted; worn out",
     "meanings": [
       "beaten",
       "exhausted",
@@ -74104,7 +74078,7 @@
     "simplified": "盲目",
     "traditional": "盲目",
     "pinyin": "máng mù",
-    "studyMeaning": "blindness",
+    "studyMeaning": "blindly; without thinking",
     "meanings": [
       "blind",
       "blindly",
@@ -74570,7 +74544,7 @@
     "id": "hsk-old-6-码头",
     "simplified": "码头",
     "traditional": "碼頭",
-    "pinyin": "mǎ tóu",
+    "pinyin": "mǎ tou",
     "studyMeaning": "dock",
     "meanings": [
       "dock",
@@ -74894,7 +74868,7 @@
     "simplified": "神仙",
     "traditional": "神仙",
     "pinyin": "shén xiān",
-    "studyMeaning": "fig. lighthearted person",
+    "studyMeaning": "immortal; supernatural being",
     "meanings": [
       "Daoist immortal",
       "supernatural entity",
@@ -75056,7 +75030,7 @@
     "simplified": "私自",
     "traditional": "私自",
     "pinyin": "sī zì",
-    "studyMeaning": "private",
+    "studyMeaning": "without permission; on one's own authority",
     "meanings": [
       "private; personal",
       "secretly; without explicit approval"
@@ -76040,7 +76014,7 @@
     "simplified": "粉碎",
     "traditional": "粉碎",
     "pinyin": "fěn suì",
-    "studyMeaning": "to crash",
+    "studyMeaning": "to smash; to crush",
     "meanings": [
       "to crush; to smash; to shatter"
     ],
@@ -76336,7 +76310,7 @@
     "simplified": "素食",
     "traditional": "素食",
     "pinyin": "sù shí",
-    "studyMeaning": "vegetables",
+    "studyMeaning": "vegetarian food; vegetarian diet",
     "meanings": [
       "vegetarian food",
       "to eat a vegetarian diet"
@@ -77084,7 +77058,7 @@
     "simplified": "统筹兼顾",
     "traditional": "統籌兼顧",
     "pinyin": "tǒng chóu jiān gù",
-    "studyMeaning": "take every aspects into consideration through plan and preparation",
+    "studyMeaning": "to plan as a whole while considering all interests",
     "meanings": [
       "an overall plan taking into account all factors"
     ],
@@ -77761,7 +77735,7 @@
     "simplified": "聋哑",
     "traditional": "聾啞",
     "pinyin": "lóng yǎ",
-    "studyMeaning": "deaf and dumb",
+    "studyMeaning": "deaf and unable to speak",
     "meanings": [
       "deaf and dumb"
     ],
@@ -78116,7 +78090,7 @@
     "simplified": "胸怀",
     "traditional": "胸懷",
     "pinyin": "xiōng huái",
-    "studyMeaning": "think about",
+    "studyMeaning": "breadth of mind; aspirations; to cherish",
     "meanings": [
       "one's bosom (the seat of emotions)",
       "breast",
@@ -79127,7 +79101,7 @@
     "simplified": "落实",
     "traditional": "落實",
     "pinyin": "luò shí",
-    "studyMeaning": "workable",
+    "studyMeaning": "to implement; to put into effect",
     "meanings": [
       "practical",
       "workable",
@@ -79192,12 +79166,15 @@
   {
     "id": "hsk-old-6-蒙",
     "simplified": "蒙",
-    "traditional": "濛",
+    "traditional": "蒙",
     "pinyin": "méng",
-    "studyMeaning": "drizzle",
+    "studyMeaning": "to cover; to receive; to suffer",
     "meanings": [
-      "drizzle",
-      "mist"
+      "to cover",
+      "ignorant",
+      "to suffer (misfortune)",
+      "to receive (a favor)",
+      "to cheat"
     ],
     "partOfSpeech": [
       "v",
@@ -79583,7 +79560,7 @@
     "simplified": "表彰",
     "traditional": "表彰",
     "pinyin": "biǎo zhāng",
-    "studyMeaning": "cite (in dispatches)",
+    "studyMeaning": "to commend publicly",
     "meanings": [
       "to honor",
       "to commend",
@@ -79831,7 +79808,7 @@
     "simplified": "要命",
     "traditional": "要命",
     "pinyin": "yào mìng",
-    "studyMeaning": "cause somebody's death",
+    "studyMeaning": "terrible; unbearable; life-threatening",
     "meanings": [
       "to cause sb's death",
       "extremely; terribly",
@@ -81745,7 +81722,7 @@
     "simplified": "赞叹",
     "traditional": "讚嘆",
     "pinyin": "zàn tàn",
-    "studyMeaning": "sigh or grasp in admiration",
+    "studyMeaning": "to exclaim in admiration",
     "meanings": [
       "to exclaim in admiration"
     ],
@@ -81952,7 +81929,7 @@
     "simplified": "起哄",
     "traditional": "起鬨",
     "pinyin": "qǐ hòng",
-    "studyMeaning": "gather together",
+    "studyMeaning": "to make a noisy disturbance; to heckle",
     "meanings": [
       "to heckle",
       "rowdy jeering",
@@ -82949,7 +82926,7 @@
     "simplified": "过渡",
     "traditional": "過渡",
     "pinyin": "guò dù",
-    "studyMeaning": "to cross a river by ferry",
+    "studyMeaning": "transition; to move from one stage to another",
     "meanings": [
       "to cross over (by ferry)",
       "transition",
@@ -83988,7 +83965,7 @@
     "simplified": "部署",
     "traditional": "部署",
     "pinyin": "bù shǔ",
-    "studyMeaning": "dispose",
+    "studyMeaning": "to deploy; to arrange",
     "meanings": [
       "to dispose",
       "to deploy",
@@ -85102,7 +85079,7 @@
     "simplified": "附和",
     "traditional": "附和",
     "pinyin": "fù hè",
-    "studyMeaning": "repeat an agreement",
+    "studyMeaning": "to echo someone's opinion; to agree along with",
     "meanings": [
       "to agree",
       "to go along with",
@@ -85171,7 +85148,7 @@
     "simplified": "陈述",
     "traditional": "陳述",
     "pinyin": "chén shù",
-    "studyMeaning": "allegation",
+    "studyMeaning": "to state; statement",
     "meanings": [
       "an assertion",
       "to declare",
@@ -85332,7 +85309,7 @@
     "simplified": "随手",
     "traditional": "隨手",
     "pinyin": "suí shǒu",
-    "studyMeaning": "convenient",
+    "studyMeaning": "as one does something; casually; readily",
     "meanings": [
       "conveniently",
       "without extra trouble",
@@ -85718,7 +85695,6 @@
     ],
     "partOfSpeech": [
       "n",
-      "nr",
       "nz"
     ],
     "hskLevel": 6,
@@ -85874,7 +85850,6 @@
     ],
     "partOfSpeech": [
       "v",
-      "nr",
       "vn"
     ],
     "hskLevel": 6,
@@ -85923,7 +85898,7 @@
     "simplified": "须知",
     "traditional": "須知",
     "pinyin": "xū zhī",
-    "studyMeaning": "prerequisites",
+    "studyMeaning": "instructions; things one should know",
     "meanings": [
       "key information",
       "instructions",
@@ -86207,7 +86182,7 @@
     "simplified": "领先",
     "traditional": "領先",
     "pinyin": "lǐng xiān",
-    "studyMeaning": "leadership",
+    "studyMeaning": "to be ahead; to lead",
     "meanings": [
       "to lead",
       "to be in front"
@@ -86836,7 +86811,7 @@
     "simplified": "验收",
     "traditional": "驗收",
     "pinyin": "yàn shōu",
-    "studyMeaning": "inspect and then accept (i.e. received goods",
+    "studyMeaning": "to inspect and accept a delivery or completed work",
     "meanings": [
       "to inspect and accept",
       "acceptance"
@@ -86888,7 +86863,7 @@
     "simplified": "高尚",
     "traditional": "高尚",
     "pinyin": "gāo shàng",
-    "studyMeaning": "nobly",
+    "studyMeaning": "noble; admirable",
     "meanings": [
       "noble",
       "lofty",
@@ -86913,8 +86888,7 @@
       "height"
     ],
     "partOfSpeech": [
-      "n",
-      "nr"
+      "n"
     ],
     "hskLevel": 6,
     "frequency": 7388
@@ -86929,8 +86903,7 @@
       "brilliant; superior; wise"
     ],
     "partOfSpeech": [
-      "a",
-      "nr"
+      "a"
     ],
     "hskLevel": 6,
     "frequency": 9773

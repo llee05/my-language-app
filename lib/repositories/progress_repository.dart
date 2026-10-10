@@ -63,8 +63,7 @@ extension ProgressRepositoryQueries on ProgressRepository {
     final vocabulary = await vocabularyProgress();
     final learnedIds = {
       for (final word in vocabulary)
-        if (word.progress.timesSeen > 0 && word.progress.mastery >= .8)
-          word.progress.cardId,
+        if (word.progress.isLearned) word.progress.cardId,
     };
     final decks = await Future.wait(ids.map(lessons.findById));
     return Map.unmodifiable({

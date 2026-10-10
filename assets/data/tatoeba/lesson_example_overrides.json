@@ -84,5 +84,307 @@
     "chineseId": "2186246",
     "englishId": "906749",
     "reason": "Concrete beginner-friendly question about a favorite drink instead of an abstract statement about desire."
+  },
+  "hsk-old-1-下": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-1-块": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-1-日": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-2-外": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-2-题": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-3-包": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-3-宾馆": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-3-拿": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-博士": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-台": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-场": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-理发": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-篇": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-行": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-甲": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-乙": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-丙": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-丁": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-背": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-哇": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-大意": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-淋": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-蒙": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-4-干": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-生态": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-册": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-则": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-哈": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-应聘": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-开放": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-恐怖": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-所": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-棒": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-系": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-聚会": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-象棋": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-闻": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-项": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-一律": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-得罪": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-慢性": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-法人": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-私自": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-须知": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-随手": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-过渡": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-匹": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-5-橡皮": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-主流": {
+    "omit": true,
+    "reason": "Reviewed original example explicitly teaches the selected study sense and reading; replaces an unsuitable or misleading corpus match."
+  },
+  "hsk-old-6-泄露": {
+    "omit": true,
+    "reason": "Uses the reviewed primary xiè lòu reading; existing source pairs use the accepted alternate xiè lù."
+  },
+  "hsk-old-1-不": {
+    "chineseId": "883469",
+    "englishId": "260055",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-了": {
+    "chineseId": "1899582",
+    "englishId": "31664",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-呢": {
+    "chineseId": "1468442",
+    "englishId": "679375",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-家": {
+    "chineseId": "333605",
+    "englishId": "387554",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-想": {
+    "chineseId": "628502",
+    "englishId": "312847",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-月": {
+    "chineseId": "7774609",
+    "englishId": "8249371",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-没": {
+    "chineseId": "1966174",
+    "englishId": "631560",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-1-热": {
+    "chineseId": "10644868",
+    "englishId": "9179787",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-2-旅游": {
+    "chineseId": "336583",
+    "englishId": "65955",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-3-复习": {
+    "chineseId": "27",
+    "englishId": "1304",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-3-才": {
+    "chineseId": "1422711",
+    "englishId": "247228",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-3-条": {
+    "chineseId": "642835",
+    "englishId": "320752",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-4-当": {
+    "chineseId": "760845",
+    "englishId": "265688",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-5-功夫": {
+    "chineseId": "333461",
+    "englishId": "408343",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-5-沙滩": {
+    "chineseId": "805584",
+    "englishId": "22972",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-5-除非": {
+    "chineseId": "461524",
+    "englishId": "371985",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-6-以至": {
+    "chineseId": "2000407",
+    "englishId": "37127",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-6-栋": {
+    "chineseId": "4970063",
+    "englishId": "25585",
+    "reason": "Retain the existing source example: it still teaches a selected sense after the study gloss expansion."
+  },
+  "hsk-old-4-俩": {
+    "omit": true,
+    "reason": "A reviewed original provides a direct, natural example of the selected meaning and pronunciation."
+  },
+  "hsk-old-1-字": {
+    "omit": true,
+    "reason": "A reviewed original provides a direct, natural example of the selected meaning and pronunciation."
+  },
+  "hsk-old-2-离": {
+    "omit": true,
+    "reason": "A reviewed original provides a direct, natural example of the selected meaning and pronunciation."
   }
 }

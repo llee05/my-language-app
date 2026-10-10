@@ -6,9 +6,11 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../repositories/bundled_vocabulary_repository.dart';
 import 'flashcard_seed.dart';
 import 'vocabulary_content.dart';
+import '../services/vocabulary_quiz_options.dart';
 
 const vocabularyCurriculumMarker = 'bundled_hsk_curriculum_v1';
 const vocabularyExampleCorrectionsMarker = 'bundled_hsk_examples_v2';
+const vocabularyEditorialCorrectionsMarker = 'bundled_hsk_editorial_v3';
 const vocabularyLessonSize = 20;
 
 /// Classify only the first exact bundled deck in backups lacking provenance.
@@ -33,10 +35,7 @@ Future<void> identifyVocabularyCurriculumLessons(DatabaseExecutor db) async {
     );
     final expected = [
       for (final entry in definition['entries'] as List)
-        _wordKey(
-          byId[entry['vocabularyId']]!['simplified'] as String,
-          byId[entry['vocabularyId']]!['pinyin'] as String,
-        ),
+        byId[entry['vocabularyId']]!,
     ];
     for (final row in rows) {
       final members = await db.rawQuery(
@@ -59,11 +58,11 @@ Future<void> identifyVocabularyCurriculumLessons(DatabaseExecutor db) async {
       if (cards.length != expected.length ||
           cards.indexed.any(
             (entry) =>
-                _wordKey(
-                  entry.$2['chinese'] as String,
+                entry.$2['chinese'] != expected[entry.$1]['simplified'] ||
+                !matchesBundledVocabularyReading(
+                  expected[entry.$1],
                   entry.$2['pinyin'] as String,
-                ) !=
-                expected[entry.$1],
+                ),
           )) {
         continue;
       }
@@ -78,20 +77,13 @@ Future<void> identifyVocabularyCurriculumLessons(DatabaseExecutor db) async {
   }
 }
 
-String _wordKey(String chinese, String pinyin) =>
-    '$chinese\u0000${pinyin.toLowerCase().replaceAll(RegExp(r"[\s']"), '')}';
-
-/// Runs in the caller's transaction. Memberships let the new decks share
-/// existing cards without moving cards out of unfinished historical lessons.
-Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
-  if ((await db.query(
-    'content_migrations',
-    where: 'key = ?',
-    whereArgs: [vocabularyCurriculumMarker],
-  )).isNotEmpty) {
-    await _correctVocabularyExamples(db);
-    return;
-  }
+Future<
+  ({
+    List<Map<String, dynamic>> definitions,
+    Map<String, Map<String, dynamic>> byId,
+  })
+>
+_loadCurriculum() async {
   final document =
       jsonDecode(
             await rootBundle.loadString('assets/data/vocabulary_lessons.json'),
@@ -150,6 +142,27 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
     );
   }
 
+  return (definitions: definitions, byId: byId);
+}
+
+/// Runs in the caller's transaction. Memberships let the new decks share
+/// existing cards without moving cards out of unfinished historical lessons.
+Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
+  if ((await db.query(
+    'content_migrations',
+    where: 'key = ?',
+    whereArgs: [vocabularyCurriculumMarker],
+  )).isNotEmpty) {
+    await _correctVocabularyExamples(db);
+    await refreshVocabularyEditorialContent(db);
+    return;
+  }
+  final (definitions: definitions, byId: byId) = await _loadCurriculum();
+  final quizIndex = VocabularyQuizIndex(byId.values);
+  final quizMeanings = {
+    for (final word in byId.values) word['id']: quizIndex.forEntry(word),
+  };
+
   final existing = await db.rawQuery('''
     SELECT cards.*, COALESCE(card_progress.times_seen, 0) AS saved_times_seen
     FROM cards INNER JOIN lessons ON lessons.id = cards.lesson_id
@@ -160,7 +173,7 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
   final cardIds = <String, int>{};
   for (final card in existing) {
     cardIds.putIfAbsent(
-      _wordKey(card['chinese'] as String, card['pinyin'] as String),
+      vocabularyWordKey(card['chinese'] as String, card['pinyin'] as String),
       () => card['id'] as int,
     );
   }
@@ -217,36 +230,25 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
     }
     final entries = (definition['entries'] as List)
         .cast<Map<String, dynamic>>();
-    final meanings = {
-      for (final entry in entries)
-        vocabularyStudyMeaning(byId[entry['vocabularyId']]!),
-    };
+    final candidates = [
+      for (final entry in entries) quizMeanings[entry['vocabularyId']]!,
+      for (final word in byId.values)
+        if (word['hskLevel'] == definition['hskLevel'])
+          quizMeanings[word['id']]!,
+    ];
     for (final (position, entry) in entries.indexed) {
       final word = byId[entry['vocabularyId']]!;
-      final meaning = vocabularyStudyMeaning(word);
-      final key = _wordKey(
+      final key = vocabularyWordKey(
         word['simplified'] as String,
         word['pinyin'] as String,
       );
       final example = entry['example'] as Map<String, dynamic>?;
-      final values = <String, Object?>{
-        'chinese': word['simplified'],
-        'pinyin': word['pinyin'],
-        'english_meaning': meaning,
-        'part_of_speech': (word['partOfSpeech'] as List).join(', '),
-        'hsk_level': word['hskLevel'],
-        'example_sentence_chinese': example?['chinese'] ?? '',
-        'example_sentence_pinyin': example?['pinyin'] ?? '',
-        'example_sentence_english': example?['english'] ?? '',
-        'example_source': example?['source'] ?? '',
-        'example_source_id': example?['chineseId'] ?? '',
-        'example_translation_id': example?['englishId'] ?? '',
-        'quiz_options': jsonEncode([
-          meaning,
-          ...meanings.where((value) => value != meaning).take(3),
-        ]),
-        'correct_answer': meaning,
-      };
+      final values = _vocabularyCardValues(
+        word,
+        example!,
+        quizMeanings[word['id']]!,
+        candidates,
+      );
       var cardId = cardIds[key];
       if (cardId == null) {
         cardId = nextCardId++;
@@ -280,6 +282,7 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
   });
   await batch.commit(noResult: true);
   await _correctVocabularyExamples(db);
+  await refreshVocabularyEditorialContent(db);
 }
 
 /// Update examples in place, without rebuilding memberships or choosing new
@@ -322,8 +325,14 @@ Future<void> _correctVocabularyExamples(DatabaseExecutor db) async {
         [definition['title'], word['simplified']],
       );
       for (final card in cards) {
-        if (_wordKey(card['chinese'] as String, card['pinyin'] as String) !=
-            _wordKey(word['simplified'] as String, word['pinyin'] as String)) {
+        if (vocabularyWordKey(
+              card['chinese'] as String,
+              card['pinyin'] as String,
+            ) !=
+            vocabularyWordKey(
+              word['simplified'] as String,
+              word['pinyin'] as String,
+            )) {
           continue;
         }
         await db.update(
@@ -346,4 +355,103 @@ Future<void> _correctVocabularyExamples(DatabaseExecutor db) async {
     'key': vocabularyExampleCorrectionsMarker,
     'applied_at': DateTime.now().toUtc().toIso8601String(),
   });
+}
+
+Map<String, Object?> _vocabularyCardValues(
+  Map<String, dynamic> word,
+  Map<String, dynamic> example,
+  QuizMeaning meaning,
+  Iterable<QuizMeaning> candidates,
+) => {
+  'chinese': word['simplified'],
+  'pinyin': word['pinyin'],
+  'english_meaning': meaning.answer,
+  'part_of_speech': (word['partOfSpeech'] as List).join(', '),
+  'hsk_level': word['hskLevel'],
+  'example_sentence_chinese': example['chinese'],
+  'example_sentence_pinyin': example['pinyin'],
+  'example_sentence_english': example['english'],
+  'example_source': example['source'],
+  'example_source_id': example['chineseId'] ?? '',
+  'example_translation_id': example['englishId'] ?? '',
+  'quiz_options': jsonEncode(
+    buildMeaningOptions(answer: meaning, candidates: candidates),
+  ),
+  'correct_answer': meaning.answer,
+};
+
+/// In-place editorial correction. The caller owns the transaction and cache
+/// invalidation. Only cards shared by known bundled decks are changed; archived
+/// cards outside the curriculum and learner-created copies retain their text.
+Future<void> refreshVocabularyEditorialContent(DatabaseExecutor db) async {
+  if ((await db.query(
+    'content_migrations',
+    where: 'key = ?',
+    whereArgs: [vocabularyEditorialCorrectionsMarker],
+  )).isNotEmpty) {
+    return;
+  }
+  final (definitions: definitions, byId: byId) = await _loadCurriculum();
+  final byChinese = {for (final word in byId.values) word['simplified']: word};
+  final titles = [for (final definition in definitions) definition['title']];
+  final placeholders = List.filled(titles.length, '?').join(',');
+  final rows = await db.rawQuery('''
+    SELECT DISTINCT cards.id, cards.chinese, cards.pinyin
+    FROM cards
+    INNER JOIN lessons owner ON owner.id = cards.lesson_id
+    INNER JOIN lesson_cards ON lesson_cards.card_id = cards.id
+    INNER JOIN lessons deck ON deck.id = lesson_cards.lesson_id
+    WHERE owner.is_user_generated = 0 AND owner.is_sentence_practice = 0
+      AND deck.is_user_generated = 0 AND deck.is_sentence_practice = 0
+      AND deck.lesson_title IN ($placeholders)
+  ''', titles);
+  final rowsByWord = <String, List<Map<String, Object?>>>{};
+  for (final row in rows) {
+    final chinese = row['chinese'] as String;
+    final word = byChinese[chinese];
+    if (word == null ||
+        !matchesBundledVocabularyReading(word, row['pinyin'] as String)) {
+      continue;
+    }
+    rowsByWord.putIfAbsent(chinese, () => []).add(row);
+  }
+  final quizIndex = VocabularyQuizIndex(byId.values);
+  final quizMeanings = {
+    for (final word in byId.values) word['id']: quizIndex.forEntry(word),
+  };
+  final updated = <int>{};
+  final batch = db.batch();
+  for (final definition in definitions) {
+    final entries = (definition['entries'] as List)
+        .cast<Map<String, dynamic>>();
+    final candidates = [
+      for (final entry in entries) quizMeanings[entry['vocabularyId']]!,
+      for (final word in byId.values)
+        if (word['hskLevel'] == definition['hskLevel'])
+          quizMeanings[word['id']]!,
+    ];
+    for (final entry in entries) {
+      final word = byId[entry['vocabularyId']]!;
+      for (final row in rowsByWord[word['simplified']] ?? const []) {
+        final id = row['id'] as int;
+        if (!updated.add(id)) continue;
+        batch.update(
+          'cards',
+          _vocabularyCardValues(
+            word,
+            entry['example'] as Map<String, dynamic>,
+            quizMeanings[word['id']]!,
+            candidates,
+          ),
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+    }
+  }
+  batch.insert('content_migrations', {
+    'key': vocabularyEditorialCorrectionsMarker,
+    'applied_at': DateTime.now().toUtc().toIso8601String(),
+  });
+  await batch.commit(noResult: true);
 }

@@ -3,23 +3,11 @@ import 'dart:io';
 
 import 'hsk_vocabulary_overrides.dart';
 
-typedef _GlossaryEntry = ({
+typedef HskGlossaryEntry = ({
   String traditional,
   List<String> pinyin,
   String meaning,
 });
-
-const _displayPinyinOverrides = <String, String>{
-  '系领带': 'jì lǐng dài',
-  '纽扣儿': 'niǔ kòu r',
-  '致力于': 'zhì lì yú',
-};
-
-const _studyMeaningOverrides = <String, String>{
-  '只': 'only',
-  '字典': 'dictionary',
-  '致力于': 'to dedicate oneself to',
-};
 
 void main(List<String> args) {
   if (args.length != 3) {
@@ -54,7 +42,18 @@ void main(List<String> args) {
       forms: forms,
       glossary: glossaryEntry,
     );
-    final meanings = (form['meanings'] as List<dynamic>).cast<String>();
+    final meanings = (form['meanings'] as List<dynamic>)
+        .cast<String>()
+        .map((raw) {
+          var meaning = raw;
+          for (final replacement
+              in (reviewedMeaningReplacements[simplified] ?? const {})
+                  .entries) {
+            meaning = meaning.replaceAll(replacement.key, replacement.value);
+          }
+          return meaning;
+        })
+        .toList(growable: false);
     if (meanings.isEmpty) continue;
     final transcriptions = form['transcriptions'] as Map<String, dynamic>;
     final sourcePinyin = transcriptions['pinyin'] as String;
@@ -63,7 +62,7 @@ void main(List<String> args) {
       sourcePinyin: sourcePinyin,
       glossary: glossaryEntry,
     );
-    final studyMeaning = _studyMeaning(
+    final studyMeaning = studyMeaningForForm(
       simplified: simplified,
       selectedPinyin: pinyin,
       meanings: meanings,
@@ -74,11 +73,17 @@ void main(List<String> args) {
     output.add({
       'id': 'hsk-old-$hskLevel-$simplified',
       'simplified': simplified,
-      'traditional': form['traditional'],
+      'traditional':
+          reviewedDisplayTraditional[simplified] ?? form['traditional'],
       'pinyin': pinyin,
       'studyMeaning': studyMeaning,
       'meanings': meanings,
-      'partOfSpeech': entry['pos'],
+      'partOfSpeech': (entry['pos'] as List<dynamic>)
+          .where(
+            (tag) =>
+                tag != 'nr' || !wordsWithUnrelatedNameTags.contains(simplified),
+          )
+          .toList(growable: false),
       'hskLevel': hskLevel,
       'frequency': entry['frequency'],
     });
@@ -96,7 +101,7 @@ void main(List<String> args) {
   stdout.writeln('Imported ${output.length} HSK 2.0 vocabulary entries.');
 }
 
-Map<String, _GlossaryEntry> _loadGlossary(Directory directory) {
+Map<String, HskGlossaryEntry> _loadGlossary(Directory directory) {
   if (!directory.existsSync()) {
     throw ArgumentError('Glossary directory does not exist: ${directory.path}');
   }
@@ -120,7 +125,7 @@ Map<String, _GlossaryEntry> _loadGlossary(Directory directory) {
     );
   }
 
-  final result = <String, _GlossaryEntry>{};
+  final result = <String, HskGlossaryEntry>{};
   for (final file in files) {
     for (var line in file.readAsLinesSync()) {
       line = line
@@ -150,7 +155,7 @@ Map<String, _GlossaryEntry> _loadGlossary(Directory directory) {
 Map<String, dynamic> _selectStudyForm({
   required String simplified,
   required List<Map<String, dynamic>> forms,
-  required _GlossaryEntry? glossary,
+  required HskGlossaryEntry? glossary,
 }) {
   Iterable<Map<String, dynamic>> candidates = forms;
   final preferredPinyin = preferredHsk2Pinyin[simplified];
@@ -197,7 +202,7 @@ Map<String, dynamic> _selectStudyForm({
   return ranked.first;
 }
 
-int _formPenalty(Map<String, dynamic> form, _GlossaryEntry? glossary) {
+int _formPenalty(Map<String, dynamic> form, HskGlossaryEntry? glossary) {
   var penalty = 0;
   final pinyin = _formPinyin(form);
   final meanings = (form['meanings'] as List<dynamic>).cast<String>();
@@ -223,9 +228,9 @@ String _formPinyin(Map<String, dynamic> form) =>
 String _displayPinyin({
   required String simplified,
   required String sourcePinyin,
-  required _GlossaryEntry? glossary,
+  required HskGlossaryEntry? glossary,
 }) {
-  final override = _displayPinyinOverrides[simplified];
+  final override = reviewedDisplayPinyin[simplified];
   if (override != null) return override;
 
   var result = sourcePinyin.replaceAll('u:', 'ü');
@@ -243,38 +248,50 @@ String _displayPinyin({
   return result;
 }
 
-String _studyMeaning({
+String studyMeaningForForm({
   required String simplified,
   required String selectedPinyin,
   required List<String> meanings,
-  required _GlossaryEntry? glossary,
+  required HskGlossaryEntry? glossary,
 }) {
-  final override = _studyMeaningOverrides[simplified];
+  final override = reviewedStudyMeanings[simplified];
   if (override != null) return override;
 
   if (glossary != null) {
     final branches = glossary.meaning.split(RegExp(r'\s+\|\s+'));
-    var branch = branches.first;
-    if (branches.length == glossary.pinyin.length) {
-      final selectedIndex = glossary.pinyin.indexWhere(
-        (candidate) =>
-            _normalizedPinyin(candidate).toLowerCase() ==
-            _normalizedPinyin(selectedPinyin).toLowerCase(),
-      );
-      if (selectedIndex >= 0) branch = branches[selectedIndex];
+    final selectedIndex = glossary.pinyin.indexWhere(
+      (candidate) =>
+          _normalizedPinyin(candidate).toLowerCase() ==
+          _normalizedPinyin(selectedPinyin).toLowerCase(),
+    );
+    if (selectedIndex >= 0 && branches.length == glossary.pinyin.length) {
+      return conciseStudyGloss(branches[selectedIndex]);
     }
-    return _conciseGloss(branch);
+    if (selectedIndex >= 0 && branches.length == 1) {
+      return conciseStudyGloss(branches.single);
+    }
   }
 
   final substantive = meanings.firstWhere(
     (meaning) => !_isDictionaryReference(meaning),
     orElse: () => meanings.first,
   );
-  return _conciseGloss(substantive);
+  return conciseStudyGloss(substantive);
 }
 
-String _conciseGloss(String meaning) {
-  var result = meaning.split(';').first.trim();
+String conciseStudyGloss(String meaning) {
+  var depth = 0;
+  var end = meaning.length;
+  for (var index = 0; index < meaning.length; index++) {
+    final character = meaning[index];
+    if (character == '(' || character == '（') depth++;
+    if (character == ')' || character == '）') depth--;
+    if (depth == 0 && (character == ';' || character == '；')) {
+      end = index;
+      break;
+    }
+  }
+  var result = meaning.substring(0, end).trim();
   result = result.replaceAll(
     RegExp(r'\s*\(Kangxi radical[^)]*\)', caseSensitive: false),
     '',

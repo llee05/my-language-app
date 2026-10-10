@@ -9,8 +9,8 @@
   },
   "vocabularyCount": 4991,
   "exampleCount": 4991,
-  "tatoebaExampleCount": 4241,
-  "originalExampleCount": 750,
+  "tatoebaExampleCount": 4191,
+  "originalExampleCount": 800,
   "missingExamples": [],
   "lessons": [
     {
@@ -81,13 +81,10 @@
         {
           "vocabularyId": "hsk-old-1-下",
           "example": {
-            "chinese": "昨天下了一天的雨。",
-            "pinyin": "Zuótiān xià le yī tiān de yǔ.",
-            "english": "Yesterday it rained all day.",
-            "source": "Tatoeba",
-            "chineseId": "385106",
-            "englishId": "7772834",
-            "pinyinContributor": ""
+            "chinese": "请把书放在桌子下。",
+            "pinyin": "Qǐng bǎ shū fàng zài zhuō zi xià。",
+            "english": "Please put the book under the table.",
+            "source": "Original"
           }
         },
         {
@@ -798,13 +795,10 @@
         {
           "vocabularyId": "hsk-old-1-块",
           "example": {
-            "chinese": "我没和她一块儿去。",
-            "pinyin": "Wǒ méi hé tā yīkuàir qù.",
-            "english": "I didn't go with her.",
-            "source": "Tatoeba",
-            "chineseId": "10335151",
-            "englishId": "3903862",
-            "pinyinContributor": ""
+            "chinese": "这块蛋糕很好吃。",
+            "pinyin": "Zhè kuài dàn gāo hěn hǎo chī。",
+            "english": "This piece of cake is delicious.",
+            "source": "Original"
           }
         },
         {
@@ -918,13 +912,10 @@
         {
           "vocabularyId": "hsk-old-1-字",
           "example": {
-            "chinese": "你会读这个汉字吗？",
-            "pinyin": "Nǐ huì dú zhège hànzì ma?",
-            "english": "Can you read this kanji?",
-            "source": "Tatoeba",
-            "chineseId": "433697",
-            "englishId": "16699",
-            "pinyinContributor": ""
+            "chinese": "这个字怎么写？",
+            "pinyin": "Zhè gè zì zěn me xiě？",
+            "english": "How do you write this character?",
+            "source": "Original"
           }
         },
         {
@@ -1165,13 +1156,10 @@
         {
           "vocabularyId": "hsk-old-1-日",
           "example": {
-            "chinese": "这儿有人说日语吗？",
-            "pinyin": "Zhèr yǒu rén shuō Rìyǔ ma?",
-            "english": "Does anyone here speak Japanese?",
-            "source": "Tatoeba",
-            "chineseId": "334985",
-            "englishId": "61727",
-            "pinyinContributor": "Yorwba"
+            "chinese": "今天是十月一日。",
+            "pinyin": "Jīn tiān shì shí yuè yī rì。",
+            "english": "Today is the first of October.",
+            "source": "Original"
           }
         },
         {
@@ -2448,13 +2436,10 @@
         {
           "vocabularyId": "hsk-old-2-外",
           "example": {
-            "chinese": "一个外国人？你是哪里人？",
-            "pinyin": "Yī gè wàiguórén? Nǐ shì nǎlǐ rén?",
-            "english": "A foreigner? And where are you from?",
-            "source": "Tatoeba",
-            "chineseId": "871642",
-            "englishId": "871536",
-            "pinyinContributor": "Yorwba"
+            "chinese": "他在门外等你。",
+            "pinyin": "Tā zài mén wài děng nǐ。",
+            "english": "He is waiting for you outside the door.",
+            "source": "Original"
           }
         },
         {
@@ -3256,13 +3241,10 @@
         {
           "vocabularyId": "hsk-old-2-离",
           "example": {
-            "chinese": "离我的车远一点。",
-            "pinyin": "Lí wǒ de chē yuǎn yīdiǎn.",
-            "english": "Leave my car alone.",
-            "source": "Tatoeba",
-            "chineseId": "824575",
-            "englishId": "321506",
-            "pinyinContributor": ""
+            "chinese": "学校离我家很近。",
+            "pinyin": "Xué xiào lí wǒ jiā hěn jìn。",
+            "english": "The school is close to my home.",
+            "source": "Original"
           }
         },
         {
@@ -3894,13 +3876,10 @@
         {
           "vocabularyId": "hsk-old-2-题",
           "example": {
-            "chinese": "他说的话跑题了。",
-            "pinyin": "Tā shuō dehuà pǎotí le.",
-            "english": "What he said was beside the point.",
-            "source": "Tatoeba",
-            "chineseId": "6101378",
-            "englishId": "286092",
-            "pinyinContributor": ""
+            "chinese": "这道题很难。",
+            "pinyin": "Zhè dào tí hěn nán。",
+            "english": "This question is difficult.",
+            "source": "Original"
           }
         },
         {
@@ -4695,13 +4674,10 @@
         {
           "vocabularyId": "hsk-old-3-包",
           "example": {
-            "chinese": "我的钱包里已经没有钱了。",
-            "pinyin": "Wǒ de qiánbāo lǐ yǐjīng méiyǒu qián le.",
-            "english": "I have no more money in my wallet.",
-            "source": "Tatoeba",
-            "chineseId": "1327457",
-            "englishId": "244277",
-            "pinyinContributor": "Yorwba"
+            "chinese": "这个包是我的。",
+            "pinyin": "Zhè gè bāo shì wǒ de。",
+            "english": "This bag is mine.",
+            "source": "Original"
           }
         }
       ]
@@ -5292,13 +5268,10 @@
         {
           "vocabularyId": "hsk-old-3-宾馆",
           "example": {
-            "chinese": "这里是三星级宾馆，三百元住一晚。",
-            "pinyin": "Zhèlǐ shì sānxīng jí bīnguǎn, sān bǎi yuán zhù yī wǎn.",
-            "english": "This is a three-star hotel; three hundred dollars a night.",
-            "source": "Tatoeba",
-            "chineseId": "420442",
-            "englishId": "487212",
-            "pinyinContributor": ""
+            "chinese": "这家宾馆很干净。",
+            "pinyin": "Zhè jiā bīn guǎn hěn gān jìng。",
+            "english": "This hotel is clean.",
+            "source": "Original"
           }
         },
         {
@@ -5611,13 +5584,10 @@
         {
           "vocabularyId": "hsk-old-3-拿",
           "example": {
-            "chinese": "你最喜欢的加拿大歌手是谁？",
-            "pinyin": "Nǐ zuì xǐhuan de Jiānádà gēshǒu shì shéi?",
-            "english": "Who is your favorite Canadian singer?",
-            "source": "Tatoeba",
-            "chineseId": "13573891",
-            "englishId": "6949925",
-            "pinyinContributor": ""
+            "chinese": "请拿一本书给我。",
+            "pinyin": "Qǐng ná yī běn shū gěi wǒ。",
+            "english": "Please bring me a book.",
+            "source": "Original"
           }
         },
         {
@@ -8386,7 +8356,7 @@
           "vocabularyId": "hsk-old-4-俩",
           "example": {
             "chinese": "我们俩是很好的朋友。",
-            "pinyin": "Wǒ men liǎng shì hěn hǎo de péng you。",
+            "pinyin": "Wǒ men liǎ shì hěn hǎo de péng you。",
             "english": "The two of us are good friends.",
             "source": "Original"
           }
@@ -9003,13 +8973,10 @@
         {
           "vocabularyId": "hsk-old-4-博士",
           "example": {
-            "chinese": "预定在一点半与博士见面。",
-            "pinyin": "Yùdìng zài yīdiǎn bàn yǔ bóshì jiànmiàn.",
-            "english": "I planned to meet the professor at 1:30.",
-            "source": "Tatoeba",
-            "chineseId": "6484890",
-            "englishId": "6534861",
-            "pinyinContributor": ""
+            "chinese": "她正在读博士。",
+            "pinyin": "Tā zhèng zài dú bó shì。",
+            "english": "She is studying for a doctorate.",
+            "source": "Original"
           }
         },
         {
@@ -9358,13 +9325,10 @@
         {
           "vocabularyId": "hsk-old-4-台",
           "example": {
-            "chinese": "他一边等火车，一边在月台上走来走去。",
-            "pinyin": "Tā yībiān děng huǒchē, yībiān zài yuètái shàng zǒu lái zǒuqù.",
-            "english": "He walked back and forth on the platform while waiting for the train.",
-            "source": "Tatoeba",
-            "chineseId": "598135",
-            "englishId": "304812",
-            "pinyinContributor": ""
+            "chinese": "我买了一台电脑。",
+            "pinyin": "Wǒ mǎi le yī tái diàn nǎo。",
+            "english": "I bought a computer.",
+            "source": "Original"
           }
         },
         {
@@ -9741,13 +9705,10 @@
         {
           "vocabularyId": "hsk-old-4-场",
           "example": {
-            "chinese": "我们去年夏天在一个农场上工作。",
-            "pinyin": "Wǒmen qùnián xiàtiān zài yī gè nóngchǎng shàng gōngzuò.",
-            "english": "We worked on a farm last summer.",
-            "source": "Tatoeba",
-            "chineseId": "907480",
-            "englishId": "248748",
-            "pinyinContributor": ""
+            "chinese": "今天有一场比赛。",
+            "pinyin": "Jīn tiān yǒu yī chǎng bǐ sài。",
+            "english": "There is a match today.",
+            "source": "Original"
           }
         },
         {
@@ -10395,13 +10356,10 @@
         {
           "vocabularyId": "hsk-old-4-干",
           "example": {
-            "chinese": "像那样的老师还是别干了比较好。",
-            "pinyin": "Xiàng nàyàng de lǎoshī háishi bié gàn le bǐjiào hǎo.",
-            "english": "Such a teacher may as well retire from his work.",
-            "source": "Tatoeba",
-            "chineseId": "432954",
-            "englishId": "49812",
-            "pinyinContributor": ""
+            "chinese": "这件事你干得很好。",
+            "pinyin": "Zhè jiàn shì nǐ gàn de hěn hǎo。",
+            "english": "You did this very well.",
+            "source": "Original"
           }
         },
         {
@@ -12572,13 +12530,10 @@
         {
           "vocabularyId": "hsk-old-4-理发",
           "example": {
-            "chinese": "你去哪儿了？我去了理发店。",
-            "pinyin": "Nǐ qù nǎr le? wǒqù le lǐfàdiàn.",
-            "english": "\"Where have you been?\" \"I've been to the barber's.\"",
-            "source": "Tatoeba",
-            "chineseId": "1446798",
-            "englishId": "73840",
-            "pinyinContributor": ""
+            "chinese": "我明天去理发。",
+            "pinyin": "Wǒ míng tiān qù lǐ fà。",
+            "english": "I am getting a haircut tomorrow.",
+            "source": "Original"
           }
         },
         {
@@ -13214,13 +13169,10 @@
         {
           "vocabularyId": "hsk-old-4-篇",
           "example": {
-            "chinese": "我一直忙于写一部短篇小说。",
-            "pinyin": "Wǒ yīzhí mángyú xiě yī bù duǎnpiān xiǎoshuō.",
-            "english": "I have been busy writing a short story.",
-            "source": "Tatoeba",
-            "chineseId": "333038",
-            "englishId": "259391",
-            "pinyinContributor": "Yorwba"
+            "chinese": "我读了三篇文章。",
+            "pinyin": "Wǒ dú le sān piān wén zhāng。",
+            "english": "I read three articles.",
+            "source": "Original"
           }
         },
         {
@@ -13768,13 +13720,10 @@
         {
           "vocabularyId": "hsk-old-4-行",
           "example": {
-            "chinese": "从这里步行到车站要多少时间？",
-            "pinyin": "Cóng zhèlǐ bùxíng dào chēzhàn yào duōshao shíjiān?",
-            "english": "How long does it take to walk from here to the station?",
-            "source": "Tatoeba",
-            "chineseId": "403427",
-            "englishId": "62098",
-            "pinyinContributor": ""
+            "chinese": "这样做行吗？",
+            "pinyin": "Zhè yàng zuò xíng ma？",
+            "english": "Is it okay to do it this way?",
+            "source": "Original"
           }
         },
         {
@@ -15109,13 +15058,10 @@
         {
           "vocabularyId": "hsk-old-5-丁",
           "example": {
-            "chinese": "我要坚持学习拉丁语，因为它非常有趣。",
-            "pinyin": "Wǒ yào jiānchí xuéxí Lādīngyǔ, yīnwèi tā fēicháng yǒuqù.",
-            "english": "I will continue to study Latin, because it is really interesting.",
-            "source": "Tatoeba",
-            "chineseId": "4625767",
-            "englishId": "4626114",
-            "pinyinContributor": ""
+            "chinese": "甲、乙、丙、丁是四个不同的小组。",
+            "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+            "english": "A, B, C, and D are four different groups.",
+            "source": "Original"
           }
         },
         {
@@ -15356,9 +15302,9 @@
         {
           "vocabularyId": "hsk-old-5-丙",
           "example": {
-            "chinese": "甲、乙、丙是三个不同的小组。",
-            "pinyin": "Jiǎ、 yǐ、 bǐng shì sān gè bù tóng de xiǎo zǔ。",
-            "english": "A, B, and C are three different groups.",
+            "chinese": "甲、乙、丙、丁是四个不同的小组。",
+            "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+            "english": "A, B, C, and D are four different groups.",
             "source": "Original"
           }
         },
@@ -15636,13 +15582,10 @@
         {
           "vocabularyId": "hsk-old-5-乙",
           "example": {
-            "chinese": "甲之蜜糖，乙之砒霜。",
-            "pinyin": "Jiǎ zhī mì táng, yǐ zhī pīshuāng.",
-            "english": "One man's meat is another man's poison.",
-            "source": "Tatoeba",
-            "chineseId": "5092091",
-            "englishId": "67212",
-            "pinyinContributor": "Yorwba"
+            "chinese": "甲、乙、丙、丁是四个不同的小组。",
+            "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+            "english": "A, B, C, and D are four different groups.",
+            "source": "Original"
           }
         },
         {
@@ -17006,13 +16949,10 @@
         {
           "vocabularyId": "hsk-old-5-册",
           "example": {
-            "chinese": "这本书对新手来说是一本很好的手册。",
-            "pinyin": "Zhè běn shū duì xīnshǒu lái shuō shì yī běn hěn hǎo de shǒucè.",
-            "english": "This book is a good guide for beginners.",
-            "source": "Tatoeba",
-            "chineseId": "13943480",
-            "englishId": "56919",
-            "pinyinContributor": ""
+            "chinese": "我买了两册书。",
+            "pinyin": "Wǒ mǎi le liǎng cè shū。",
+            "english": "I bought two volumes.",
+            "source": "Original"
           }
         }
       ]
@@ -17296,13 +17236,10 @@
         {
           "vocabularyId": "hsk-old-5-则",
           "example": {
-            "chinese": "就连我们的头脑也遵守物理法则。",
-            "pinyin": "Jiù lián wǒmen de tóunǎo yě zūnshǒu wùlǐ fǎzé.",
-            "english": "Even our brains are subject to the laws of physics.",
-            "source": "Tatoeba",
-            "chineseId": "2031257",
-            "englishId": "23350",
-            "pinyinContributor": "Yorwba"
+            "chinese": "报纸上有一则新闻。",
+            "pinyin": "Bào zhǐ shàng yǒu yī zé xīn wén。",
+            "english": "There is a news item in the newspaper.",
+            "source": "Original"
           }
         },
         {
@@ -17696,13 +17633,10 @@
         {
           "vocabularyId": "hsk-old-5-匹",
           "example": {
-            "chinese": "我枪杀了那匹马，因为他已呼吸困难。",
-            "pinyin": "Wǒ qiāngshā le nà pǐ mǎ, yīnwèi tā yǐ hūxī kùnnan.",
-            "english": "I shot the horse because it had trouble breathing.",
-            "source": "Tatoeba",
-            "chineseId": "4638680",
-            "englishId": "4756043",
-            "pinyinContributor": ""
+            "chinese": "田里有一匹马。",
+            "pinyin": "Tián lǐ yǒu yī pǐ mǎ。",
+            "english": "There is a horse in the field.",
+            "source": "Original"
           }
         },
         {
@@ -18705,13 +18639,10 @@
         {
           "vocabularyId": "hsk-old-5-哈",
           "example": {
-            "chinese": "哈里发塔是现时世界上最高的摩天大楼。",
-            "pinyin": "Hālǐfā Tǎ shì xiànshí shìjiè shàng zuì gāo de mótiāndàlóu.",
-            "english": "Burj Khalifa is currently the tallest skyscraper in the world.",
-            "source": "Tatoeba",
-            "chineseId": "1530737",
-            "englishId": "1399479",
-            "pinyinContributor": ""
+            "chinese": "哈哈，这个笑话真有趣！",
+            "pinyin": "Hā hā， zhè gè xiào hua zhēn yǒu qù！",
+            "english": "Ha ha, this joke is really funny!",
+            "source": "Original"
           }
         },
         {
@@ -18851,7 +18782,7 @@
           "vocabularyId": "hsk-old-5-嘱咐",
           "example": {
             "chinese": "妈妈嘱咐我早点回家。",
-            "pinyin": "Mā ma zhǔ fù wǒ zǎo diǎn huí jiā。",
+            "pinyin": "Mā ma zhǔ fu wǒ zǎo diǎn huí jiā。",
             "english": "Mother told me to come home early.",
             "source": "Original"
           }
@@ -20947,13 +20878,10 @@
         {
           "vocabularyId": "hsk-old-5-应聘",
           "example": {
-            "chinese": "我打算去应聘那个公司的营销部经理职位.",
-            "pinyin": "Wǒ dǎsuàn qù yìngpìn nàge gōngsī de yíngxiāo bù jīnglǐ zhíwèi.",
-            "english": "I plan to accept the offer from that company to become their marketing department's manager.",
-            "source": "Tatoeba",
-            "chineseId": "5144690",
-            "englishId": "5144699",
-            "pinyinContributor": ""
+            "chinese": "她想应聘这份工作。",
+            "pinyin": "Tā xiǎng yìng pìn zhè fèn gōng zuò。",
+            "english": "She wants to apply for this job.",
+            "source": "Original"
           }
         },
         {
@@ -21079,13 +21007,10 @@
         {
           "vocabularyId": "hsk-old-5-开放",
           "example": {
-            "chinese": "在英国，银行开放在早上九点。",
-            "pinyin": "Zài Yīngguó, yínháng kāifàng zài zǎoshang jiǔ diǎn.",
-            "english": "In Britain, the banks open at 9:00 in the morning.",
-            "source": "Tatoeba",
-            "chineseId": "9981362",
-            "englishId": "26166",
-            "pinyinContributor": ""
+            "chinese": "这家博物馆周末开放。",
+            "pinyin": "Zhè jiā bó wù guǎn zhōu mò kāi fàng。",
+            "english": "This museum is open to the public on weekends.",
+            "source": "Original"
           }
         },
         {
@@ -21606,13 +21531,10 @@
         {
           "vocabularyId": "hsk-old-5-恐怖",
           "example": {
-            "chinese": "一个人的恐怖分子为另人的自由战士。",
-            "pinyin": "Yīgèrén de kǒngbùfènzǐ wèi lìng rén de zìyóu zhànshì.",
-            "english": "One man's terrorist is another man's freedom fighter.",
-            "source": "Tatoeba",
-            "chineseId": "770843",
-            "englishId": "518097",
-            "pinyinContributor": ""
+            "chinese": "这部电影很恐怖。",
+            "pinyin": "Zhè bù diàn yǐng hěn kǒng bù。",
+            "english": "This movie is terrifying.",
+            "source": "Original"
           }
         },
         {
@@ -21992,13 +21914,10 @@
         {
           "vocabularyId": "hsk-old-5-所",
           "example": {
-            "chinese": "钱币的价值取决于所使用的金属的重量。",
-            "pinyin": "Qiánbì de jiàzhí qǔjué yú suǒ shǐyòng de jīnshǔ de zhòngliàng.",
-            "english": "The value of the coins depended on the weight of the metal used.",
-            "source": "Tatoeba",
-            "chineseId": "335005",
-            "englishId": "240958",
-            "pinyinContributor": "Yorwba"
+            "chinese": "附近有一所学校。",
+            "pinyin": "Fù jìn yǒu yī suǒ xué xiào。",
+            "english": "There is a school nearby.",
+            "source": "Original"
           }
         },
         {
@@ -24158,13 +24077,10 @@
         {
           "vocabularyId": "hsk-old-5-棒",
           "example": {
-            "chinese": "我后天打算去棒球场看一场棒球比赛。",
-            "pinyin": "Wǒ hòutiān dǎsuàn qù bàngqiú chǎng kàn yī chǎng bàngqiú bǐsài.",
-            "english": "I plan to watch a game at the baseball field the day after tomorrow.",
-            "source": "Tatoeba",
-            "chineseId": "554546",
-            "englishId": "381092",
-            "pinyinContributor": ""
+            "chinese": "你的想法真棒！",
+            "pinyin": "Nǐ de xiǎng fǎ zhēn bàng！",
+            "english": "Your idea is excellent!",
+            "source": "Original"
           }
         },
         {
@@ -24230,13 +24146,10 @@
         {
           "vocabularyId": "hsk-old-5-橡皮",
           "example": {
-            "chinese": "橡皮不硬：它在压力下会变形。",
-            "pinyin": "Xiàngpí bù yìng: tā zài yālì xià huì biànxíng.",
-            "english": "Rubber is not hard: it gives way to pressure.",
-            "source": "Tatoeba",
-            "chineseId": "1565680",
-            "englishId": "1565838",
-            "pinyinContributor": ""
+            "chinese": "我用橡皮擦掉了这个字。",
+            "pinyin": "Wǒ yòng xiàng pí cā diào le zhè gè zì。",
+            "english": "I erased this character with an eraser.",
+            "source": "Original"
           }
         },
         {
@@ -25664,13 +25577,10 @@
         {
           "vocabularyId": "hsk-old-5-甲",
           "example": {
-            "chinese": "她站在甲板上，长头发随风飞舞。",
-            "pinyin": "Tā zhàn zài jiǎbǎn shàng, cháng tóufa suífēng fēiwǔ.",
-            "english": "She stood on the deck with her long hair waving in the wind.",
-            "source": "Tatoeba",
-            "chineseId": "2411903",
-            "englishId": "315862",
-            "pinyinContributor": "Yorwba"
+            "chinese": "甲、乙、丙、丁是四个不同的小组。",
+            "pinyin": "Jiǎ、 yǐ、 bǐng、 dīng shì sì gè bù tóng de xiǎo zǔ。",
+            "english": "A, B, C, and D are four different groups.",
+            "source": "Original"
           }
         },
         {
@@ -26857,13 +26767,10 @@
         {
           "vocabularyId": "hsk-old-5-系",
           "example": {
-            "chinese": "彼此必须一辈子努力,才能把感情维系好。",
-            "pinyin": "Bǐcǐ bìxū yībèizi nǔlì, cáinéng bǎ gǎnqíng wéixì hǎo.",
-            "english": "Each of you must work hard for a lifetime, and only then will you be able to maintain a relationship.",
-            "source": "Tatoeba",
-            "chineseId": "735161",
-            "englishId": "735162",
-            "pinyinContributor": ""
+            "chinese": "她在中文系学习。",
+            "pinyin": "Tā zài zhōng wén xì xué xí。",
+            "english": "She studies in the Chinese language department.",
+            "source": "Original"
           }
         },
         {
@@ -27399,13 +27306,10 @@
         {
           "vocabularyId": "hsk-old-5-聚会",
           "example": {
-            "chinese": "我也不知道为什么聚会被推迟了。",
-            "pinyin": "Wǒ yě bù zhīdào wèishénme jùhuì bèi tuīchí le.",
-            "english": "I don't know why the meeting was postponed, either.",
-            "source": "Tatoeba",
-            "chineseId": "10626685",
-            "englishId": "10626043",
-            "pinyinContributor": ""
+            "chinese": "周末我们有一个聚会。",
+            "pinyin": "Zhōu mò wǒ men yǒu yī gè jù huì。",
+            "english": "We have a get-together this weekend.",
+            "source": "Original"
           }
         },
         {
@@ -27495,13 +27399,10 @@
         {
           "vocabularyId": "hsk-old-5-背",
           "example": {
-            "chinese": "为什么小朋友得背这么重的书包呢?",
-            "pinyin": "Wèishénme xiǎopéngyǒu de bèi zhème zhòng de shūbāo ne?",
-            "english": "Why do children have to carry such a heavy bag?",
-            "source": "Tatoeba",
-            "chineseId": "3763633",
-            "englishId": "3763807",
-            "pinyinContributor": ""
+            "chinese": "请背这首诗。",
+            "pinyin": "Qǐng bèi zhè shǒu shī。",
+            "english": "Please memorize this poem.",
+            "source": "Original"
           }
         },
         {
@@ -28842,13 +28743,10 @@
         {
           "vocabularyId": "hsk-old-5-象棋",
           "example": {
-            "chinese": "你要是想学的话我可以教你下象棋。",
-            "pinyin": "Nǐ yàoshi xiǎng xué dehuà wǒ kěyǐ jiāo nǐ xià xiàngqí.",
-            "english": "If you like, I will teach you to play chess.",
-            "source": "Tatoeba",
-            "chineseId": "10283287",
-            "englishId": "29867",
-            "pinyinContributor": ""
+            "chinese": "爷爷教我下象棋。",
+            "pinyin": "Yé ye jiāo wǒ xià xiàng qí。",
+            "english": "Grandpa teaches me to play Chinese chess.",
+            "source": "Original"
           }
         },
         {
@@ -30104,13 +30002,10 @@
         {
           "vocabularyId": "hsk-old-5-闻",
           "example": {
-            "chinese": "事实上，她和这个丑闻没有任何关系。",
-            "pinyin": "Shìshíshàng, tā hé zhège chǒuwén méiyǒu rènhé guānxi.",
-            "english": "In point of fact, she had nothing to do with the scandal.",
-            "source": "Tatoeba",
-            "chineseId": "2394351",
-            "englishId": "265231",
-            "pinyinContributor": ""
+            "chinese": "我闻到了花的香味。",
+            "pinyin": "Wǒ wén dào le huā de xiāng wèi。",
+            "english": "I smelled the fragrance of the flowers.",
+            "source": "Original"
           }
         },
         {
@@ -30547,13 +30442,10 @@
         {
           "vocabularyId": "hsk-old-5-项",
           "example": {
-            "chinese": "所有订购必须在今年年底前支付款项。",
-            "pinyin": "Suǒyǒu dìnggòu bìxū zài jīnnián niándǐ qián zhīfù kuǎnxiàng.",
-            "english": "All subscriptions must be paid before the end of this year.",
-            "source": "Tatoeba",
-            "chineseId": "830486",
-            "englishId": "324753",
-            "pinyinContributor": "Yorwba"
+            "chinese": "这是一项重要的任务。",
+            "pinyin": "Zhè shì yī xiàng zhòng yào de rèn wu。",
+            "english": "This is an important task.",
+            "source": "Original"
           }
         },
         {
@@ -31041,13 +30933,10 @@
         {
           "vocabularyId": "hsk-old-6-一律",
           "example": {
-            "chinese": "这个节目变得千篇一律。",
-            "pinyin": "Zhège jiémù biànde qiānpiānyīlǜ.",
-            "english": "This program has become stereotyped.",
-            "source": "Tatoeba",
-            "chineseId": "2394575",
-            "englishId": "57469",
-            "pinyinContributor": ""
+            "chinese": "所有学生一律遵守规定。",
+            "pinyin": "Suǒ yǒu xué sheng yī lǜ zūn shǒu guī dìng。",
+            "english": "All students must follow the rules without exception.",
+            "source": "Original"
           }
         },
         {
@@ -31800,9 +31689,9 @@
         {
           "vocabularyId": "hsk-old-6-主流",
           "example": {
-            "chinese": "这条河的主流流向南方。",
-            "pinyin": "Zhè tiáo hé de zhǔ liú liú xiàng nán fāng。",
-            "english": "The main stream of this river flows south.",
+            "chinese": "这种观点已经成为主流。",
+            "pinyin": "Zhè zhǒng guān diǎn yǐ jīng chéng wéi zhǔ liú。",
+            "english": "This view has already become mainstream.",
             "source": "Original"
           }
         },
@@ -37414,13 +37303,10 @@
         {
           "vocabularyId": "hsk-old-6-哇",
           "example": {
-            "chinese": "他就像七月四日的烟火一样耀眼！我心想：「哇！」",
-            "pinyin": "Tā jiù xiàng Qīyuè sì rì de yānhuǒ yīyàng yàoyǎn! wǒ xīnxiǎng:「 wā!」",
-            "english": "He was bright like the 4th of July! \"Wow!\", I thought!",
-            "source": "Tatoeba",
-            "chineseId": "13575750",
-            "englishId": "4597050",
-            "pinyinContributor": ""
+            "chinese": "哇，这里真漂亮！",
+            "pinyin": "Wā， zhè lǐ zhēn piào liang！",
+            "english": "Wow, it is really beautiful here!",
+            "source": "Original"
           }
         },
         {
@@ -38745,13 +38631,10 @@
         {
           "vocabularyId": "hsk-old-6-大意",
           "example": {
-            "chinese": "他们粗心大意，还没意识到危险。",
-            "pinyin": "Tāmen cūxīn-dàyì, hái méi yìshí dào wēixiǎn.",
-            "english": "They were carelessly unaware of the danger.",
-            "source": "Tatoeba",
-            "chineseId": "332505",
-            "englishId": "305521",
-            "pinyinContributor": "Yorwba"
+            "chinese": "开车时不要大意。",
+            "pinyin": "Kāi chē shí bù yào dà yi。",
+            "english": "Do not be careless when driving.",
+            "source": "Original"
           }
         },
         {
@@ -41743,13 +41626,10 @@
         {
           "vocabularyId": "hsk-old-6-得罪",
           "example": {
-            "chinese": "小草间的对话不要得罪大树。",
-            "pinyin": "Xiǎo cǎo jiān de duìhuà bù yào dézuì dà shù.",
-            "english": "In conversation among the small grasses, do not offend the big tree.",
-            "source": "Tatoeba",
-            "chineseId": "1754873",
-            "englishId": "11975649",
-            "pinyinContributor": "Yorwba"
+            "chinese": "我不想得罪你。",
+            "pinyin": "Wǒ bù xiǎng dé zui nǐ。",
+            "english": "I do not want to offend you.",
+            "source": "Original"
           }
         },
         {
@@ -42741,13 +42621,10 @@
         {
           "vocabularyId": "hsk-old-6-慢性",
           "example": {
-            "chinese": "鲍勃已无法忍受她老婆的慢性子。",
-            "pinyin": "Bào bó yǐ wúfǎrěnshòu tā lǎopó de mànxìngzi.",
-            "english": "Bob got impatient at his wife's delay.",
-            "source": "Tatoeba",
-            "chineseId": "2440912",
-            "englishId": "33185",
-            "pinyinContributor": ""
+            "chinese": "这是一种慢性病。",
+            "pinyin": "Zhè shì yī zhǒng màn xìng bìng。",
+            "english": "This is a chronic illness.",
+            "source": "Original"
           }
         },
         {
@@ -48252,25 +48129,19 @@
         {
           "vocabularyId": "hsk-old-6-泄露",
           "example": {
-            "chinese": "不要把这些资料泄露出去。",
-            "pinyin": "Bù yào bǎ zhèxiē zīliào xiè lùchū qù.",
-            "english": "Don't let this information leak out.",
-            "source": "Tatoeba",
-            "chineseId": "1587617",
-            "englishId": "1963532",
-            "pinyinContributor": ""
+            "chinese": "不要泄露这个秘密。",
+            "pinyin": "Bù yào xiè lòu zhè gè mì mì。",
+            "english": "Do not reveal this secret.",
+            "source": "Original"
           }
         },
         {
           "vocabularyId": "hsk-old-6-法人",
           "example": {
-            "chinese": "戏法人人会变，各有巧妙不同。",
-            "pinyin": "Xìfǎ rénrén huì biàn, gè yǒu qiǎomiào bù tóng.",
-            "english": "Everyone's tricks are different; each differs in ingenious ways.",
-            "source": "Tatoeba",
-            "chineseId": "917819",
-            "englishId": "11272588",
-            "pinyinContributor": ""
+            "chinese": "公司是独立的法人。",
+            "pinyin": "Gōng sī shì dú lì de fǎ rén。",
+            "english": "The company is an independent legal entity.",
+            "source": "Original"
           }
         },
         {
@@ -48697,13 +48568,10 @@
         {
           "vocabularyId": "hsk-old-6-淋",
           "example": {
-            "chinese": "你不该吃太多冰激淋和太多意大利面。",
-            "pinyin": "Nǐ bù gāi chī tài duō bīng jī lín hé tài duō Yìdàlìmiàn.",
-            "english": "You mustn't eat too much ice cream and spaghetti.",
-            "source": "Tatoeba",
-            "chineseId": "408493",
-            "englishId": "378537",
-            "pinyinContributor": ""
+            "chinese": "他被雨淋湿了。",
+            "pinyin": "Tā bèi yǔ lín shī le。",
+            "english": "He was soaked by the rain.",
+            "source": "Original"
           }
         }
       ]
@@ -50279,13 +50147,10 @@
         {
           "vocabularyId": "hsk-old-6-生态",
           "example": {
-            "chinese": "她开始对生态学感兴趣，是受到他的影响。",
-            "pinyin": "Tā kāishǐ duì shēngtàixué gǎn xìngqù, shì shòudào tā de yǐngxiǎng.",
-            "english": "It was through his influence that she became interested in ecology.",
-            "source": "Tatoeba",
-            "chineseId": "333785",
-            "englishId": "308387",
-            "pinyinContributor": "Yorwba"
+            "chinese": "我们需要保护这里的生态环境。",
+            "pinyin": "Wǒ men xū yào bǎo hù zhè lǐ de shēng tài huán jìng。",
+            "english": "We need to protect the local ecological environment.",
+            "source": "Original"
           }
         },
         {
@@ -51629,13 +51494,10 @@
         {
           "vocabularyId": "hsk-old-6-私自",
           "example": {
-            "chinese": "他只不过是个自私自利的人。",
-            "pinyin": "Tā zhǐbuguò shì gè zìsīzìlì de rén.",
-            "english": "He is nothing more than an egoist.",
-            "source": "Tatoeba",
-            "chineseId": "373197",
-            "englishId": "301415",
-            "pinyinContributor": ""
+            "chinese": "不要私自打开这封信。",
+            "pinyin": "Bù yào sī zì dǎ kāi zhè fēng xìn。",
+            "english": "Do not open this letter without permission.",
+            "source": "Original"
           }
         },
         {
@@ -54455,13 +54317,10 @@
         {
           "vocabularyId": "hsk-old-6-蒙",
           "example": {
-            "chinese": "齐里的眼睛里泛着一层雾蒙蒙的白色光晕。",
-            "pinyin": "Qí lǐ de yǎnjing lǐ fàn zhe yīcéng wù méng méng de báisè guāngyùn.",
-            "english": "Ziri had a foggy white eye.",
-            "source": "Tatoeba",
-            "chineseId": "13556504",
-            "englishId": "11221127",
-            "pinyinContributor": ""
+            "chinese": "我蒙上了眼睛。",
+            "pinyin": "Wǒ méng shàng le yǎn jing。",
+            "english": "I covered my eyes.",
+            "source": "Original"
           }
         },
         {
@@ -56929,13 +56788,10 @@
         {
           "vocabularyId": "hsk-old-6-过渡",
           "example": {
-            "chinese": "证实她顺利地过渡入皇室组织，有帮于消除这些焦虑。",
-            "pinyin": "Zhèngshí tā shùnlì de guòdù rù huángshì zǔzhī, yǒu bāng yú xiāochú zhèxiē jiāolǜ.",
-            "english": "Her smooth entry into the ranks of the royal family will help to dispel these fears.",
-            "source": "Tatoeba",
-            "chineseId": "1573219",
-            "englishId": "1573234",
-            "pinyinContributor": ""
+            "chinese": "我们正从旧系统过渡到新系统。",
+            "pinyin": "Wǒ men zhèng cóng jiù xì tǒng guò dù dào xīn xì tǒng。",
+            "english": "We are transitioning from the old system to the new one.",
+            "source": "Original"
           }
         },
         {
@@ -58502,13 +58358,10 @@
         {
           "vocabularyId": "hsk-old-6-随手",
           "example": {
-            "chinese": "当他写字时, 他总是随手拿着一本字典。",
-            "pinyin": "Dāng tā xiězì shí, tā zǒngshì suíshǒu ná zhe yī běn zìdiǎn.",
-            "english": "When he writes, he always keeps a dictionary at hand.",
-            "source": "Tatoeba",
-            "chineseId": "785230",
-            "englishId": "299426",
-            "pinyinContributor": ""
+            "chinese": "请随手关门。",
+            "pinyin": "Qǐng suí shǒu guān mén。",
+            "english": "Please close the door as you leave.",
+            "source": "Original"
           }
         },
         {
@@ -58894,13 +58747,10 @@
         {
           "vocabularyId": "hsk-old-6-须知",
           "example": {
-            "chinese": "我们必须知道事情的真相。",
-            "pinyin": "Wǒmen bìxū zhīdào shìqing de zhēnxiàng.",
-            "english": "We have to get at the truth of the matter.",
-            "source": "Tatoeba",
-            "chineseId": "349762",
-            "englishId": "22942",
-            "pinyinContributor": ""
+            "chinese": "请先阅读游客须知。",
+            "pinyin": "Qǐng xiān yuè dú yóu kè xū zhī。",
+            "english": "Please read the visitor instructions first.",
+            "source": "Original"
           }
         },
         {

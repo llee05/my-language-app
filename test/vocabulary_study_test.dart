@@ -947,6 +947,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ListeningPracticePage(
+            vocabularyRepository: const _Vocabulary(),
             lessonRepository: widgetLessons,
             progressRepository: memory,
             studyService: widgetStudy(),

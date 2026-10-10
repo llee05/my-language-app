@@ -112,6 +112,14 @@ class DailyReviewSession {
 
 enum ReviewRating { again, hard, good, easy }
 
+enum VocabularyLearningState { unseen, learning, learned, due }
+
+const learnedAccuracyThreshold = .8;
+const vocabularyMasteryExplanation =
+    'Mastery is your recorded answer accuracy. Learned means at least 80% '
+    'correct, even after one answer. Hard counts as correct. '
+    'This score does not measure long-term retention.';
+
 class ReviewRecord {
   const ReviewRecord({
     required this.id,
@@ -178,6 +186,16 @@ class CardProgress {
   int get intervalDays => reviewInterval;
   DateTime get dueAt => nextReview;
   DateTime? get lastReviewedAt => lastReview;
+
+  bool get isLearned => timesSeen > 0 && mastery >= learnedAccuracyThreshold;
+
+  VocabularyLearningState learningStateAt(DateTime now) {
+    if (timesSeen == 0) return VocabularyLearningState.unseen;
+    if (!nextReview.isAfter(now)) return VocabularyLearningState.due;
+    return isLearned
+        ? VocabularyLearningState.learned
+        : VocabularyLearningState.learning;
+  }
 }
 
 enum DailyQueueReason { due, weak, newWord }

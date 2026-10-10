@@ -47,10 +47,25 @@ class MandarinAudioImportTest(unittest.TestCase):
                 clip.write_bytes(b"damaged")
                 with self.assertRaises(AssertionError):
                     importer.verify()
+                previous_catalog = (output / "catalog.json").read_bytes()
+                with self.assertRaises(AssertionError):
+                    importer.refresh_metadata()
+                self.assertEqual((output / "catalog.json").read_bytes(), previous_catalog)
                 importer.main()
                 fetch.assert_called_once()
                 self.assertEqual(clip.read_bytes(), audio)
                 importer.verify()
+                fetch.reset_mock()
+                (root / "assets/data/hsk_vocabulary.json").write_text(json.dumps([
+                    {"simplified": "你好", "pinyin": "nǐ hao", "hskLevel": 2},
+                ]))
+                importer.refresh_metadata()
+                fetch.assert_not_called()
+                self.assertEqual(clip.read_bytes(), audio)
+                updated = json.loads((output / "catalog.json").read_text())["clips"][0]
+                self.assertEqual(updated["pinyin"], "nǐ hao")
+                self.assertEqual(updated["hskLevel"], 2)
+                self.assertEqual(updated["sourceBlob"], importer.blob_sha1(audio))
 
 
 if __name__ == "__main__":

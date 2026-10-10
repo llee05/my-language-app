@@ -110,11 +110,29 @@ void main() {
       '鸟': ('niǎo', 'bird'),
       '孙子': ('sūn zi', 'grandson'),
       '成功': ('chéng gōng', 'success'),
-      '台': ('tái', 'platform'),
+      '台': ('tái', 'classifier for machines; platform'),
       '钟': ('zhōng', 'clock'),
       '方言': ('fāng yán', 'dialect'),
       '联想': ('lián xiǎng', 'to associate (cognitively)'),
       '恶心': ('ě xīn', 'disgusting'),
+      '俩': ('liǎ', 'two; both'),
+      '干': ('gàn', 'to do; to work'),
+      '丙': ('bǐng', 'third; label C; third Heavenly Stem'),
+      '乙': ('yǐ', 'second; label B; second Heavenly Stem'),
+      '甲': ('jiǎ', 'first; label A; first Heavenly Stem'),
+      '背': ('bèi', 'back; to memorize'),
+      '哇': ('wā', 'wow'),
+      '大意': ('dà yi', 'careless'),
+      '拄': ('zhǔ', 'to lean on a walking stick; to support oneself with'),
+      '挨': ('ái', 'to suffer; to endure'),
+      '条理': ('tiáo lǐ', 'logical order; organization'),
+      '欧洲': ('Ōu zhōu', 'Europe'),
+      '淋': ('lín', 'to drench; to sprinkle'),
+      '澄清': ('chéng qīng', 'to clarify; clear'),
+      '生态': ('shēng tài', 'ecology; ecological conditions'),
+      '粉碎': ('fěn suì', 'to smash; to crush'),
+      '起哄': ('qǐ hòng', 'to make a noisy disturbance; to heckle'),
+      '领先': ('lǐng xiān', 'to be ahead; to lead'),
     };
 
     for (final MapEntry(key: word, value: expectedValue) in expected.entries) {
@@ -142,5 +160,52 @@ void main() {
     expect(entriesByWord['系领带']!['pinyin'], 'jì lǐng dài');
     expect(entriesByWord['纽扣儿']!['pinyin'], 'niǔ kòu r');
     expect(entriesByWord['致力于']!['pinyin'], 'zhì lì yú');
+  });
+
+  test('dictionary references retain their complete Chinese headwords', () {
+    const references = {
+      '甲': ['十天干', '保甲'],
+      '乙': ['十天干', '乙方', '甲方'],
+      '丙': ['十天干'],
+      '丁': ['天干'],
+      '哈': ['哈士奇'],
+      '高速': ['高速公路'],
+      '立方': ['立方米'],
+      '泰斗': ['泰山北斗'],
+      '法人': ['自然人'],
+      '得罪': ['得罪'],
+      '淡季': ['旺季'],
+      '嫌': ['嫌犯'],
+    };
+    for (final MapEntry(key: word, value: expected) in references.entries) {
+      final entry = vocabulary.singleWhere(
+        (entry) => entry['simplified'] == word,
+      );
+      final text = (entry['meanings'] as List).join(' ');
+      for (final reference in expected) {
+        expect(text, contains(reference), reason: word);
+      }
+    }
+  });
+
+  test('modern display variants and common-word grammar tags are reviewed', () {
+    final entries = {
+      for (final entry in vocabulary) entry['simplified']: entry,
+    };
+    expect(entries['嘱咐']!['pinyin'], 'zhǔ fu');
+    expect(entries['泄露']!['pinyin'], 'xiè lòu');
+    expect(entries['泄露']!['meanings'], contains('also pr. [xiè lù]'));
+    expect(entries['小伙子']!['traditional'], '小夥子');
+    expect(entries['事迹']!['traditional'], '事蹟');
+    expect(entries['合伙']!['traditional'], '合夥');
+    expect(entries['生锈']!['traditional'], '生鏽');
+    expect(entries['蒙']!['traditional'], '蒙');
+    for (final word in ['东西', '钱', '一起', '夏', '马']) {
+      expect(
+        entries[word]!['partOfSpeech'],
+        isNot(contains('nr')),
+        reason: word,
+      );
+    }
   });
 }
