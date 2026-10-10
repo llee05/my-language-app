@@ -604,7 +604,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 24),
         _SettingsCard(
           title: 'Learner profile',
-          subtitle: 'Changes are saved locally and used on your next launch.',
+          subtitle: 'Select Save settings to keep changes to your profile.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -663,7 +663,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _SettingsCard(
           title: 'Learning preferences',
-          subtitle: 'These preferences are restored on your next launch.',
+          subtitle: 'Select Save settings to keep changes to pinyin and sound.',
           child: _loadingPreferences
               ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
               : _preferencesLoadFailed
@@ -703,7 +703,9 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 20),
         _SettingsCard(
           title: 'Appearance',
-          subtitle: 'Pick a colour theme and how buttons respond when pressed.',
+          subtitle:
+              'Colour themes save automatically. Button feedback previews '
+              'immediately; select Save settings to keep it.',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

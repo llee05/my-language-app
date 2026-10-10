@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -369,6 +370,54 @@ TutorLearnerSnapshot _roleplaySnapshot() => TutorLearnerSnapshot(
 );
 
 void main() {
+  testWidgets(
+    'personality choice has a labeled touch target and keyboard access',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        await _pumpTutor(
+          tester,
+          pronunciationService: _FakePronunciationService(),
+          speechInputService: _FakeSpeechInputService(),
+        );
+        final control = find.byKey(const Key('choose-personality'));
+        expect(tester.getSize(control).height, greaterThanOrEqualTo(48));
+        expect(
+          tester.getSemantics(control).getSemanticsData().label,
+          contains('Choose personality'),
+        );
+
+        bool hasFocus() {
+          final focused = FocusManager.instance.primaryFocus?.context;
+          if (focused == null) return false;
+          var found = focused == tester.element(control);
+          focused.visitAncestorElements((element) {
+            if (element == tester.element(control)) {
+              found = true;
+              return false;
+            }
+            return true;
+          });
+          return found;
+        }
+
+        for (var attempt = 0; attempt < 15 && !hasFocus(); attempt++) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
+        }
+        expect(hasFocus(), isTrue);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('personality-precision_coach')),
+          findsOneWidget,
+        );
+      } finally {
+        semantics.dispose();
+      }
+    },
+  );
+
   for (final fails in [false, true]) {
     testWidgets('chat reset ignores a stale ${fails ? 'error' : 'reply'}', (
       tester,

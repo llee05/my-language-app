@@ -136,7 +136,10 @@ mastery. The weekly report covers Monday through Sunday in local time and shows
 XP, reviews, accuracy, days studied, and the most productive day. Saved correct
 reviews earn 10 XP and incorrect reviews earn 5 XP.
 
-Words count as learned at 80% mastery. HSK vocabulary progress counts distinct
+Words count as learned at 80% mastery. Mastery is lifetime recorded answer
+accuracy, so a single correct answer can count as learned. Hard ratings count
+as correct; the score does not measure long-term retention. HSK vocabulary
+progress counts distinct
 learned words in each level and marks a level reached when that level and all
 lower levels are complete. This progress is separate from the HSK level you
 choose in learner settings and is not an official proficiency score. Analytics

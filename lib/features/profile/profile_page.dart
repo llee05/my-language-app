@@ -138,7 +138,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                     );
                     final vocabulary = _ProfilePanel(
-                      title: 'VOCABULARY MASTERY',
+                      title: 'VOCABULARY PROGRESS',
                       child: _VocabularyAnalytics(stats: stats),
                     );
                     if (!wide) {
@@ -190,7 +190,7 @@ class _HskProgressAnalytics extends StatelessWidget {
     final nextLevel = stats.nextHskLevel;
     final title = reached == 0 ? 'Building HSK 1' : 'HSK $reached reached';
     final detail = nextLevel == null
-        ? 'All 4,991 HSK words mastered'
+        ? 'All 4,991 HSK words meet the learned threshold'
         : '${stats.nextHskWordsLearned} of ${stats.nextHskWordTarget} '
               'HSK $nextLevel words learned';
 
@@ -647,6 +647,12 @@ class _VocabularyAnalytics extends StatelessWidget {
         _SummaryRow(
           label: 'Correct answers',
           value: '${stats.correctReviewCount}',
+        ),
+        const SizedBox(height: 16),
+        Text(
+          vocabularyMasteryExplanation,
+          key: const Key('vocabulary-mastery-explanation'),
+          style: TextStyle(color: AppColors.muted, fontSize: 13, height: 1.5),
         ),
       ],
     );

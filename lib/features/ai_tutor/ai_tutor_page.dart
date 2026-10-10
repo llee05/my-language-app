@@ -519,11 +519,9 @@ useful:
                 ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final title = Text(
                       _personalities.selected.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -532,9 +530,8 @@ useful:
                         fontWeight: FontWeight.w700,
                         color: AppColors.text,
                       ),
-                    ),
-                    SizedBox(height: 3),
-                    Tooltip(
+                    );
+                    final selector = Tooltip(
                       message:
                           _personalityError ??
                           'Choose a personality for tutor chat',
@@ -547,8 +544,8 @@ useful:
                             : _choosePersonality,
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 28),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(0, 48),
+                          tapTargetSize: MaterialTapTargetSize.padded,
                           textStyle: const TextStyle(fontSize: 11),
                         ),
                         icon: Icon(
@@ -567,8 +564,22 @@ useful:
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                    if (constraints.maxWidth >= 320) {
+                      return Row(
+                        children: [
+                          Expanded(child: title),
+                          const SizedBox(width: 8),
+                          selector,
+                        ],
+                      );
+                    }
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [title, const SizedBox(height: 3), selector],
+                    );
+                  },
                 ),
               ),
               OutlinedButton.icon(

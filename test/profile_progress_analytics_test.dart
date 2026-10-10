@@ -76,6 +76,9 @@ void main() {
     expect(find.text('Reviews this week'), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
     expect(find.text('Words seen'), findsOneWidget);
+    expect(find.text('VOCABULARY PROGRESS'), findsOneWidget);
+    expect(find.textContaining('even after one answer'), findsOneWidget);
+    expect(find.textContaining('Hard counts as correct'), findsOneWidget);
     expect(find.text('40'), findsOneWidget);
     expect(find.text('HSK 1 reached'), findsOneWidget);
     expect(find.text('100 of 147 HSK 2 words learned'), findsOneWidget);
