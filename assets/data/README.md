@@ -5,13 +5,25 @@
 It contains the HSK 2.0 levels 1–6 used by lessons, Vocab Rush, and the
 vocabulary browser.
 
+The target list is the `old-1`–`old-6` labels in the pinned import source
+(commit `7ac65bf1a6387d35f1ade478906172a19311c7f9`). This is 4,991
+unique headwords, not an assertion of complete coverage of every HSK reference.
+The original `clem109` reference also includes 称 and 志愿者, which have no
+old-HSK labels in that import source; the curriculum retains its existing scope.
+
 The importer cross-checks ambiguous readings against the original HSK 2.0
 lists from [`clem109/hsk-vocabulary`](https://github.com/clem109/hsk-vocabulary)
 and builds concise `studyMeaning` values from the "HSK Official With
 Definitions 2012" files in
 [`glxxyz/hskhsk.com`](https://github.com/glxxyz/hskhsk.com). This avoids
 selecting surnames, archaic readings, variants, and other dictionary senses
-that are not the intended HSK vocabulary.
+that are not the intended HSK vocabulary. Glossary branches must match the
+selected reading; unmatched or ambiguous branches fall back to that form’s
+substantive dictionary senses. Reviewed definitions, reference repairs, modern
+display variants, and source-tag exclusions live in
+`tool/hsk_vocabulary_overrides.dart`. Explicit compatibility glosses preserve
+established study senses when the older glossary contains branch-count, spelling,
+or sandhi inconsistencies. Semicolons inside parentheses do not truncate a gloss.
 
 Regenerate it with:
 
@@ -52,7 +64,7 @@ entries: 8 / 8 / 15 / 30 / 65 / 125 lessons for HSK levels 1–6. Every deck has
 decks overlap slightly with the preceding deck to stay at 20 words; there are
 5,020 memberships but only 4,991 vocabulary cards on a fresh installation.
 
-There are 4,241 Tatoeba-backed examples and 750 original examples. All entries
+There are 4,191 Tatoeba-backed examples and 800 original examples. All entries
 include Hanzi, sentence pinyin, and English. `lesson_original_examples.json`
 records originals with the source label `Original` and no Tatoeba IDs.
 `tool/original_lesson_examples.py` contains the authored examples, semantic frames,
@@ -91,6 +103,31 @@ once to installed curriculum cards. It changes only example text and attribution
 preserving card IDs, memberships, learner history, sessions, and custom copies.
 The replacements are recorded in `lesson_example_overrides.json`; their source
 transcriptions remain in the bundled subset for offline regeneration.
+
+`bundled_hsk_editorial_v3` applies the vocabulary review in place, including
+readings, meanings, grammatical tags, examples, designated answers, and safe
+quiz alternatives. It preserves current memberships, card IDs, reviews, and
+sessions; learner-created copies and archived cards outside the current
+curriculum keep their text. Older backups are corrected before shared-card
+selection, including decks with the legacy display readings.
+
+Quiz alternatives use the target’s known dictionary senses, ordinary English
+articles, and parenthetical annotations to reject equivalent meanings. Matching
+pronunciations are also excluded. The same rule serves installed cards, Listening
+Practice, Vocab Rush, and Exam Mode. This is a conservative check of supplied
+senses, not a complete English synonym model.
+
+When vocabulary display readings change, refresh the recording catalog’s
+curriculum metadata without downloading or modifying audio:
+
+```sh
+python3 tool/import_mandarin_audio.py --refresh-metadata
+python3 tool/import_mandarin_audio.py --verify
+```
+
+Both operations verify the pinned cached audio; metadata refresh fails before
+writing if any recording is damaged. Catalog pinyin remains curriculum metadata
+rather than a verified transcript of the recordings.
 
 The historical flashcard seeds in `lib/database/flashcard_seed.dart` remain as
 migration definitions. They no longer seed the default vocabulary library.

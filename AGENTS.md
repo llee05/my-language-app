@@ -77,7 +77,8 @@ Check implementation and tests before describing an existing feature as planned.
   Preserve legacy daily-review sessions and backup compatibility.
 - Dashboard and Profile use `DashboardLearningStats.fromSavedData`, including
   XP, streaks, accuracy, HSK vocabulary mastery, and `WeeklyProgressReport`.
-  Learned words require at least 80% mastery; HSK progress is independent of the
+  Learned words require at least 80% recorded answer accuracy (including after
+  one correct answer; Hard counts as correct); HSK progress is independent of the
   learner's selected HSK level. Refresh statistics after reviews, at local
   midnight, and when the app resumes. Home samples available lessons across
   HSK levels rather than generating personalized recommendations.
@@ -202,6 +203,7 @@ flutter test test/kokoro_voice_pack_test.dart test/sherpa_voice_config_test.dart
 flutter test test/startup_test.dart test/widget_test.dart test/lesson_completion_test.dart
 flutter test test/gemini_service_test.dart test/ai_tutor_page_test.dart
 flutter test test/ai_service_test.dart test/ai_settings_card_test.dart test/ai_configuration_repository_test.dart
+flutter test test/hsk_vocabulary_import_test.dart test/vocabulary_quiz_options_test.dart test/vocabulary_editorial_update_test.dart test/learning_progress_state_test.dart
 flutter test test/vocabulary_content_test.dart test/vocabulary_dataset_test.dart test/vocabulary_page_test.dart test/vocab_rush_test.dart test/dashboard_learning_stats_test.dart test/vocabulary_study_test.dart
 flutter test test/vocabulary_lesson_content_test.dart test/vocabulary_lesson_dataset_test.dart test/bundled_lesson_rewrite_test.dart test/sentence_practice_test.dart test/listening_practice_test.dart
 flutter test test/hsk_exam_test.dart test/exam_mode_test.dart test/profile_progress_analytics_test.dart test/weekly_progress_report_test.dart
@@ -370,3 +372,22 @@ broken schema need to be re-entered once.
   notification scheduling is not implemented. Exam results, chat history, and
   listening scores are not saved, but explicit vocabulary assessments are;
   button-animation settings remain experimental.
+
+### Reviewed vocabulary and test organization
+
+`tool/hsk_vocabulary_overrides.dart` holds reviewed senses, display variants,
+complete dictionary references, and grammatical-tag exclusions. The explicit
+`bundled_hsk_editorial_v3` content update changes current bundled cards in place;
+older backups are corrected before shared-card selection. Preserve IDs,
+memberships, history, sessions, custom copies, and archived cards outside the
+current curriculum. The target list remains the import source’s 4,991 old-HSK
+headwords; do not describe it as complete relative to every HSK reference.
+
+`VocabularyQuizIndex` and `buildMeaningOptions` share dictionary-aware distractor
+filtering across curriculum installation, Listening Practice, Vocab Rush, and
+Exam Mode. Reject supplied alternate senses, equivalent annotated/article forms,
+and matching pronunciations. This is not a full synonym model.
+
+`test/widget_test.dart` registers the feature case files in `test/widget_cases/`
+in their original order. These are parts of that test library, not independent
+test entry points. Keep its existing focused command usable when adding cases.

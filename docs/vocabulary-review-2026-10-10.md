@@ -12,6 +12,10 @@ their current text, findings, source-comparison results and asset line numbers.
 Application code, runtime vocabulary assets and the installed learner database
 were not changed. Only these review documents were added.
 
+The follow-up implementation is documented in
+[the app improvements report](app-improvements-2026-10-11.md). This review and
+its CSV remain a historical snapshot of the values before those corrections.
+
 ## Scope and method
 
 - Read every bundled word, its displayed pinyin and primary study definition.
