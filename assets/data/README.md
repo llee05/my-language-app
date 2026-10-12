@@ -79,6 +79,33 @@ both sentence IDs, and pinyin contributors, and excludes original examples.
 The app's speech engine reads the sentences; no Tatoeba audio is bundled or
 downloaded. No new corpus asset or content migration is needed for this feed.
 
+`vocabulary_examples.json` preserves all 4,991 primary examples and adds 1,717
+alternate examples for 883 words, with at most five examples per word. Alternates
+reuse the existing curriculum's Tatoeba selection; they do not introduce new
+corpus sentences, translations, or authored pinyin. The generator checks the
+source transcription against the target reading (including ü and tones),
+matches the longest bundled words, requires an English study-meaning anchor,
+and excludes contexts containing bundled words more than two HSK levels above
+the target. These filters are conservative selection rules, not a complete
+semantic or sentence-difficulty model. Words with explicit editorial exceptions
+keep their primary example until their alternate contexts are reviewed.
+
+Flashcards, Dictionary, and Doom Scrolling load this immutable asset without
+writing to SQLite. Ratings, card IDs, sessions, custom decks, and backups retain
+their existing behavior. Example browsing cycles in memory and does not award
+mastery. Regenerate offline after updating the vocabulary or curriculum:
+
+```sh
+python3 tool/build_vocabulary_examples.py
+python3 -m unittest discover -s tool -p 'test_vocabulary_examples.py' -v
+flutter test test/bundled_vocabulary_example_repository_test.dart test/vocabulary_examples_test.dart
+```
+
+The output records its source curriculum checksum and actual coverage. English
+anchors can miss valid synonyms; absence of an alternate does not establish
+that Tatoeba has no suitable sentence. Expanding coverage requires additional
+context review, rather than weakening pronunciation or editorial protections.
+
 Regenerate the originals and final runtime asset without downloading data:
 
 ```sh

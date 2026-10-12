@@ -97,6 +97,16 @@ the final deck in each level repeats a few words to keep its size at 20.
 Examples use attributed Tatoeba Mandarin–English pairs with source pinyin,
 and original study sentences fill gaps. Everything is bundled for offline use.
 
+**Another sentence** cycles through up to five examples for a word in flashcard
+answers, Dictionary details, and Doom Scrolling word details or larger word
+cards. The bundle contains 1,717 alternate Tatoeba examples for 883 words;
+words without suitable alternates retain their existing example. Each alternate
+keeps its source pinyin, English translation, sentence IDs, and contributor
+credit. Example pronunciation reads the currently displayed sentence. Browsing
+examples does not change word ratings or mastery, and saved custom decks keep
+their own examples. Source links require a browser connection; examples and
+speech remain available offline with an installed Mandarin voice.
+
 Reveal each answer and rate the word; TingShuo saves every rating immediately
 and schedules the card's next review. Completing a deck shows a short
 celebration, the XP earned from saved ratings, accuracy, and new/revisited word
@@ -610,7 +620,8 @@ Android and the three desktop platforms. There is no web runner.
 ### In-memory caching
 
 Bundled vocabulary is parsed once per asset bundle and shared as immutable data
-by Flashcards, Dictionary, Doom Scrolling, Vocab Rush, and Exam Mode. The database
+by Flashcards, Dictionary, Doom Scrolling, Vocab Rush, and Exam Mode. Vocabulary
+examples use a separate immutable asset cache shared by the word views. The database
 retains up to 32 recent lesson reads (including the library summary) and one daily statistics
 result. Lesson sessions are loaded in one bulk query and remain fresh on each load.
 Statistics refresh after saved reviews, at local midnight, and when the app

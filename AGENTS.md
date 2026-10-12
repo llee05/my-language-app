@@ -80,6 +80,14 @@ Check implementation and tests before describing an existing feature as planned.
   advancing; support swipes, mouse-wheel scrolling, keyboard navigation, and
   save retries.
   Preserve legacy daily-review sessions and backup compatibility.
+- Vocabulary examples use `BundledVocabularyExampleRepository` and the immutable
+  `vocabulary_examples.json` asset: all 4,991 primary examples plus 1,717 Tatoeba
+  alternates for 883 words, with at most five examples per word. Dictionary,
+  flashcard answers, and Doom Scrolling offer Another sentence. Browsing does
+  not award mastery; speech must follow the displayed example and cancel old
+  requests when examples change. Custom decks retain their own examples.
+  Regenerate with `tool/build_vocabulary_examples.py`; preserve source readings,
+  English translations, IDs, contributor credit, and editorial exclusions.
 - Dashboard and Profile use `DashboardLearningStats.fromSavedData`, including
   XP, streaks, accuracy, HSK vocabulary mastery, and `WeeklyProgressReport`.
   Learned words require at least 80% recorded answer accuracy (including after
@@ -217,6 +225,7 @@ flutter test test/backup_repository_test.dart test/backup_settings_test.dart tes
 flutter test test/android_pronunciation_test.dart test/system_pronunciation_service_test.dart test/pronunciation_button_test.dart
 flutter test test/recorded_pronunciation_service_test.dart test/linux_system_pronunciation_service_test.dart test/desktop_voice_installation_test.dart
 flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/bundled_listening_sentence_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
+flutter test test/bundled_vocabulary_example_repository_test.dart test/vocabulary_examples_test.dart
 ```
 
 - `test/flutter_test_config.dart` defaults the database to in-memory SQLite and
