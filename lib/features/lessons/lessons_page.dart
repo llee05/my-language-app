@@ -934,6 +934,7 @@ class _LessonsPageState extends State<LessonsPage> {
           ? _VocabularyPracticePanel(
               service: widget.studyService!,
               text: _cards.map((card) => card.chinese).join("。"),
+              pinyin: _cards.map((card) => card.pinyin).join('. '),
               onProgressChanged: widget.onProgressChanged,
             )
           : null,

@@ -512,6 +512,7 @@ Return only compact JSON with this exact shape:
             key: ObjectKey(dialogue),
             service: widget.studyService!,
             text: dialogue.lines.map((line) => line.chinese).join('。'),
+            pinyin: dialogue.lines.map((line) => line.pinyin).join('. '),
             onProgressChanged: widget.onProgressChanged,
           ),
         const SizedBox(height: 18),

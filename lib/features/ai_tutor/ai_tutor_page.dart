@@ -668,6 +668,7 @@ class _Conversation extends StatelessWidget {
                   key: ObjectKey(message),
                   service: studyService!,
                   text: message.chinese,
+                  pinyin: message.pinyin,
                   onProgressChanged: onProgressChanged,
                 ),
             ],

@@ -6,6 +6,9 @@ class _VocabularyPracticePanel extends StatefulWidget {
     super.key,
     required this.service,
     required this.text,
+    this.pinyin,
+    this.excludedWords = const [],
+    this.allowedWordIds,
     this.words,
     this.onProgressChanged,
     this.onNavigationBlocked,
@@ -13,6 +16,9 @@ class _VocabularyPracticePanel extends StatefulWidget {
 
   final VocabularyStudyService service;
   final String text;
+  final String? pinyin;
+  final List<String> excludedWords;
+  final List<String>? allowedWordIds;
   final List<Map<String, dynamic>>? words;
   final VoidCallback? onProgressChanged;
   final ValueChanged<bool>? onNavigationBlocked;
@@ -33,18 +39,28 @@ class _VocabularyPracticePanelState extends State<_VocabularyPracticePanel> {
   @override
   void initState() {
     super.initState();
-    _words = widget.words == null
-        ? widget.service.wordsInText(widget.text)
-        : Future.value(widget.words!);
+    _words = _loadWords();
   }
+
+  Future<List<Map<String, dynamic>>> _loadWords() => widget.words == null
+      ? widget.service.wordsInText(
+          widget.text,
+          pinyin: widget.pinyin,
+          excludedWords: widget.excludedWords,
+          allowedWordIds: widget.allowedWordIds,
+        )
+      : Future.value(widget.words!);
 
   @override
   void didUpdateWidget(covariant _VocabularyPracticePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.text != widget.text) {
-      _words = widget.words == null
-          ? widget.service.wordsInText(widget.text)
-          : Future.value(widget.words!);
+    if (oldWidget.text != widget.text ||
+        oldWidget.pinyin != widget.pinyin ||
+        oldWidget.excludedWords != widget.excludedWords ||
+        oldWidget.allowedWordIds != widget.allowedWordIds ||
+        oldWidget.service != widget.service ||
+        oldWidget.words != widget.words) {
+      _words = _loadWords();
     }
   }
 
@@ -83,30 +99,33 @@ class _VocabularyPracticePanelState extends State<_VocabularyPracticePanel> {
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) => FutureBuilder<List<Map<String, dynamic>>>(
-    future: _words,
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        return TextButton(
-          onPressed: () =>
-              setState(() => _words = widget.service.wordsInText(widget.text)),
-          child: const Text('Retry vocabulary practice'),
-        );
-      }
-      final words = snapshot.data;
-      if (words == null || words.isEmpty) return const SizedBox.shrink();
-      return Material(
-        color: Colors.transparent,
-        child: ExpansionTile(
-          title: const Text('Practise these words'),
-          subtitle: const Text('Rate words to update your vocabulary progress'),
-          children: [for (final word in words) _buildWord(word)],
-        ),
+  Widget build(BuildContext context) =>
+      FutureBuilder<List<Map<String, dynamic>>>(
+        future: _words,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const SizedBox.shrink();
+          }
+          if (snapshot.hasError) {
+            return TextButton(
+              onPressed: () => setState(() => _words = _loadWords()),
+              child: const Text('Retry vocabulary practice'),
+            );
+          }
+          final words = snapshot.data;
+          if (words == null || words.isEmpty) return const SizedBox.shrink();
+          return Material(
+            color: Colors.transparent,
+            child: ExpansionTile(
+              title: const Text('Practise these words'),
+              subtitle: const Text(
+                'Rate words to update your vocabulary progress',
+              ),
+              children: [for (final word in words) _buildWord(word)],
+            ),
+          );
+        },
       );
-    },
-  );
 
   Widget _buildWord(Map<String, dynamic> word) {
     final key = vocabularyWordKey(

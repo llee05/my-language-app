@@ -623,6 +623,7 @@ Return only compact JSON with this exact shape:
                       key: ObjectKey(turn),
                       service: widget.studyService!,
                       text: turn.npcReply.chinese,
+                      pinyin: turn.npcReply.pinyin,
                       onProgressChanged: widget.onProgressChanged,
                     ),
                 ],

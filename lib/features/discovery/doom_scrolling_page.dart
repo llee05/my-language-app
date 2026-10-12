@@ -555,6 +555,9 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                       key: ValueKey('$_run:sentence:$index'),
                       service: widget.studyService,
                       text: sentence.chinese,
+                      pinyin: sentence.pinyin,
+                      excludedWords: sentence.excludedVocabulary,
+                      allowedWordIds: sentence.practiceVocabularyIds,
                       onProgressChanged: widget.onProgressChanged,
                       onNavigationBlocked: (blocked) {
                         if (mounted) {

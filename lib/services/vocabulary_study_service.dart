@@ -6,6 +6,7 @@ import '../repositories/bundled_vocabulary_example_repository.dart';
 import '../repositories/lesson_repository.dart';
 import '../repositories/progress_repository.dart';
 import 'review_scheduler.dart';
+import 'mandarin_sentence_reading.dart';
 
 export '../database/vocabulary_content.dart' show vocabularyWordKey;
 
@@ -80,9 +81,57 @@ class VocabularyStudyService {
     return result;
   }
 
-  /// Longest matching bundled words; never trusts provider-supplied readings.
-  Future<List<Map<String, dynamic>>> wordsInText(String text) async {
+  /// Source readings only filter local entries; they never create word readings.
+  /// Ambiguous overlaps are omitted instead of joining unrelated word parts.
+  Future<List<Map<String, dynamic>>> wordsInText(
+    String text, {
+    String? pinyin,
+    List<String> excludedWords = const [],
+    List<String>? allowedWordIds,
+  }) async {
     final entries = await vocabulary.load();
+    final offsets = RegExp(
+      r'[\u3400-\u9fff]',
+    ).allMatches(text).map((match) => match.start).toList(growable: false);
+    final reading = pinyin == null || pinyin.trim().isEmpty
+        ? null
+        : parseMandarinSentenceReading(pinyin);
+    if (pinyin != null &&
+        pinyin.trim().isNotEmpty &&
+        (reading == null || reading.length != offsets.length)) {
+      return const [];
+    }
+    final syllableAt = {
+      for (final (index, offset) in offsets.indexed) offset: index,
+    };
+    final excluded = excludedWords.toSet();
+    final allowed = allowedWordIds?.toSet();
+    const names = [
+      '汤姆',
+      '玛丽',
+      '麦克',
+      '迈克',
+      '杰克',
+      '爱丽丝',
+      '安卡拉',
+      '青森',
+      '挪威',
+      '柳霞',
+      '克拉娃',
+      '小明',
+      '小林',
+      '小李',
+      '小王',
+      '老王',
+    ];
+    final namesInText = <(int, int)>[];
+    for (final name in names) {
+      var start = text.indexOf(name);
+      while (start >= 0) {
+        namesInText.add((start, start + name.length));
+        start = text.indexOf(name, start + name.length);
+      }
+    }
     final byFirst = <String, List<Map<String, dynamic>>>{};
     for (final word in entries) {
       final chinese = word['simplified'] as String;
@@ -96,29 +145,134 @@ class VocabularyStudyService {
         ),
       );
     }
-    final found = <String, Map<String, dynamic>>{};
-    var offset = 0;
-    while (offset < text.length) {
-      Map<String, dynamic>? match;
+    final candidates = <_SentenceWordMatch>[];
+    for (final offset in offsets) {
       for (final word in byFirst[text[offset]] ?? const []) {
-        if (text.startsWith(word['simplified'] as String, offset)) {
-          match = word;
-          break;
+        final chinese = word['simplified'] as String;
+        if (excluded.contains(chinese) || !text.startsWith(chinese, offset)) {
+          continue;
         }
-      }
-      if (match == null) {
-        offset++;
-      } else {
-        final chinese = match['simplified'] as String;
-        found.putIfAbsent(
-          vocabularyWordKey(chinese, match['pinyin'] as String),
-          () => match!,
+        if ((allowed != null && !allowed.contains(word['id'])) ||
+            namesInText.any(
+              (name) => name.$1 < offset + chinese.length && name.$2 > offset,
+            )) {
+          continue;
+        }
+        if (reading == null) {
+          if (word['hasMultipleReadings'] == true) continue;
+        } else if (!_matchesSentenceReading(
+          word,
+          reading,
+          syllableAt[offset]!,
+          offsets,
+        )) {
+          continue;
+        }
+        candidates.add(
+          _SentenceWordMatch(offset, offset + chinese.length, word),
         );
-        offset += chinese.length;
       }
+    }
+    final longest = candidates
+        .where(
+          (match) => !candidates.any(
+            (other) =>
+                other.start <= match.start &&
+                other.end >= match.end &&
+                other.end - other.start > match.end - match.start,
+          ),
+        )
+        .toList(growable: false);
+    final found = <String, Map<String, dynamic>>{};
+    for (final match in longest) {
+      if (longest.any(
+        (other) =>
+            other != match &&
+            other.start < match.end &&
+            other.end > match.start,
+      )) {
+        continue;
+      }
+      final word = match.word;
+      found.putIfAbsent(
+        vocabularyWordKey(
+          word['simplified'] as String,
+          word['pinyin'] as String,
+        ),
+        () => word,
+      );
     }
     return found.values.toList(growable: false);
   }
+}
+
+class _SentenceWordMatch {
+  const _SentenceWordMatch(this.start, this.end, this.word);
+
+  final int start;
+  final int end;
+  final Map<String, dynamic> word;
+}
+
+bool _matchesSentenceReading(
+  Map<String, dynamic> word,
+  List<MandarinSyllable> actual,
+  int start,
+  List<int> offsets,
+) {
+  final pinyin = word['pinyin'] as String;
+  final expected = parseMandarinSentenceReading(pinyin);
+  if (expected == null ||
+      expected.length != (word['simplified'] as String).length ||
+      start + expected.length > actual.length) {
+    return false;
+  }
+  final proper = pinyin[0] != pinyin[0].toLowerCase();
+  const distinctNeutralSenses = {
+    '东西',
+    '大意',
+    '地道',
+    '精神',
+    '孙子',
+    '先生',
+    '把手',
+    '便宜',
+    '的',
+    '得',
+    '地',
+    '着',
+    '了',
+  };
+  for (var index = 0; index < expected.length; index++) {
+    final reference = expected[index];
+    final source = actual[start + index];
+    if (!proper && source.capitalized && !source.sentenceInitial) return false;
+    if (reference.base != source.base) return false;
+    if (reference.tone == source.tone) continue;
+    if (reference.tone == 5 &&
+        !distinctNeutralSenses.contains(word['simplified'])) {
+      // Retain source-attested full-tone variants of otherwise identical words.
+      continue;
+    }
+    final position = start + index;
+    final adjacent =
+        position + 1 < actual.length &&
+        offsets[position + 1] == offsets[position] + 1;
+    final nextTone = adjacent ? actual[position + 1].tone : null;
+    if (reference.tone == 3 && source.tone == 2 && nextTone == 3) continue;
+    if (reference.base == 'yi' &&
+        reference.tone == 1 &&
+        (source.tone == 2 || source.tone == 4)) {
+      continue;
+    }
+    if (reference.base == 'bu' &&
+        reference.tone == 4 &&
+        (source.tone == 5 || (source.tone == 2 && nextTone == 4))) {
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 List<Map<String, dynamic>> unlearnedVocabulary(
