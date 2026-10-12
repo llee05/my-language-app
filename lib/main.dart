@@ -21,6 +21,7 @@ import 'models/learner_profile.dart';
 import 'models/learning_progress.dart';
 import 'models/listening_dialogue.dart';
 import 'models/listening_sentence.dart';
+import 'models/vocabulary_example.dart';
 import 'models/lesson.dart';
 import 'models/roleplay_mission.dart';
 import 'models/tutor_learner_snapshot.dart';
@@ -44,6 +45,7 @@ import 'models/dashboard_learning_stats.dart';
 import 'models/weekly_progress_report.dart';
 import 'repositories/bundled_vocabulary_repository.dart';
 import 'repositories/bundled_listening_sentence_repository.dart';
+import 'repositories/bundled_vocabulary_example_repository.dart';
 
 export 'models/dashboard_learning_stats.dart';
 export 'models/learner_profile.dart';
@@ -60,6 +62,7 @@ part 'core/widgets/button_animation.dart';
 part 'core/widgets/push_to_talk_button.dart';
 part 'core/widgets/pronunciation_button.dart';
 part 'core/widgets/vocabulary_practice_panel.dart';
+part 'core/widgets/vocabulary_examples.dart';
 part 'core/widgets/shared_widgets.dart';
 part 'core/widgets/flashcard_library.dart';
 part 'core/widgets/system_voice_setup.dart';
@@ -368,6 +371,7 @@ class _HanziPathAppState extends State<HanziPathApp> {
             onButtonAnimationStyleChanged: _applyButtonAnimationStyle,
             lessonRepository: widget.dependencies.lessons,
             vocabularyRepository: widget.dependencies.vocabulary,
+            vocabularyExampleRepository: widget.dependencies.vocabularyExamples,
             progressRepository: widget.dependencies.progress,
             dailyReviewSessionRepository: widget.dependencies.dailyReviews,
             settingsRepository: widget.dependencies.settings,

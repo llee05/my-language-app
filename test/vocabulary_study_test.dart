@@ -663,7 +663,10 @@ void main() {
           tester.widget<Text>(find.byKey(Key('discovery-word-$index'))).data!;
       final first = visibleWord(0);
       expect(voice.spoken, soundEnabled ? [first] : isEmpty);
-      expect(find.byType(PronunciationButton), findsNothing);
+      expect(
+        find.byType(PronunciationButton),
+        size.width < 600 ? findsNothing : findsOneWidget,
+      );
       expect(await memory.reviewHistory(), isEmpty);
 
       // Rebuilding a card does not repeat its pronunciation.

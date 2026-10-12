@@ -399,9 +399,8 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
           onSpeakWord: _settings.soundEnabled
               ? () => _speak(entry.simplified)
               : null,
-          onSpeakExample: _settings.soundEnabled && entry.hasExample
-              ? () => _speak(entry.exampleChinese)
-              : null,
+          onSpeakExample: _settings.soundEnabled ? _speak : null,
+          onStopAudio: _stopAudio,
         ),
       ),
     );
@@ -657,33 +656,20 @@ class _DoomScrollingPageState extends State<DoomScrollingPage> {
                             color: AppColors.text,
                           ),
                         ),
-                        if (!compact && entry.hasExample) ...[
+                        if (!compact) ...[
                           const SizedBox(height: 24),
-                          Text(
-                            entry.exampleChinese,
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppColors.text,
-                              fontSize: 22,
+                          _VocabularyExamples(
+                            chinese: entry.simplified,
+                            pinyin: entry.pinyin,
+                            repository: widget.studyService.examples,
+                            fallback: entry.example,
+                            showPinyin: _settings.showPinyin,
+                            inline: true,
+                            onSpeak: _settings.soundEnabled ? _speak : null,
+                            onStopAudio: _stopAudio,
+                            pronunciationKey: Key(
+                              'discovery-example-pronunciation-$index',
                             ),
-                          ),
-                          if (_settings.showPinyin &&
-                              entry.examplePinyin.isNotEmpty)
-                            Text(
-                              entry.examplePinyin,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: AppColors.gold),
-                            ),
-                          Text(
-                            entry.exampleEnglish,
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: AppColors.muted),
                           ),
                         ],
                       ],

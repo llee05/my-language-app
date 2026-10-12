@@ -2,6 +2,7 @@ import '../database/vocabulary_content.dart';
 import '../models/learning_progress.dart';
 import '../models/lesson.dart';
 import '../repositories/bundled_vocabulary_repository.dart';
+import '../repositories/bundled_vocabulary_example_repository.dart';
 import '../repositories/lesson_repository.dart';
 import '../repositories/progress_repository.dart';
 import 'review_scheduler.dart';
@@ -14,12 +15,14 @@ class VocabularyStudyService {
     required this.lessons,
     required this.progress,
     this.vocabulary = const BundledVocabularyRepository(),
+    this.examples = const BundledVocabularyExampleRepository(),
     this.clock,
   });
 
   final LessonRepository lessons;
   final ProgressRepository progress;
   final BundledVocabularyRepository vocabulary;
+  final BundledVocabularyExampleRepository examples;
   final DateTime Function()? clock;
   Future<void> _pending = Future.value();
 

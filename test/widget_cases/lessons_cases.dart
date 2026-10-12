@@ -553,9 +553,10 @@ void _registerLessonSessionWidgetTests() {
 
     expect(pronunciation.spoken, ['学']);
 
+    final stopsBeforeExit = pronunciation.stopCalls;
     await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
     await tester.pump();
-    expect(pronunciation.stopCalls, 1);
+    expect(pronunciation.stopCalls, stopsBeforeExit + 1);
     expect(pronunciation.disposeCalls, 0);
   });
 

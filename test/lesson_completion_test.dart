@@ -130,12 +130,15 @@ void main() {
       card.exampleChinese,
       card.examplePinyin,
       card.exampleEnglish,
-      'Tatoeba · sentence 333474',
       'I know this word',
       'Tap for word',
     ]) {
       expect(find.text(text).hitTestable(), findsOneWidget);
     }
+    expect(
+      find.textContaining('Tatoeba · CC BY 2.0 FR · #333474').hitTestable(),
+      findsOneWidget,
+    );
     expect(progress.recordCalls, 0);
     await tester.tap(find.text('Tap for word'));
     await tester.pumpAndSettle();
@@ -187,7 +190,10 @@ void main() {
       expect(find.text(card.exampleChinese), findsOneWidget);
       expect(find.text(card.examplePinyin), findsOneWidget);
       expect(find.text(card.exampleEnglish), findsOneWidget);
-      expect(find.text('Tatoeba · sentence 13753100'), findsOneWidget);
+      expect(
+        find.textContaining('Tatoeba · CC BY 2.0 FR · #13753100'),
+        findsOneWidget,
+      );
       final rating = find.byKey(const Key('lesson-familiar'));
       await tester.ensureVisible(rating);
       await tester.pumpAndSettle();

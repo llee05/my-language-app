@@ -36,6 +36,8 @@ class _VocabularyPageState extends State<VocabularyPage> {
   bool _loading = true;
   bool _loadFailed = false;
   bool _soundEnabled = true;
+  int _audioRequestId = 0;
+  Future<void> _audioStopQueue = Future.value();
   LearnerSettings _learnerSettings = const LearnerSettings();
   int? _hskLevel;
   VocabularyLearningState? _learningState;
@@ -80,21 +82,29 @@ class _VocabularyPageState extends State<VocabularyPage> {
 
   Future<void> _speak(String text) async {
     if (!_soundEnabled || text.trim().isEmpty) return;
+    final stop = _stopPronunciation();
+    final request = _audioRequestId;
     try {
+      await stop;
+      if (!mounted || request != _audioRequestId) return;
       await applyPronunciationSettings(_pronunciationService, _learnerSettings);
+      if (!mounted || request != _audioRequestId || !_soundEnabled) return;
       await _pronunciationService.speakMandarin(text);
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || request != _audioRequestId) return;
       _showPronunciationError(context, _pronunciationService, error);
     }
   }
 
-  Future<void> _stopPronunciation() async {
-    try {
-      await _pronunciationService.stop();
-    } catch (error) {
-      debugPrint('Vocabulary pronunciation stop failed: $error');
-    }
+  Future<void> _stopPronunciation() {
+    _audioRequestId++;
+    return _audioStopQueue = _audioStopQueue.then((_) async {
+      try {
+        await _pronunciationService.stop();
+      } catch (error) {
+        debugPrint('Vocabulary pronunciation stop failed: $error');
+      }
+    });
   }
 
   Future<void> _loadVocabulary() async {
@@ -189,9 +199,8 @@ class _VocabularyPageState extends State<VocabularyPage> {
               ),
           onProgressChanged: widget.onProgressChanged,
           onSpeakWord: _soundEnabled ? () => _speak(entry.simplified) : null,
-          onSpeakExample: _soundEnabled && entry.hasExample
-              ? () => _speak(entry.exampleChinese)
-              : null,
+          onSpeakExample: _soundEnabled ? _speak : null,
+          onStopAudio: _stopPronunciation,
         ),
       ),
     );
@@ -501,6 +510,13 @@ class _VocabularyEntry {
   String get normalizedPinyin => _normalizePinyin(pinyin);
   String get compactPinyin => normalizedPinyin.replaceAll(' ', '');
   bool get hasExample => exampleChinese.isNotEmpty;
+  VocabularyExample? get example => hasExample
+      ? VocabularyExample(
+          chinese: exampleChinese,
+          pinyin: examplePinyin,
+          english: exampleEnglish,
+        )
+      : null;
 
   VocabularyLearningState learningState(DateTime now) {
     return progress?.learningStateAt(now) ?? VocabularyLearningState.unseen;
@@ -668,13 +684,15 @@ class _VocabularyDetailPage extends StatelessWidget {
     this.onProgressChanged,
     this.onSpeakWord,
     this.onSpeakExample,
+    this.onStopAudio,
   });
 
   final _VocabularyEntry entry;
   final VocabularyStudyService studyService;
   final VoidCallback? onProgressChanged;
   final Future<void> Function()? onSpeakWord;
-  final Future<void> Function()? onSpeakExample;
+  final Future<void> Function(String)? onSpeakExample;
+  final Future<void> Function()? onStopAudio;
 
   @override
   Widget build(BuildContext context) {
@@ -741,73 +759,18 @@ class _VocabularyDetailPage extends StatelessWidget {
                 const SizedBox(height: 18),
                 _DetailSection(
                   title: 'Example sentence',
-                  child: entry.hasExample
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    entry.exampleChinese,
-                                    key: const Key('example-sentence-chinese'),
-                                    style: TextStyle(
-                                      fontFamily: 'serif',
-                                      color: AppColors.text,
-                                      fontSize: 24,
-                                    ),
-                                  ),
-                                ),
-                                PronunciationButton(
-                                  key: const Key(
-                                    'vocabulary-example-pronunciation',
-                                  ),
-                                  tooltip: onSpeakExample == null
-                                      ? 'Pronunciation audio is disabled in Settings'
-                                      : 'Hear example sentence',
-                                  onPressed: onSpeakExample,
-                                ),
-                              ],
-                            ),
-                            if (entry.examplePinyin.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                entry.examplePinyin,
-                                style: TextStyle(
-                                  color: AppColors.gold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                            if (entry.exampleEnglish.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                entry.exampleEnglish,
-                                style: TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Icon(
-                              Icons.menu_book_outlined,
-                              color: AppColors.muted,
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'No example sentence is available for this word yet.',
-                                key: Key('example-sentence-unavailable'),
-                                style: TextStyle(color: AppColors.muted),
-                              ),
-                            ),
-                          ],
-                        ),
+                  child: _VocabularyExamples(
+                    chinese: entry.simplified,
+                    pinyin: entry.pinyin,
+                    repository: studyService.examples,
+                    fallback: entry.example,
+                    onSpeak: onSpeakExample,
+                    onStopAudio: onStopAudio,
+                    pronunciationKey: const Key(
+                      'vocabulary-example-pronunciation',
+                    ),
+                    chineseKey: const Key('example-sentence-chinese'),
+                  ),
                 ),
                 _VocabularyPracticePanel(
                   service: studyService,

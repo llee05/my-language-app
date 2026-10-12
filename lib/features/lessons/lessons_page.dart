@@ -33,6 +33,9 @@ class _LessonsPageState extends State<LessonsPage> {
   Map<int, LessonLearningProgress> _lessonLearningProgress = const {};
   bool _sentenceMode = false;
   bool _lessonIsSentence = false;
+  bool _allowBundledExamples = true;
+  int _audioRequestId = 0;
+  Future<void> _audioStopQueue = Future.value();
   bool _loadingTopics = true;
   final Set<int> _deletingLessonIds = {};
   bool _libraryLoadFailed = false;
@@ -121,14 +124,29 @@ class _LessonsPageState extends State<LessonsPage> {
 
   Future<void> _speakText(String text) async {
     if (!_soundEnabled || text.trim().isEmpty) return;
+    final stop = _stopPronunciation();
+    final request = _audioRequestId;
     try {
+      await stop;
+      if (!mounted || request != _audioRequestId) return;
       await applyPronunciationSettings(_pronunciationService, _learnerSettings);
-      if (!mounted || !_soundEnabled) return;
+      if (!mounted || !_soundEnabled || request != _audioRequestId) return;
       await _pronunciationService.speakMandarin(text);
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || request != _audioRequestId) return;
       _showPronunciationError(context, _pronunciationService, error);
     }
+  }
+
+  Future<void> _stopPronunciation() {
+    _audioRequestId++;
+    return _audioStopQueue = _audioStopQueue.then((_) async {
+      try {
+        await _pronunciationService.stop();
+      } catch (error) {
+        debugPrint('Lesson pronunciation stop failed: $error');
+      }
+    });
   }
 
   void _goToCard(int index) {
@@ -350,6 +368,8 @@ class _LessonsPageState extends State<LessonsPage> {
       }
       _activeSessions = sessions;
       _lessonIsSentence = lesson.summary.isSentencePractice;
+      _allowBundledExamples =
+          !lesson.summary.isUserGenerated && !lesson.summary.isSentencePractice;
       _sentenceMode = lesson.summary.isSentencePractice;
       _lessonTitle = _flashcardDeckTitle(lesson.summary);
       _cards = lesson.cards;
@@ -722,6 +742,7 @@ class _LessonsPageState extends State<LessonsPage> {
                     : null,
                 onPageChanged: (index) {
                   setState(() => _currentCard = index);
+                  unawaited(_stopPronunciation());
                   unawaited(_prepareCurrentAudio());
                   _savePosition(index);
                 },
@@ -736,9 +757,12 @@ class _LessonsPageState extends State<LessonsPage> {
                       _reviewCardIds.contains(_cards[index].id),
                   onRated: (rating) => _recordAnswer(_cards[index], rating),
                   onSpeak: _soundEnabled ? () => _speak(_cards[index]) : null,
-                  onSpeakExample: _soundEnabled
-                      ? () => _speakText(_cards[index].exampleChinese)
-                      : null,
+                  onSpeakExample: _soundEnabled ? _speakText : null,
+                  onStopAudio: _stopPronunciation,
+                  exampleRepository:
+                      widget.studyService?.examples ??
+                      const BundledVocabularyExampleRepository(),
+                  allowBundledExamples: _allowBundledExamples,
                 ),
               ),
       ),
@@ -994,6 +1018,9 @@ class _LessonFlashcard extends StatefulWidget {
     required this.onRated,
     required this.onSpeak,
     required this.onSpeakExample,
+    this.onStopAudio,
+    this.exampleRepository = const BundledVocabularyExampleRepository(),
+    this.allowBundledExamples = true,
     this.isSentence = false,
   });
   final bool isSentence;
@@ -1003,7 +1030,10 @@ class _LessonFlashcard extends StatefulWidget {
   final bool alreadyRated;
   final Future<void> Function(ReviewRating rating) onRated;
   final Future<void> Function()? onSpeak;
-  final Future<void> Function()? onSpeakExample;
+  final Future<void> Function(String)? onSpeakExample;
+  final Future<void> Function()? onStopAudio;
+  final BundledVocabularyExampleRepository exampleRepository;
+  final bool allowBundledExamples;
 
   @override
   State<_LessonFlashcard> createState() => _LessonFlashcardState();
@@ -1190,7 +1220,8 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
               color: AppColors.text,
             ),
           ),
-          if (widget.card.exampleChinese.trim().isNotEmpty) ...[
+          if (widget.allowBundledExamples ||
+              widget.card.exampleChinese.trim().isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildExample(),
           ],
@@ -1257,54 +1288,21 @@ class _LessonFlashcardState extends State<_LessonFlashcard> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Example sentence',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.muted,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            PronunciationButton(
-              key: const Key('lesson-example-pronunciation'),
-              requestKey: widget.card.id,
-              tooltip: widget.onSpeakExample == null
-                  ? 'Pronunciation audio is disabled in Settings'
-                  : 'Hear example sentence',
-              onPressed: widget.onSpeakExample,
-            ),
-          ],
-        ),
         Text(
-          widget.card.exampleChinese,
-          style: TextStyle(fontSize: 18, height: 1.45, color: AppColors.text),
+          'Example sentence',
+          style: TextStyle(fontSize: 12, color: AppColors.muted),
         ),
-        if (widget.card.examplePinyin.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
-            widget.card.examplePinyin,
-            style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.gold),
-          ),
-        ],
         const SizedBox(height: 8),
-        Text(
-          widget.card.exampleEnglish,
-          style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
+        _VocabularyExamples(
+          chinese: widget.card.chinese,
+          pinyin: widget.card.pinyin,
+          repository: widget.exampleRepository,
+          fallback: VocabularyExample.fromCard(widget.card),
+          allowBundledExamples: widget.allowBundledExamples,
+          onSpeak: widget.onSpeakExample,
+          onStopAudio: widget.onStopAudio,
+          pronunciationKey: const Key('lesson-example-pronunciation'),
         ),
-        if (widget.card.exampleSource.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(
-            widget.card.exampleSource == 'Original'
-                ? 'Original study example'
-                : '${widget.card.exampleSource} · sentence ${widget.card.exampleSourceId}',
-            style: TextStyle(fontSize: 10, height: 1.4, color: AppColors.faint),
-          ),
-        ],
       ],
     ),
   );

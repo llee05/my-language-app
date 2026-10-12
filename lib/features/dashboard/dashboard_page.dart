@@ -25,6 +25,8 @@ class DashboardPage extends StatefulWidget {
     this.clock,
     this.random,
     this.vocabularyRepository = const BundledVocabularyRepository(),
+    this.vocabularyExampleRepository =
+        const BundledVocabularyExampleRepository(),
     this.backupRepository = const SqliteBackupRepository(),
     this.backupFileService = const FilePickerBackupFileService(),
   });
@@ -39,6 +41,7 @@ class DashboardPage extends StatefulWidget {
   final ButtonAnimationStyle buttonAnimationStyle;
   final ValueChanged<ButtonAnimationStyle>? onButtonAnimationStyleChanged;
   final BundledVocabularyRepository vocabularyRepository;
+  final BundledVocabularyExampleRepository vocabularyExampleRepository;
   final LessonRepository lessonRepository;
   final ProgressRepository progressRepository;
   final DailyReviewSessionRepository? dailyReviewSessionRepository;
@@ -102,6 +105,7 @@ class _DashboardPageState extends State<DashboardPage>
       lessons: widget.lessonRepository,
       progress: widget.progressRepository,
       vocabulary: widget.vocabularyRepository,
+      examples: widget.vocabularyExampleRepository,
       clock: widget.clock,
     );
     _loadDiscoveryPrompt();
