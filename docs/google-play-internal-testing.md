@@ -1,17 +1,17 @@
 # Google Play internal testing
 
-This guide covers TingShuo beta 7. Console instructions were checked against
+This guide covers TingShuo beta 8. Console instructions were checked against
 Google's documentation on 6 October 2026.
 
-| Field | Beta 7 value |
+| Field | Beta 8 value |
 | --- | --- |
 | App name | TingShuo |
 | Application/package ID | `io.github.llee05.tingshuo` |
-| Flutter version | `1.0.0-beta.7+7` |
-| Android version name | `1.0.0-beta.7` |
-| Android version code | `7` |
+| Flutter version | `1.0.0-beta.8+8` |
+| Android version name | `1.0.0-beta.8` |
+| Android version code | `8` |
 | Local upload file | `build/app/outputs/bundle/release/app-release.aab` |
-| GitHub release upload file | `tingshuo-1.0.0-beta.7-android.aab` |
+| GitHub release upload file | `tingshuo-1.0.0-beta.8-android.aab` |
 
 ## 1. Select or create the app
 
@@ -26,8 +26,8 @@ uses `io.github.llee05.tingshuo`; an existing Play app must have that same packa
 ID. Google fixes the package ID after the first artifact upload.
 
 Check **Test and release → Latest releases and bundles** for previously uploaded
-version codes. Code `7` must be unused and higher than the version testers already
-have. If `7` was already uploaded, increase the `+BUILD` number in `pubspec.yaml`,
+version codes. Code `8` must be unused and higher than the version testers already
+have. If `8` was already uploaded, increase the `+BUILD` number in `pubspec.yaml`,
 align the current-version documentation, and rebuild before uploading.
 
 ## 2. Use the upload key
@@ -68,7 +68,7 @@ Upload `build/app/outputs/bundle/release/app-release.aab`. Release signing must
 be configured; the build fails if signing credentials are missing. Build without
 developer AI-key Dart defines, so each user supplies their own optional AI key.
 
-Alternatively, download `tingshuo-1.0.0-beta.7-android.aab` from the verified
+Alternatively, download `tingshuo-1.0.0-beta.8-android.aab` from the verified
 GitHub release described in [Beta release workflow](beta-releases.md).
 A local signed build does not require a GitHub tag. Ordinary branch CI produces
 a debug APK; Play Console needs the signed release bundle.
@@ -87,13 +87,13 @@ Internal testing supports up to **100 testers**. Each person must both belong
 to the selected list and opt in using the test link. See
 [Google's testing setup guide](https://support.google.com/googleplay/android-developer/answer/9845334?hl=en).
 
-## 5. Upload and roll out beta 7
+## 5. Upload and roll out beta 8
 
 1. On **Internal testing → Releases**, choose **Create new release**.
 2. Complete Play App Signing setup if requested, then upload the `.aab` from
    step 3. Confirm package ID `io.github.llee05.tingshuo`, version name
-   `1.0.0-beta.7`, and version code `7` in the processed bundle details.
-3. Name the release `TingShuo 1.0.0 beta 7 (7)` and add the notes below. Use the
+   `1.0.0-beta.8`, and version code `8` in the processed bundle details.
+3. Name the release `TingShuo 1.0.0 beta 8 (8)` and add the notes below. Use the
    language tag Console provides if your listing language differs from `en-US`.
 4. Save the draft and choose **Next** / **Preview and confirm**. Resolve blocking
    errors and review warnings. If release creation is disabled, complete the
@@ -105,7 +105,7 @@ to the selected list and opt in using the test link. See
 
 ```text
 <en-US>
-Beta 7 adds Dictionary and Doom Scrolling with saved vocabulary progress across study modes. Flashcards and Listening Practice share a searchable deck library. Includes numbered-pinyin search, example-sentence playback, improved layouts and lesson summaries, safer account reset, and fixes for Vocab Rush, appearance settings, and dictation. Core study works offline; AI features use your own API key.
+Beta 8 corrects reviewed vocabulary readings, meanings and examples, improves quiz answer choices, and refines mobile layouts, Dictionary scrolling and Doom Scrolling playback. Mastery and Settings save behavior are clearer. Saved learning progress is preserved. Core study works offline; AI features use your own API key.
 </en-US>
 ```
 

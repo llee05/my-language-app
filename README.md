@@ -1,6 +1,6 @@
 # 听说 TingShuo
 
-**TingShuo v1.0.0 Beta 7** is a local-first Flutter app for building a
+**TingShuo v1.0.0 Beta 8** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard decks,
 sentence and listening practice, a swipe-based word feed, a searchable
 dictionary, Vocab Rush, offline vocabulary exams, and saved progress analytics.
@@ -629,7 +629,25 @@ release tools live in `tool/`; automated coverage lives in `test/`.
 
 ## Release
 
-Current version: **1.0.0-beta.7+7**
+Current version: **1.0.0-beta.8+8**
+
+### Beta 8
+
+- Corrected reviewed vocabulary readings, study meanings, grammar labels, and
+  dictionary references, including all 18 high-priority vocabulary findings.
+- Updated 54 curriculum examples to teach the intended senses and readings.
+- Improved quiz choices across Flashcards, Listening Practice, Vocab Rush, and
+  Exam Mode by excluding supplied alternate meanings and matching pronunciations.
+- Applied content corrections to existing installations and older backups while
+  preserving shared card IDs, saved progress, review history, and session position.
+- Improved mobile Home and flashcard layouts, kept Dictionary search visible
+  while scrolling, and added automatic word playback in Doom Scrolling.
+- Clarified mastery and Settings save behavior, and improved the tutor
+  personality selector for touch, keyboard, and narrow layouts.
+- Updated Android to version code **8** and refreshed the beta release guides.
+
+See the [app improvements report](docs/app-improvements-2026-10-11.md) for content
+details, completed validation, and remaining device checks.
 
 ### Beta 7
 
@@ -701,9 +719,9 @@ The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
 
 For Google Play, follow [Google Play internal testing](docs/google-play-internal-testing.md).
-Beta 7 uses package ID `io.github.llee05.tingshuo`, version name
-`1.0.0-beta.7`, and version code `7`. Reuse the existing upload key and check
-that Play Console has not already used version code `7` before uploading.
+Beta 8 uses package ID `io.github.llee05.tingshuo`, version name
+`1.0.0-beta.8`, and version code `8`. Reuse the existing upload key and check
+that Play Console has not already used version code `8` before uploading.
 
 Version tags matching `v*` use the same signing configuration in GitHub
 Actions. Release artifacts contain no shared AI key; users configure their own
