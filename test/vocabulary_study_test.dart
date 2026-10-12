@@ -10,8 +10,10 @@ import 'package:mylanguageapp/local_database.dart';
 import 'package:mylanguageapp/main.dart';
 import 'package:mylanguageapp/models/hsk_exam.dart';
 import 'package:mylanguageapp/models/learning_progress.dart';
+import 'package:mylanguageapp/models/listening_sentence.dart';
 import 'package:mylanguageapp/models/tutor_learner_snapshot.dart';
 import 'package:mylanguageapp/repositories/bundled_vocabulary_repository.dart';
+import 'package:mylanguageapp/repositories/bundled_listening_sentence_repository.dart';
 import 'package:mylanguageapp/repositories/progress_repository.dart';
 import 'package:mylanguageapp/repositories/lesson_repository.dart';
 import 'package:mylanguageapp/repositories/settings_repository.dart';
@@ -61,11 +63,12 @@ class _Vocabulary extends BundledVocabularyRepository {
 }
 
 class _Settings implements SettingsRepository {
-  const _Settings({this.soundEnabled = false});
+  const _Settings({this.soundEnabled = false, this.showPinyin = true});
   final bool soundEnabled;
+  final bool showPinyin;
   @override
   Future<LearnerSettings> load() async =>
-      LearnerSettings(soundEnabled: soundEnabled);
+      LearnerSettings(soundEnabled: soundEnabled, showPinyin: showPinyin);
   @override
   Future<void> save(LearnerSettings settings) async {}
 }
@@ -80,6 +83,58 @@ class _SilentVoice implements PronunciationService {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _SlowVoice extends _SilentVoice
+    implements PlaybackRatePronunciationService {
+  final rates = <double>[];
+  @override
+  Future<void> speakMandarinAtRate(String text, {required double rate}) async {
+    spoken.add(text);
+    rates.add(rate);
+  }
+}
+
+const _sentences = [
+  ListeningSentence(
+    chinese: '我喝茶。',
+    pinyin: 'Wǒ hē chá.',
+    english: 'I drink tea.',
+    chineseId: 123,
+    englishId: 456,
+    pinyinContributor: 'Test contributor',
+  ),
+  ListeningSentence(
+    chinese: '我看书。',
+    pinyin: 'Wǒ kàn shū.',
+    english: 'I read a book.',
+    chineseId: 124,
+    englishId: 457,
+    pinyinContributor: 'Test contributor',
+  ),
+  ListeningSentence(
+    chinese: '我喜欢学习。',
+    pinyin: 'Wǒ xǐhuān xuéxí.',
+    english: 'I like studying.',
+    chineseId: 125,
+    englishId: 458,
+    pinyinContributor: 'Test contributor',
+  ),
+];
+
+class _Sentences extends BundledListeningSentenceRepository {
+  _Sentences({this.fail = false, this.values = _sentences});
+  bool fail;
+  final List<ListeningSentence> values;
+  int loads = 0;
+  Completer<void>? gate;
+  @override
+  Future<List<ListeningSentence>> load({AssetBundle? bundle}) async {
+    loads++;
+    await gate?.future;
+    if (fail) throw StateError('sentences unavailable');
+    return values;
+  }
 }
 
 class _GatedVoice extends _SilentVoice implements OfflinePronunciationManager {
@@ -193,6 +248,36 @@ void main() {
     );
   });
   tearDown(LocalDatabase.close);
+
+  Future<void> pumpSentenceFeed(
+    WidgetTester tester, {
+    PronunciationService? voice,
+    _Settings settings = const _Settings(soundEnabled: true),
+    _Sentences? sentences,
+    ProgressRepository? store,
+    VoidCallback? onProgressChanged,
+  }) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DoomScrollingPage(
+            studyService: widgetStudy(store),
+            settingsRepository: settings,
+            pronunciationService: voice ?? _SilentVoice(),
+            sentenceRepository: sentences ?? _Sentences(),
+            random: Random(7),
+            onProgressChanged: onProgressChanged,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    if (sentences != null) expect(sentences.loads, 0);
+    final mode = find.widgetWithText(ChoiceChip, 'Sentence listening');
+    await tester.ensureVisible(mode);
+    await tester.tap(mode);
+    await tester.pumpAndSettle();
+  }
 
   test('study modes share vocabulary progress and retry identities', () async {
     final study = service();
@@ -885,6 +970,332 @@ void main() {
           .page,
       1,
     );
+  });
+
+  testWidgets(
+    'sentence feed autoplays, replays, reveals Tatoeba sources, and saves only explicit word practice',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final voice = _SlowVoice();
+      var updates = 0;
+      await pumpSentenceFeed(
+        tester,
+        voice: voice,
+        onProgressChanged: () => updates++,
+      );
+      expect(find.text('3 Tatoeba sentences'), findsOneWidget);
+      final first = _sentences.singleWhere(
+        (s) => s.chinese == voice.spoken.last,
+      );
+      expect(find.text(first.chinese), findsNothing);
+      expect(find.text(first.pinyin), findsNothing);
+      expect(find.text(first.english), findsNothing);
+      expect(await memory.reviewHistory(), isEmpty);
+      await tester.tap(find.byKey(const Key('discovery-sentence-replay-0')));
+      await tester.pumpAndSettle();
+      expect(voice.spoken.last, first.chinese);
+      await tester.tap(find.byKey(const Key('discovery-sentence-slow-0')));
+      await tester.pumpAndSettle();
+      expect(voice.rates, [.75]);
+      expect(voice.spoken.last, first.chinese);
+      await tester.tap(find.byKey(const Key('discovery-sentence-reveal-0')));
+      await tester.pumpAndSettle();
+      expect(find.text(first.chinese), findsOneWidget);
+      expect(find.text(first.pinyin), findsOneWidget);
+      expect(find.text(first.english), findsOneWidget);
+      expect(find.text('Tatoeba · CC BY 2.0 FR'), findsOneWidget);
+      expect(find.text('Pinyin: Test contributor'), findsOneWidget);
+      expect(find.text('Chinese source #${first.chineseId}'), findsOneWidget);
+      expect(find.text('English source #${first.englishId}'), findsOneWidget);
+      expect(await memory.reviewHistory(), isEmpty);
+      await tester.tap(find.text('Practise these words'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Got it').hitTestable().first);
+      await tester.tap(find.text('Got it').hitTestable().first);
+      await tester.pumpAndSettle();
+      expect(await memory.reviewHistory(), hasLength(1));
+      expect(updates, 1);
+      final card = widgetLessons.cards.values.single;
+      expect(first.chinese.contains(card.chinese), isTrue);
+      expect(card.chinese, isNot(first.chinese));
+      final next = find.byKey(const Key('discovery-sentence-next-0'));
+      await tester.ensureVisible(next);
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+      expect(voice.spoken.last, isNot(first.chinese));
+      expect(
+        find.byKey(const Key('discovery-sentence-chinese-1')),
+        findsNothing,
+      );
+      expect(await memory.reviewHistory(), hasLength(1));
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(find.text('You’ve reached the end of this mix.'), findsOneWidget);
+      await tester.tap(find.text('Refresh sentence feed'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+            .controller!
+            .page,
+        0,
+      );
+      expect(
+        find.byKey(const Key('discovery-sentence-chinese-0')),
+        findsNothing,
+      );
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Words'));
+      await tester.pumpAndSettle();
+      expect(find.text('0 practised · 2 unlearned words'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final (size, scale) in [
+    (const Size(320, 640), 1.0),
+    (const Size(320, 640), 2.0),
+    (const Size(640, 360), 1.0),
+  ]) {
+    testWidgets(
+      'sentence feed transcript and navigation remain reachable at $size with $scale text',
+      (tester) async {
+        await tester.binding.setSurfaceSize(size);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final voice = _SilentVoice();
+        await pumpSentenceFeed(tester, voice: voice);
+        final reveal = find.byKey(const Key('discovery-sentence-reveal-0'));
+        await tester.ensureVisible(reveal);
+        await tester.tap(reveal);
+        await tester.pumpAndSettle();
+        final transcript = find.byKey(
+          const Key('discovery-sentence-chinese-0'),
+        );
+        await tester.ensureVisible(transcript);
+        expect(transcript.hitTestable(), findsOneWidget);
+        final first = _sentences.singleWhere(
+          (s) => s.chinese == voice.spoken.last,
+        );
+        expect(find.text(first.pinyin), findsOneWidget);
+        expect(find.text(first.english), findsOneWidget);
+        final next = find.byKey(const Key('discovery-sentence-next-0'));
+        await tester.ensureVisible(next);
+        expect(next.hitTestable(), findsOneWidget);
+        await tester.tap(next);
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+              .controller!
+              .page,
+          1,
+        );
+        expect(await memory.reviewHistory(), isEmpty);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'sentence feed swipes and mouse wheel play the next whole sentence without saving',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final voice = _SilentVoice();
+      await pumpSentenceFeed(tester, voice: voice);
+      final feed = find.byKey(const Key('doom-scrolling-feed'));
+      final before = voice.spoken.length;
+      await tester.drag(feed, const Offset(0, -600));
+      await tester.pumpAndSettle();
+      expect(tester.widget<PageView>(feed).controller!.page, 1);
+      expect(voice.spoken, hasLength(before + 1));
+      final mouse = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(mouse.hover(tester.getCenter(feed)));
+      await tester.sendEventToBinding(mouse.scroll(const Offset(0, 150)));
+      await tester.pumpAndSettle();
+      expect(tester.widget<PageView>(feed).controller!.page, 2);
+      expect(voice.spoken, hasLength(before + 2));
+      expect(
+        voice.spoken
+            .skip(1)
+            .every((text) => _sentences.any((s) => s.chinese == text)),
+        isTrue,
+      );
+      expect(await memory.reviewHistory(), isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'sentence refresh stops audio until the new mix finishes loading',
+    (tester) async {
+      final voice = _SilentVoice();
+      final sentences = _Sentences();
+      await pumpSentenceFeed(tester, voice: voice, sentences: sentences);
+      for (var i = 0; i < 3; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Refresh sentence feed'), findsOneWidget);
+      final spokenBefore = voice.spoken.length;
+      sentences.gate = Completer<void>();
+      await tester.tap(find.text('Refresh sentence feed'));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(voice.spoken, hasLength(spokenBefore));
+      sentences.gate!.complete();
+      await tester.pumpAndSettle();
+      expect(voice.spoken, hasLength(spokenBefore + 1));
+      expect(
+        tester
+            .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+            .controller!
+            .page,
+        0,
+      );
+      expect(await memory.reviewHistory(), isEmpty);
+    },
+  );
+
+  testWidgets('sentence feed honors sound and pinyin settings', (tester) async {
+    final voice = _SilentVoice();
+    await pumpSentenceFeed(
+      tester,
+      voice: voice,
+      settings: const _Settings(showPinyin: false),
+    );
+    expect(voice.spoken, isEmpty);
+    expect(find.textContaining('Sound is off.'), findsOneWidget);
+    final replay = tester.widget<PronunciationButton>(
+      find.byKey(const Key('discovery-sentence-replay-0')),
+    );
+    expect(replay.onPressed, isNull);
+    await tester.tap(find.byKey(const Key('discovery-sentence-reveal-0')));
+    await tester.pumpAndSettle();
+    final chinese = tester
+        .widget<Text>(find.byKey(const Key('discovery-sentence-chinese-0')))
+        .data;
+    final sentence = _sentences.singleWhere((s) => s.chinese == chinese);
+    expect(find.text(sentence.pinyin), findsNothing);
+    expect(find.text(sentence.english), findsOneWidget);
+    expect(await memory.reviewHistory(), isEmpty);
+  });
+
+  testWidgets('sentence feed cancels audio during mode changes and scrolling', (
+    tester,
+  ) async {
+    final voice = _GatedVoice();
+    await pumpSentenceFeed(tester, voice: voice);
+    expect(voice.configurations, hasLength(2));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    expect(voice.configurations, hasLength(3));
+    voice.configurations[0].complete();
+    voice.configurations[1].complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, isEmpty);
+    voice.configurations[2].complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, hasLength(1));
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox.shrink());
+    voice.configurations[3].complete();
+    await tester.pumpAndSettle();
+    expect(voice.spoken, hasLength(1));
+    expect(await memory.reviewHistory(), isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'sentence word practice blocks navigation until a failed save is retried',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1000, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final store = _GatedProgress(widgetLessons.cards);
+      await pumpSentenceFeed(tester, store: store);
+      await tester.tap(find.byKey(const Key('discovery-sentence-reveal-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Practise these words'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Got it').hitTestable().first);
+      await tester.pump();
+      final feed = find.byKey(const Key('doom-scrolling-feed'));
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(tester.widget<PageView>(feed).controller!.page, 0);
+      expect(
+        tester
+            .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Words'))
+            .onSelected,
+        isNull,
+      );
+      store.gate.completeError(StateError('save failed'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(tester.widget<PageView>(feed).controller!.page, 0);
+      expect(await store.reviewHistory(), isEmpty);
+      store.gate = Completer<void>()..complete();
+      await tester.tap(find.text('Couldn’t save. Try again'));
+      await tester.pumpAndSettle();
+      expect(await store.reviewHistory(), hasLength(1));
+      expect(store.reviews.single.rating, ReviewRating.good);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(tester.widget<PageView>(feed).controller!.page, 1);
+    },
+  );
+
+  testWidgets('sentence feed retries loading and handles an empty pool', (
+    tester,
+  ) async {
+    final sentences = _Sentences(fail: true);
+    await pumpSentenceFeed(tester, sentences: sentences);
+    expect(find.text('The sentence feed could not be loaded'), findsOneWidget);
+    sentences.fail = false;
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.text('3 Tatoeba sentences'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await pumpSentenceFeed(tester, sentences: _Sentences(values: const []));
+    expect(find.text('No Tatoeba sentences are available.'), findsOneWidget);
+    expect(find.text('You’ve learned every bundled word!'), findsNothing);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Words'));
+    await tester.pumpAndSettle();
+    expect(find.text('0 practised · 3 unlearned words'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sentence audio failures leave transcripts and skipping usable', (
+    tester,
+  ) async {
+    await pumpSentenceFeed(tester, voice: _FailingVoice());
+    expect(
+      find.textContaining('Mandarin audio is unavailable'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('discovery-sentence-reveal-0')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('discovery-sentence-chinese-0')),
+      findsOneWidget,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<PageView>(find.byKey(const Key('doom-scrolling-feed')))
+          .controller!
+          .page,
+      1,
+    );
+    expect(await memory.reviewHistory(), isEmpty);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('dictionary ratings update the shared word statistics', (

@@ -20,6 +20,7 @@ import 'repositories/backup_repository.dart';
 import 'models/learner_profile.dart';
 import 'models/learning_progress.dart';
 import 'models/listening_dialogue.dart';
+import 'models/listening_sentence.dart';
 import 'models/lesson.dart';
 import 'models/roleplay_mission.dart';
 import 'models/tutor_learner_snapshot.dart';
@@ -42,6 +43,7 @@ import 'services/backup_file_service.dart';
 import 'models/dashboard_learning_stats.dart';
 import 'models/weekly_progress_report.dart';
 import 'repositories/bundled_vocabulary_repository.dart';
+import 'repositories/bundled_listening_sentence_repository.dart';
 
 export 'models/dashboard_learning_stats.dart';
 export 'models/learner_profile.dart';

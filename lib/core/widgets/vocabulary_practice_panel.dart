@@ -8,12 +8,14 @@ class _VocabularyPracticePanel extends StatefulWidget {
     required this.text,
     this.words,
     this.onProgressChanged,
+    this.onNavigationBlocked,
   });
 
   final VocabularyStudyService service;
   final String text;
   final List<Map<String, dynamic>>? words;
   final VoidCallback? onProgressChanged;
+  final ValueChanged<bool>? onNavigationBlocked;
 
   @override
   State<_VocabularyPracticePanel> createState() =>
@@ -57,6 +59,7 @@ class _VocabularyPracticePanelState extends State<_VocabularyPracticePanel> {
       _ratings.putIfAbsent(key, () => rating);
       _errors.remove(key);
     });
+    widget.onNavigationBlocked?.call(true);
     try {
       await widget.service.recordWord(
         word,
@@ -70,7 +73,12 @@ class _VocabularyPracticePanelState extends State<_VocabularyPracticePanel> {
       debugPrint('Vocabulary practice save failed: $error');
       if (mounted) setState(() => _errors.add(key));
     } finally {
-      if (mounted) setState(() => _saving.remove(key));
+      if (mounted) {
+        setState(() => _saving.remove(key));
+        widget.onNavigationBlocked?.call(
+          _saving.isNotEmpty || _errors.isNotEmpty,
+        );
+      }
     }
   }
 
