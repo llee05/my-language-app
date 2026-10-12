@@ -14,6 +14,10 @@ import tarfile
 import unicodedata
 from pathlib import Path
 
+from content_review import (MAX_EXAMPLE_CHARACTERS, excluded_pair,
+                            has_hidden_formatting, load_review,
+                            practice_exclusions)
+
 HANZI = re.compile(r'[\u3400-\u9fff]')
 SYLLABLE = re.compile(r'(?:[a-züv]|u:)+[1-5]', re.I)
 MARKS = {'a': 'āáǎà', 'e': 'ēéěè', 'i': 'īíǐì', 'o': 'ōóǒò',
@@ -92,7 +96,10 @@ def main():
     parser.add_argument('--original-examples', type=Path,
                         default=Path('assets/data/lesson_original_examples.json'))
     parser.add_argument('--allow-missing', action='store_true')
+    parser.add_argument('--review', type=Path,
+                        default=Path('assets/data/tatoeba/sentence_review_exclusions.json'))
     args = parser.parse_args()
+    review = load_review(args.review)
     vocabulary = json.loads(args.vocabulary.read_text())
     overrides = json.loads(args.overrides.read_text()) if args.overrides.exists() else {}
     unknown = set(overrides) - {word['id'] for word in vocabulary}
@@ -120,16 +127,22 @@ def main():
         if not sid.isdigit() or not eid.isdigit():
             raise ValueError('Tatoeba IDs must be positive integers.')
         pairs_count += 1
+        if excluded_pair(sid, eid, review):
+            continue
         metadata = scripts.get(sid, {})
         chinese = metadata.get('Hans', (original, '', ''))[0]
         source_reading = metadata.get('Latn')
         if not source_reading or re.search(r'[A-Za-z0-9]', chinese):
+            continue
+        if has_hidden_formatting(chinese, source_reading[0], english):
             continue
         parsed = reading(source_reading[0], chinese)
         if parsed is None:
             continue
         tokens, pinyin = parsed
         chars = HANZI.findall(chinese)
+        if len(chars) > MAX_EXAMPLE_CHARACTERS:
+            continue
         found = set()
         complex_words = []
         cursor = 0
@@ -169,14 +182,18 @@ def main():
                         continue
                     # Avoid teaching the target as a substring of a different
                     # dictionary word (e.g. 快 in 快乐 or 做主 in 做主角).
-                    if any(a <= start and b >= start + length and b - a > length
-                           for a, b, _ in complex_words):
+                    override = overrides.get(word['id'], {})
+                    if (not override.get('allowBoundaryOverlap') and
+                            any(a < start + length and b > start and
+                                (a != start or b != start + length)
+                                for a, b, _ in complex_words)):
                         continue
                     if length == 1 and re.match(r'(迈克|迈阿密|爱丽丝|汤姆|玛丽|杰克)', chinese[start:]):
                         continue
                     found.add(word['id'])
-                    override = overrides.get(word['id'], {})
                     if override.get('omit'):
+                        continue
+                    if target in practice_exclusions(sid, review):
                         continue
                     if override.get('chineseId') and str(override['chineseId']) != sid:
                         continue
@@ -201,6 +218,9 @@ def main():
                         'source': 'Tatoeba', 'chineseId': sid, 'englishId': eid,
                         'pinyinContributor': source_reading[1],
                     }
+                    excluded_words = practice_exclusions(sid, review)
+                    if excluded_words:
+                        example['excludedVocabulary'] = excluded_words
                     if word['id'] not in best or rank < best[word['id']][0]:
                         best[word['id']] = (rank, example)
     for entry_id, override in overrides.items():

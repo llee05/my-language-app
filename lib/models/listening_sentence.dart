@@ -7,6 +7,8 @@ class ListeningSentence {
     required this.chineseId,
     required this.englishId,
     required this.pinyinContributor,
+    this.excludedVocabulary = const [],
+    this.practiceVocabularyIds,
   });
 
   factory ListeningSentence.fromTatoeba(Map<String, dynamic> example) {
@@ -36,6 +38,7 @@ class ListeningSentence {
       chineseId: sentenceId('chineseId'),
       englishId: sentenceId('englishId'),
       pinyinContributor: example['pinyinContributor'] as String? ?? '',
+      excludedVocabulary: _excludedVocabulary(example),
     );
   }
 
@@ -45,6 +48,29 @@ class ListeningSentence {
   final int chineseId;
   final int englishId;
   final String pinyinContributor;
+  final List<String> excludedVocabulary;
+  final List<String>? practiceVocabularyIds;
+
+  ListeningSentence withPracticeVocabulary(Iterable<String> ids) =>
+      ListeningSentence(
+        chinese: chinese,
+        pinyin: pinyin,
+        english: english,
+        chineseId: chineseId,
+        englishId: englishId,
+        pinyinContributor: pinyinContributor,
+        excludedVocabulary: excludedVocabulary,
+        practiceVocabularyIds: List.unmodifiable(ids),
+      );
+
+  static List<String> _excludedVocabulary(Map<String, dynamic> example) {
+    final values = example['excludedVocabulary'] ?? const <String>[];
+    if (values is! List ||
+        values.any((value) => value is! String || value.trim().isEmpty)) {
+      throw const FormatException('Invalid sentence vocabulary exclusions.');
+    }
+    return List<String>.unmodifiable(values.cast<String>());
+  }
 
   Uri get chineseSource =>
       Uri.https('tatoeba.org', '/en/sentences/show/$chineseId');

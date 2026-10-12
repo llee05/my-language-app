@@ -22,7 +22,7 @@ void main() {
     'loads unique attributed sentences from the bundled Tatoeba examples',
     () async {
       final sentences = await repository.load();
-      expect(sentences, hasLength(3851));
+      expect(sentences, hasLength(3567));
       expect(
         sentences.map((s) => s.chinese).toSet(),
         hasLength(sentences.length),
@@ -31,6 +31,7 @@ void main() {
         expect(sentence.chinese, isNotEmpty);
         expect(sentence.pinyin, isNotEmpty);
         expect(sentence.english, isNotEmpty);
+        expect(sentence.practiceVocabularyIds, isNotEmpty);
         expect(sentence.chineseSource.host, 'tatoeba.org');
         expect(
           sentence.englishSource.path,
@@ -56,6 +57,11 @@ void main() {
       expect(bundle.reads, 1);
       expect(sentences, hasLength(1));
       expect(sentences.single.pinyinContributor, 'Test contributor');
+      expect(sentences.single.practiceVocabularyIds, ['word-0', 'word-1']);
+      expect(
+        () => sentences.single.practiceVocabularyIds!.clear(),
+        throwsUnsupportedError,
+      );
       expect(
         sentences.single.chineseSource.toString(),
         'https://tatoeba.org/en/sentences/show/123',
@@ -112,7 +118,8 @@ class _SentenceBundle extends CachingAssetBundle {
             'lessons': [
               {
                 'entries': [
-                  for (final example in examples) {'example': example},
+                  for (final (index, example) in examples.indexed)
+                    {'vocabularyId': 'word-$index', 'example': example},
                 ],
               },
             ],

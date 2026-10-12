@@ -14,6 +14,8 @@ import unicodedata
 from pathlib import Path
 
 from build_vocabulary_lessons import HANZI, plain, reading, transcriptions
+from content_review import (excluded_pair, has_hidden_formatting,
+                            load_review, practice_exclusions)
 
 STOP_WORDS = set('a an the to of in on at for with and or as by from be is are '
                  'was were being been someone something person people thing '
@@ -62,7 +64,8 @@ def matching_reading(word, chinese, tokens, start):
     return True
 
 
-def build(vocabulary, curriculum, scripts, overrides, limit=5):
+def build(vocabulary, curriculum, scripts, overrides, limit=5, review=None):
+    review = review or {}
     if not 1 <= limit <= 5:
         raise ValueError('Example limit must be between 1 and 5.')
     primary = {}
@@ -72,6 +75,8 @@ def build(vocabulary, curriculum, scripts, overrides, limit=5):
             example = entry['example']
             primary[entry['vocabularyId']] = example
             if example['source'] == 'Tatoeba':
+                if excluded_pair(example['chineseId'], example['englishId'], review):
+                    raise ValueError('Curriculum contains an excluded source pair.')
                 pool.setdefault(example['chinese'], example)
     if set(primary) != {word['id'] for word in vocabulary}:
         raise ValueError('Curriculum and vocabulary IDs must match.')
@@ -79,6 +84,8 @@ def build(vocabulary, curriculum, scripts, overrides, limit=5):
     maximum = max(map(len, by_text))
     candidates = collections.defaultdict(list)
     for chinese, example in pool.items():
+        if has_hidden_formatting(chinese, example['pinyin'], example['english']):
+            continue
         metadata = scripts.get(example['chineseId'], {})
         source = metadata.get('Latn')
         parsed = reading(source[0], chinese) if source else None
@@ -102,9 +109,13 @@ def build(vocabulary, curriculum, scripts, overrides, limit=5):
         english_terms = terms(example['english'])
         for start, end, _ in spans:
             word = by_text[chinese[start:end]]
-            if word['id'] in overrides:
+            choice = overrides.get(word['id'], {})
+            if choice.get('excludeAlternates',
+                          bool(choice) and not choice.get('reviewedPrimary')):
                 # Reviewed exceptions retain their designated context until
                 # alternate contexts receive an explicit editorial review.
+                continue
+            if word['simplified'] in practice_exclusions(example['chineseId'], review):
                 continue
             if chinese == primary[word['id']]['chinese']:
                 continue
@@ -147,11 +158,14 @@ def main():
     parser.add_argument('--transcriptions', type=Path, default=Path('assets/data/tatoeba/lesson_transcriptions.tsv'))
     parser.add_argument('--overrides', type=Path, default=Path('assets/data/tatoeba/lesson_example_overrides.json'))
     parser.add_argument('--output', type=Path, default=Path('assets/data/vocabulary_examples.json'))
+    parser.add_argument('--review', type=Path,
+                        default=Path('assets/data/tatoeba/sentence_review_exclusions.json'))
     args = parser.parse_args()
     document = build(json.loads(args.vocabulary.read_text()),
                      json.loads(args.curriculum.read_text()),
                      transcriptions(args.transcriptions),
-                     json.loads(args.overrides.read_text()))
+                     json.loads(args.overrides.read_text()),
+                     review=load_review(args.review))
     document['curriculumSha256'] = hashlib.sha256(args.curriculum.read_bytes()).hexdigest()
     args.output.write_text(json.dumps(document, ensure_ascii=False, indent=2) + '\n')
     print(f'{document["wordsWithAlternates"]} words with {document["alternateExampleCount"]} '

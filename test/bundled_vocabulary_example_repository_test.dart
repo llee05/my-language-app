@@ -57,8 +57,8 @@ void main() {
       }
       expect(primary, hasLength(4991));
       expect(document['entries'], hasLength(primary.length));
-      expect(alternates, 1717);
-      expect(withAlternates, 883);
+      expect(alternates, 1611);
+      expect(withAlternates, 833);
       expect(document['alternateExampleCount'], alternates);
       expect(document['wordsWithAlternates'], withAlternates);
       expect(await repository.load(), hasLength(4991));

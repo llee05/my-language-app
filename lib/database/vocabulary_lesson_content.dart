@@ -11,6 +11,7 @@ import '../services/vocabulary_quiz_options.dart';
 const vocabularyCurriculumMarker = 'bundled_hsk_curriculum_v1';
 const vocabularyExampleCorrectionsMarker = 'bundled_hsk_examples_v2';
 const vocabularyEditorialCorrectionsMarker = 'bundled_hsk_editorial_v3';
+const vocabularyReviewCorrectionsMarker = 'bundled_hsk_editorial_v4';
 const vocabularyLessonSize = 20;
 
 /// Classify only the first exact bundled deck in backups lacking provenance.
@@ -155,6 +156,7 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
   )).isNotEmpty) {
     await _correctVocabularyExamples(db);
     await refreshVocabularyEditorialContent(db);
+    await refreshVocabularyReviewContent(db);
     return;
   }
   final (definitions: definitions, byId: byId) = await _loadCurriculum();
@@ -283,6 +285,7 @@ Future<void> installVocabularyCurriculum(DatabaseExecutor db) async {
   await batch.commit(noResult: true);
   await _correctVocabularyExamples(db);
   await refreshVocabularyEditorialContent(db);
+  await refreshVocabularyReviewContent(db);
 }
 
 /// Update examples in place, without rebuilding memberships or choosing new
@@ -383,11 +386,62 @@ Map<String, Object?> _vocabularyCardValues(
 /// In-place editorial correction. The caller owns the transaction and cache
 /// invalidation. Only cards shared by known bundled decks are changed; archived
 /// cards outside the curriculum and learner-created copies retain their text.
-Future<void> refreshVocabularyEditorialContent(DatabaseExecutor db) async {
+Future<void> refreshVocabularyEditorialContent(DatabaseExecutor db) =>
+    _refreshVocabularyEditorialContent(
+      db,
+      vocabularyEditorialCorrectionsMarker,
+    );
+
+/// The full content review is a new migration even on installations that have
+/// already received v3. It runs in the caller's transaction.
+Future<void> refreshVocabularyReviewContent(DatabaseExecutor db) async {
   if ((await db.query(
     'content_migrations',
     where: 'key = ?',
-    whereArgs: [vocabularyEditorialCorrectionsMarker],
+    whereArgs: [vocabularyReviewCorrectionsMarker],
+  )).isNotEmpty) {
+    return;
+  }
+  await _refreshVocabularyEditorialContent(
+    db,
+    vocabularyReviewCorrectionsMarker,
+  );
+  // This exact historical seed has an incorrect download reading. Limit the
+  // correction to its bundled owner and unchanged example; keep custom text.
+  for (final lesson in flashcardLessons) {
+    for (final card in (lesson['cards'] as List).cast<Map<String, dynamic>>()) {
+      if (card['chinese'] != '下载') continue;
+      await db.update(
+        'cards',
+        {
+          'pinyin': card['pinyin'],
+          'example_sentence_pinyin': card['example_sentence_pinyin'],
+        },
+        where:
+            'chinese = ? AND pinyin = ? AND example_sentence_chinese = ? '
+            'AND example_sentence_pinyin = ? AND lesson_id IN '
+            '(SELECT id FROM lessons WHERE lesson_title = ? '
+            'AND is_user_generated = 0 AND is_sentence_practice = 0)',
+        whereArgs: [
+          '下载',
+          'xiàzài',
+          card['example_sentence_chinese'],
+          'Nǐ kěyǐ zài zhèlǐ xiàzài xuéxí zīliào.',
+          lesson['lesson_title'],
+        ],
+      );
+    }
+  }
+}
+
+Future<void> _refreshVocabularyEditorialContent(
+  DatabaseExecutor db,
+  String marker,
+) async {
+  if ((await db.query(
+    'content_migrations',
+    where: 'key = ?',
+    whereArgs: [marker],
   )).isNotEmpty) {
     return;
   }
@@ -450,7 +504,7 @@ Future<void> refreshVocabularyEditorialContent(DatabaseExecutor db) async {
     }
   }
   batch.insert('content_migrations', {
-    'key': vocabularyEditorialCorrectionsMarker,
+    'key': marker,
     'applied_at': DateTime.now().toUtc().toIso8601String(),
   });
   await batch.commit(noResult: true);

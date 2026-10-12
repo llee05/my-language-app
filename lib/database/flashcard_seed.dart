@@ -3712,11 +3712,11 @@ const List<Map<String, dynamic>> flashcardLessons = [
       },
       {
         "chinese": "下载",
-        "pinyin": "xiàzài",
+        "pinyin": "xiàzǎi",
         "english_meaning": "to download",
         "part_of_speech": "verb",
         "example_sentence_chinese": "你可以在这里下载学习资料。",
-        "example_sentence_pinyin": "Nǐ kěyǐ zài zhèlǐ xiàzài xuéxí zīliào.",
+        "example_sentence_pinyin": "Nǐ kěyǐ zài zhèlǐ xiàzǎi xuéxí zīliào.",
         "example_sentence_english": "You can download study materials here.",
         "quiz_options": [
           "function; feature",

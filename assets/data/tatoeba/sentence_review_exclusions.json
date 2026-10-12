@@ -1,0 +1,466 @@
+{
+  "version": 1,
+  "reviewedOn": "2026-10-12",
+  "excludedSentenceIds": {
+    "333458": "Fragment with unnatural relative-clause grammar",
+    "334732": "猛涨 requires zhang3",
+    "335419": "Editorial square brackets exposed in study text",
+    "341839": "Incorrect possessive before superlative",
+    "343796": "Unnatural birthday preposition",
+    "345285": "Malformed final-exam phrase",
+    "345286": "Missing article before hot season",
+    "346486": "不禁 requires jin1",
+    "347811": "Speech paragraph too long for a vocabulary example",
+    "347818": "Speech paragraph too long for a vocabulary example",
+    "347859": "Paragraph too long for a vocabulary example",
+    "372386": "Bouncing ball read as tan instead of dan",
+    "389922": "Profanity missed by the selector filter",
+    "391196": "Unnatural turn instruction",
+    "400226": "Unnatural comparative question",
+    "404094": "Malformed gossip-about-daily-life phrase",
+    "418539": "Duplicated comparative directional construction",
+    "418945": "Undated obsolete/changing security alert level",
+    "420712": "Price described as big rather than high",
+    "433697": "Mandarin characters described as Japanese kanji",
+    "438476": "糖份 typo for 糖分 and malformed dietary expression",
+    "460837": "Long paragraph unsuitable for vocabulary practice",
+    "550732": "不禁 requires jin1",
+    "636193": "Greasy food rendered as unnatural fat diet",
+    "690503": "Immortals and emperors conflated into an immortal emperor",
+    "727968": "广为 requires wei2",
+    "765261": "City experience rendered with an unnatural supplies construction",
+    "770843": "Unnatural perspective comparison",
+    "772150": "Warning against testimony rendered as opposing testimony",
+    "778542": "Incomplete explanation-result construction",
+    "781165": "Duplicated locative result marker",
+    "785084": "Unnatural serial-verb adverb marker",
+    "793345": "Undated universal smallpox-immunity claim",
+    "793944": "Unnatural job acceptance phrase",
+    "798195": "Duplicated 在",
+    "799206": "Undated future succession prediction",
+    "802873": "Unnatural duplicated sentence classifier",
+    "804512": "裁缝师 requires feng2",
+    "804617": "Unnatural price construction",
+    "810029": "Missing article before Renaissance and incorrect positivist terminology",
+    "810059": "Malformed think-of-the-children question",
+    "811099": "Malformed snake-poisoning construction",
+    "816793": "Unnatural circular thought construction",
+    "816911": "Held her own idiom rendered as physically holding an instrument",
+    "827578": "Interrogative 谁 inserted in a relative description",
+    "830330": "监狱长 requires zhang3",
+    "838091": "福无双进 typo for 福无双至",
+    "840753": "Unnatural processing-children collocation",
+    "842046": "Missing copula or breed predicate",
+    "846005": "中 in 音乐会中保持 requires zhong1",
+    "846312": "锻练 typo and malformed required-action phrase",
+    "856652": "Malformed conditional pronoun order",
+    "857572": "Paragraph too long for a vocabulary example",
+    "858948": "跟本 typo for 根本",
+    "864291": "Undated changing succession position",
+    "867604": "Unnatural repeated innovation construction",
+    "875041": "中 in 黑暗中保持 requires zhong1",
+    "884214": "Malformed grammatical-definition fragment",
+    "898032": "Unnatural historical sentence",
+    "898039": "Malformed widespread-Buddhism construction",
+    "905851": "中国 truncated to 中",
+    "918456": "When-question combined with yes/no particle",
+    "1070536": "Unnatural respectful prohibition",
+    "1127106": "Incorrect 的 adverb marker",
+    "1192609": "Paragraph too long for a vocabulary example",
+    "1208520": "Incomplete internet-uses predicate",
+    "1208525": "Malformed addicted-to construction",
+    "1233447": "Malformed foolproof construction",
+    "1424311": "Malformed first/second edition question",
+    "1512392": "Completed action translated as a future plan",
+    "1565725": "Malformed classifier for three fields",
+    "1567751": "嘻戏 typo for 嬉戏",
+    "1573219": "Broken confirmation construction; 有帮于 typo",
+    "1573327": "Unnatural meticulous-architect construction",
+    "1667396": "不得了 requires liao3",
+    "1902268": "Effects typo for efforts",
+    "2170252": "Repeated hidden-in construction",
+    "2265486": "Unnatural topic construction",
+    "2342814": "Malformed limitless-resource comparison",
+    "2366159": "Vulgar proverb unsuitable as a cooking example",
+    "2454690": "绵 used for modern cotton spelling 棉",
+    "2581516": "Malformed noun for a round of talks",
+    "2684976": "Paragraph too long for a vocabulary example",
+    "2757059": "Broken father-death construction",
+    "3671667": "Ambiguous ability/refusal statement and tying/wearing a tie",
+    "4683861": "不为过 requires wei2 guo4",
+    "4757240": "Unnatural negative experience marker",
+    "4759987": "名 typo as 命 in a long prayer",
+    "4813513": "讯息 requires xi1",
+    "4844717": "Unnatural bilingual question and incorrect adverb marker",
+    "5405477": "Malformed 给露出 construction",
+    "5542964": "理发店 requires fa4",
+    "5551026": "Undated changing coal-production ranking",
+    "5558530": "认为 requires wei2",
+    "5663585": "Unnatural lawyer noun and literal devil advocate",
+    "5728390": "Unnatural first-500-words construction",
+    "6591448": "得 used where 的 is required; malformed distance phrase",
+    "6799691": "Complement 得 requires de5",
+    "7004963": "Incorrect 的 adverb marker",
+    "7033616": "长久 requires chang2",
+    "7066685": "Duplicated sentence classifier",
+    "7774803": "Malformed rich-enough construction",
+    "8857229": "Unnatural congratulation construction",
+    "8932454": "Missing result construction in Mandarin",
+    "8934247": "Reversed passive for admitting students",
+    "9074739": "毛病 used as a verb without 出",
+    "9400990": "Unnatural and mismatched forms of address",
+    "9958157": "Unsuitable introductory example built around a reported blindness myth",
+    "9960198": "Unnatural news announcement phrasing",
+    "10007005": "付出实践 typo for 付诸实践",
+    "10104129": "Mixed unexpected-to-me construction",
+    "13054926": "Rights 权利 rendered as power",
+    "13109385": "Duplicated destination prepositions",
+    "13117514": "主意 requires zhu3",
+    "13190498": "摄影头 typo for 摄像头",
+    "13533679": "Nonstandard mom spelling and unsuitable introductory example",
+    "13552217": "Long undated world-heritage news paragraph",
+    "13552225": "News paragraph too long for a vocabulary example",
+    "13573764": "Paragraph too long for a vocabulary example",
+    "13573836": "点缀 requires zhui4",
+    "13573939": "Long procedural fragment unsuitable for a vocabulary example",
+    "13575742": "Story paragraph too long for a vocabulary example",
+    "13578076": "俄罗斯 requires e2",
+    "13822795": "Butterfly story attributed to the Duke of Zhou instead of Zhuang Zhou",
+    "13849261": "着 used where 著 is required for authorship",
+    "13858740": "Paragraph too long for a vocabulary example",
+    "13879065": "华 requires hua2; 矫 requires jiao3",
+    "13879111": "Poetry paragraph too long for a vocabulary example",
+    "13884928": "Paragraph exceeds useful vocabulary example length",
+    "13888098": "Poetry paragraph too long for a vocabulary example",
+    "6080259": "过得 complement requires de5",
+    "447996": "Plants growing requires zhang3",
+    "1735628": "扮演着 aspect requires zhe5",
+    "2394799": "看着 aspect requires zhe5",
+    "7681049": "看得见 complement requires de5",
+    "13523793": "被动得 complement requires de5",
+    "1964659": "Necessity 得 requires dei3",
+    "13916226": "镶嵌着 aspect requires zhe5",
+    "2047578": "过得 complement requires de5",
+    "782968": "叉着手 aspect requires zhe5",
+    "13543174": "Invisible zero-width characters split vocabulary",
+    "794017": "Formula variables have no spoken readings in the source transcript."
+  },
+  "excludedPairs": {
+    "332560:268459": "English joking idiom rendered as a literal leg-pulling instruction",
+    "332758:1102851": "Translation adds mending absent from Chinese",
+    "332868:41756": "Excitement idiom confused with English anger idiom",
+    "335619:757579": "Effect on someone confused with effectiveness",
+    "339225:328886": "Missing English article before media player",
+    "351051:65911": "Anxiety confused with hurrying",
+    "408940:408938": "Unnatural Mandarin and English",
+    "420812:1538992": "You mistranslated as he",
+    "467732:242352": "Chinese typing characters mistranslated as words",
+    "483954:309674": "Posture/attitude mistranslated as nose length",
+    "502853:1886": "Completed purchase mistranslated as a future purchase",
+    "528695:266248": "Missing English article before close relationship",
+    "599697:240903": "Missing English article before diploma",
+    "604452:286483": "Missing English article before great shock",
+    "623185:271137": "Increase by twice confused with doubling",
+    "728002:728000": "Translation adds an unsupported year",
+    "731775:1159900": "Sum of little things mistranslated as an end target",
+    "760850:7770325": "Family idiom mistranslated as a house",
+    "768282:7816804": "Exchange a purchased shirt confused with changing into it",
+    "778490:302571": "Warning not to do something confused with reprimanding a past action",
+    "797104:270934": "Liquid water confused with water vapor",
+    "811258:510839": "Most confused with almost half",
+    "818929:603588": "Henry mistranslated as Harry; disqualification confused with withdrawing",
+    "838363:9400853": "Blessing confused with success",
+    "846357:284387": "Business company confused with companionship",
+    "848190:62558": "Heads a department mistranslated as carries",
+    "885364:885703": "June confused with six months; 1930s confused with thirty years",
+    "969995:433685": "Keep talking mistranslated as when you fart",
+    "1214450:1214451": "President mistranslated as prime minister",
+    "1235651:264822": "Degenerating confused with regretting",
+    "1298060:1299105": "Dangling whenever clause mistranslated as ability",
+    "1304761:241994": "Deficit confused with surplus",
+    "1426551:50742": "Detailed confused with subtle",
+    "1438476:30526": "Request for support confused with offer of support",
+    "1501634:847183": "Why one lives mistranslated as what it is to live",
+    "1501684:1539022": "Signed treaty confused with agreeing to sign",
+    "1517750:247961": "Washing plates mistranslated as washing them away",
+    "1583538:1583539": "Winning a tournament confused with being seeded",
+    "1781979:6010784": "Further examination confused with a step forward",
+    "2394350:2398222": "Remembering involuntarily mistranslated as never forgetting",
+    "2915553:2915554": "Application architecture confused with infrastructure",
+    "3060463:3060464": "Back side confused with upside down",
+    "3285886:7837709": "Lion mistranslated as tiger",
+    "3666900:19556": "Earth surface confused with land surface",
+    "3709292:5941374": "Embarrassing someone confused with mocking them",
+    "4147269:4145082": "Singular monster mistranslated as plural monsters",
+    "4813370:12137230": "Longing confused with thought",
+    "4844774:4837286": "Translation adds acting alone",
+    "5292979:7248336": "Turning within an alley confused with turning into one",
+    "5452164:5574770": "Speaking to me mistranslated as listening to me",
+    "5574453:4664334": "Losing belongings confused with not understanding",
+    "5655373:273346": "Quiet confused with a dormant volcano",
+    "6005568:277908": "House confused with room",
+    "6159421:6293544": "Translation omits tying the legs",
+    "8930308:8930225": "Quantity of fuel confused with fuel quality",
+    "9772999:11277833": "Vertical confused with straight hair",
+    "9961260:8303970": "Two yuan mistranslated as one dollar",
+    "11136297:10856859": "Official policy confused with office politics",
+    "13069581:11628289": "Incorrect English trick-to-open construction",
+    "13117577:1172040": "Incomplete ungrammatical English",
+    "13122359:1746": "Misunderstandable statements confused with unavoidable circumstances",
+    "13519178:13194119": "Obligation should end confused with ability can end",
+    "13519266:13111924": "Agile mistranslated as fat",
+    "13544405:10789734": "Translation adds braiding not present in Chinese",
+    "13561194:6776752": "Bouquet/bunch mistranslated as one flower",
+    "13578076:2883588": "Destination 向 confused with against; equipment typo",
+    "13943178:807525": "Legs mistranslated as feet",
+    "13959015:7992075": "English means typo",
+    "13998248:247707": "Fragile confused with short-lived",
+    "345973:265270": "Neglecting confused with despising",
+    "2848643:27339": "Muscle development is generalized to physical strength in translation.",
+    "691291:754746": "Unnatural causative collocation for slapping passers-by.",
+    "502736:180286": "Unnatural comparison about mathematics and physics.",
+    "341926:29080": "Usually conceal is translated as ability to conceal."
+  },
+  "wordPracticeExclusions": {
+    "13826465": [
+      "于是"
+    ],
+    "489530": [
+      "天生"
+    ],
+    "6086822": [
+      "喂"
+    ],
+    "475395": [
+      "活该"
+    ],
+    "8893590": [
+      "刮"
+    ],
+    "7772000": [
+      "接"
+    ],
+    "7779229": [
+      "拉"
+    ],
+    "343972": [
+      "人事"
+    ],
+    "892469": [
+      "青"
+    ],
+    "8824089": [
+      "冻"
+    ],
+    "958022": [
+      "香"
+    ],
+    "463761": [
+      "智慧"
+    ],
+    "335009": [
+      "之"
+    ],
+    "333306": [
+      "卷"
+    ],
+    "502998": [
+      "修"
+    ],
+    "503096": [
+      "牵"
+    ],
+    "332945": [
+      "取"
+    ],
+    "372386": [
+      "弹"
+    ],
+    "383127": [
+      "省"
+    ],
+    "1735628": [
+      "着重"
+    ],
+    "5685461": [
+      "个体"
+    ],
+    "2143980": [
+      "把手"
+    ],
+    "338638": [
+      "从前"
+    ],
+    "9961241": [
+      "派"
+    ],
+    "333525": [
+      "克"
+    ],
+    "1502735": [
+      "腐蚀"
+    ],
+    "8835114": [
+      "生动"
+    ],
+    "5728390": [
+      "官"
+    ],
+    "13556564": [
+      "执行"
+    ],
+    "397060": [
+      "披"
+    ],
+    "830486": [
+      "支"
+    ],
+    "1395041": [
+      "方"
+    ],
+    "1227107": [
+      "点头"
+    ],
+    "380585": [
+      "片"
+    ],
+    "8932461": [
+      "茎"
+    ],
+    "784060": [
+      "加工"
+    ],
+    "828647": [
+      "计算"
+    ],
+    "1235528": [
+      "上任"
+    ],
+    "2254420": [
+      "为期"
+    ],
+    "333584": [
+      "人间"
+    ],
+    "780377": [
+      "人为"
+    ],
+    "13519175": [
+      "成天"
+    ],
+    "6140904": [
+      "挪"
+    ],
+    "934197": [
+      "体系"
+    ],
+    "6744758": [
+      "前提"
+    ],
+    "4262150": [
+      "可口"
+    ],
+    "12617591": [
+      "吉祥"
+    ],
+    "810692": [
+      "启示"
+    ],
+    "6962933": [
+      "呵"
+    ],
+    "2022464": [
+      "啃"
+    ],
+    "777845": [
+      "宰"
+    ],
+    "766046": [
+      "州"
+    ],
+    "13837436": [
+      "意志"
+    ],
+    "13545651": [
+      "拧"
+    ],
+    "1394890": [
+      "捏"
+    ],
+    "13519136": [
+      "更正"
+    ],
+    "760723": [
+      "次品"
+    ],
+    "782968": [
+      "着手"
+    ],
+    "6151846": [
+      "神奇"
+    ],
+    "1395050": [
+      "立体"
+    ],
+    "342711": [
+      "绣"
+    ],
+    "2567409": [
+      "腥"
+    ],
+    "8605876": [
+      "自发"
+    ],
+    "482907": [
+      "要点"
+    ],
+    "527702": [
+      "部位"
+    ],
+    "4270716": [
+      "霞"
+    ],
+    "5574391": [
+      "亲爱"
+    ],
+    "1394895": [
+      "体会"
+    ],
+    "2298599": [
+      "天真"
+    ],
+    "8792104": [
+      "学问"
+    ],
+    "1127068": [
+      "实现"
+    ],
+    "13959015": [
+      "事态"
+    ],
+    "336242": [
+      "人工"
+    ],
+    "408440": [
+      "以便"
+    ],
+    "793344": [
+      "作风"
+    ],
+    "2194350": [
+      "动员"
+    ],
+    "427619": [
+      "对付"
+    ],
+    "2298533": [
+      "成交"
+    ],
+    "896504": [
+      "机关"
+    ],
+    "8744858": [
+      "民用"
+    ]
+  }
+}

@@ -245,6 +245,12 @@ class SqliteBackupRepository implements BackupRepository {
         await txn.delete(
           'content_migrations',
           where: 'key = ?',
+          whereArgs: [vocabularyReviewCorrectionsMarker],
+        );
+        await refreshVocabularyReviewContent(txn);
+        await txn.delete(
+          'content_migrations',
+          where: 'key = ?',
           whereArgs: [vocabularyCurriculumMarker],
         );
         await installVocabularyCurriculum(txn);

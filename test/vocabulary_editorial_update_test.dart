@@ -37,8 +37,21 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  Future<({int cardId, int lessonId, int customId})> legacyFixture() async {
+  Future<({int cardId, int lessonId, int customId, int lihaiId})>
+  legacyFixture() async {
     final db = await LocalDatabase.ensureInitialized();
+    final lihai = (await db.query(
+      'cards',
+      where: 'chinese = ?',
+      whereArgs: ['利害'],
+    )).single;
+    final lihaiId = lihai['id'] as int;
+    await db.update(
+      'cards',
+      {'pinyin': 'lì hai', 'english_meaning': 'serious'},
+      where: 'id = ?',
+      whereArgs: [lihaiId],
+    );
     final card = (await db.query(
       'cards',
       where: 'chinese = ?',
@@ -100,7 +113,12 @@ void main() {
         correctAnswers: 1,
       ),
     );
-    return (cardId: cardId, lessonId: lessonId, customId: customId);
+    return (
+      cardId: cardId,
+      lessonId: lessonId,
+      customId: customId,
+      lihaiId: lihaiId,
+    );
   }
 
   Future<Map<String, List<Map<String, Object?>>>> savedTables(
@@ -116,121 +134,134 @@ void main() {
       table: await db.query(table, orderBy: 'rowid'),
   };
 
-  test(
-    'startup correction preserves shared IDs, sessions, history and custom copies',
-    () async {
-      final fixture = await legacyFixture();
-      final db = await LocalDatabase.ensureInitialized();
-      final customCards = await db.query(
-        'cards',
-        where: 'lesson_id = ?',
-        whereArgs: [fixture.customId],
-        orderBy: 'id',
-      );
-      final historicalId = await db.insert('lessons', {
-        'lesson_title': 'Archived words',
-        'theme': 'Historical',
-        'hsk_level': 4,
-        'is_archived': 1,
-        'is_listed': 0,
-        'is_user_generated': 0,
-      });
-      final historical = Map<String, Object?>.of(
-        (await db.query(
-          'cards',
-          where: 'id = ?',
-          whereArgs: [fixture.cardId],
-        )).single,
-      )..remove('id');
-      historical['lesson_id'] = historicalId;
-      final historicalCardId = await db.insert('cards', historical);
-      final saved = await savedTables(db);
-      await db.delete(
-        'content_migrations',
-        where: 'key = ?',
-        whereArgs: [vocabularyEditorialCorrectionsMarker],
-      );
-      await LocalDatabase.close();
-      final upgraded = await LocalDatabase.ensureInitialized();
-      expect(await savedTables(upgraded), saved);
-      final corrected = (await upgraded.query(
-        'cards',
-        where: 'id = ?',
-        whereArgs: [fixture.cardId],
-      )).single;
-      expect(corrected['pinyin'], 'liǎ');
-      expect(corrected['english_meaning'], 'two; both');
-      expect(corrected['correct_answer'], 'two; both');
-      expect(corrected['example_sentence_pinyin'], contains('liǎ '));
-      expect(
-        jsonDecode(corrected['quiz_options'] as String),
-        isNot(contains('both')),
-      );
-      expect(
-        await upgraded.query(
+  for (final marker in [
+    vocabularyEditorialCorrectionsMarker,
+    vocabularyReviewCorrectionsMarker,
+  ]) {
+    test(
+      '$marker preserves shared IDs, sessions, history and custom copies',
+      () async {
+        final fixture = await legacyFixture();
+        final db = await LocalDatabase.ensureInitialized();
+        final customCards = await db.query(
           'cards',
           where: 'lesson_id = ?',
           whereArgs: [fixture.customId],
           orderBy: 'id',
-        ),
-        customCards,
-      );
-      expect(
-        (await upgraded.query(
+        );
+        final historicalId = await db.insert('lessons', {
+          'lesson_title': 'Archived words',
+          'theme': 'Historical',
+          'hsk_level': 4,
+          'is_archived': 1,
+          'is_listed': 0,
+          'is_user_generated': 0,
+        });
+        final historical = Map<String, Object?>.of(
+          (await db.query(
+            'cards',
+            where: 'id = ?',
+            whereArgs: [fixture.cardId],
+          )).single,
+        )..remove('id');
+        historical['lesson_id'] = historicalId;
+        final historicalCardId = await db.insert('cards', historical);
+        final saved = await savedTables(db);
+        await db.delete(
+          'content_migrations',
+          where: 'key = ?',
+          whereArgs: [marker],
+        );
+        await LocalDatabase.close();
+        final upgraded = await LocalDatabase.ensureInitialized();
+        expect(await savedTables(upgraded), saved);
+        final corrected = (await upgraded.query(
           'cards',
           where: 'id = ?',
-          whereArgs: [historicalCardId],
-        )).single['pinyin'],
-        'liǎng',
-      );
-      final cardsAfter = await upgraded.query('cards', orderBy: 'id');
-      await LocalDatabase.close();
-      final reopened = await LocalDatabase.ensureInitialized();
-      expect(await reopened.query('cards', orderBy: 'id'), cardsAfter);
-      expect(await savedTables(reopened), saved);
-      expect(await reopened.rawQuery('PRAGMA foreign_key_check'), isEmpty);
-    },
-  );
+          whereArgs: [fixture.cardId],
+        )).single;
+        expect(corrected['pinyin'], 'liǎ');
+        expect(
+          (await upgraded.query(
+            'cards',
+            where: 'id = ?',
+            whereArgs: [fixture.lihaiId],
+          )).single['pinyin'],
+          'lì hài',
+        );
+        expect(corrected['english_meaning'], 'two; both');
+        expect(corrected['correct_answer'], 'two; both');
+        expect(corrected['example_sentence_pinyin'], contains('liǎ '));
+        expect(
+          jsonDecode(corrected['quiz_options'] as String),
+          isNot(contains('both')),
+        );
+        expect(
+          await upgraded.query(
+            'cards',
+            where: 'lesson_id = ?',
+            whereArgs: [fixture.customId],
+            orderBy: 'id',
+          ),
+          customCards,
+        );
+        expect(
+          (await upgraded.query(
+            'cards',
+            where: 'id = ?',
+            whereArgs: [historicalCardId],
+          )).single['pinyin'],
+          'liǎng',
+        );
+        final cardsAfter = await upgraded.query('cards', orderBy: 'id');
+        await LocalDatabase.close();
+        final reopened = await LocalDatabase.ensureInitialized();
+        expect(await reopened.query('cards', orderBy: 'id'), cardsAfter);
+        expect(await savedTables(reopened), saved);
+        expect(await reopened.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+      },
+    );
 
-  test('a failed content update rolls back and succeeds on retry', () async {
-    final fixture = await legacyFixture();
-    final db = await LocalDatabase.ensureInitialized();
-    final before = await db.query('cards', orderBy: 'id');
-    await db.delete(
-      'content_migrations',
-      where: 'key = ?',
-      whereArgs: [vocabularyEditorialCorrectionsMarker],
-    );
-    await db.execute(
-      "CREATE TRIGGER reject_editorial BEFORE UPDATE ON cards WHEN NEW.chinese = '背' BEGIN SELECT RAISE(ABORT, 'simulated write failure'); END",
-    );
-    await LocalDatabase.close();
-    await expectLater(
-      LocalDatabase.initialize(),
-      throwsA(isA<DatabaseException>()),
-    );
-    final probe = await openDatabase(path, singleInstance: false);
-    expect(await probe.query('cards', orderBy: 'id'), before);
-    expect(
-      await probe.query(
+    test('$marker rolls back a failed update and succeeds on retry', () async {
+      final fixture = await legacyFixture();
+      final db = await LocalDatabase.ensureInitialized();
+      final before = await db.query('cards', orderBy: 'id');
+      await db.delete(
         'content_migrations',
         where: 'key = ?',
-        whereArgs: [vocabularyEditorialCorrectionsMarker],
-      ),
-      isEmpty,
-    );
-    await probe.execute('DROP TRIGGER reject_editorial');
-    await probe.close();
-    final retried = await LocalDatabase.ensureInitialized();
-    expect(
-      (await retried.query(
-        'cards',
-        where: 'id = ?',
-        whereArgs: [fixture.cardId],
-      )).single['pinyin'],
-      'liǎ',
-    );
-  });
+        whereArgs: [marker],
+      );
+      await db.execute(
+        "CREATE TRIGGER reject_editorial BEFORE UPDATE ON cards WHEN NEW.chinese = '背' BEGIN SELECT RAISE(ABORT, 'simulated write failure'); END",
+      );
+      await LocalDatabase.close();
+      await expectLater(
+        LocalDatabase.initialize(),
+        throwsA(isA<DatabaseException>()),
+      );
+      final probe = await openDatabase(path, singleInstance: false);
+      expect(await probe.query('cards', orderBy: 'id'), before);
+      expect(
+        await probe.query(
+          'content_migrations',
+          where: 'key = ?',
+          whereArgs: [marker],
+        ),
+        isEmpty,
+      );
+      await probe.execute('DROP TRIGGER reject_editorial');
+      await probe.close();
+      final retried = await LocalDatabase.ensureInitialized();
+      expect(
+        (await retried.query(
+          'cards',
+          where: 'id = ?',
+          whereArgs: [fixture.cardId],
+        )).single['pinyin'],
+        'liǎ',
+      );
+    });
+  }
 
   for (final legacyProvenance in [false, true]) {
     test(
@@ -265,6 +296,14 @@ void main() {
           whereArgs: [fixture.cardId],
         )).single;
         expect(corrected['pinyin'], 'liǎ');
+        expect(
+          (await restored.query(
+            'cards',
+            where: 'id = ?',
+            whereArgs: [fixture.lihaiId],
+          )).single['pinyin'],
+          'lì hài',
+        );
         expect(await savedTables(restored), saved);
         expect(
           await restored.query(
@@ -279,4 +318,83 @@ void main() {
       },
     );
   }
+
+  test(
+    'v4 corrects the exact archived download seed and protects custom copies',
+    () async {
+      final db = await LocalDatabase.ensureInitialized();
+      final ownerId = await db.insert('lessons', {
+        'lesson_title': 'Technology HSK4 Flashcards',
+        'theme': 'Technology',
+        'hsk_level': 4,
+        'is_user_generated': 0,
+        'is_archived': 1,
+        'is_listed': 0,
+      });
+      final row = Map<String, Object?>.of(
+        (await db.query(
+          'cards',
+          where: 'chinese = ?',
+          whereArgs: ['下载'],
+        )).first,
+      )..remove('id');
+      row.addAll({
+        'lesson_id': ownerId,
+        'pinyin': 'xiàzài',
+        'example_sentence_chinese': '你可以在这里下载学习资料。',
+        'example_sentence_pinyin': 'Nǐ kěyǐ zài zhèlǐ xiàzài xuéxí zīliào.',
+      });
+      final archivedId = await db.insert('cards', row);
+      final customOwner = await db.insert('lessons', {
+        'lesson_title': 'My saved download',
+        'theme': 'Custom',
+        'hsk_level': 4,
+        'is_user_generated': 1,
+      });
+      final customId = await db.insert('cards', {
+        ...row,
+        'lesson_id': customOwner,
+      });
+      await db.delete(
+        'content_migrations',
+        where: 'key = ?',
+        whereArgs: [vocabularyReviewCorrectionsMarker],
+      );
+      await db.execute(
+        "CREATE TRIGGER reject_download BEFORE UPDATE ON cards WHEN OLD.id = $archivedId BEGIN SELECT RAISE(ABORT, 'simulated historical failure'); END",
+      );
+      await expectLater(
+        db.transaction(refreshVocabularyReviewContent),
+        throwsA(isA<DatabaseException>()),
+      );
+      expect(
+        await db.query(
+          'content_migrations',
+          where: 'key = ?',
+          whereArgs: [vocabularyReviewCorrectionsMarker],
+        ),
+        isEmpty,
+      );
+      await db.execute('DROP TRIGGER reject_download');
+      await db.transaction(refreshVocabularyReviewContent);
+      final corrected = (await db.query(
+        'cards',
+        where: 'id = ?',
+        whereArgs: [archivedId],
+      )).single;
+      expect(corrected['pinyin'], 'xiàzǎi');
+      expect(corrected['example_sentence_pinyin'], contains('xiàzǎi'));
+      expect(
+        (await db.query(
+          'cards',
+          where: 'id = ?',
+          whereArgs: [customId],
+        )).single['pinyin'],
+        'xiàzài',
+      );
+      final after = await db.query('cards', orderBy: 'id');
+      await db.transaction(refreshVocabularyReviewContent);
+      expect(await db.query('cards', orderBy: 'id'), after);
+    },
+  );
 }

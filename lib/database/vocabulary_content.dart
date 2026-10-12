@@ -84,6 +84,8 @@ const legacyEditorialPinyin = <String, String>{
   '码头': 'mǎ tóu',
   '泄露': 'xiè lù',
   '得罪': 'dé zuì',
+  '利害': 'lì hai',
+  '下载': 'xiàzài',
 };
 
 bool matchesBundledVocabularyReading(

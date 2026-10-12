@@ -86,6 +86,12 @@ void main(List<String> args) {
           .toList(growable: false),
       'hskLevel': hskLevel,
       'frequency': entry['frequency'],
+      'hasMultipleReadings':
+          forms
+              .map((form) => _normalizedPinyin(_formPinyin(form)).toLowerCase())
+              .toSet()
+              .length >
+          1,
     });
   }
 
