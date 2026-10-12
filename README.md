@@ -25,7 +25,8 @@ custom teaching personalities using your own provider and API key.
 - Immediate card ratings, persisted deck position, completion summaries, and
   the ability to resume an unfinished deck after restarting the app.
 - Doom Scrolling: a vertical, random feed of vocabulary below 80% mastery,
-  with pronunciation, examples, and explicit word ratings.
+  with pronunciation, examples, explicit word ratings, and Tatoeba sentence
+  listening with transcript reveal and replay.
 - Spaced-review scheduling and saved progress shared across study modes.
 - Dictionary search by Hanzi, pinyin, or English, with HSK and learning-state
   filters, word details, and word-rating controls.
@@ -170,6 +171,24 @@ of a mix, **Refresh word feed** reshuffles the remaining unlearned vocabulary.
 
 With enlarged text or a short window, scroll within the word card to reach its
 content and ratings, then select **Next word** to advance.
+
+Choose **Sentence listening** for a shuffled feed of 3,851 unique Tatoeba
+Mandarin–English sentences from the bundled vocabulary examples. Whole sentences
+play automatically when Sound is enabled; **Replay sentence** and **Play slower**
+(when supported by the speech engine) repeat the audio. **Reveal transcript**
+shows Hanzi, optional source pinyin, the English translation, source sentence
+links, and the pinyin contributor where available. Sentence text works offline;
+source links open Tatoeba in a browser. Playback uses the app's Mandarin speech
+engine, rather than recordings from Tatoeba.
+
+Swipe, use the mouse wheel or arrow keys, or select **Next sentence** to continue.
+On small screens, scroll inside the sentence card to reach its controls.
+Listening, revealing, and skipping do not award mastery. **Practise these words**
+offers explicit ratings for bundled vocabulary found in the transcript; failed
+saves can be retried before advancing. **Refresh sentence feed** reshuffles the
+sentences. The feed uses Tatoeba examples only, retaining their CC BY 2.0 FR
+attribution; original study examples and the separate sentence-practice decks
+are not included in this mode.
 
 Legacy daily-review sessions remain in local storage and backups; navigation
 now opens the word feed. Spaced-review dates and the Dictionary's **To review**

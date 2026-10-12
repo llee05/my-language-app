@@ -72,8 +72,13 @@ Check implementation and tests before describing an existing feature as planned.
   excluded from HSK vocabulary totals but retain review history and XP.
 - Doom Scrolling replaces the Daily Review navigation entry and Home prompt.
   Its vertical feed shuffles vocabulary below 80% mastery across HSK 1–6;
-  learned words stay excluded even when due. Save ratings before advancing;
-  support swipes, mouse-wheel scrolling, keyboard navigation, and save retries.
+  learned words stay excluded even when due. Sentence listening reuses 3,851
+  unique Tatoeba curriculum examples with hidden transcripts, source pinyin,
+  translations, attribution, and whole-sentence speech. Original examples are
+  excluded. Listening and transcript reveal do not award mastery; explicit
+  matched-word ratings use shared vocabulary progress. Save ratings before
+  advancing; support swipes, mouse-wheel scrolling, keyboard navigation, and
+  save retries.
   Preserve legacy daily-review sessions and backup compatibility.
 - Dashboard and Profile use `DashboardLearningStats.fromSavedData`, including
   XP, streaks, accuracy, HSK vocabulary mastery, and `WeeklyProgressReport`.
@@ -211,7 +216,7 @@ flutter test test/tutor_context_repository_test.dart test/tutor_personality_test
 flutter test test/backup_repository_test.dart test/backup_settings_test.dart test/appearance_theme_test.dart test/app_button_theme_test.dart
 flutter test test/android_pronunciation_test.dart test/system_pronunciation_service_test.dart test/pronunciation_button_test.dart
 flutter test test/recorded_pronunciation_service_test.dart test/linux_system_pronunciation_service_test.dart test/desktop_voice_installation_test.dart
-flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
+flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/bundled_listening_sentence_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
 ```
 
 - `test/flutter_test_config.dart` defaults the database to in-memory SQLite and

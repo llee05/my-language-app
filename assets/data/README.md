@@ -72,6 +72,13 @@ translation edits, and explicit supporting-word readings. Its pinyin assembler
 uses bundled dictionary readings plus that lexicon and fails on unknown words;
 polyphonic words and particles require contextual readings in the lexicon.
 
+The Doom Scrolling sentence-listening feed reuses the Tatoeba entries in
+`vocabulary_lessons.json`, deduplicating repeated Chinese sentences across
+headwords and overlapping decks into 3,851 sentences. It keeps source pinyin,
+both sentence IDs, and pinyin contributors, and excludes original examples.
+The app's speech engine reads the sentences; no Tatoeba audio is bundled or
+downloaded. No new corpus asset or content migration is needed for this feed.
+
 Regenerate the originals and final runtime asset without downloading data:
 
 ```sh
