@@ -72,7 +72,7 @@ Check implementation and tests before describing an existing feature as planned.
   excluded from HSK vocabulary totals but retain review history and XP.
 - Doom Scrolling replaces the Daily Review navigation entry and Home prompt.
   Its vertical feed shuffles vocabulary below 80% mastery across HSK 1–6;
-  learned words stay excluded even when due. Sentence listening reuses 3,851
+  learned words stay excluded even when due. Sentence listening reuses 3,567
   unique Tatoeba curriculum examples with hidden transcripts, source pinyin,
   translations, attribution, and whole-sentence speech. Original examples are
   excluded. Listening and transcript reveal do not award mastery; explicit
@@ -80,9 +80,13 @@ Check implementation and tests before describing an existing feature as planned.
   advancing; support swipes, mouse-wheel scrolling, keyboard navigation, and
   save retries.
   Preserve legacy daily-review sessions and backup compatibility.
+  Sentence listening limits word ratings to reviewed curriculum associations
+  and compatible source readings. Other sentence practice filters local words
+  with displayed pinyin; ambiguous crossing matches and unsupported transcripts
+  omit inferred practice. Preserve dictionary word readings and explicit ratings.
 - Vocabulary examples use `BundledVocabularyExampleRepository` and the immutable
-  `vocabulary_examples.json` asset: all 4,991 primary examples plus 1,717 Tatoeba
-  alternates for 883 words, with at most five examples per word. Dictionary,
+  `vocabulary_examples.json` asset: all 4,991 primary examples plus 1,611 Tatoeba
+  alternates for 833 words, with at most five examples per word. Dictionary,
   flashcard answers, and Doom Scrolling offer Another sentence. Browsing does
   not award mastery; speech must follow the displayed example and cancel old
   requests when examples change. Custom decks retain their own examples.
@@ -225,7 +229,7 @@ flutter test test/backup_repository_test.dart test/backup_settings_test.dart tes
 flutter test test/android_pronunciation_test.dart test/system_pronunciation_service_test.dart test/pronunciation_button_test.dart
 flutter test test/recorded_pronunciation_service_test.dart test/linux_system_pronunciation_service_test.dart test/desktop_voice_installation_test.dart
 flutter test test/async_lru_cache_test.dart test/bundled_vocabulary_repository_test.dart test/bundled_listening_sentence_repository_test.dart test/repository_cache_test.dart test/pronunciation_audio_cache_test.dart
-flutter test test/bundled_vocabulary_example_repository_test.dart test/vocabulary_examples_test.dart
+flutter test test/bundled_vocabulary_example_repository_test.dart test/vocabulary_examples_test.dart test/mandarin_sentence_reading_test.dart
 ```
 
 - `test/flutter_test_config.dart` defaults the database to in-memory SQLite and
@@ -391,11 +395,16 @@ broken schema need to be re-entered once.
 
 `tool/hsk_vocabulary_overrides.dart` holds reviewed senses, display variants,
 complete dictionary references, and grammatical-tag exclusions. The explicit
-`bundled_hsk_editorial_v3` content update changes current bundled cards in place;
+`bundled_hsk_editorial_v4` content update changes current bundled cards in place;
 older backups are corrected before shared-card selection. Preserve IDs,
 memberships, history, sessions, custom copies, and archived cards outside the
 current curriculum. The target list remains the import source’s 4,991 old-HSK
 headwords; do not describe it as complete relative to every HSK reference.
+The v4 update also repairs the exact unchanged historical 下载 seed reading;
+other archived cards and custom copies retain their text. The review exclusions
+in `assets/data/tatoeba/sentence_review_exclusions.json` apply to both example
+generators. Run `python3 tool/audit_learning_content.py` after regenerating
+content; preserve reading-ambiguity metadata and reviewed primary pins.
 
 `VocabularyQuizIndex` and `buildMeaningOptions` share dictionary-aware distractor
 filtering across curriculum installation, Listening Practice, Vocab Rush, and

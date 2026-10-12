@@ -16,6 +16,9 @@ The follow-up implementation is documented in
 [the app improvements report](app-improvements-2026-10-11.md). This review and
 its CSV remain a historical snapshot of the values before those corrections.
 
+The subsequent full word and sentence review, fixes, and migration validation
+are documented in [the completed content review](content-review-2026-10-13.md).
+
 ## Scope and method
 
 - Read every bundled word, its displayed pinyin and primary study definition.

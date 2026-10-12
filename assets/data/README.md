@@ -56,6 +56,13 @@ suitability, intended word sense, and contextual pinyin. Record corrections in
 `lesson_example_overrides.json`; use an original example when no suitable source
 pair with a correct reading is available.
 
+`sentence_review_exclusions.json` records unsuitable sentences, incorrect
+translation pairs, and words whose apparent occurrence has the wrong sense or
+crosses a word boundary. Both generators enforce these decisions, reject hidden
+formatting, and cap vocabulary examples at 45 Hanzi. Reviewed primary choices
+are pinned in `lesson_example_overrides.json`; pins permit reviewed alternate
+contexts unless `excludeAlternates` is set. Raw corpus records remain unchanged.
+
 ## Twenty-word vocabulary curriculum
 
 `vocabulary_lessons.json` contains 251 lessons covering all 4,991 vocabulary
@@ -64,7 +71,7 @@ entries: 8 / 8 / 15 / 30 / 65 / 125 lessons for HSK levels 1–6. Every deck has
 decks overlap slightly with the preceding deck to stay at 20 words; there are
 5,020 memberships but only 4,991 vocabulary cards on a fresh installation.
 
-There are 4,191 Tatoeba-backed examples and 800 original examples. All entries
+There are 3,905 Tatoeba-backed examples and 1,086 original examples. All entries
 include Hanzi, sentence pinyin, and English. `lesson_original_examples.json`
 records originals with the source label `Original` and no Tatoeba IDs.
 `tool/original_lesson_examples.py` contains the authored examples, semantic frames,
@@ -74,13 +81,19 @@ polyphonic words and particles require contextual readings in the lexicon.
 
 The Doom Scrolling sentence-listening feed reuses the Tatoeba entries in
 `vocabulary_lessons.json`, deduplicating repeated Chinese sentences across
-headwords and overlapping decks into 3,851 sentences. It keeps source pinyin,
+headwords and overlapping decks into 3,567 sentences. It keeps source pinyin,
 both sentence IDs, and pinyin contributors, and excludes original examples.
 The app's speech engine reads the sentences; no Tatoeba audio is bundled or
 downloaded. No new corpus asset or content migration is needed for this feed.
 
-`vocabulary_examples.json` preserves all 4,991 primary examples and adds 1,717
-alternate examples for 883 words, with at most five examples per word. Alternates
+Sentence word practice uses the reviewed curriculum associations and source
+pinyin to filter the bundled word readings. Unsupported transcripts, ambiguous
+crossing matches, proper names, and incompatible polyphonic readings do not
+offer inferred word ratings. Generic sentence practice also checks available
+pinyin; explicit standalone dictionary ratings retain their selected word.
+
+`vocabulary_examples.json` preserves all 4,991 primary examples and adds 1,611
+alternate examples for 833 words, with at most five examples per word. Alternates
 reuse the existing curriculum's Tatoeba selection; they do not introduce new
 corpus sentences, translations, or authored pinyin. The generator checks the
 source transcription against the target reading (including ü and tones),
@@ -144,6 +157,25 @@ quiz alternatives. It preserves current memberships, card IDs, reviews, and
 sessions; learner-created copies and archived cards outside the current
 curriculum keep their text. Older backups are corrected before shared-card
 selection, including decks with the legacy display readings.
+
+`bundled_hsk_editorial_v4` applies the full word and sentence review even when v3
+has already run. It corrects current shared cards transactionally and repairs
+the exact historical 下载 seed's reading, preserving learner records and custom
+copies. Older backups also receive the update before shared-card selection.
+See [the completed review](../../docs/content-review-2026-10-13.md) and its
+full word/sentence CSVs. Validate every bundled association and source record
+offline with:
+
+```sh
+python3 tool/audit_learning_content.py
+python3 tool/audit_learning_content.py --database path/to/copied/local_app.db
+python3 -m unittest discover -s tool -p 'test_*.py' -v
+flutter test test/mandarin_sentence_reading_test.dart test/vocabulary_editorial_update_test.dart
+```
+
+The database audit opens SQLite read-only. Use `--csv-directory path/to/output`
+to export bundled review tables; it never exports learner records. These checks
+verify consistency and provenance, not naturalness or translation quality.
 
 Quiz alternatives use the target’s known dictionary senses, ordinary English
 articles, and parenthetical annotations to reject equivalent meanings. Matching

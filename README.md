@@ -99,7 +99,7 @@ and original study sentences fill gaps. Everything is bundled for offline use.
 
 **Another sentence** cycles through up to five examples for a word in flashcard
 answers, Dictionary details, and Doom Scrolling word details or larger word
-cards. The bundle contains 1,717 alternate Tatoeba examples for 883 words;
+cards. The bundle contains 1,611 alternate Tatoeba examples for 833 words;
 words without suitable alternates retain their existing example. Each alternate
 keeps its source pinyin, English translation, sentence IDs, and contributor
 credit. Example pronunciation reads the currently displayed sentence. Browsing
@@ -182,7 +182,7 @@ of a mix, **Refresh word feed** reshuffles the remaining unlearned vocabulary.
 With enlarged text or a short window, scroll within the word card to reach its
 content and ratings, then select **Next word** to advance.
 
-Choose **Sentence listening** for a shuffled feed of 3,851 unique Tatoeba
+Choose **Sentence listening** for a shuffled feed of 3,567 unique Tatoeba
 Mandarin–English sentences from the bundled vocabulary examples. Whole sentences
 play automatically when Sound is enabled; **Replay sentence** and **Play slower**
 (when supported by the speech engine) repeat the audio. **Reveal transcript**
