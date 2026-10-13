@@ -70,6 +70,9 @@ Check implementation and tests before describing an existing feature as planned.
   while their answered vocabulary assessments persist. Excluded and unanswered
   exam questions do not change vocabulary progress. Whole sentence cards are
   excluded from HSK vocabulary totals but retain review history and XP.
+  Vocab Rush retains an unsaved answer through feedback, timeout, and Back;
+  navigation waits for successful persistence. Retries keep the submission key
+  and original review-queue date, and do not repeat an already saved review.
 - Doom Scrolling replaces the Daily Review navigation entry and Home prompt.
   Its vertical feed shuffles vocabulary below 80% mastery across HSK 1–6;
   learned words stay excluded even when due. Sentence listening reuses 3,567

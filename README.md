@@ -258,6 +258,10 @@ Three mistakes end a Vocab Rush game. Timed games keep counting while the app
 is in the background; Survival has no time limit. **Show pinyin** in Settings
 also controls the pronunciation hint during a game.
 
+Vocab Rush keeps the answered word visible until progress is saved. If saving
+fails, **Try again** stays on the card. Advancing, results, and navigation wait
+for the answer to save; retries count the answer once.
+
 ### Appearance and preferences
 
 Open **Settings → Appearance** to choose Classic Ember, Ocean, Forest, Violet,
