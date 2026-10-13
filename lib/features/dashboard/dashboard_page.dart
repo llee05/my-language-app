@@ -70,6 +70,7 @@ class _DashboardPageState extends State<DashboardPage>
   late final bool _ownsSpeechInputService;
   late final VocabularyStudyService _studyService;
   int selectedNav = 0;
+  bool _rushNavigationBlocked = false;
   bool _resumeLatestLesson = false;
   int? _initialLessonId;
   bool _loadingDiscovery = true;
@@ -319,6 +320,16 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   void _selectNavigation(int value) {
+    if (_rushNavigationBlocked && value != selectedNav) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Finish saving your answer in Vocab Rush before leaving.',
+          ),
+        ),
+      );
+      return;
+    }
     setState(() {
       selectedNav = value;
       _resumeLatestLesson = false;
@@ -368,11 +379,7 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   void _openProfile() {
-    unawaited(_loadLearningStats());
-    setState(() {
-      selectedNav = AppSidebar.items.length + 1;
-      _resumeLatestLesson = false;
-    });
+    _selectNavigation(AppSidebar.items.length + 1);
   }
 
   void _openSettings() => _selectNavigation(AppSidebar.items.length);
@@ -443,6 +450,8 @@ class _DashboardPageState extends State<DashboardPage>
                             onRetryDiscovery: _loadDiscoveryPrompt,
                             onRetryAvailableLessons: _loadAvailableLessons,
                             onLearningProgressChanged: _loadLearningStats,
+                            onRushNavigationBlocked: (blocked) =>
+                                _rushNavigationBlocked = blocked,
                             onLessonProgressChanged: _refreshDashboardData,
                             loadingDiscovery: _loadingDiscovery,
                             discoveryLoadError: _discoveryLoadError,
@@ -532,6 +541,7 @@ class _DashboardBody extends StatelessWidget {
     required this.onRetryDiscovery,
     required this.onRetryAvailableLessons,
     required this.onLearningProgressChanged,
+    required this.onRushNavigationBlocked,
     required this.onLessonProgressChanged,
     required this.loadingDiscovery,
     required this.discoveryLoadError,
@@ -583,6 +593,7 @@ class _DashboardBody extends StatelessWidget {
   final VoidCallback onRetryDiscovery;
   final VoidCallback onRetryAvailableLessons;
   final VoidCallback onLearningProgressChanged;
+  final ValueChanged<bool> onRushNavigationBlocked;
   final VoidCallback onLessonProgressChanged;
   final bool loadingDiscovery;
   final bool discoveryLoadError;
@@ -665,6 +676,7 @@ class _DashboardBody extends StatelessWidget {
       return VocabRushPage(
         studyService: studyService,
         onProgressChanged: onLearningProgressChanged,
+        onNavigationBlocked: onRushNavigationBlocked,
         vocabularyRepository: vocabularyRepository,
         lessonRepository: lessonRepository,
         progressRepository: progressRepository,

@@ -36,11 +36,13 @@ class VocabRushPage extends StatefulWidget {
     this.vocabularyRepository = const BundledVocabularyRepository(),
     this.studyService,
     this.onProgressChanged,
+    this.onNavigationBlocked,
     this.clock,
   });
 
   final VocabularyStudyService? studyService;
   final VoidCallback? onProgressChanged;
+  final ValueChanged<bool>? onNavigationBlocked;
   final DateTime Function()? clock;
 
   final LessonRepository lessonRepository;
@@ -60,9 +62,11 @@ class _VocabRushPageState extends State<VocabRushPage>
   final _random = Random();
   late final PronunciationService _pronunciationService;
   late final bool _ownsPronunciationService;
+  late final VocabularyStudyService _studyService;
   _RushDifficulty _difficulty = _RushDifficulty.beginner;
   _RushDuration _duration = _RushDuration.threeMinutes;
   Timer? _timer;
+  Timer? _feedbackTimer;
   DateTime? _deadline;
   String _finishReason = 'Game ended.';
   int _gameGeneration = 0;
@@ -70,6 +74,11 @@ class _VocabRushPageState extends State<VocabRushPage>
   Map<String, dynamic>? _card;
   List<String> _answers = const [];
   String? _selectedAnswer;
+  _RushAnswerSubmission? _pendingAnswer;
+  bool _savingAnswer = false;
+  bool _feedbackElapsed = false;
+  String? _saveError;
+  String? _requestedFinishReason;
   int _secondsLeft = 0;
   int _score = 0;
   int _streak = 0;
@@ -90,6 +99,13 @@ class _VocabRushPageState extends State<VocabRushPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _studyService =
+        widget.studyService ??
+        VocabularyStudyService(
+          lessons: widget.lessonRepository,
+          progress: widget.progressRepository,
+          clock: widget.clock,
+        );
     _ownsPronunciationService = widget.pronunciationService == null;
     _pronunciationService =
         widget.pronunciationService ?? createSystemPronunciationService();
@@ -100,6 +116,7 @@ class _VocabRushPageState extends State<VocabRushPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _feedbackTimer?.cancel();
     if (_ownsPronunciationService) {
       unawaited(_pronunciationService.dispose());
     } else {
@@ -114,9 +131,21 @@ class _VocabRushPageState extends State<VocabRushPage>
     if (state == AppLifecycleState.paused) unawaited(_stopPronunciation());
   }
 
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    if (_pendingAnswer == null) return AppExitResponse.exit;
+    _finish();
+    return AppExitResponse.cancel;
+  }
+
   void _tick() {
     final deadline = _deadline;
-    if (!mounted || !_playing || deadline == null) return;
+    if (!mounted ||
+        !_playing ||
+        deadline == null ||
+        _requestedFinishReason != null) {
+      return;
+    }
     final remaining = deadline.difference(_now()).inMilliseconds;
     if (remaining <= 0) {
       _finish(reason: 'Time!');
@@ -160,13 +189,14 @@ class _VocabRushPageState extends State<VocabRushPage>
   }
 
   Future<void> _start() async {
-    if (_starting || _playing) return;
+    if (_starting || _playing || _pendingAnswer != null) return;
     setState(() {
       _starting = true;
       _startError = null;
     });
     _timer?.cancel();
     try {
+      _feedbackTimer?.cancel();
       final vocabulary =
           widget.initialVocabulary ??
           await widget.vocabularyRepository.load(
@@ -221,6 +251,9 @@ class _VocabRushPageState extends State<VocabRushPage>
         _mistakes = 0;
         _gameRunId = gameRunId;
         _selectedAnswer = null;
+        _requestedFinishReason = null;
+        _saveError = null;
+        _feedbackElapsed = false;
         _nextCard();
       });
 
@@ -273,76 +306,97 @@ class _VocabRushPageState extends State<VocabRushPage>
         _streak = 0;
         _mistakes++;
       }
-    });
-
-    final submissionKey = 'vocab-rush:$_gameRunId:attempt:$_attempts';
-    unawaited(_savePractice(source, submissionKey, correct));
-
-    Future<void>.delayed(const Duration(milliseconds: 450), () {
-      if (!mounted || !_playing || generation != _gameGeneration) return;
-      _tick();
-      if (!_playing) return;
-      if (_mistakes >= 3) {
-        _finish(reason: 'Three strikes!');
-      } else {
-        setState(_nextCard);
-      }
-    });
-  }
-
-  Future<void> _savePractice(
-    Map<String, dynamic> source,
-    String submissionKey,
-    bool correct,
-  ) async {
-    try {
-      final service =
-          widget.studyService ??
-          VocabularyStudyService(
-            lessons: widget.lessonRepository,
-            progress: widget.progressRepository,
-          );
-      final card = await service.recordCard(
-        Flashcard(
+      _feedbackElapsed = false;
+      _pendingAnswer = _RushAnswerSubmission(
+        card: Flashcard(
           chinese: source['chinese'] as String,
           pinyin: source['pinyin'] as String,
           englishMeaning: source['english_meaning'] as String,
           partOfSpeech: source['part_of_speech'] as String,
         ),
         hskLevel: source['hsk_level'] as int,
-        rating: correct ? ReviewRating.good : ReviewRating.again,
-        submissionKey: submissionKey,
+        correct: correct,
+        submissionKey: 'vocab-rush:$_gameRunId:attempt:$_attempts',
+        queueDate: _now(),
       );
-      if (!correct) {
+    });
+    widget.onNavigationBlocked?.call(true);
+    unawaited(_savePractice());
+    _feedbackTimer = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted || !_playing || generation != _gameGeneration) return;
+      _feedbackElapsed = true;
+      _advanceAfterAnswer();
+    });
+  }
+
+  void _advanceAfterAnswer() {
+    if (!mounted || !_playing || _pendingAnswer != null) return;
+    if (_requestedFinishReason case final reason?) {
+      _finish(reason: reason);
+      return;
+    }
+    if (!_feedbackElapsed) return;
+    _tick();
+    if (!_playing) return;
+    if (_mistakes >= 3) {
+      _finish(reason: 'Three strikes!');
+    } else {
+      setState(_nextCard);
+    }
+  }
+
+  Future<void> _savePractice() async {
+    final submission = _pendingAnswer;
+    if (submission == null || _savingAnswer) return;
+    setState(() {
+      _savingAnswer = true;
+      _saveError = null;
+    });
+    try {
+      if (submission.savedCard == null) {
+        submission.savedCard = await _studyService.recordCard(
+          submission.card,
+          hskLevel: submission.hskLevel,
+          rating: submission.correct ? ReviewRating.good : ReviewRating.again,
+          submissionKey: submission.submissionKey,
+        );
+        if (mounted) widget.onProgressChanged?.call();
+      }
+      if (!submission.correct) {
         await widget.dailyReviewSessionRepository?.enqueueCard(
-          date: DateTime.now(),
-          cardId: card.id,
+          date: submission.queueDate,
+          cardId: submission.savedCard!.id,
         );
       }
-      widget.onProgressChanged?.call();
+      if (!mounted) return;
+      setState(() => _pendingAnswer = null);
+      widget.onNavigationBlocked?.call(false);
+      _advanceAfterAnswer();
     } catch (error) {
       debugPrint('Vocab Rush review queue update failed: $error');
-      if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text(
-            correct
-                ? 'Your vocabulary progress could not be saved.'
-                : _AppErrorCopy.addToReview,
-          ),
-          action: SnackBarAction(
-            label: 'Try again',
-            onPressed: () =>
-                unawaited(_savePractice(source, submissionKey, correct)),
-          ),
-        ),
-      );
+      if (mounted) {
+        setState(
+          () => _saveError = submission.savedCard == null
+              ? 'Your vocabulary progress could not be saved.'
+              : _AppErrorCopy.addToReview,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _savingAnswer = false);
     }
   }
 
   void _finish({String reason = 'Game ended.'}) {
     _timer?.cancel();
     unawaited(_stopPronunciation());
+    if (_pendingAnswer != null) {
+      setState(() {
+        _secondsLeft = 0;
+        _requestedFinishReason ??= reason;
+      });
+      return;
+    }
+    _feedbackTimer?.cancel();
     setState(() {
       _secondsLeft = 0;
       _playing = false;
@@ -353,21 +407,27 @@ class _VocabRushPageState extends State<VocabRushPage>
 
   @override
   Widget build(BuildContext context) {
-    return _BackNavigationScope(
-      active: _playing,
-      onBack: _finish,
-      child: ColoredBox(
-        color: AppColors.background,
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: constraints.maxWidth < 600 ? 20 : 48,
-              vertical: 34,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: _playing ? _buildGame() : _buildLobby(),
+    return PopScope<Object?>(
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _pendingAnswer != null) _finish();
+      },
+      child: _BackNavigationScope(
+        active: _playing,
+        blocked: _pendingAnswer != null,
+        onBack: _finish,
+        child: ColoredBox(
+          color: AppColors.background,
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: constraints.maxWidth < 600 ? 20 : 48,
+                vertical: 34,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: _playing ? _buildGame() : _buildLobby(),
+                ),
               ),
             ),
           ),
@@ -437,16 +497,25 @@ class _VocabRushPageState extends State<VocabRushPage>
         const SizedBox(height: 28),
         SizedBox(
           width: 285,
-          child: FilledButton.icon(
+          child: FilledButton(
             style: FilledButton.styleFrom(minimumSize: const Size(0, 54)),
             onPressed: _starting ? null : _start,
-            icon: const Icon(Icons.sports_martial_arts_rounded, size: 18),
-            label: Text(
-              _starting
-                  ? 'Loading words…'
-                  : _finished
-                  ? '再玩一次 — Play Again'
-                  : '开始游戏 — Start Game',
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.sports_martial_arts_rounded, size: 18),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    _starting
+                        ? 'Loading words…'
+                        : _finished
+                        ? '再玩一次 — Play Again'
+                        : '开始游戏 — Start Game',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -549,6 +618,28 @@ class _VocabRushPageState extends State<VocabRushPage>
           },
         ),
         const SizedBox(height: 34),
+        if (_saveError != null) ...[
+          _AppInlineError(
+            key: const Key('vocab-rush-save-error'),
+            message: _saveError!,
+            onRetry: _savingAnswer ? null : () => unawaited(_savePractice()),
+            retryKey: const Key('vocab-rush-retry-save'),
+          ),
+          const SizedBox(height: 16),
+        ] else if (_savingAnswer) ...[
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _requestedFinishReason == null
+                  ? 'Saving your answer…'
+                  : 'Finishing the game after your answer is saved…',
+              key: const Key('vocab-rush-saving'),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.muted),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         _scoreRow(),
       ],
     );
@@ -710,4 +801,22 @@ class _VocabRushPageState extends State<VocabRushPage>
       ],
     ),
   );
+}
+
+class _RushAnswerSubmission {
+  _RushAnswerSubmission({
+    required this.card,
+    required this.hskLevel,
+    required this.correct,
+    required this.submissionKey,
+    required this.queueDate,
+  });
+
+  final Flashcard card;
+  final int hskLevel;
+  final bool correct;
+  final String submissionKey;
+  final DateTime queueDate;
+  // A queue retry must not re-record an already committed vocabulary review.
+  Flashcard? savedCard;
 }
