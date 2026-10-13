@@ -265,9 +265,9 @@ for the answer to save; retries count the answer once.
 ### Appearance and preferences
 
 Open **Settings → Appearance** to choose Classic Ember, Ocean, Forest, Violet,
-or Midnight. Colour changes apply immediately and save automatically. The
-experimental **Press feedback** selector includes a preview button; select
-**Save settings** to keep that choice.
+Midnight, Sakura, Jade, Copper, or Slate. Colour changes apply immediately and
+save automatically. The experimental **Press feedback** selector includes a
+preview button; select **Save settings** to keep that choice.
 
 Use **Save settings** after editing your name, HSK level, daily word target,
 Show pinyin, Sound, or Kokoro voice selection on iOS/macOS. These preferences are stored

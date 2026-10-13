@@ -102,7 +102,7 @@ Check implementation and tests before describing an existing feature as planned.
   learner's selected HSK level. Refresh statistics after reviews, at local
   midnight, and when the app resumes. Home samples available lessons across
   HSK levels rather than generating personalized recommendations.
-- Appearance uses five `AppThemes` palettes and shared `AppColors`. Theme
+- Appearance uses nine `AppThemes` palettes and shared `AppColors`. Theme
   choices apply immediately and persist automatically; button-animation choices
   require Save settings and remain experimental. Preserve appearance restoration,
   backup support, and the default appearance after full reset.
