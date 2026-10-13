@@ -11,6 +11,16 @@ from release_metadata import release_metadata
 
 
 class ReleaseMetadataTest(unittest.TestCase):
+    def test_v2_beta_retains_the_increasing_build_number(self):
+        result = release_metadata("version: 2.0.0-beta.1+9\n", "refs/tags/v2.0.0-beta.1")
+        self.assertEqual(result["release_version"], "2.0.0-beta.1")
+        self.assertEqual(result["build_number"], "9")
+        self.assertEqual(result["is_release"], "true")
+        self.assertEqual(result["prerelease"], "true")
+        for wrong_tag in ("refs/tags/v1.0.0-beta.8", "refs/tags/v2.0.0-beta.1+9"):
+            with self.subTest(tag=wrong_tag), self.assertRaises(ValueError):
+                release_metadata("version: 2.0.0-beta.1+9\n", wrong_tag)
+
     def test_beta_tag_matches_app_version_and_build(self):
         result = release_metadata("version: 1.0.0-beta.6+6\n", "refs/tags/v1.0.0-beta.6")
         self.assertEqual(result["release_version"], "1.0.0-beta.6")
@@ -82,6 +92,50 @@ class ReleaseAssetsTest(unittest.TestCase):
             )
         self.assertIn("notarization", (self.root / "notes.md").read_text())
         self.prepare()  # A failed publication can reuse the same asset preparation.
+
+    def test_v2_packages_include_only_matching_product_notes(self):
+        for asset in self.directory.iterdir():
+            asset.unlink()
+        metadata = release_metadata("version: 2.0.0-beta.1+9", "refs/tags/v2.0.0-beta.1")
+        assets = expected_assets("2.0.0-beta.1")
+        for name in assets:
+            (self.directory / name).write_bytes(f"fixture: {name}".encode())
+        notes_directory = self.root / "product-notes"
+        notes_directory.mkdir()
+        (notes_directory / "2.0.0-beta.1.md").write_text("# V2 beta 1\n\nReviewed words and reliable answer saves.\n")
+        (notes_directory / "1.0.0-beta.8.md").write_text("Old beta-only changes.")
+        prepare_release(self.directory, metadata, "v2-commit", "3.44.4", self.root / "notes.md",
+                        release_notes_directory=notes_directory)
+        notes = (self.root / "notes.md").read_text()
+        self.assertIn("Reviewed words and reliable answer saves.", notes)
+        self.assertIn("Downloads for 2.0.0-beta.1", notes)
+        self.assertNotIn("Old beta-only changes.", notes)
+        manifest = json.loads((self.directory / "release.json").read_text())
+        self.assertEqual(manifest["version"], "2.0.0-beta.1+9")
+        self.assertEqual(manifest["tag"], "v2.0.0-beta.1")
+        self.assertEqual(set(manifest["assets"]), assets)
+        self.assertTrue(manifest["prerelease"])
+        for line in (self.directory / "SHA256SUMS").read_text().splitlines():
+            digest, name = line.split("  ", 1)
+            self.assertEqual(digest, hashlib.sha256((self.directory / name).read_bytes()).hexdigest())
+
+    def test_invalid_curated_notes_stop_preparation(self):
+        notes_directory = self.root / "product-notes"
+        notes_directory.mkdir()
+        source = notes_directory / "1.0.0-beta.6.md"
+        source.write_text("  \n")
+        with self.assertRaisesRegex(ValueError, "must not be empty"):
+            prepare_release(self.directory, self.metadata, "test-commit", "3.44.4", self.root / "notes.md",
+                            release_notes_directory=notes_directory)
+        source.unlink()
+        outside = self.root / "outside-notes.md"
+        outside.write_text("fixture")
+        source.symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, "symbolic link"):
+            prepare_release(self.directory, self.metadata, "test-commit", "3.44.4", self.root / "notes.md",
+                            release_notes_directory=notes_directory)
+        self.assertFalse((self.directory / "release.json").exists())
+        self.assertFalse((self.directory / "SHA256SUMS").exists())
 
     def test_missing_platform_fails_without_generating_checksums(self):
         (self.directory / next(iter(self.assets))).unlink()

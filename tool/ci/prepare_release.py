@@ -20,7 +20,22 @@ def expected_assets(version):
     }
 
 
-def prepare_release(directory, metadata, commit, flutter_version, notes_path):
+def prepare_release(directory, metadata, commit, flutter_version, notes_path,
+                    *, release_notes_directory=None):
+    version = metadata["release_version"]
+    notes_directory = (release_notes_directory if release_notes_directory is not None
+                       else Path(__file__).resolve().parents[2] / "docs/releases")
+    curated_path = notes_directory / f"{version}.md"
+    if curated_path.is_symlink():
+        raise ValueError("Release notes must not be a symbolic link")
+    product_notes = ""
+    if curated_path.exists():
+        if not curated_path.is_file():
+            raise ValueError("Release notes must be a regular file")
+        product_notes = curated_path.read_text().strip()
+        if not product_notes:
+            raise ValueError("Release notes must not be empty")
+        product_notes += "\n\n"
     expected = expected_assets(metadata["release_version"])
     actual = {path.name for path in directory.iterdir()}
     # Allow regenerating our own outputs, but never publish unrelated artifacts.
@@ -53,8 +68,8 @@ def prepare_release(directory, metadata, commit, flutter_version, notes_path):
                 digest.update(chunk)
         checksums.append(f"{digest.hexdigest()}  {name}\n")
     (directory / "SHA256SUMS").write_text("".join(checksums))
-    version = metadata["release_version"]
     notes_path.write_text(
+        product_notes +
         f"## Downloads for {version}\n\n"
         "- **Linux x64:** extract the `.tar.gz` and run `tingshuo` inside the extracted folder. "
         "Keep its `lib` and `data` directories beside it. Built on Ubuntu 22.04; "
