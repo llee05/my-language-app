@@ -114,6 +114,7 @@ Future<void> _pumpHarness(
   WidgetTester tester,
   _MemorySettingsRepository settingsRepository, {
   Future<void>? profileSaveGate,
+  AppThemeId initialTheme = AppThemeId.classic,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1000, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -121,7 +122,7 @@ Future<void> _pumpHarness(
     MaterialApp(
       home: _ThemeHarness(
         settingsRepository: settingsRepository,
-        initialTheme: AppThemeId.classic,
+        initialTheme: initialTheme,
         profileSaveGate: profileSaveGate,
       ),
     ),
@@ -154,7 +155,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(pinyin);
       await tester.pumpAndSettle();
-      final appearance = find.byKey(const Key('theme-choice-ocean'));
+      final appearance = find.byKey(const Key('theme-choice-slate'));
       await tester.scrollUntilVisible(
         appearance,
         200,
@@ -256,42 +257,56 @@ void main() {
     },
   );
 
-  testWidgets('selecting a theme applies it and persists the choice', (
-    tester,
-  ) async {
-    final settingsRepository = _MemorySettingsRepository();
-    await _pumpHarness(tester, settingsRepository);
-    await tester.binding.setSurfaceSize(const Size(1000, 1800));
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<Text>(find.text('设置')).style?.color,
-      AppThemes.classic.red,
-    );
+  for (final palette in AppThemes.all) {
+    testWidgets(
+      'selecting the ${palette.label} theme applies it and persists the choice',
+      (tester) async {
+        final initial = palette.id == AppThemeId.classic
+            ? AppThemes.ocean
+            : AppThemes.classic;
+        final settingsRepository = _MemorySettingsRepository(
+          LearnerSettings(showPinyin: false, appThemeId: initial.id.name),
+        );
+        await _pumpHarness(
+          tester,
+          settingsRepository,
+          initialTheme: initial.id,
+        );
+        await tester.binding.setSurfaceSize(const Size(1000, 1800));
+        await tester.pumpAndSettle();
+        expect(tester.widget<Text>(find.text('设置')).style?.color, initial.red);
 
-    expect(
-      tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
-      AppThemes.classic.background,
-    );
+        expect(
+          tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
+          initial.background,
+        );
 
-    final oceanChip = find.byKey(const Key('theme-choice-ocean'));
-    expect(oceanChip.hitTestable(), findsOneWidget);
-    await tester.tap(oceanChip);
-    await tester.pumpAndSettle();
+        final choice = find.byKey(Key('theme-choice-${palette.id.name}'));
+        await tester.ensureVisible(choice);
+        await tester.pumpAndSettle();
+        expect(choice.hitTestable(), findsOneWidget);
+        await tester.tap(choice);
+        await tester.pumpAndSettle();
 
-    // The active palette changed immediately…
-    expect(
-      tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
-      AppThemes.ocean.background,
+        // The active palette changed immediately…
+        expect(
+          tester.widget<ColoredBox>(find.byKey(const Key('theme-probe'))).color,
+          palette.background,
+        );
+        await tester.scrollUntilVisible(
+          find.text('设置'),
+          -400,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        expect(tester.widget<Text>(find.text('设置')).style?.color, palette.red);
+        // …and the choice was persisted without touching other preferences.
+        expect(settingsRepository.saveCalls, 1);
+        expect(settingsRepository.savedSettings.appThemeId, palette.id.name);
+        expect(settingsRepository.savedSettings.showPinyin, isFalse);
+      },
     );
-    expect(
-      tester.widget<Text>(find.text('设置')).style?.color,
-      AppThemes.ocean.red,
-    );
-    // …and the choice was persisted without touching other preferences.
-    expect(settingsRepository.saveCalls, 1);
-    expect(settingsRepository.savedSettings.appThemeId, 'ocean');
-    expect(settingsRepository.savedSettings.showPinyin, isFalse);
-  });
+  }
 
   testWidgets('a failed theme save surfaces a retryable error', (tester) async {
     final settingsRepository = _MemorySettingsRepository()..failSaves = true;

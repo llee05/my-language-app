@@ -1,7 +1,17 @@
 part of '../../main.dart';
 
 /// Available colour themes. Persisted by id in `learner_settings.theme_id`.
-enum AppThemeId { classic, ocean, forest, violet, midnight }
+enum AppThemeId {
+  classic,
+  ocean,
+  forest,
+  violet,
+  midnight,
+  sakura,
+  jade,
+  copper,
+  slate,
+}
 
 /// One complete colour palette. Every slot that the UI paints with must be
 /// listed here so a theme switch recolours the whole app.
@@ -130,7 +140,85 @@ abstract final class AppThemes {
     faint: Color(0xFFA9B1BF),
   );
 
-  static const all = [classic, ocean, forest, violet, midnight];
+  static const sakura = AppColorPalette(
+    id: AppThemeId.sakura,
+    label: 'Sakura',
+    background: Color(0xFF211823),
+    sidebar: Color(0xFF2D202C),
+    surface: Color(0xFF382736),
+    surfaceLight: Color(0xFF493447),
+    border: Color(0xFFB889A3),
+    red: Color(0xFFFF9ABD),
+    darkRed: Color(0xFFC66889),
+    gold: Color(0xFFF0C982),
+    teal: Color(0xFF91D5BC),
+    text: Color(0xFFFFF2F7),
+    muted: Color(0xFFDFC2D0),
+    faint: Color(0xFFCBB0BF),
+  );
+
+  static const jade = AppColorPalette(
+    id: AppThemeId.jade,
+    label: 'Jade',
+    background: Color(0xFF142622),
+    sidebar: Color(0xFF1D332D),
+    surface: Color(0xFF264139),
+    surfaceLight: Color(0xFF335449),
+    border: Color(0xFF82ADA0),
+    red: Color(0xFF70E0BC),
+    darkRed: Color(0xFF42A785),
+    gold: Color(0xFFE3D081),
+    teal: Color(0xFFA4DDD6),
+    text: Color(0xFFEBF8F2),
+    muted: Color(0xFFBCD8CB),
+    faint: Color(0xFFACC8BC),
+  );
+
+  static const copper = AppColorPalette(
+    id: AppThemeId.copper,
+    label: 'Copper',
+    background: Color(0xFF251D18),
+    sidebar: Color(0xFF32261F),
+    surface: Color(0xFF3F3026),
+    surfaceLight: Color(0xFF524030),
+    border: Color(0xFFBC9778),
+    red: Color(0xFFF0B786),
+    darkRed: Color(0xFFB77A4A),
+    gold: Color(0xFFF2D58E),
+    teal: Color(0xFF92CFBD),
+    text: Color(0xFFFBF1E8),
+    muted: Color(0xFFDCCAB8),
+    faint: Color(0xFFC9B49F),
+  );
+
+  static const slate = AppColorPalette(
+    id: AppThemeId.slate,
+    label: 'Slate',
+    background: Color(0xFF1C1E22),
+    sidebar: Color(0xFF26292E),
+    surface: Color(0xFF30343B),
+    surfaceLight: Color(0xFF414751),
+    border: Color(0xFF939CAB),
+    red: Color(0xFFD2D9E4),
+    darkRed: Color(0xFF8795AA),
+    gold: Color(0xFFE6CC92),
+    teal: Color(0xFF9ED6C7),
+    text: Color(0xFFF2F4F8),
+    muted: Color(0xFFCDD1DA),
+    faint: Color(0xFFB8BFCD),
+  );
+
+  static const all = [
+    classic,
+    ocean,
+    forest,
+    violet,
+    midnight,
+    sakura,
+    jade,
+    copper,
+    slate,
+  ];
 
   static AppColorPalette paletteOf(AppThemeId id) => switch (id) {
     AppThemeId.classic => classic,
@@ -138,6 +226,10 @@ abstract final class AppThemes {
     AppThemeId.forest => forest,
     AppThemeId.violet => violet,
     AppThemeId.midnight => midnight,
+    AppThemeId.sakura => sakura,
+    AppThemeId.jade => jade,
+    AppThemeId.copper => copper,
+    AppThemeId.slate => slate,
   };
 
   /// Returns the theme with the given persisted id, or null when unknown so

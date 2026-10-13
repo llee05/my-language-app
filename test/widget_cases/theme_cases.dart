@@ -24,6 +24,8 @@ void _registerThemeWidgetTests() {
       final scheme = Theme.of(
         tester.element(find.byType(DashboardPage)),
       ).colorScheme;
+      expect(scheme.primary, palette.red);
+      expect(scheme.onPrimary, palette.background);
       final luminances = [
         scheme.primary.computeLuminance(),
         scheme.onPrimary.computeLuminance(),
