@@ -32,6 +32,13 @@ manifest, and publishes one GitHub Release. No shared AI key is embedded.
 build number, commit, Flutter version, platform files, and desktop signing status.
 `SHA256SUMS` covers all five packages and `release.json`.
 
+Current prepared release: `2.0.0-beta.1+9`, tagged `v2.0.0-beta.1` when ready.
+The [V2 walkthrough](release-v2.md) provides the exact publishing steps.
+Version-specific notes in `docs/releases/VERSION.md` are prepended to the
+generated download/signing instructions; older versions without such a file
+retain the generated instructions. The v2 notes are in
+[`docs/releases/2.0.0-beta.1.md`](releases/2.0.0-beta.1.md).
+
 Linux CI checks linked native libraries for missing dependencies. macOS CI
 checks the app and embedded Mach-O libraries for both architectures and verifies
 the ad-hoc signature. Android CI verifies both signatures. These checks do not
@@ -72,7 +79,7 @@ obsolete branch and PR checks are cancelled.
 ## Prepare the next beta
 
 1. Finish and commit the intended app changes. Set the next version/build in
-   `pubspec.yaml`, currently `1.0.0-beta.8+8` for beta 8. Increase the Android
+   `pubspec.yaml`, currently `2.0.0-beta.1+9` for v2 beta 1. Increase the Android
    build number for each uploaded release and update the README release notes.
 2. Select **Flutter 3.44.4**, matching CI, before resolving dependencies or
    running checks. With mise, run `mise trust` and `mise install`; the repository's
@@ -99,14 +106,14 @@ obsolete branch and PR checks are cancelled.
    **without** the `+BUILD` suffix. For the example above:
 
    ```sh
-   git tag -a v1.0.0-beta.8 -m 'TingShuo 1.0.0 beta 8'
-   git push origin v1.0.0-beta.8
+   git tag -a v2.0.0-beta.1 -m 'TingShuo 2.0.0 beta 1'
+   git push origin v2.0.0-beta.1
    ```
 
    These commands publish through the workflow; do not use a release tag just
    to check compilation. A mismatched tag fails before platform builds start.
 6. Confirm the tagged run succeeds and the release includes five packages,
-   `SHA256SUMS`, and `release.json`. Prerelease versions such as `-beta.8` are
+   `SHA256SUMS`, and `release.json`. Prerelease versions such as `-beta.1` are
    marked **Pre-release** and do not replace the latest stable release.
 7. Install the signed Android APK over the previous direct-install beta and
    verify saved learning data and pronunciation. Check the final desktop
@@ -118,9 +125,9 @@ Release metadata always comes from the checked-out `pubspec.yaml`.
 ## Google Play internal testing
 
 Follow [Google Play internal testing](google-play-internal-testing.md) to upload
-the signed beta 8 app bundle and invite testers. A local signed bundle can be
+the signed v2 beta 1 app bundle and invite testers. A local signed bundle can be
 uploaded without creating a GitHub release tag. If using the tagged workflow,
-upload `tingshuo-1.0.0-beta.8-android.aab` from the verified release assets.
+upload `tingshuo-2.0.0-beta.1-android.aab` from the verified release assets.
 GitHub publication and Play Console rollout are separate actions; this workflow
 does not publish to Google Play.
 

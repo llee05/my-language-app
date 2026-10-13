@@ -1,6 +1,6 @@
 # 听说 TingShuo
 
-**TingShuo v1.0.0 Beta 8** is a local-first Flutter app for building a
+**TingShuo v2.0.0 Beta 1** is a local-first Flutter app for building a
 consistent Mandarin study habit. It combines HSK-aligned flashcard decks,
 sentence and listening practice, a swipe-based word feed, a searchable
 dictionary, Vocab Rush, offline vocabulary exams, and saved progress analytics.
@@ -663,7 +663,30 @@ release tools live in `tool/`; automated coverage lives in `test/`.
 
 ## Release
 
-Current version: **1.0.0-beta.8+8**
+Current version: **2.0.0-beta.1+9**
+
+### V2 Beta 1
+
+- Completed the full bundled word and sentence review: improved 197 additional
+  study definitions and corrected 357 primary example records, including
+  translations, contextual readings, and target-word usage.
+- Added source-pinyin filters and reviewed sentence associations so sentence
+  practice offers compatible bundled word readings.
+- Added **Another sentence** across word study, with 1,611 attributed alternate
+  examples for 833 words and 3,567 unique sentence-listening transcripts.
+- Made Vocab Rush wait for answer saves before advancing or finishing, with
+  persistent retries, protected navigation, and no duplicate review credit.
+- Added Sakura, Jade, Copper, and Slate to the nine appearance palettes.
+- Preserved existing card IDs, decks, reviews, progress, sessions, custom content,
+  and application identities when upgrading from the v1 betas.
+- Started the v2 testing series at `2.0.0-beta.1+9`; Android build numbers continue
+  increasing across the major-version change.
+
+See [V2 beta 1 release notes](docs/releases/2.0.0-beta.1.md) and the
+[V2 release walkthrough](docs/release-v2.md) for publishing steps and checks.
+The [full content review](docs/content-review-2026-10-13.md) and
+[Vocab Rush save report](docs/vocab-rush-save-fix-2026-10-13.md) record the changes
+and validation completed during development.
 
 ### Beta 8
 
@@ -722,8 +745,10 @@ details, completed validation, and remaining device checks.
 
 ### Android signing
 
-Android release builds must be signed with the project's upload key. Generate
-the key once and keep both the keystore and its passwords in a secure backup:
+Android release builds must be signed with the project's upload key. Reuse the
+existing key and configuration when upgrading from a v1 beta. For a first
+release only, generate the key once and keep the keystore and passwords in a
+secure backup:
 
 ```sh
 keytool -genkeypair -v \
@@ -732,7 +757,9 @@ keytool -genkeypair -v \
   -alias upload
 ```
 
-Copy the versioned template, then replace all four placeholder values:
+Keep an already configured `android/key.properties`. If it is missing, copy the
+versioned template and replace all four placeholder values with the existing
+key's details:
 
 ```sh
 cp android/key.properties.example android/key.properties
@@ -753,9 +780,9 @@ The signed bundle is written to
 `build/app/outputs/bundle/release/app-release.aab`.
 
 For Google Play, follow [Google Play internal testing](docs/google-play-internal-testing.md).
-Beta 8 uses package ID `io.github.llee05.tingshuo`, version name
-`1.0.0-beta.8`, and version code `8`. Reuse the existing upload key and check
-that Play Console has not already used version code `8` before uploading.
+V2 beta 1 uses package ID `io.github.llee05.tingshuo`, version name
+`2.0.0-beta.1`, and version code `9`. Reuse the existing upload key and check
+that Play Console has not already used version code `9` before uploading.
 
 Version tags matching `v*` use the same signing configuration in GitHub
 Actions. Release artifacts contain no shared AI key; users configure their own
